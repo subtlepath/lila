@@ -34,6 +34,20 @@ from collections import namedtuple
 
 from cpfont_version import CPFONT_VERSION
 
+
+BITMAP_FONT_EXTENSIONS = {".bdf", ".pcf"}
+BITMAP_QUOTE_ALIASES = {
+    0x2018: 0x0060,  # LEFT SINGLE QUOTATION MARK <- legacy quoteleft
+    0x2019: 0x0027,  # RIGHT SINGLE QUOTATION MARK <- legacy quoteright
+    0x201C: 0x0060,  # LEFT DOUBLE QUOTATION MARK, composed below
+    0x201D: 0x0027,  # RIGHT DOUBLE QUOTATION MARK, composed below
+}
+
+
+def is_bitmap_font(font_path):
+    """Return whether a font is a fixed-strike bitmap format."""
+    return os.path.splitext(font_path)[1].lower() in BITMAP_FONT_EXTENSIONS
+
 # --- Unicode interval presets ---
 
 INTERVAL_PRESETS = {
@@ -204,6 +218,9 @@ def extract_ligature_glyph_indices_fonttools(font_path):
     codepoints, so rasterize the GSUB target directly instead of falling back
     to another font for a codepoint that the primary cmap does not contain.
     """
+    if is_bitmap_font(font_path):
+        return {}
+
     from fontTools.ttLib import TTFont
 
     font = TTFont(font_path)
@@ -303,6 +320,9 @@ def extract_kerning_fonttools(font_path, codepoints, ppem):
     codepoints.  Values are scaled from font design units to integer
     pixels at ppem.
     """
+    if is_bitmap_font(font_path):
+        return {}
+
     from fontTools.ttLib import TTFont
 
     font = TTFont(font_path)
@@ -455,6 +475,9 @@ def extract_ligatures_fonttools(font_path, codepoints):
     Returns list of (packed_pair, ligature_codepoint) for the given codepoints.
     Multi-character ligatures are decomposed into chained pairs.
     """
+    if is_bitmap_font(font_path):
+        return []
+
     from fontTools.ttLib import TTFont
 
     font = TTFont(font_path)
@@ -575,24 +598,42 @@ def rasterize_font_style(fontfile, size, intervals, style_id=0, force_autohint=F
     style_names = {0: "regular", 1: "bold", 2: "italic", 3: "bolditalic"}
     style_label = style_names.get(style_id, str(style_id))
 
+    def configure_size(font_face, path):
+        if is_bitmap_font(path):
+            if not font_face.available_sizes:
+                raise ValueError(f"Bitmap font has no fixed strike: {path}")
+            # BDF/PCF files contain already-rasterized pixels. Selecting their
+            # native strike preserves those pixels and their authored metrics.
+            font_face.select_size(0)
+        else:
+            # Set scalable fonts at 150 DPI, matching fontconvert.py.
+            font_face.set_char_size(size << 6, size << 6, 150, 150)
+
     face = freetype.Face(fontfile)
-    # Set font size at 150 DPI (matching fontconvert.py) BEFORE any glyph load.
-    # load_glyph() with FT_LOAD_RENDER renders at the active size, so calling
-    # it before set_char_size() would waste work at the default size and risk
-    # Invalid_Size_Handle on some fonts.
-    face.set_char_size(size << 6, size << 6, 150, 150)
+    # Select the size BEFORE any glyph load. load_glyph() with FT_LOAD_RENDER
+    # renders at the active size and some drivers reject the default size.
+    configure_size(face, fontfile)
     ligature_glyph_indices = extract_ligature_glyph_indices_fonttools(fontfile)
     fallback_face = None
     if fallback_fontfile:
         fallback_face = freetype.Face(fallback_fontfile)
-        fallback_face.set_char_size(size << 6, size << 6, 150, 150)
+        configure_size(fallback_face, fallback_fontfile)
 
     load_flags = freetype.FT_LOAD_RENDER
     if force_autohint:
         load_flags |= freetype.FT_LOAD_FORCE_AUTOHINT
 
+    def primary_codepoint(code_point):
+        if face.get_char_index(code_point) != 0:
+            return code_point
+        if is_bitmap_font(fontfile):
+            alias = BITMAP_QUOTE_ALIASES.get(code_point)
+            if alias is not None and face.get_char_index(alias) != 0:
+                return alias
+        return code_point
+
     def load_glyph(code_point):
-        glyph_index = face.get_char_index(code_point)
+        glyph_index = face.get_char_index(primary_codepoint(code_point))
         if glyph_index == 0:
             glyph_index = ligature_glyph_indices.get(code_point, 0)
         if glyph_index > 0:
@@ -614,7 +655,8 @@ def rasterize_font_style(fontfile, size, intervals, style_id=0, force_autohint=F
     for i_start, i_end in intervals:
         start = i_start
         for code_point in range(i_start, i_end + 1):
-            has_primary = face.get_char_index(code_point) != 0 or code_point in ligature_glyph_indices
+            source_codepoint = primary_codepoint(code_point)
+            has_primary = face.get_char_index(source_codepoint) != 0 or code_point in ligature_glyph_indices
             has_fallback = fallback_face and fallback_face.get_char_index(code_point) != 0
             if not has_primary and not has_fallback:
                 if start < code_point:
@@ -640,73 +682,84 @@ def rasterize_font_style(fontfile, size, intervals, style_id=0, force_autohint=F
                 continue
 
             bitmap = f.glyph.bitmap
+            glyph_advance = (fp4_from_ft16_16(f.glyph.linearHoriAdvance)
+                             if f.face_flags & freetype.FT_FACE_FLAG_SCALABLE
+                             else ((f.glyph.advance.x + 2) >> 2))
+            glyph_height = bitmap.rows
+            glyph_left = f.glyph.bitmap_left
+            glyph_top = f.glyph.bitmap_top
 
-            # Build 4-bit greyscale bitmap (same logic as fontconvert.py).
-            #
-            # FreeType returns the buffer with bitmap.pitch as the row stride
-            # in bytes, which can be negative when the bitmap is stored
-            # bottom-up. Iterating bitmap.buffer linearly assumes
-            # pitch == width and a top-down layout — that holds in the common
-            # case but breaks on padded or flipped bitmaps and corrupts the
-            # output. Walk by (row, col) using the real pitch instead.
-            #
-            # Cache bitmap.buffer in a local — ctypes struct field access
-            # creates a new Python wrapper object each time, so re-evaluating
-            # it per pixel is catastrophically slow.
-            pixels4g = []
-            px = 0
+            # FreeType returns scalable outlines as 8-bit grayscale but fixed
+            # BDF/PCF strikes as bit-packed monochrome rows. Normalize either
+            # representation directly into CrossPoint's packed 2-bit pixels.
             buf = bitmap.buffer
             abs_pitch = abs(bitmap.pitch)
+            mono_mode = freetype.FT_PIXEL_MODE_MONO
+            gray_mode = freetype.FT_PIXEL_MODE_GRAY
+            if bitmap.pixel_mode not in (mono_mode, gray_mode):
+                raise ValueError(
+                    f"Unsupported FreeType pixel mode {bitmap.pixel_mode} in {fontfile}")
+
+            pixel_rows = []
             for y in range(bitmap.rows):
                 row_offset = y * abs_pitch if bitmap.pitch >= 0 else (bitmap.rows - 1 - y) * abs_pitch
+                row = []
                 for x in range(bitmap.width):
-                    v = buf[row_offset + x]
-                    if x % 2 == 0:
-                        px = (v >> 4)
+                    if bitmap.pixel_mode == mono_mode:
+                        intensity = 255 if buf[row_offset + (x // 8)] & (0x80 >> (x % 8)) else 0
                     else:
-                        px = px | (v & 0xF0)
-                        pixels4g.append(px)
-                        px = 0
-                if bitmap.width % 2 > 0:
-                    pixels4g.append(px)
-                    px = 0
+                        intensity = buf[row_offset + x]
 
-            # Downsample to 2-bit bitmap
+                    row.append(min(3, intensity // 64))
+                pixel_rows.append(row)
+
+            glyph_width = bitmap.width
+            if (is_bitmap_font(fontfile) and face.get_char_index(code_point) == 0
+                    and code_point in (0x201C, 0x201D)):
+                # These legacy strikes contain native curved single quotes but
+                # no Unicode double-curly glyphs. Compose the double quote from
+                # two copies fitted to the strike's authored quotedbl width.
+                single_width = glyph_width
+                quotedbl_index = face.get_char_index(0x0022)
+                if quotedbl_index:
+                    face.load_glyph(quotedbl_index, load_flags)
+                    quotedbl_width = face.glyph.bitmap.width
+                    glyph_advance = ((face.glyph.advance.x + 2) >> 2)
+                else:
+                    quotedbl_width = single_width * 2 + 1
+                    glyph_advance *= 2
+                shift = max(1, quotedbl_width - single_width)
+                glyph_width = shift + single_width
+                composed_rows = []
+                for row in pixel_rows:
+                    composed = [0] * glyph_width
+                    for x, value in enumerate(row):
+                        composed[x] = max(composed[x], value)
+                        composed[x + shift] = max(composed[x + shift], value)
+                    composed_rows.append(composed)
+                pixel_rows = composed_rows
+
             pixels2b = []
-            px = 0
-            pitch = (bitmap.width // 2) + (bitmap.width % 2)
-            for y in range(bitmap.rows):
-                for x in range(bitmap.width):
-                    px = px << 2
-                    bm = pixels4g[y * pitch + (x // 2)]
-                    bm = (bm >> ((x % 2) * 4)) & 0xF
-
-                    if bm >= 12:
-                        px += 3
-                    elif bm >= 8:
-                        px += 2
-                    elif bm >= 4:
-                        px += 1
-
-                    if (y * bitmap.width + x) % 4 == 3:
-                        pixels2b.append(px)
-                        px = 0
-            if (bitmap.width * bitmap.rows) % 4 != 0:
-                # Outer parens are for clarity: in Python `*` binds tighter
-                # than `<<`, so the original `px << (4 - … % 4) * 2` already
-                # evaluates as `px << ((4 - … % 4) * 2)`. Match the explicit
-                # bracketing here so the shift width is obvious at a glance,
-                # mirroring the inner-loop style in fontconvert.py.
-                px = px << ((4 - (bitmap.width * bitmap.rows) % 4) * 2)
-                pixels2b.append(px)
+            packed_pixel = 0
+            packed_count = 0
+            for row in pixel_rows:
+                for value in row:
+                    packed_pixel = (packed_pixel << 2) | value
+                    packed_count += 1
+                    if packed_count == 4:
+                        pixels2b.append(packed_pixel)
+                        packed_pixel = 0
+                        packed_count = 0
+            if packed_count:
+                pixels2b.append(packed_pixel << ((4 - packed_count) * 2))
 
             packed = bytes(pixels2b)
             glyph = GlyphProps(
-                width=bitmap.width,
-                height=bitmap.rows,
-                advance_x=fp4_from_ft16_16(f.glyph.linearHoriAdvance),
-                left=f.glyph.bitmap_left,
-                top=f.glyph.bitmap_top,
+                width=glyph_width,
+                height=glyph_height,
+                advance_x=glyph_advance,
+                left=glyph_left,
+                top=glyph_top,
                 data_length=len(packed),
                 data_offset=total_bitmap_size,
                 code_point=code_point,

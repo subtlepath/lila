@@ -210,3 +210,29 @@ To list all presets with codepoint counts:
 `--force-autohint` — force FreeType's auto-hinter instead of the font's native hinting (useful when a font's built-in hints produce poor results at small sizes).
 
 Install custom fonts via the web interface or manual SD card copy.
+
+### Converting X11 bitmap fonts
+
+The converter also accepts BDF and PCF bitmap strikes. Bitmap input keeps its
+native pixels and authored metrics; it is never resized or resampled.
+Because bitmap fonts do not contain OpenType layout tables, their `.cpfont`
+files do not include OpenType kerning or ligature substitutions.
+
+To bundle a directory of X11 BDF fonts by family, point size, and style:
+
+    python3 lib/EpdFont/scripts/convert-x11-bdf.py x11/ \
+      --output-dir x11/cpfont/ \
+      --target-dpi 150
+
+Each output file contains every encoded glyph in its source BDF strikes. When
+both 75 DPI and 100 DPI strikes exist, the script creates distinct family names
+so one set cannot silently overwrite the other. The reported point size is the
+strike's size in CrossPoint's 150-DPI font convention (`source points × source
+DPI ÷ target DPI`). CrossPoint filenames support only integer point sizes, so the
+script makes colliding rounded sizes strictly increasing to retain every native
+strike. Missing Unicode curly quotes are mapped to each strike's hand-drawn
+legacy `quoteleft` and `quoteright` glyphs; double curly quotes are composed from
+two copies of the corresponding native single quote without resampling. Charter
+strikes copy their missing Unicode hyphen, non-breaking hyphen, figure dash, en
+dash, em dash, horizontal bar, and minus glyphs from the matching New Century
+Schoolbook size and style.
