@@ -143,6 +143,26 @@ On a touch device, tap tabs, books, and the Search icon directly. Tap an active 
 
 The index is created automatically the first time the Library is opened. To pick up later file changes or updated metadata, use **Settings → System → Rebuild library index**. The **Use book metadata** setting controls whether the index reads titles and authors stored inside books.
 
+#### Games
+
+The last Library tab, **Games**, holds a few turn-based games that suit an e-ink screen. Play them alone against the CPU, or sit up to six readers at one "table". Readers connect directly to each other over ESP-NOW; no Wi-Fi network or internet connection is needed. They only need to be within radio range, roughly the same room.
+
+- **Host a table** opens a table that nearby readers can see. As the host you choose what the table plays, add or remove CPU players, and can start a new game at any time. Everyone stays seated when you switch games.
+- **Join a table** lists the tables hosted nearby. Select one to sit down. If a game is already running, you watch it and are dealt into the next one.
+- **Your name** is how other readers see you at a table. The default is based on your reader's radio address.
+- The **Solo** rows start a game against CPU players right away.
+
+Available games:
+
+- **Connect Four** (2 players): drop discs into the columns; the first to line up four in any direction wins. Left/Right choose a column and Confirm drops a disc.
+- **Dots & Boxes** (2–6 players): draw one line per turn. Completing a box scores it and earns another turn. The arrow buttons move between lines and Confirm draws the selected one.
+- **Liar's Dice** (2–6 players): every reader shows only its own cup. On your turn, raise the bid (more dice, or the same count of a higher face) or call **Liar!**. Ones are wild and cannot be bid. Left/Right move between the quantity, the face, **Bid**, and **Liar!**; Up/Down change the value. The loser of a challenge loses a die, and the last player with dice wins.
+- **Murder Mystery** (3–6 players): one suspect, one weapon and one room are sealed in the case file and the other cards are dealt out. On your turn, pick a suspect, weapon and room with Left/Right (column) and Up/Down (card), then choose **Suggest** or **Accuse**. After a suggestion, the first player clockwise who holds one of those cards shows you one in private. If they hold more than one, they pick which. Your notebook fills itself in: a filled box is a card in your hand, and a crossed-out card has been ruled out. The **Casebook** lists earlier suggestions and who answered them. A player who could not answer holds none of the three cards. Accuse only when you are sure: a right accusation wins, and a wrong one takes you out of the running, though you still show cards when asked.
+
+During a game, **Back** opens the table menu: resume, play again, choose another game, let the CPU play for readers who have dropped out, or leave or close the table. If a reader drops out, for example because it went out of range or to sleep, its seat is kept and it rejoins automatically when it comes back. Closing the table as host ends it for everyone.
+
+A table keeps the radio on, which uses more battery than reading, and the reader stays awake while a table is active. After 20 minutes with no moves or button presses, normal auto-sleep resumes.
+
 ### 3.5 File Transfer Screen
 
 The File Transfer screen allows you to upload and manage files on the device. When you enter the screen, choose **Join a Network**, **Calibre Wireless**, or **Create Hotspot**. The reader then starts the web server for the selected mode.

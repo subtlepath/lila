@@ -85,7 +85,8 @@ class ActivityManager {
   void goToUsbDrive();
   void goToSettings();
   void goToFileBrowser(std::string path = {});
-  void goToLibrary();
+  // gamesTab opens the Library on its Games tab (returning from a table).
+  void goToLibrary(bool gamesTab = false);
   void goToBrowser();
   void goToReader(std::string path, bool allowFastInitialRefresh = false);
   void goToSleep(bool fromTimeout = false);

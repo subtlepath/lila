@@ -16,6 +16,8 @@
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
 #include "RecentBooksStore.h"
+#include "activities/games/GamePlayerName.h"
+#include "activities/games/GameTableActivity.h"
 #include "activities/util/ConfirmationActivity.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UIScale.h"
@@ -35,7 +37,36 @@ constexpr unsigned long LONG_PRESS_MS = 1000;
 constexpr int RECENT_TAB = 0;
 constexpr int TITLE_TAB = 1;
 constexpr int AUTHOR_TAB = 2;
-constexpr int TAB_SLOTS = AUTHOR_TAB + 1;
+constexpr int GAMES_TAB = 3;
+constexpr int TAB_SLOTS = GAMES_TAB + 1;
+
+struct GameRow {
+  StrId label;
+  StrId subtitle;
+  UIIcon icon;
+  // Rows that do not launch a table edit the player name instead.
+  bool launches;
+  GameTableActivity::Mode mode;
+  table::GameId game;
+};
+
+constexpr GameRow GAME_ROWS[] = {
+    {StrId::STR_GAMES_HOST, StrId::STR_GAMES_HOST_DESC, UIIcon::Hotspot, true, GameTableActivity::Mode::Host,
+     table::GameId::None},
+    {StrId::STR_GAMES_JOIN, StrId::STR_GAMES_JOIN_DESC, UIIcon::Wifi, true, GameTableActivity::Mode::Join,
+     table::GameId::None},
+    {StrId::STR_GAMES_YOUR_NAME, StrId::STR_GAMES_YOUR_NAME_DESC, UIIcon::Bookmark, false,
+     GameTableActivity::Mode::Host, table::GameId::None},
+    {StrId::STR_GAME_CONNECT_FOUR, StrId::STR_GAME_CONNECT_FOUR_DESC, UIIcon::Blocks, true,
+     GameTableActivity::Mode::Solo, table::GameId::ConnectFour},
+    {StrId::STR_GAME_DOTS_AND_BOXES, StrId::STR_GAME_DOTS_AND_BOXES_DESC, UIIcon::Blocks, true,
+     GameTableActivity::Mode::Solo, table::GameId::DotsAndBoxes},
+    {StrId::STR_GAME_LIARS_DICE, StrId::STR_GAME_LIARS_DICE_DESC, UIIcon::Blocks, true, GameTableActivity::Mode::Solo,
+     table::GameId::LiarsDice},
+    {StrId::STR_GAME_MURDER_MYSTERY, StrId::STR_GAME_MURDER_MYSTERY_DESC, UIIcon::Blocks, true,
+     GameTableActivity::Mode::Solo, table::GameId::MurderMystery},
+};
+constexpr int FIRST_SOLO_ROW = 3;
 
 constexpr bool isDescending(const library::SortOrder order) {
   return order == library::SortOrder::RecentDesc || order == library::SortOrder::TitleDesc ||
@@ -60,16 +91,19 @@ constexpr library::SortOrder orderForTab(const int tab, const uint8_t descending
 const char* tabLabelFor(const int tab) {
   if (tab == TITLE_TAB) return tr(STR_LIBRARY_TAB_TITLE);
   if (tab == AUTHOR_TAB) return tr(STR_LIBRARY_TAB_AUTHOR);
+  if (tab == GAMES_TAB) return tr(STR_LIBRARY_TAB_GAMES);
   return tr(STR_LIBRARY_TAB_RECENT);
 }
 
 }  // namespace
 
-LibraryListActivity::LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
-    : UiTabListActivity("Library", renderer, mappedInput, true) {
-  // Three short tab labels: a full-slot pill would stretch across a third of
-  // the screen, so cap it at the label plus padding (slots stay put).
+LibraryListActivity::LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
+                                         const bool openGamesTab)
+    : UiTabListActivity("Library", renderer, mappedInput, true), openGamesTabOnEnter(openGamesTab) {
+  // Short tab labels: a full-slot pill would stretch across a quarter of the
+  // screen, so cap it at the label plus padding (slots stay put).
   tabPillMaxPad = 16;
+  static_assert(sizeof(GAME_ROWS) / sizeof(GAME_ROWS[0]) == GAME_ROW_COUNT, "Games tab row storage");
 }
 
 void LibraryListActivity::onEnter() {
@@ -104,6 +138,9 @@ void LibraryListActivity::onEnter() {
     LOG_ERR("LIB", "index was built without duplicate detection");
   }
   resolvePinned();
+  // A degraded index hides the tab strip, which would strand the reader on
+  // a Games list with no way to the books; stay on the default shelf then.
+  if (openGamesTabOnEnter && !degraded) selectTab(GAMES_TAB, false);
 
   // Entered while Confirm was still held (typical when launched from the home
   // menu): ignore its release, or we would open whatever sits at row 0.
@@ -221,6 +258,10 @@ void LibraryListActivity::openBookByPath(const std::string& path) {
 }
 
 void LibraryListActivity::activateIndex(const int index) {
+  if (gamesTab()) {
+    launchGameRow(index);
+    return;
+  }
   if (groupsCollapsed) {
     expandGroup(index);
   } else {
@@ -235,7 +276,9 @@ void LibraryListActivity::activateIndex(const int index) {
 bool LibraryListActivity::deleteEligible() const { return !groupsCollapsed && (!query.empty() || !groupable()); }
 
 void LibraryListActivity::onRowLongPress(const int index) {
-  if (isRecentSort(sortOrder)) {
+  if (gamesTab()) {
+    activateIndex(index);
+  } else if (isRecentSort(sortOrder)) {
     showRecentBookOptions(index);
   } else if (deleteEligible()) {
     promptDeleteBook(index);
@@ -458,6 +501,16 @@ void LibraryListActivity::onTabAction(const int index) {
 
 void LibraryListActivity::selectTab(const int index, const bool toggleIfActive) {
   if (index < 0 || index >= TAB_SLOTS) return;
+  if (index == GAMES_TAB) {
+    // No sort order behind this tab: keep the book order, filter and pins as
+    // they are so switching back lands where the reader left off.
+    activeTabIndex = index;
+    auto& nav = activeNav();
+    nav.selected = 0;
+    nav.top = 0;
+    requestUpdate();
+    return;
+  }
   if (toggleIfActive && index == activeTab()) descendingTabs ^= static_cast<uint8_t>(1u << index);
   sortOrder = orderForTab(index, descendingTabs);
   // The filter and the overlap rows hold positions in the old order, so they
@@ -482,7 +535,7 @@ int LibraryListActivity::activeTab() const { return activeTabIndex; }
 const char* LibraryListActivity::tabLabel(const int index) const { return tabLabelFor(index); }
 
 fui::TabIndicator LibraryListActivity::tabIndicator(const int index) const {
-  if (index != activeTab()) return fui::TabIndicator::None;
+  if (index != activeTab() || index == GAMES_TAB) return fui::TabIndicator::None;
   return isDescending(sortOrder) ? fui::TabIndicator::Down : fui::TabIndicator::Up;
 }
 
@@ -494,7 +547,79 @@ int LibraryListActivity::bookRowCount() const {
   return static_cast<int>(index.bookCount()) + (pinned > 0 ? pinned - overlapCount : 0);
 }
 
-int LibraryListActivity::listCount() const { return groupsCollapsed ? static_cast<int>(groupCount) : bookRowCount(); }
+int LibraryListActivity::listCount() const {
+  if (gamesTab()) return GAME_ROW_COUNT;
+  return groupsCollapsed ? static_cast<int>(groupCount) : bookRowCount();
+}
+
+bool LibraryListActivity::gamesTab() const { return activeTabIndex == GAMES_TAB; }
+
+void LibraryListActivity::launchGameRow(const int row) {
+  if (row < 0 || row >= GAME_ROW_COUNT) return;
+  const GameRow& game = GAME_ROWS[row];
+  if (!game.launches) {
+    editPlayerName();
+    return;
+  }
+  auto activity = makeUniqueNoThrow<GameTableActivity>(renderer, mappedInput, game.mode, game.game);
+  if (!activity) {
+    LOG_ERR("LIB", "OOM: game table");
+    return;
+  }
+  app.clearTapFlash();
+  // The table replaces the Library: the index handle and the row windows are
+  // freed while the radio (and its WiFi buffers) is up.
+  index.close();
+  activityManager.replaceActivity(std::move(activity));
+}
+
+// Named here rather than at the table: the keyboard is a pushed activity, and
+// at a live table that would stop the radio loop and time out every guest.
+void LibraryListActivity::editPlayerName() {
+  app.clearTapFlash();
+  auto keyboard =
+      makeUniqueNoThrow<KeyboardEntryActivity>(renderer, mappedInput, tr(STR_GAMES_YOUR_NAME),
+                                               std::string(SETTINGS.gamesPlayerName), table::NAME_LEN, InputType::Text);
+  if (!keyboard) {
+    LOG_ERR("LIB", "OOM: player name keyboard");
+    return;
+  }
+  startActivityForResult(std::move(keyboard), [this](const ActivityResult& result) {
+    swallowHeldReleases();
+    if (!result.isCancelled) setGamePlayerName(std::get<KeyboardResult>(result.data).text.c_str());
+    requestUpdate();
+  });
+}
+
+void LibraryListActivity::buildGameRows(UiScreen& screen) {
+  fui::ListProps props;
+  props.count = GAME_ROW_COUNT;
+  props.action = ACTION_ROW;
+  props.inputMask = fui::InputTouch | fui::InputLongPress;
+  props.labelText = screen.theme().bodyText;
+  props.labelText.maxLines = 1;
+  props.rowGap = std::max<int16_t>(screen.theme().listRowGap, 6);
+  props.headerUnderline = false;
+  syncTabListViewport(screen, props);
+  for (int row = 0; row < GAME_ROW_COUNT; row++) {
+    fui::ListItem item;
+    item.label = I18N.get(GAME_ROWS[row].label);
+    item.subtitle = I18N.get(GAME_ROWS[row].subtitle);
+    item.icon = listIconFor(GAME_ROWS[row].icon, 32);
+    item.actionValue = static_cast<int16_t>(row);
+    if (!GAME_ROWS[row].launches) {
+      gamePlayerName(playerNameBuf, sizeof(playerNameBuf));
+      item.value = playerNameBuf;
+    }
+    if (row == 0) item.sectionHeading = tr(STR_GAMES_SECTION_TABLE);
+    if (row == FIRST_SOLO_ROW) item.sectionHeading = tr(STR_GAMES_SECTION_SOLO);
+    gameItems[row] = item;
+  }
+  props.items = gameItems;
+  props.itemsWindowFirst = 0;
+  props.itemsWindowCount = GAME_ROW_COUNT;
+  screen.list(props);
+}
 
 // Entry position on screen to row position in the sort order. Identity while
 // unfiltered and unpinned, so the shelf costs nothing when nothing is typed.
@@ -653,7 +778,14 @@ void LibraryListActivity::applyFilter() {
 // leave for home.
 void LibraryListActivity::handleBackAction() {
   auto& nav = activeNav();
-  if (!query.empty()) {
+  if (gamesTab()) {
+    if (tabsFocused()) {
+      onGoHome();
+    } else {
+      nav.selected = 0;
+      requestUpdate();
+    }
+  } else if (!query.empty()) {
     query.clear();
     applyFilter();
     nav.selected = 0;
@@ -738,7 +870,9 @@ bool LibraryListActivity::handleButtons() {
   // ActivityManager::loop() before any activity runs, so it cannot land in
   // the freshly opened confirmation and select its default.
   if (mappedInput.wasLongPressed(MappedInputManager::Button::Confirm, LONG_PRESS_MS)) {
-    if (tabsFocused()) {
+    if (gamesTab()) {
+      if (!tabsFocused()) activateIndex(selectedEntry());
+    } else if (tabsFocused()) {
       if (!degraded) toggleSortDirection();
     } else if (isRecentSort(sortOrder)) {
       showRecentBookOptions(selectedEntry());
@@ -776,7 +910,7 @@ void LibraryListActivity::navigateButtons() {
     if (count > 0) moveRingTo(ringPos() == count ? 1 : ringPos() + 1);
   });
   buttonNavigator.onPreviousRelease([this, count] {
-    if (tabsFocused() && !degraded) {
+    if (tabsFocused() && !degraded && !gamesTab()) {
       openSearch();
     } else if (count > 0) {
       moveRingTo(ringPos() <= 1 ? count : ringPos() - 1);
@@ -932,7 +1066,7 @@ void LibraryListActivity::buildHeader(UiScreen& screen) {
     header.leadingIcon = fui::bitmapFromIcon(icon_header_back_32);
     header.leadingAction = ACTION_BACK;
   }
-  if (!degraded) {
+  if (!degraded && !gamesTab()) {
     // Keep both touch actions together on the right; button boards reach
     // rebuild through the row options menu.
     header.trailingIcon = fui::bitmapFromIcon(icon_search_32);
@@ -962,6 +1096,10 @@ void LibraryListActivity::buildScreen(UiScreen& screen) {
                                                 static_cast<int16_t>(metrics.buttonHintsHeight + readoutReserved), 0});
 
   if (!degraded) buildTabBar(screen);
+  if (gamesTab()) {
+    buildGameRows(screen);
+    return;
+  }
   if (bookRowCount() == 0) {
     const char* message = tr(STR_LIBRARY_NO_RESULTS);
     if (filterFailed) {
@@ -996,6 +1134,7 @@ void LibraryListActivity::drawPositionReadout() const {
 }
 
 const char* LibraryListActivity::headerTitle() const {
+  if (gamesTab()) return tr(STR_LIBRARY);
   if (!headerSearchTitle.empty()) return headerSearchTitle.c_str();
   return degraded ? tr(STR_LIBRARY_TITLE_UNSORTED) : tr(STR_LIBRARY);
 }
@@ -1027,6 +1166,13 @@ void LibraryListActivity::render(RenderLock&& lock) {
 }
 
 void LibraryListActivity::drawFooter() {
+  if (gamesTab()) {
+    const auto labels =
+        mappedInput.mapLabels(tabsFocused() ? tr(STR_HOME) : tr(STR_BACK),
+                              tabsFocused() ? tr(STR_TOGGLE) : tr(STR_OPEN), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+    GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
+    return;
+  }
   drawPositionReadout();
   drawHoldHelp();
 

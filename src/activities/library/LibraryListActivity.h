@@ -31,7 +31,8 @@
 // indexed book so an allocation failure remains recoverable on the C3.
 class LibraryListActivity final : public UiTabListActivity {
  public:
-  LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
+  // openGamesTab lands on the Games tab (coming back from a game table).
+  LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool openGamesTab = false);
 
   void onEnter() override;
   void onExit() override;
@@ -111,6 +112,15 @@ class LibraryListActivity final : public UiTabListActivity {
   int groupForBook(int bookEntry) const;
   bool groupable() const;
 
+  // --- Games tab ------------------------------------------------------------
+  // The fourth tab is not a sort order but a launcher: hosting or joining a
+  // table over ESP-NOW, or a solo game. Every index-backed path above is
+  // bypassed while it is active.
+  bool gamesTab() const;
+  void buildGameRows(UiScreen& screen);
+  void launchGameRow(int row);
+  void editPlayerName();
+
   // Screen building
   void buildHeader(UiScreen& screen);
   // Materializes ListItems and their strings for the visible window only.
@@ -174,6 +184,10 @@ class LibraryListActivity final : public UiTabListActivity {
   std::vector<std::string> winTitles;
   std::vector<std::string> winAuthors;
   std::vector<std::string> winHeaders;
+  // Games tab rows are a fixed menu; storage lives here for the render pass.
+  static constexpr int GAME_ROW_COUNT = 7;
+  freeink::ui::ListItem gameItems[GAME_ROW_COUNT];
+  char playerNameBuf[16] = {};
 
   // Pinned overlay state: per store entry its RecentAsc row (0xFFFF when the
   // book is not in the index), and the current-direction rows to skip, sorted
@@ -183,6 +197,7 @@ class LibraryListActivity final : public UiTabListActivity {
   uint8_t pinnedTotal = 0;
   uint8_t overlapCount = 0;
 
+  bool openGamesTabOnEnter = false;
   bool lockNextConfirmRelease = false;
   bool lockNextBackRelease = false;
 
