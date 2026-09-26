@@ -218,7 +218,8 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   // renderable at those sizes, so the range is unambiguous and folds to the
   // point sizes those slots used to mean. Drop this once 1.4 upgrades are done.
   uint8_t storedFontSize = doc["fontSize"] | DEFAULT_FONT_POINT_SIZE;
-  if (storedFontSize <= LEGACY_FONT_SIZE_MAX) {
+  const bool legacyFontSize = storedFontSize <= LEGACY_FONT_SIZE_MAX;
+  if (legacyFontSize) {
     storedFontSize = 12 + storedFontSize * 2;  // 0,1,2,3 -> 12,14,16,18
     needsResave = true;
   }
@@ -242,7 +243,7 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   const char* sfn = doc["sdFontFamilyName"] | "";
   strncpy(sdFontFamilyName, sfn, sizeof(sdFontFamilyName) - 1);
   sdFontFamilyName[sizeof(sdFontFamilyName) - 1] = '\0';
-  if (storedFontFamily == LEGACY_OPENDYSLEXIC && sdFontFamilyName[0] == '\0') {
+  if (storedFontFamily == LEGACY_OPENDYSLEXIC && legacyFontSize && sdFontFamilyName[0] == '\0') {
     fontFamily = NOTOSERIF;
     strncpy(sdFontFamilyName, "OpenDyslexic", sizeof(sdFontFamilyName) - 1);
     sdFontFamilyName[sizeof(sdFontFamilyName) - 1] = '\0';
@@ -342,18 +343,6 @@ float CrossPointSettings::getReaderLineCompression() const {
         case EXTRA_WIDE:
           return 1.2f;
       }
-    case NOTOSANS:
-      switch (lineSpacing) {
-        case TIGHT:
-          return 0.90f;
-        case NORMAL:
-        default:
-          return 0.95f;
-        case WIDE:
-          return 1.0f;
-        case EXTRA_WIDE:
-          return 1.05f;
-      }
   }
 }
 
@@ -407,14 +396,16 @@ int CrossPointSettings::getReaderFontId() const {
       snapToNearestPointSize(BUILTIN_READER_POINT_SIZES, std::size(BUILTIN_READER_POINT_SIZES), fontPointSize);
   const bool sans = (fontFamily == NOTOSANS);
   switch (pt) {
-    case 12:
-      return sans ? NOTOSANS_12_FONT_ID : NOTOSERIF_12_FONT_ID;
-    case 16:
-      return sans ? NOTOSANS_16_FONT_ID : NOTOSERIF_16_FONT_ID;
-    case 18:
-      return sans ? NOTOSANS_18_FONT_ID : NOTOSERIF_18_FONT_ID;
+    case 8:
+      return sans ? HELVETICA_8_FONT_ID : TIMES_8_FONT_ID;
+    case 9:
+      return sans ? HELVETICA_9_FONT_ID : TIMES_9_FONT_ID;
     case 14:
+      return sans ? HELVETICA_14_FONT_ID : TIMES_14_FONT_ID;
+    case 16:
+      return sans ? HELVETICA_16_FONT_ID : TIMES_16_FONT_ID;
+    case 12:
     default:
-      return sans ? NOTOSANS_14_FONT_ID : NOTOSERIF_14_FONT_ID;
+      return sans ? HELVETICA_12_FONT_ID : TIMES_12_FONT_ID;
   }
 }

@@ -4,31 +4,67 @@ set -e
 
 cd "$(dirname "$0")"
 
+# Built-in fonts are native X11 bitmap strikes (Adobe 100 DPI Times/Helvetica),
+# never resampled. Sizes follow CrossPoint's 150-DPI point convention, matching
+# the x11/cpfont names produced by convert-x11-bdf.py:
+#   source pt @ 100 DPI -> 12:8  14:9  18:12  21:14  24:16
+# The 21pt strikes are CrossPoint's hand-tuned additions (x11/font-crosspoint-100dpi).
+# GNU Unifont fills codepoints the Adobe strikes lack (Cyrillic, Hebrew, Arabic,
+# symbols, U+FFFD) at its native 16px.
+X11_DIR="../../../x11/font-adobe-100dpi-1.0.4"
+CROSSPOINT_X11_DIR="../../../x11/font-crosspoint-100dpi"
+UNIFONT="../../../x11/unifont-18.0.01.bdf"
+
 READER_FONT_STYLES=("Regular" "Italic" "Bold" "BoldItalic")
-NOTOSERIF_FONT_SIZES=(12 14 16 18)
-NOTOSANS_FONT_SIZES=(12 14 16 18)
+READER_FONT_SIZES=(8 9 12 14 16)
 
-for size in ${NOTOSERIF_FONT_SIZES[@]}; do
+source_pt() {
+  case "$1" in
+    8) echo 12 ;;
+    9) echo 14 ;;
+    12) echo 18 ;;
+    14) echo 21 ;;
+    16) echo 24 ;;
+    *) echo "No X11 strike mapped for ${1}pt" >&2; exit 1 ;;
+  esac
+}
+
+strike_dir() {
+  case "$1" in
+    14) echo "$CROSSPOINT_X11_DIR" ;;
+    *) echo "$X11_DIR" ;;
+  esac
+}
+
+# X11 file-name style suffixes (Helvetica uses Oblique for italic).
+times_style() {
+  case "$1" in Regular) echo R ;; Italic) echo I ;; Bold) echo B ;; BoldItalic) echo BI ;; esac
+}
+helvetica_style() {
+  case "$1" in Regular) echo R ;; Italic) echo O ;; Bold) echo B ;; BoldItalic) echo BO ;; esac
+}
+
+for size in ${READER_FONT_SIZES[@]}; do
   for style in ${READER_FONT_STYLES[@]}; do
-    font_name="notoserif_${size}_$(echo $style | tr '[:upper:]' '[:lower:]')"
-    font_path="../builtinFonts/source/NotoSerif/NotoSerif-${style}.ttf"
-    output_path="../builtinFonts/${font_name}.h"
-    python fontconvert.py $font_name $size $font_path --2bit --compress --pnum --zopfli > $output_path
+    lower_style=$(echo $style | tr '[:upper:]' '[:lower:]')
+
+    output_path="../builtinFonts/times_${size}_${lower_style}.h"
+    python fontconvert.py times_${size}_${lower_style} $size \
+      "$(strike_dir $size)/tim$(times_style $style)$(source_pt $size).bdf" "$UNIFONT" \
+      --2bit --compress --zopfli > $output_path
+    echo "Generated $output_path"
+
+    output_path="../builtinFonts/helvetica_${size}_${lower_style}.h"
+    python fontconvert.py helvetica_${size}_${lower_style} $size \
+      "$(strike_dir $size)/helv$(helvetica_style $style)$(source_pt $size).bdf" "$UNIFONT" \
+      --2bit --compress --zopfli > $output_path
     echo "Generated $output_path"
   done
 done
 
-for size in ${NOTOSANS_FONT_SIZES[@]}; do
-  for style in ${READER_FONT_STYLES[@]}; do
-    font_name="notosans_${size}_$(echo $style | tr '[:upper:]' '[:lower:]')"
-    font_path="../builtinFonts/source/NotoSans/NotoSans-${style}.ttf"
-    output_path="../builtinFonts/${font_name}.h"
-    python fontconvert.py $font_name $size $font_path --2bit --compress --pnum --zopfli > $output_path
-    echo "Generated $output_path"
-  done
-done
-
-UI_FONT_SIZES=(10 12)
+# UI fonts: UI_10_FONT_ID uses the 9pt strike (closest to the former 10pt UI
+# font's pixel size); SMALL_FONT_ID uses 8pt.
+UI_FONT_SIZES=(9 12)
 UI_FONT_STYLES=("Regular" "Bold")
 
 # Arabic glyphs for UI text (menus, file browser titles). The built-in fonts
@@ -63,27 +99,18 @@ ARABIC_INTERVALS=(
 
 for size in ${UI_FONT_SIZES[@]}; do
   for style in ${UI_FONT_STYLES[@]}; do
-    font_name="ubuntu_${size}_$(echo $style | tr '[:upper:]' '[:lower:]')"
-    font_path="../builtinFonts/source/Ubuntu/Ubuntu-${style}.ttf"
-    hebrew_path="../builtinFonts/source/NotoSansHebrew/NotoSansHebrew-${style}.ttf"
-    arabic_path="../builtinFonts/source/NotoSansArabic/NotoSansArabic-${style}.ttf"
-    # Ubuntu lacks the Latin Extended Additional block (U+1EA0-U+1EF9) used for
-    # Vietnamese tone marks. Append a Vietnamese-only Ubuntu cut so those glyphs
-    # are filled from it while every glyph Ubuntu already has stays unchanged
-    # (fontstack is ordered by descending priority).
-    viet_path="../builtinFonts/source/Ubuntu/Ubuntu-Vietnamese-${style}.ttf"
+    font_name="helveticaui_${size}_$(echo $style | tr '[:upper:]' '[:lower:]')"
     output_path="../builtinFonts/${font_name}.h"
-    python fontconvert.py $font_name $size $font_path $hebrew_path $arabic_path $viet_path \
+    python fontconvert.py $font_name $size \
+      "${X11_DIR}/helv$(helvetica_style $style)$(source_pt $size).bdf" "$UNIFONT" \
       --additional-intervals 0x05D0,0x05EA "${ARABIC_INTERVALS[@]}" > $output_path
     echo "Generated $output_path"
   done
 done
 
-python fontconvert.py notosans_8_regular 8 \
-  ../builtinFonts/source/NotoSans/NotoSans-Regular.ttf \
-  ../builtinFonts/source/NotoSansHebrew/NotoSansHebrew-Regular.ttf \
-  ../builtinFonts/source/NotoSansArabic/NotoSansArabic-Regular.ttf \
-  --additional-intervals 0x05D0,0x05EA "${ARABIC_INTERVALS[@]}" > ../builtinFonts/notosans_8_regular.h
+python fontconvert.py helveticaui_8_regular 8 \
+  "${X11_DIR}/helvR$(source_pt 8).bdf" "$UNIFONT" \
+  --additional-intervals 0x05D0,0x05EA "${ARABIC_INTERVALS[@]}" > ../builtinFonts/helveticaui_8_regular.h
 
 echo ""
 echo "Running compression verification..."

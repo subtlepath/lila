@@ -236,3 +236,8 @@ two copies of the corresponding native single quote without resampling. Charter
 strikes copy their missing Unicode hyphen, non-breaking hyphen, figure dash, en
 dash, em dash, horizontal bar, and minus glyphs from the matching New Century
 Schoolbook size and style.
+
+`x11/font-crosspoint-100dpi/` adds 16pt (22px) and 21pt (29px) Times and
+Helvetica strikes in all four styles, hand-tuned to match the Adobe strikes, so
+both families also get an 11pt size between the Adobe 14pt (9) and 18pt (12)
+strikes and a 14pt size between the Adobe 18pt (12) and 24pt (16) strikes.

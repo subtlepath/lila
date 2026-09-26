@@ -104,6 +104,9 @@ LibraryListActivity::LibraryListActivity(GfxRenderer& renderer, MappedInputManag
   // screen, so cap it at the label plus padding (slots stay put).
   tabPillMaxPad = 16;
   static_assert(sizeof(GAME_ROWS) / sizeof(GAME_ROWS[0]) == GAME_ROW_COUNT, "Games tab row storage");
+  // Row titles use the small slot; the title slot is rebound for the author
+  // line. The header draws its title from the body slot (the same UI font).
+  uiTarget.setFont(fui::GfxRendererTarget::FONT_TITLE, SMALL_FONT_ID);
 }
 
 void LibraryListActivity::onEnter() {
@@ -945,8 +948,10 @@ void LibraryListActivity::buildRows(UiScreen& screen) {
   props.count = static_cast<uint16_t>(count);
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch | fui::InputLongPress;
-  props.labelText = screen.theme().bodyText;
+  props.labelText = screen.theme().smallText;
   props.labelText.maxLines = 1;
+  props.subtitleText = screen.theme().smallText;
+  props.subtitleText.font = fui::GfxRendererTarget::FONT_TITLE;
   // Breathing room between rows; the dense theme default packs the two-line
   // rows edge-to-edge.
   props.rowGap = std::max<int16_t>(screen.theme().listRowGap, 6);
@@ -1049,6 +1054,7 @@ void LibraryListActivity::buildHeader(UiScreen& screen) {
   fui::HeaderProps header;
   header.title = headerTitle();
   header.titleText = theme.titleText;
+  header.titleText.font = fui::GfxRendererTarget::FONT_BODY;
   header.titleText.align = theme.headerTitleAlign;
   header.sidePadding = theme.headerSidePadding;
   header.minTouchSize = theme.minTouchSize;

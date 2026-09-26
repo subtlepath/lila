@@ -26,10 +26,15 @@ parser.add_argument("--force-autohint", dest="force_autohint", action="store_tru
 parser.add_argument("--pnum", dest="pnum", action="store_true", help="Use proportional numerals (pnum OpenType feature) instead of default tabular figures. Reduces visual gaps between digits in running prose.")
 args = parser.parse_args()
 
+import os
 import freetype
 from fontTools.ttLib import TTFont
 
 GlyphProps = namedtuple("GlyphProps", ["width", "height", "advance_x", "left", "top", "data_length", "data_offset", "code_point"])
+
+def is_bitmap_font(font_path):
+    """BDF/PCF strikes are pre-rasterized: no OpenType tables, fixed pixel size."""
+    return os.path.splitext(font_path)[1].lower() in (".bdf", ".pcf")
 
 font_stack = [freetype.Face(f) for f in args.fontstack]
 is2Bit = args.is2Bit
@@ -236,6 +241,8 @@ pnum_glyph_overrides = {}
 pnum_kern_subs = {}  # face_index -> {original_glyph_name: substitute_glyph_name}
 if args.pnum:
     for face_idx, font_path in enumerate(args.fontstack):
+        if is_bitmap_font(font_path):
+            continue
         subs = extract_pnum_subs(font_path)
         if not subs:
             continue
@@ -256,6 +263,25 @@ if args.pnum:
         if count > 0:
             print(f"pnum: {count} glyph substitutions from {font_path}", file=sys.stderr)
 
+def glyph_gray_pixels(bitmap):
+    """Row-major 8-bit intensities for a rendered glyph, honoring pitch.
+
+    Scalable faces render 8-bit grayscale; bitmap strikes render 1-bit mono.
+    """
+    buf = bitmap.buffer
+    pitch = bitmap.pitch
+    abs_pitch = abs(pitch)
+    mono = bitmap.pixel_mode == freetype.FT_PIXEL_MODE_MONO
+    pixels = []
+    for y in range(bitmap.rows):
+        row_offset = y * abs_pitch if pitch >= 0 else (bitmap.rows - 1 - y) * abs_pitch
+        for x in range(bitmap.width):
+            if mono:
+                pixels.append(255 if buf[row_offset + (x >> 3)] & (0x80 >> (x & 7)) else 0)
+            else:
+                pixels.append(buf[row_offset + x])
+    return pixels
+
 def load_glyph(code_point):
     face_index = 0
     while face_index < len(font_stack):
@@ -268,6 +294,14 @@ def load_glyph(code_point):
             return face
         face_index += 1
     return None
+
+# Size faces before any glyph load: BDF/PCF drivers reject rendering at the
+# default size. Bitmap strikes keep their native pixels and metrics.
+for face_path, face in zip(args.fontstack, font_stack):
+    if is_bitmap_font(face_path):
+        face.select_size(0)
+    else:
+        face.set_char_size(size << 6, size << 6, 150, 150)
 
 unmerged_intervals = sorted(intervals + add_ints)
 intervals = []
@@ -289,9 +323,6 @@ for i_start, i_end in unvalidated_intervals:
     if start != i_end + 1:
         intervals.append((start, i_end))
 
-for face in font_stack:
-    face.set_char_size(size << 6, size << 6, 150, 150)
-
 total_size = 0
 all_glyphs = []
 
@@ -303,7 +334,7 @@ for i_start, i_end in intervals:
         # Build out 4-bit greyscale bitmap
         pixels4g = []
         px = 0
-        for i, v in enumerate(bitmap.buffer):
+        for i, v in enumerate(glyph_gray_pixels(bitmap)):
             y = i / bitmap.width
             x = i % bitmap.width
             if x % 2 == 0:
@@ -368,8 +399,11 @@ for i_start, i_end in intervals:
             width = bitmap.width,
             height = bitmap.rows,
             # We use linearHoriAdvance (16.16 fixed-point, unhinted) instead of
-            # advance.x (26.6 fixed-point, grid-fitted to whole pixels by hinter)
-            advance_x = fp4_from_ft16_16(face.glyph.linearHoriAdvance),
+            # advance.x (26.6 fixed-point, grid-fitted to whole pixels by hinter).
+            # Bitmap strikes have no linear advance; their 26.6 advance is authored.
+            advance_x = (fp4_from_ft16_16(face.glyph.linearHoriAdvance)
+                         if face.face_flags & freetype.FT_FACE_FLAG_SCALABLE
+                         else (face.glyph.advance.x + 2) >> 2),
             left = face.glyph.bitmap_left,
             top = face.glyph.bitmap_top,
             data_length = len(packed),
@@ -531,6 +565,8 @@ ppem = size * 150.0 / 72.0
 kern_map = {}  # (leftCp, rightCp) -> adjust
 for face_idx, cps in face_idx_cps.items():
     font_path = args.fontstack[face_idx]
+    if is_bitmap_font(font_path):
+        continue
     subs = pnum_kern_subs.get(face_idx) if args.pnum else None
     kern_map.update(extract_kerning_fonttools(font_path, cps, ppem, pnum_subs=subs))
 
@@ -753,6 +789,8 @@ for cp, fi in lig_cp_to_face_idx.items():
 ligature_pairs = []
 for face_idx, cps in lig_face_idx_cps.items():
     font_path = args.fontstack[face_idx]
+    if is_bitmap_font(font_path):
+        continue
     ligature_pairs.extend(extract_ligatures_fonttools(font_path, cps))
 
 # Deduplicate (keep first occurrence) and sort

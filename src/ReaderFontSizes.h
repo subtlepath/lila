@@ -11,9 +11,9 @@
 // therefore come from whichever family is active: the built-in set below, or the
 // .cpfont files a user installed for an SD family.
 
-// The built-in Noto Serif / Noto Sans families are compiled in at exactly these
+// The built-in Times / Helvetica families are compiled in at exactly these
 // point sizes (see the global font objects in main.cpp).
-inline constexpr uint8_t BUILTIN_READER_POINT_SIZES[] = {12, 14, 16, 18};
+inline constexpr uint8_t BUILTIN_READER_POINT_SIZES[] = {8, 9, 12, 14, 16};
 
 // Point sizes selectable for the active reader font, ascending: the SD family's
 // installed sizes when `sdFamilyName` names one the registry knows, otherwise

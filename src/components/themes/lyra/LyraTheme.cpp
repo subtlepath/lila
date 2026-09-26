@@ -34,6 +34,9 @@ constexpr int topHintButtonY = 345;
 constexpr int maxListValueWidth = 200;
 constexpr int mainMenuIconSize = 32;
 constexpr int mainMenuColumns = 2;
+// SMALL_FONT_ID has little space above its capitals; rotated hint labels
+// shift this far inside their strip to sit clear of the screen edge.
+constexpr int rotatedHintInset = 4;
 int coverWidth = 0;
 
 const uint8_t* iconForName(UIIcon icon) {
@@ -92,13 +95,13 @@ void LyraTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char
     auto truncatedRightLabel = renderer.truncatedText(SMALL_FONT_ID, rightLabel, contentWidth, EpdFontFamily::REGULAR);
     const int rightLabelWidth = renderer.getTextWidth(SMALL_FONT_ID, truncatedRightLabel.c_str());
     renderer.drawText(SMALL_FONT_ID, rect.x + rect.width - LyraMetrics::values.contentSidePadding - rightLabelWidth,
-                      rect.y + 7, truncatedRightLabel.c_str());
+                      rect.y + 11, truncatedRightLabel.c_str());
     labelWidth = std::max(0, contentWidth - rightLabelWidth - hPaddingInSelection);
   }
 
   if (labelWidth > 0) {
     auto truncatedLabel = renderer.truncatedText(UI_10_FONT_ID, label, labelWidth, EpdFontFamily::REGULAR);
-    renderer.drawText(UI_10_FONT_ID, rect.x + LyraMetrics::values.contentSidePadding, rect.y + 6,
+    renderer.drawText(UI_10_FONT_ID, rect.x + LyraMetrics::values.contentSidePadding, rect.y + 9,
                       truncatedLabel.c_str(), true, EpdFontFamily::REGULAR);
   }
 
@@ -119,7 +122,7 @@ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
   constexpr int smallButtonHeight = 15;
   constexpr int buttonHeight = LyraMetrics::values.buttonHintsHeight;
   constexpr int buttonY = LyraMetrics::values.buttonHintsHeight;  // Distance from bottom
-  constexpr int textYOffset = 7;                                  // Distance from top of button to text baseline
+  constexpr int textYOffset = 11;                                 // Distance from top of button to text line top
   // Keyed to the portrait panel width: the 528-wide X3 gets more spacing than
   // the 480-wide boards (X4, X4 Pro, and the other 800x480 panels).
   constexpr int narrowButtonPositions[] = {58, 146, 254, 342};
@@ -170,7 +173,8 @@ void LyraTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
       renderer.drawRoundedRect(buttonMargin, x3ButtonY, buttonWidth, buttonHeight, 1, cornerRadius, false, true, false,
                                true, true);
       const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, topBtn);
-      renderer.drawTextRotated90CW(SMALL_FONT_ID, buttonMargin, x3ButtonY + (buttonHeight + textWidth) / 2, topBtn);
+      renderer.drawTextRotated90CW(SMALL_FONT_ID, buttonMargin + rotatedHintInset,
+                                   x3ButtonY + (buttonHeight + textWidth) / 2, topBtn);
     }
 
     if (bottomBtn != nullptr && bottomBtn[0] != '\0') {
@@ -178,7 +182,8 @@ void LyraTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
       renderer.drawRoundedRect(rightX, x3ButtonY, buttonWidth, buttonHeight, 1, cornerRadius, true, false, true, false,
                                true);
       const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, bottomBtn);
-      renderer.drawTextRotated90CW(SMALL_FONT_ID, rightX, x3ButtonY + (buttonHeight + textWidth) / 2, bottomBtn);
+      renderer.drawTextRotated90CW(SMALL_FONT_ID, rightX + rotatedHintInset, x3ButtonY + (buttonHeight + textWidth) / 2,
+                                   bottomBtn);
     }
   } else {
     // X4 layout: Both buttons stacked on right side
@@ -199,7 +204,8 @@ void LyraTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
       if (labels[i] != nullptr && labels[i][0] != '\0') {
         const int y = topHintButtonY + (i * buttonHeight) + 5;
         const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, labels[i]);
-        renderer.drawTextRotated90CW(SMALL_FONT_ID, x, y + (buttonHeight + textWidth) / 2, labels[i]);
+        renderer.drawTextRotated90CW(SMALL_FONT_ID, x + rotatedHintInset, y + (buttonHeight + textWidth) / 2,
+                                     labels[i]);
       }
     }
   }
@@ -328,13 +334,16 @@ void LyraTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount
     const char* label = labelStr.c_str();
     int textX = tileRect.x + 16;
     const int lineHeight = renderer.getLineHeight(UI_12_FONT_ID);
-    const int textY = tileRect.y + (LyraMetrics::values.menuRowHeight - lineHeight) / 2;
+    // UI_12 has little space above its capitals; nudge down so they, not the
+    // line box, center in the row.
+    const int textY = tileRect.y + (LyraMetrics::values.menuRowHeight - lineHeight) / 2 + 2;
+    const int iconY = tileRect.y + (LyraMetrics::values.menuRowHeight - mainMenuIconSize) / 2;
 
     if (rowIcon != nullptr) {
       UIIcon icon = rowIcon(i);
       const uint8_t* iconBitmap = iconForName(icon);
       if (iconBitmap != nullptr) {
-        renderer.drawIcon(iconBitmap, textX, textY, mainMenuIconSize);
+        renderer.drawIcon(iconBitmap, textX, iconY, mainMenuIconSize);
         textX += mainMenuIconSize + hPaddingInSelection + 2;
       }
     }
