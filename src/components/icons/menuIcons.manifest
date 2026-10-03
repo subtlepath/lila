@@ -1,0 +1,25 @@
+# Row icons for the reader menu and the Home menu: 24px Lucide line icons, one
+# per row, drawn in the row's foreground so they invert with the selection.
+# Icons already in listIcons.h (sun, moon, bookmark, refresh-cw, folder, ...)
+# and readerToolbarIcons.h (contents, text, more) are reused, not repeated here.
+#
+# Regenerate from the repository root with:
+#   python3 freeink-sdk/libs/assets/Icons/tools/gen_icons.py \
+#     --manifest src/components/icons/menuIcons.manifest \
+#     --svgdir freeink-sdk/libs/assets/Icons/lucide/icons \
+#     --sizes 24 --out src/components/icons/menuIcons.h
+menu-position = locate
+menu-footnotes = superscript
+menu-lookup = book-a
+menu-bookmark-add = bookmark-plus
+menu-bookmark-remove = bookmark-minus
+menu-orientation = rotate-cw
+menu-auto-turn = timer
+menu-qr = qr-code
+menu-screenshot = camera
+menu-close-book = log-out
+menu-troubleshoot = wrench
+menu-refresh-screen = eraser
+menu-rebuild = hammer
+menu-settings = settings
+menu-transfer = arrow-right-left

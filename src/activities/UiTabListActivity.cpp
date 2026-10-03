@@ -100,7 +100,7 @@ void UiTabListActivity::buildTabBar(UiScreen& screen) {
   // (slot minus a 4px frame, 8px clearance above the divider) with
   // body-size labels; zero horizontal contentInset disables the tabBar's
   // label-width shrink.
-  const bool tabsFocused = ringPos() == 0;
+  const bool tabsFocused = tabBarFocused();
   if (metrics.tabPillFullSlot) {
     tabProps.text = screen.theme().bodyText;
     tabProps.tabInset = fui::Insets{4, 4, 7, 4};
@@ -129,11 +129,11 @@ void UiTabListActivity::buildTabBar(UiScreen& screen) {
     tabProps.contentInset.right = tabPillMaxPad;
   }
 
-  // Legacy Lyra two-state treatment: with the selection on the tab band, the
-  // band fills gray and the active tab is a solid pill; with the selection
-  // down in the list, the band is plain and the active tab keeps a gray box
-  // with an underline. The 1px rule under the band is always there, drawn
-  // full-width below (not by tabBar, whose rect is inset for side padding).
+  // Two states, never a dither behind a label: with the selection on the tab
+  // band the active tab is the solid pill every focused row uses; with the
+  // selection down in the list it is an underlined label on plain paper. The
+  // 1px rule under the band is always there, drawn full-width below (not by
+  // tabBar, whose rect is inset for side padding).
   fui::StyleSet tabStyles;
   tabStyles.explicitlySet = true;
   tabStyles.normal.foreground = fui::Paint::solid(fui::Color::Black);
@@ -148,9 +148,8 @@ void UiTabListActivity::buildTabBar(UiScreen& screen) {
     tabStyles.selected.foreground = fui::Paint::solid(fui::Color::White);
     tabStyles.selected.radius = screen.theme().listRowRadius;
   } else {
-    tabStyles.selected.background = fui::Paint::dither(fui::Color::LightGray);
     tabStyles.selected.foreground = fui::Paint::solid(fui::Color::Black);
-    tabProps.selectedUnderline = 2;
+    tabProps.selectedUnderline = 3;
   }
   // Focus/flash states keep the pill instead of falling back to an unset
   // (blank) style.
@@ -162,11 +161,6 @@ void UiTabListActivity::buildTabBar(UiScreen& screen) {
   // Tab chrome is a full-width screen band like the legacy GUI tab bar. The
   // remaining list content still stays inside the device safe area.
   const fui::Rect tabRect{frameRect.x, contentTabRect.y, frameRect.width, contentTabRect.height};
-  // Focused band wash is the Lyra treatment; legacy RoundedRaff keeps the
-  // band plain in both states.
-  if (tabsFocused && !metrics.tabPillFullSlot) {
-    screen.target().fill(tabRect, fui::Paint::dither(fui::Color::LightGray));
-  }
   // The band chrome (wash, divider) spans the full screen width, but the tab
   // slots keep the content side padding so the outer pills never touch the
   // bezel. The divider is drawn here rather than by tabBar(), which would

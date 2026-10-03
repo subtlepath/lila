@@ -161,5 +161,11 @@ void EpubReaderChapterSelectionActivity::drawChrome() {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const Rect safe = UITheme::getInstance().getScreenSafeArea(renderer, true, false);
   GUI.drawHeader(renderer, Rect{safe.x, safe.y + metrics.topPadding, safe.width, metrics.headerHeight},
-                 tr(STR_SELECT_CHAPTER));
+                 tr(STR_TOOL_CONTENTS));
+}
+
+// Back leaves for the page, never for the menu that opened this list.
+void EpubReaderChapterSelectionActivity::drawFooter() {
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK_TO_BOOK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+  GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }

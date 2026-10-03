@@ -11,6 +11,7 @@
 #include "MappedInputManager.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 
 namespace fui = freeink::ui;
 
@@ -146,7 +147,10 @@ void KOReaderSettingsActivity::buildScreen(UiScreen& screen) {
       rowValues_[i] =
           KOREADER_STORE.getMatchMethod() == DocumentMatchMethod::FILENAME ? tr(STR_FILENAME) : tr(STR_BINARY);
     } else if (i == 4) {
-      rowValues_[i] = KOREADER_STORE.getSendMetadata() ? tr(STR_STATE_ON) : tr(STR_STATE_OFF);
+      // On/off: a switch, not words.
+      rowItems_[i].toggle = true;
+      rowItems_[i].toggleChecked = KOREADER_STORE.getSendMetadata();
+      rowValues_[i].clear();
     } else if (i == 5) {
       rowValues_[i] =
           KOREADER_STORE.getSyncBehavior() == KOReaderSyncBehavior::SMART ? tr(STR_SMART_SYNC) : tr(STR_ASK_EVERY_TIME);
@@ -161,10 +165,9 @@ void KOReaderSettingsActivity::buildScreen(UiScreen& screen) {
   props.count = static_cast<uint16_t>(MENU_ITEMS);
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  props.valueInset = 8;               // air between the value and the row edge
-  // Label at the value's font size: both sides of the row read as one unit.
-  // maxLines=2 also marks the style caller-owned (see textStyleUnset).
-  props.labelText = screen.theme().smallText;
+  applyListControlStyle(props, screen.theme());
+  // Body-size names, small values: the name leads, its state follows.
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncListViewport(screen, props);
   screen.list(props);

@@ -17,6 +17,7 @@ void RecentBooksStore::toJson(JsonDocument& doc) const {
     obj["title"] = book.title;
     obj["author"] = book.author;
     obj["coverBmpPath"] = book.coverBmpPath;
+    if (book.progress >= 0) obj["progress"] = book.progress;
   }
 }
 
@@ -33,6 +34,7 @@ bool RecentBooksStore::fromJson(JsonVariantConst doc) {
     book.title = obj["title"] | "";
     book.author = obj["author"] | "";
     book.coverBmpPath = obj["coverBmpPath"] | "";
+    book.progress = static_cast<int8_t>(std::clamp(obj["progress"] | -1, -1, 100));
     recentBooks.push_back(book);
   }
 
@@ -45,15 +47,17 @@ void RecentBooksStore::addBook(const std::string& path, const std::string& title
   // Drop stale entries first so a new add can't evict a valid book in their stead.
   pruneMissing();
 
-  // Remove existing entry if present
+  // Remove existing entry if present, keeping its recorded progress
+  int8_t progress = -1;
   auto it =
       std::find_if(recentBooks.begin(), recentBooks.end(), [&](const RecentBook& book) { return book.path == path; });
   if (it != recentBooks.end()) {
+    progress = it->progress;
     recentBooks.erase(it);
   }
 
   // Add to front
-  recentBooks.insert(recentBooks.begin(), {path, title, author, coverBmpPath});
+  recentBooks.insert(recentBooks.begin(), {path, title, author, coverBmpPath, progress});
 
   // Trim to max size
   if (recentBooks.size() > MAX_RECENT_BOOKS) {
@@ -74,6 +78,15 @@ void RecentBooksStore::updateBook(const std::string& path, const std::string& ti
     book.coverBmpPath = coverBmpPath;
     saveToFile();
   }
+}
+
+void RecentBooksStore::setProgress(const std::string& path, const int percent) {
+  const auto value = static_cast<int8_t>(std::clamp(percent, 0, 100));
+  auto it =
+      std::find_if(recentBooks.begin(), recentBooks.end(), [&](const RecentBook& book) { return book.path == path; });
+  if (it == recentBooks.end() || it->progress == value) return;
+  it->progress = value;
+  saveToFile();
 }
 
 bool RecentBooksStore::removeByPath(const std::string& path) {

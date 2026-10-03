@@ -8,6 +8,8 @@
 
 #include "util/HomeButtonInput.h"
 
+class GfxRenderer;
+
 class CrossPointSettings : public PersistableStore<CrossPointSettings> {
  private:
   // Private constructor for singleton
@@ -221,8 +223,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
     QUICK_RESUME_SLEEP_SCREEN_COUNT
   };
 
-  // Sleep screen settings
-  uint8_t sleepScreen = DARK;
+  // Sleep screen settings. Current Page (QUICK_RESUME) keeps the page on the
+  // glass under a small moon; Cover is the private alternative.
+  uint8_t sleepScreen = QUICK_RESUME;
   // Night mode: inverted output polarity, applied to every activity per
   // render by ActivityManager. The sleep screen opts out itself.
   uint8_t screenInverted = 0;
@@ -256,8 +259,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // Set once an NTP sync succeeds. Used to skip re-syncing on every WiFi connect.
   // Resetting to 0 (e.g. via the web UI) forces a re-sync on next WiFi connect.
   uint8_t clockHasBeenSynced = 0;
-  // Text rendering settings
-  uint8_t extraParagraphSpacing = 1;
+  // Text rendering settings. Off sets book paragraphs: the book's own first-line indent, and a half-line gap only
+  // between paragraphs that have neither indent nor margin.
+  uint8_t extraParagraphSpacing = 0;
   static constexpr uint8_t WORD_SPACING_MIN = 50;
   static constexpr uint8_t WORD_SPACING_MAX = 200;
   static constexpr uint8_t WORD_SPACING_STEP = 25;
@@ -293,13 +297,17 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // are selectable; SdCardFontSystem::ensureLoaded() snaps this to the nearest
   // available size (and persists the snap) whenever the family changes.
   uint8_t fontPointSize = DEFAULT_FONT_POINT_SIZE;
+  // WIDE is the designed leading (see ReaderTypography).
   uint8_t lineSpacing = WIDE;
-  uint8_t paragraphAlignment = JUSTIFIED;
+  // BOOK_STYLE is the designed alignment: the book's own, with body text justified where the line is long enough.
+  uint8_t paragraphAlignment = BOOK_STYLE;
   // Auto-sleep timeout setting (default 10 minutes). Legacy sleepTimeout enum values are migration-only.
   uint8_t sleepTimeoutMinutes = 10;
   // E-ink refresh frequency (default 15 pages)
   uint8_t refreshFrequency = REFRESH_15;
-  uint8_t hyphenationEnabled = 0;
+  // Always on: not in SettingsList, so it is neither shown, loaded nor saved. Kept as a field so the
+  // render-spec and cache plumbing that reads it stays as upstream has it.
+  uint8_t hyphenationEnabled = 1;
 
   // Reader screen margin settings
   static constexpr uint8_t SCREEN_MARGIN_MIN = 5;
@@ -440,7 +448,7 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // viewport is renderer/orientation-derived, so the caller supplies it —
   // passing it in keeps a spec from ever existing in a half-filled state.
   // Unlocked for the same reason as statusBarSpec(); see the note above.
-  ReaderRenderSpec readerRenderSpec(uint16_t viewportWidth, uint16_t viewportHeight) const;
+  ReaderRenderSpec readerRenderSpec(const GfxRenderer& renderer, uint16_t viewportWidth, uint16_t viewportHeight) const;
 
   static const char* getFilePath() { return "/.crosspoint/settings.json"; }
   void toJson(JsonDocument& doc) const;
@@ -449,7 +457,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   static void validateFrontButtonMapping(CrossPointSettings& settings);
   static uint8_t sleepTimeoutEnumToMinutes(uint8_t legacyValue);
 
-  float getReaderLineCompression() const;
+  // Multiplier on the reader font's natural line height (GfxRenderer::getLineHeight) that yields the leading for
+  // the current line spacing step.
+  float getReaderLineCompression(int naturalLineHeight) const;
   unsigned long getSleepTimeoutMs() const;
   int getRefreshFrequency() const;
 };

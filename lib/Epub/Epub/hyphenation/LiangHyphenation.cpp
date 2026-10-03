@@ -348,6 +348,11 @@ std::vector<size_t> collectBreakIndexes(const std::vector<CodepointInfo>& cps, c
 // Entry point that runs the full Liang pipeline for a single word.
 std::vector<size_t> liangBreakIndexes(const std::vector<CodepointInfo>& cps,
                                       const SerializedHyphenationPatterns& patterns, const LiangWordConfig& config) {
+  // Too short for any break that honors minPrefix/minSuffix: skip the trie walk.
+  if (cps.size() < config.minPrefix + config.minSuffix) {
+    return {};
+  }
+
   // AugmentedWord uses fixed-size C arrays (no heap allocation) to avoid
   // fragmenting the heap across hundreds of words during page layout.
   AugmentedWord augmented;

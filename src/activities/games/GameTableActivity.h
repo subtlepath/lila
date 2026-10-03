@@ -109,7 +109,7 @@ class GameTableActivity final : public Activity {
   int buildLobbyItems(LobbyItem* items, int capacity) const;
   void showGameMenu(bool gameOver);
   void confirmLeave();
-  void exitToLibrary();
+  void exitToGames();
   void syncViewCursor();
   void publishSnapshot();
 
@@ -139,7 +139,7 @@ class GameTableActivity final : public Activity {
   uint32_t seenRevision = 0xFFFFFFFFu;
   bool uiDirty = true;
   uint32_t lastInputMs = 0;
-  // Swallows the Confirm release that launched this screen from the Library.
+  // Swallows the Confirm release that launched this screen from Games.
   bool lockConfirmRelease = false;
   // Set from inside a popup callback: the popup cannot re-show itself while
   // its own callback is running, so the leave prompt opens next pass.

@@ -2,6 +2,7 @@
 
 #include <LibraryIndexFile.h>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -9,21 +10,28 @@
 
 #include "RecentBooksStore.h"
 #include "activities/UiTabListActivity.h"
+#include "components/HomeCoverCache.h"
 #include "components/OptionPopup.h"
+#include "components/media/book-card.h"
 
-// One Library screen: every indexed book on the card shown by recency, title,
-// or author. The Recent shelf orders by file modification time (when a book
-// landed on the card) and pins the recently OPENED books from RecentBooksStore
-// on top, so active reads and fresh arrivals share one list.
+// Home: the bookshelf. The current book sits on top, ready to resume; every
+// indexed book on the card follows, shown by recency, title, or author. The
+// Recent shelf orders by file modification time (when a book landed on the
+// card) and pins the recently OPENED books from RecentBooksStore on top, so
+// active reads and fresh arrivals share one list. The current book is the
+// hero, so the Recent shelf starts with the book after it.
 //
 // The two-slot row is the whole point rather than a styling choice: the problem
 // being solved is "I cannot find my books because I do not know the authors",
 // and that is answered by a column the eye can sweep, not by a tidier filename.
+// Only the hero carries a cover: one large enough to recognise at a glance
+// earns its space, a column of postage stamps would not.
 //
-// Rows render through fui::list on the UiTabListActivity ring (0 = the sort
-// strip, 1..N = the books), which is what brings touch to rows and tabs. Titles
-// are truncated to one line by the widget — more books on the screen, even if
-// half a name is hidden.
+// Buttons walk hero -> sort strip -> rows. The top of that walk is where the
+// shelf's other doors are: Previous opens Search and Back opens the menu
+// (folders, adding books, games, settings). Rows render through fui::list on
+// the UiTabListActivity ring (0 = the sort strip, 1..N = the books); the hero
+// sits outside the ring and owns focus while heroFocused is set.
 //
 // Only the visible window of rows is materialized per render (strings and
 // ListItems for at most one page). The ordinary shelf therefore keeps one page
@@ -31,11 +39,11 @@
 // indexed book so an allocation failure remains recoverable on the C3.
 class LibraryListActivity final : public UiTabListActivity {
  public:
-  // openGamesTab lands on the Games tab (coming back from a game table).
-  LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool openGamesTab = false);
+  LibraryListActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool cleanInitialRefresh = false);
 
   void onEnter() override;
   void onExit() override;
+  bool isHomeActivity() const override { return true; }
 
  protected:
   // --- UiListActivity / UiTabListActivity contract ---------------------------
@@ -43,16 +51,18 @@ class LibraryListActivity final : public UiTabListActivity {
   void buildScreen(UiScreen& screen) override;
   void activateIndex(int index) override;
   void onRowLongPress(int index) override;
+  void onRowAction(const freeink::ui::ActionEvent& event) override;
   int tabCount() const override;
   int activeTab() const override;
   const char* tabLabel(int index) const override;
   freeink::ui::TabIndicator tabIndicator(int index) const override;
   void onTabAction(int index) override;
   void stepTab(int direction) override;
+  bool tabBarFocused() const override { return tabsFocused(); }
   bool handleCustomInput() override;
   bool handleButtons() override;
   void navigateButtons() override;
-  // The FreeInkUI header owns both the title and search touch target.
+  // The FreeInkUI header owns both the title and its touch targets.
   void drawChrome() override {}
   void drawFooter() override;
   // OptionPopup is a self-contained modal: it owns rendering (and the button
@@ -62,8 +72,8 @@ class LibraryListActivity final : public UiTabListActivity {
  private:
   // The screen's own actions, after the base's ACTION_ROW / ACTION_TAB.
   static constexpr freeink::ui::ActionId ACTION_SEARCH = ACTION_TAB_USER;
-  static constexpr freeink::ui::ActionId ACTION_REBUILD = ACTION_SEARCH + 1;
-  static constexpr freeink::ui::ActionId ACTION_BACK = ACTION_REBUILD + 1;
+  static constexpr freeink::ui::ActionId ACTION_MENU = ACTION_SEARCH + 1;
+  static constexpr freeink::ui::ActionId ACTION_HERO = ACTION_MENU + 1;
 
   // Walk the card and write a fresh index. Blocking, with a popup: at ~70 books
   // it is well under a second, and it only runs when the index is missing or the
@@ -73,12 +83,15 @@ class LibraryListActivity final : public UiTabListActivity {
   // Input
   void openSelectedBook();
   void openSearch();
+  void openMenu();
   // Shared tail of row activation and the options menu's Open entry.
   void openBookByPath(const std::string& path);
   void promptRebuildIndex();
   void resetAfterRebuild();
-  // Recent-row long-press menu: open / remove from recents / delete / rebuild.
+  // Long-press menu for a recently opened book (store entry): open / remove
+  // from recents / delete / rebuild. Index rows get open / delete / rebuild.
   void showRecentBookOptions(int entry);
+  void showBookOptions(const std::string& path, const std::string& title, bool isStoreRow);
   void promptRemoveRecentBook(const std::string& path, const std::string& title);
   // Long-press delete owns the gesture where grouping does not apply: the
   // Recent sort, degraded lists, and any active search result.
@@ -94,11 +107,28 @@ class LibraryListActivity final : public UiTabListActivity {
   // Sub-screens act on button press, so a button still held when we resume must
   // not also act here. Records what to swallow on the next release.
   void swallowHeldReleases();
-  // Staged back-out shared by Button::Back and the header back arrow.
+  // Staged back-out shared by Button::Back: clear the search, expand groups,
+  // return focus to the top, then open the menu.
   void handleBackAction();
   static void searchActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
-  static void rebuildActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
-  static void backActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+  static void menuActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+  static void heroActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+
+  // --- hero (the current book) ------------------------------------------------
+  bool hasHero() const { return !RECENT_BOOKS.getBooks().empty(); }
+  // A search narrows the shelf on purpose; the hero steps aside for it.
+  bool heroShown() const { return hasHero() && query.empty(); }
+  void focusHero();
+  void loadHero();
+  void openHero();
+  // Writes the hero thumb at heroCoverHeight; false leaves the hero text-only.
+  bool generateHeroCover();
+  void buildHero(UiScreen& screen);
+
+  // --- shelf memory -----------------------------------------------------------
+  // Tab, sort, search, focus and scroll survive leaving Home (RAM only).
+  void saveShelf();
+  void restoreShelf();
 
   // Data
   void applyFilter();
@@ -106,20 +136,13 @@ class LibraryListActivity final : public UiTabListActivity {
   int rowFor(int entry) const;
   // fileName, when asked for, is the on-card name the row's icon derives from
   // (the display title may come from metadata and carry no extension).
-  bool rowTextFor(int entry, std::string& title, std::string& author, std::string* fileName = nullptr);
+  // progress, when asked for, is the recorded percent, or -1 when unknown.
+  bool rowTextFor(int entry, std::string& title, std::string& author, std::string* fileName = nullptr,
+                  int* progress = nullptr);
   uint32_t titleInitialFor(int entry);
   bool buildGroupStarts();
   int groupForBook(int bookEntry) const;
   bool groupable() const;
-
-  // --- Games tab ------------------------------------------------------------
-  // The fourth tab is not a sort order but a launcher: hosting or joining a
-  // table over ESP-NOW, or a solo game. Every index-backed path above is
-  // bypassed while it is active.
-  bool gamesTab() const;
-  void buildGameRows(UiScreen& screen);
-  void launchGameRow(int row);
-  void editPlayerName();
 
   // Screen building
   void buildHeader(UiScreen& screen);
@@ -127,6 +150,7 @@ class LibraryListActivity final : public UiTabListActivity {
   void buildRows(UiScreen& screen);
   static void formatInitialHeading(uint32_t initial, std::string& out);
   void formatAuthorHeading(const std::string& author, std::string& out) const;
+  static void formatProgress(int progress, std::string& out);
   void drawPositionReadout() const;
   void drawHoldHelp() const;
   const char* headerTitle() const override;
@@ -134,13 +158,18 @@ class LibraryListActivity final : public UiTabListActivity {
   // Ring 0 is the strip; the selected BOOK is ring - 1, with the strip keeping
   // row 0 as the working selection exactly as the pre-ring code did.
   int selectedEntry() const;
-  bool tabsFocused() const { return ringPos() == 0; }
+  bool tabsFocused() const { return !heroFocused && ringPos() == 0; }
+  bool rowsFocused() const { return !heroFocused && ringPos() > 0; }
 
   // --- pinned recently-opened overlay ---------------------------------------
-  // On the unfiltered Recent shelf the RecentBooksStore entries sit on top, in
-  // read order; the modification-time list follows with those books skipped.
-  // Entries below pinnedCount() are store rows; the rest go through rowFor().
+  // On the unfiltered Recent shelf, newest first, the RecentBooksStore entries
+  // after the hero sit on top, in read order; the modification-time list
+  // follows with every store book (the hero included) skipped. Entries below
+  // pinnedCount() are store rows; the rest go through rowFor().
+  bool overlayActive() const;
   int pinnedCount() const;
+  // Store index of pinned entry `entry`: the hero (store row 0) is not listed.
+  int storeIndexFor(int entry) const { return entry + (hasHero() ? 1 : 0); }
   // Re-match the store against the index (chunked scan). Call whenever the
   // index or the store changes.
   void resolvePinned();
@@ -184,20 +213,40 @@ class LibraryListActivity final : public UiTabListActivity {
   std::vector<std::string> winTitles;
   std::vector<std::string> winAuthors;
   std::vector<std::string> winHeaders;
-  // Games tab rows are a fixed menu; storage lives here for the render pass.
-  static constexpr int GAME_ROW_COUNT = 7;
-  freeink::ui::ListItem gameItems[GAME_ROW_COUNT];
-  char playerNameBuf[16] = {};
+  std::vector<std::string> winValues;
 
   // Pinned overlay state: per store entry its RecentAsc row (0xFFFF when the
-  // book is not in the index), and the current-direction rows to skip, sorted
-  // ascending, so unpinned entries map to sort rows with a <=10-step walk.
+  // book is not in the index) and its index ordinal (row progress lookup), and
+  // the current-direction rows to skip, sorted ascending, so unpinned entries
+  // map to sort rows with a <=10-step walk.
   uint16_t pinnedAscRows[RecentBooksStore::MAX_RECENT_BOOKS] = {};
+  uint16_t pinnedOrdinals[RecentBooksStore::MAX_RECENT_BOOKS] = {};
   uint16_t overlapRows[RecentBooksStore::MAX_RECENT_BOOKS] = {};
   uint8_t pinnedTotal = 0;
   uint8_t overlapCount = 0;
 
-  bool openGamesTabOnEnter = false;
+  // Hero state. Strings are copied out of the store so the render task never
+  // reads a vector the loop task may be rewriting.
+  bool heroFocused = false;
+  // Set when a book opened from the pinned Recent rows: it becomes the hero, so
+  // Home comes back with the hero focused.
+  bool focusHeroOnReturn = false;
+  bool heroCoverReady = false;
+  bool heroCoverPending = false;
+  int heroCoverHeight = 0;
+  int heroProgress = -1;
+  std::string heroPath;
+  std::string heroTitle;
+  std::string heroAuthor;
+  std::string heroCoverPath;
+  char heroProgressText[24] = {};
+  HomeCoverCache heroCover;
+  // Screen-lifetime component props keep the render task's stack small.
+  freeink::ui::BookCardProps heroCard;
+
+  const bool cleanInitialRefresh;
+  // Written by the render task; the loop waits for it before generating a cover.
+  std::atomic<bool> firstRenderDone{false};
   bool lockNextConfirmRelease = false;
   bool lockNextBackRelease = false;
 

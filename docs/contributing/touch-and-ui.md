@@ -4,7 +4,7 @@ CrossPoint runs on touch devices (Seeed Sticky, M5Paper, M5Stack PaperMono, Lily
 
 **There is one supported way to build a new screen: FreeInkUI, hosted through the firmware base classes below.** Touch hit-testing, tap highlighting, long-press, swipe scrolling, and button focus navigation all come from the shared stack; you never hand-roll coordinate math.
 
-The old bridge helpers (`rowTouch`, `colTouch`, `wasTapInRect`, manual rect `contains()` checks) are legacy. They survive only for the two remaining hand-rolled surfaces (the theme-driven home screen and the reader page) and must not appear in new code. PRs that add new uses will be asked to convert.
+The old bridge helpers (`rowTouch`, `colTouch`, `wasTapInRect`, manual rect `contains()` checks) are legacy. They survive only for the one remaining hand-rolled surface (the reader page) and must not appear in new code. PRs that add new uses will be asked to convert.
 
 ---
 
@@ -84,6 +84,20 @@ See [`FileBrowserActivity`](../../src/activities/home/FileBrowserActivity.cpp)'s
 - `TextStyle.maxLines` defaults to 1 and truncates with an ellipsis. Set `maxLines` explicitly on any dialog headline or message that can wrap.
 - Everything stays allocation-free in steady state. A local `std::vector` inside `buildScreen()` is **not** allocation-free even with `reserve()` first: it starts at zero capacity on every call, `reserve()` allocates, and the destructor frees that storage before the call returns — real allocator work and fragmentation risk on every repaint (cursor move, tap flash, ...), not just on data changes. Build `ListItem` rows into activity-owned storage instead, reserved once when the underlying data loads (`onEnter()`/a `load*()` — see the skeleton above and `FileBrowserActivity::rebuildRowItems()`), and reused unchanged by every `buildScreen()` call. Use a fixed-capacity array (e.g. `ListItem rows[MAX]`, as `OptionPopup` and `KOReaderSyncActivity`'s action rows do) when the count is small and bounded. Do not hold FUI `props` across renders — only the row storage they point into.
 
+### Visual language
+
+Every screen is built from the same few parts, so a reader learns them once. The reader menu is the reference; Home (the Library bookshelf) and Settings follow it.
+
+- **One text column.** Header title, info lines and row text start on the same x: `listInset + listSidePadding == headerSidePadding` (24px in Lyra). Values end on the matching right edge.
+- **Two text sizes in lists.** Row names use the body font (`theme.bodyText`). Values, subtitles and section headings use the small font (`theme.smallText`), with headings bold. The bitmap strikes draw 1:1, so text always sits on solid paper or solid ink, never on a dither.
+- **Selection is solid.** The focused row or tab is a black pill with white text and icon (InvertFill with the row radius). A selected tab without focus is underlined. Covers and other images are never inverted; their focus is a 3px frame.
+- **One row grammar.** A switch (`ListItem::toggle`) is an on/off that flips in place. A value is a choice that opens a picker. A bare row opens a screen or runs. Call `applyListControlStyle()` (in `UiAppHelpers.h`) so switches and value insets match everywhere.
+- **Few icons.** Use one 24px Lucide line icon per row, only where it helps scan a short menu (the reader menu, the Home menu). Never add an icon that would repeat on every row of a list (the bookshelf). Menu icons are generated into `components/icons/menuIcons.h` from its manifest.
+- **Covers earn their space.** A cover appears where it identifies a book at a glance: the current book at the top of Home. Lists of books stay text, title over author, so the eye can sweep them.
+- **Group with space, not rules.** Related rows sit together. A group gap is a blank `sectionHeading` (`" "`) with `headerRowHeight = 1`. Named groups (Settings' Troubleshooting, Library initials) get a bold small heading with no underline.
+- **Hints say where Back goes.** Use `« Home` when Back leaves for Home, `« Book` in the reader menu and every screen it opens, and `« Back` otherwise. Home is the root: at the top of the shelf Back opens the Home menu and reads `Menu`. Confirm names the action (`Open`, `Toggle`, the next tab's name) or says `Select`.
+- **The reader menu returns to the page.** Back from any level of the reader menu, and from every screen it opens, goes straight to the page with the reading position kept. Repair tools live under Troubleshooting: More Options → Troubleshooting in the reader, and the end of the System tab in Settings.
+
 ### Component inventory
 
 All under `freeink-sdk/libs/ui/FreeInkUI/include/components/`:
@@ -122,9 +136,9 @@ Because the back gesture arrives as `Button::Back`, most button-era activities g
 
 | Helper | Status |
 |---|---|
-| `wasScreenTapped` / `wasScreenTouchDown` / `isScreenTouchHeld` | Consumed by the FUI snapshot builder. Direct use only in the two legacy surfaces |
+| `wasScreenTapped` / `wasScreenTouchDown` / `isScreenTouchHeld` | Consumed by the FUI snapshot builder. Direct use only in the legacy reader page and ActivityManager's status-bar tap |
 | `wasTapInRect(x, y, w, h)` | Legacy one-off hit test |
-| `rowTouch` / `colTouch` | Legacy row/column band math. Sole remaining user: `HomeActivity` (theme-driven layout) |
+| `rowTouch` / `colTouch` | Legacy row/column band math. No remaining users |
 | `wasSwipe()` | Raw swipe direction, for behavior beyond the global gestures (reader page turns) |
 | `hasTouch()` | Still fine anywhere: gate touch-only chrome (on-screen Cancel/OK pairs) on it |
 

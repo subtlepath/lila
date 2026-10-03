@@ -2064,6 +2064,8 @@ bool ChapterHtmlSlimParser::beginParse() {
     lines.clear();
   }
   tableLineVisibleOffsets.clear();
+  bareParagraphEndPage = -1;
+  bareParagraphEndY = -1;
 
   auto paragraphAlignmentBlockStyle = BlockStyle();
   paragraphAlignmentBlockStyle.textAlignDefined = true;
@@ -2272,8 +2274,30 @@ void ChapterHtmlSlimParser::makePages() {
 
   const int lineHeight = renderer.getLineHeight(fontId, lineCompression);
 
+  BlockStyle& blockStyle = currentTextBlock->getBlockStyle();
+
+  // A hanging indent with no margin to hang into (CSS that leans on a browser's page margin) would start the first
+  // line past the edge of the page: move the block in by the overhang.
+  const bool naturalAlign = blockStyle.alignment == CssTextAlign::Justify ||
+                            blockStyle.alignment == (blockStyle.isRtl ? CssTextAlign::Right : CssTextAlign::Left);
+  if (naturalAlign && blockStyle.textIndentDefined && blockStyle.textIndent < 0) {
+    const int16_t startInset = blockStyle.isRtl ? blockStyle.rightInset() : blockStyle.leftInset();
+    const auto overhang = static_cast<int16_t>(-blockStyle.textIndent - startInset);
+    if (overhang > 0) (blockStyle.isRtl ? blockStyle.marginRight : blockStyle.marginLeft) += overhang;
+  }
+
+  // Book paragraphs: the book's indent marks a new paragraph. Two in a row with no indent and no margin between
+  // them would run together, so they get the half-line gap that extra paragraph spacing gives every paragraph.
+  // Text after a <br> continues its paragraph and never takes the gap.
+  const bool bareParagraph = !extraParagraphSpacing && naturalAlign && blockStyle.textIndentDefined &&
+                             blockStyle.textIndent == 0 && !insideTableCell && listStack.empty() &&
+                             !currentTextBlock->isBlank();
+  if (bareParagraph && !blockStyle.fromBrElement && blockStyle.topInset() <= 0 &&
+      bareParagraphEndPage == completedPageCount && bareParagraphEndY == currentPageNextY) {
+    currentPageNextY += lineHeight / 2;
+  }
+
   // Apply top spacing before the paragraph (stored in pixels)
-  const BlockStyle& blockStyle = currentTextBlock->getBlockStyle();
   if (blockStyle.marginTop > 0) {
     currentPageNextY += blockStyle.marginTop;
   }
@@ -2318,8 +2342,12 @@ void ChapterHtmlSlimParser::makePages() {
     currentPageNextY += blockStyle.paddingBottom;
   }
 
-  // Extra paragraph spacing if enabled (default behavior)
+  // Extra paragraph spacing if enabled
   if (extraParagraphSpacing) {
     currentPageNextY += lineHeight / 2;
   }
+
+  const bool endsBare = bareParagraph && blockStyle.bottomInset() <= 0;
+  bareParagraphEndPage = endsBare ? completedPageCount : -1;
+  bareParagraphEndY = endsBare ? currentPageNextY : -1;
 }

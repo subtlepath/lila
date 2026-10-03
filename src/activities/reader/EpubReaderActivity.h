@@ -30,6 +30,12 @@ class EpubReaderActivity final : public ReaderActivity {
   std::optional<uint32_t> cachedVisibleTextOffset;
   std::optional<uint32_t> currentPageVisibleOffset;
   std::optional<uint32_t> pendingOffsetJump;
+  // The passage a re-pagination keeps on screen. A reflow lands on the page
+  // containing this offset, which usually starts earlier, so re-anchoring on
+  // that page's start would walk back a little with every text size change.
+  // Holds until the reader leaves the page it lands on.
+  std::optional<uint32_t> readingAnchor;
+  int readingAnchorSpine = -1;
   unsigned long lastPageTurnTime = 0UL;
   unsigned long pageTurnDuration = 0UL;
   int8_t pendingManualTurn = 0;
@@ -90,6 +96,13 @@ class EpubReaderActivity final : public ReaderActivity {
   void settleOverlayRefresh();
   int autoTurnOption = 0;  // current auto page-turn rate index (More panel)
   std::vector<EpubReaderMenuActivity::MenuItem> moreItems;
+  // Which level of the menu the More panel shows; the toolbar's own tools
+  // stand in for the first page's Contents and Text rows.
+  EpubReaderMenuActivity::MenuPage morePage = EpubReaderMenuActivity::MenuPage::Main;
+  // The light controls open over the page, not over the menu: the request is
+  // parked until the page has been drawn again, then the loop opens the panel.
+  bool lightPanelRequested = false;
+  std::atomic<bool> lightPanelReady{false};
 
   // Footnote support
   std::vector<FootnoteEntry> currentPageFootnotes;
@@ -99,6 +112,9 @@ class EpubReaderActivity final : public ReaderActivity {
   struct SavedPosition {
     int spineIndex;
     int pageNumber;
+    int pageCount;
+    // Wins over pageNumber: the text may be re-paginated while a note is open.
+    std::optional<uint32_t> textOffset;
   };
   static constexpr int MAX_FOOTNOTE_DEPTH = 3;
   SavedPosition savedPositions[MAX_FOOTNOTE_DEPTH] = {};
@@ -131,9 +147,19 @@ class EpubReaderActivity final : public ReaderActivity {
   bool applyDeferredReposition();
   void clearDeferredReposition();
   void rememberCurrentContentOffset();
+  // readingAnchor while it still lies on `page`; a stale anchor is dropped.
+  std::optional<uint32_t> anchorOnPage(int page);
+  // The offset that names `page` of the current section: the anchor, else the page start.
+  std::optional<uint32_t> readingOffsetForPage(int page);
   bool saveProgress(int spineIndex, int currentPage, int pageCount);
   void jumpToPercent(int percent);
   void onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction action);
+  EpubReaderMenuActivity::MenuContext menuContext() const;
+  // "Times 14": the Text row's value.
+  std::string textSummary() const;
+  void requestLightPanel();
+  // Troubleshooting: drop this book's cache and reopen it at the same place.
+  void rebuildBook();
   // Live section position, or the values cached before a child screen
   // released the section.
   ChapterPosition chapterPosition() const;
@@ -158,11 +184,11 @@ class EpubReaderActivity final : public ReaderActivity {
   // re-paginate the current chapter so changes apply without re-opening the book.
   void applyReaderTextSettings();
   // More panel rows.
-  void buildMoreActions();
+  void buildMoreActions(EpubReaderMenuActivity::MenuPage page);
   std::string moreRowName(int row) const;
   std::string moreRowValue(int row) const;
   void activateMoreRow(int row);
-  void openFootnoteSelect(bool reopenMenuOnCancel);
+  void openFootnoteSelect();
   void openDictionaryWordSelect();
   bool launchKOReaderSync();
   unsigned long confirmLongPressThreshold() const;
@@ -174,6 +200,7 @@ class EpubReaderActivity final : public ReaderActivity {
   void navigateToHref(const std::string& href, bool savePosition = false);
   void restoreSavedPosition();
 
+  void contentMargins(int& top, int& right, int& bottom, int& left) const;
   void renderContents(std::unique_ptr<Page> page, int orientedMarginTop, int orientedMarginRight,
                       int orientedMarginBottom, int orientedMarginLeft);
   void renderStatusBar() const;

@@ -51,9 +51,8 @@ void HomeButtonSettingsActivity::buildScreen(UiScreen& screen) {
   props.count = listCount();
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;
-  // Keep the gesture name and its current action at the same visual weight.
-  props.labelText = screen.theme().smallText;
-  // A default smallText style is treated as inherited by screen.list().
+  // Body-size names, small values: the name leads, its state follows.
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncListViewport(screen, props);
   screen.list(props);

@@ -17,8 +17,6 @@
 class Activity;    // forward declaration
 class RenderLock;  // forward declaration
 
-enum class HomeMenuItem { NONE, FILE_BROWSER, LIBRARY, OPDS_BROWSER, FILE_TRANSFER, SETTINGS_MENU };
-
 /**
  * ActivityManager
  *
@@ -85,15 +83,15 @@ class ActivityManager {
   void goToUsbDrive();
   void goToSettings();
   void goToFileBrowser(std::string path = {});
-  // gamesTab opens the Library on its Games tab (returning from a table).
-  void goToLibrary(bool gamesTab = false);
+  void goToGames();
   void goToBrowser();
   void goToReader(std::string path, bool allowFastInitialRefresh = false);
   void goToSleep(bool fromTimeout = false);
   void goToBoot();
   void goToFullScreenMessage(std::string message, EpdFontFamily::Style style = EpdFontFamily::REGULAR);
   void goToCrashReport();
-  void goHome(HomeMenuItem initialMenuItem = HomeMenuItem::NONE, bool cleanInitialRefresh = false);
+  // Home is the Library bookshelf.
+  void goHome(bool cleanInitialRefresh = false);
 
   // This will move current activity to stack instead of deleting it
   void pushActivity(std::unique_ptr<Activity>&& activity);

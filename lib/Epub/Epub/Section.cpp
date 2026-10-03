@@ -54,7 +54,12 @@ namespace {
 // v47: Word and character spacing in the header (cache validation); cached BlockStyle stores only character spacing.
 // v48: Hangul words wrap at spaces; with hyphenation on they may also split at a line end.
 //      Justification no longer stretches between syllables.
-constexpr uint8_t SECTION_FILE_VERSION = 48;
+// v49: Knuth-Plass line breaking (hyphenation points weighed over the whole paragraph, spaces may shrink),
+//      breaks after visible hyphens with hyphenation off, and justified lines that end exactly on the margin.
+// v50: Book paragraph rhythm (no indent after <br>, a half-line gap between unmarked paragraphs, hanging indents kept
+//      on the page), centred and right-aligned blocks kept under a justified or left setting, and at most two
+//      hyphenated lines in a row.
+constexpr uint8_t SECTION_FILE_VERSION = 50;
 // Written into the version field while a build is in progress; patched to
 // SECTION_FILE_VERSION only when the build is finalized. An abandoned /
 // crash-interrupted .bin therefore carries version 0, which loadSectionFile rejects

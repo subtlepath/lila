@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <PersistableStore.h>
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -10,6 +11,8 @@ struct RecentBook {
   std::string title;
   std::string author;
   std::string coverBmpPath;
+  // Whole-book percent recorded when the reader closes; -1 until then.
+  int8_t progress = -1;
 
   bool operator==(const RecentBook& other) const { return path == other.path; }
 };
@@ -37,6 +40,9 @@ class RecentBooksStore : public PersistableStore<RecentBooksStore> {
 
   void updateBook(const std::string& path, const std::string& title, const std::string& author,
                   const std::string& coverBmpPath);
+
+  // Record the reading percent for an entry; persists only when it changed.
+  void setProgress(const std::string& path, int percent);
 
   // Remove the entry whose path matches (used when a book is removed from recents or finished/read).
   // Returns true if an entry was found and removed (no-op + false otherwise).

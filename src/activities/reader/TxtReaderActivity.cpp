@@ -9,6 +9,9 @@
 #include <Serialization.h>
 #include <Utf8.h>
 
+#include <algorithm>
+#include <iterator>
+
 #include "CrossPointSettings.h"
 #include "ProgressFile.h"
 #include "ReaderActivity.h"
@@ -283,7 +286,8 @@ void TxtReaderActivity::renderPage(GfxRenderer& renderer) {
         const bool lineIsRtl = BidiUtils::startsWithRtl(line.c_str(), BidiUtils::RTL_PARAGRAPH_PROBE_DEPTH);
         uint8_t effectiveAlignment = cachedParagraphAlignment;
         if (lineIsRtl && (effectiveAlignment == CrossPointSettings::LEFT_ALIGN ||
-                          effectiveAlignment == CrossPointSettings::JUSTIFIED)) {
+                          effectiveAlignment == CrossPointSettings::JUSTIFIED ||
+                          effectiveAlignment == CrossPointSettings::BOOK_STYLE)) {
           effectiveAlignment = CrossPointSettings::RIGHT_ALIGN;
         }
         const int textWidth = renderer.getTextAdvanceX(cachedFontId, line.c_str(), EpdFontFamily::REGULAR);
@@ -379,12 +383,26 @@ bool TxtReaderActivity::isAtEndOfBook() const { return initialized && currentPag
 
 void TxtReaderActivity::onReturnFromEndOfBook() { currentPage = totalPages > 0 ? totalPages - 1 : 0; }
 
+// progress.bin: u16 page, u16 reserved, then the u32 byte offset of the passage.
+// The page number is only a fallback (and what the Library reads); the offset
+// survives a re-pagination from a font, margin or orientation change.
 void TxtReaderActivity::saveProgress() const {
-  uint8_t data[4];
+  if (currentPage < 0 || currentPage >= static_cast<int>(pageOffsets.size())) return;
+  const size_t pageStart = pageOffsets[currentPage];
+  const size_t pageEnd =
+      currentPage + 1 < static_cast<int>(pageOffsets.size()) ? pageOffsets[currentPage + 1] : txt->getFileSize();
+  const bool anchorOnPage = readingAnchor.has_value() && *readingAnchor >= pageStart && *readingAnchor < pageEnd;
+  const auto offset = static_cast<uint32_t>(anchorOnPage ? *readingAnchor : pageStart);
+
+  uint8_t data[8];
   data[0] = currentPage & 0xFF;
   data[1] = (currentPage >> 8) & 0xFF;
   data[2] = 0;
   data[3] = 0;
+  data[4] = offset & 0xFF;
+  data[5] = (offset >> 8) & 0xFF;
+  data[6] = (offset >> 16) & 0xFF;
+  data[7] = (offset >> 24) & 0xFF;
   if (!ProgressFile::writeAtomic(txt->getCachePath(), data, sizeof(data))) {
     LOG_ERR("TRS", "Failed to save progress: page %d", currentPage);
   }
@@ -393,8 +411,22 @@ void TxtReaderActivity::saveProgress() const {
 void TxtReaderActivity::loadProgress() {
   HalFile f;
   if (Storage.openFileForRead("TRS", txt->getCachePath() + "/progress.bin", f)) {
-    uint8_t data[4];
-    if (f.read(data, 4) == 4) {
+    uint8_t data[8];
+    const int size = f.read(data, sizeof(data));
+    if (size == 8 && !pageOffsets.empty()) {
+      const size_t offset = static_cast<size_t>(data[4]) | (static_cast<size_t>(data[5]) << 8) |
+                            (static_cast<size_t>(data[6]) << 16) | (static_cast<size_t>(data[7]) << 24);
+      if (offset < txt->getFileSize()) {
+        // The page that starts at or before the offset.
+        const auto next = std::upper_bound(pageOffsets.begin(), pageOffsets.end(), offset);
+        currentPage = static_cast<int>(std::distance(pageOffsets.begin(), next)) - 1;
+        readingAnchor = offset;
+        LOG_DBG("TRS", "Loaded progress: offset %u -> page %d/%d", static_cast<unsigned>(offset), currentPage,
+                totalPages);
+        return;
+      }
+    }
+    if (size >= 4) {
       currentPage = data[0] + (data[1] << 8);
       if (currentPage >= totalPages) {
         currentPage = totalPages - 1;

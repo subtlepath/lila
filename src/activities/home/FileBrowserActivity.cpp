@@ -646,8 +646,10 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   props.action = ACTION_ROW;
   // Tap opens/navigates; long-press shows entry actions (physical buttons stay in loop()).
   props.inputMask = fui::InputTouch | fui::InputLongPress;
-  props.valueInset = 8;  // air between the extension and the row edge
+  applyListControlStyle(props, screen.theme());
   // Names use up to two small-font lines; shared list layout sizes each row.
+  // Small, not body: long file names, and the CJK fallback prewarm batches
+  // these rows with the path band, which draws in the small font.
   fui::TextStyle label = screen.theme().smallText;
   label.maxLines = 2;
   props.labelText = label;

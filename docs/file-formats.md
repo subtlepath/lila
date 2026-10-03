@@ -90,6 +90,27 @@ if (parsedSize != fileSize) {
 
 ## `section.bin`
 
+### Version 50
+
+Version 50 keeps the version 49 serialized layout unchanged. It was bumped
+because pages are now set with book paragraph rhythm: text after a `<br>` is
+not indented, two consecutive paragraphs with neither a first-line indent nor
+any margin between them are separated by half a line, and a hanging indent
+with no margin to hang into is moved onto the page. A justified or left
+alignment setting no longer overrides the book's centred and right-aligned
+blocks, and the line breaker avoids more than two hyphenated lines in a row.
+Cached pages from version 49 no longer match.
+
+### Version 49
+
+Version 49 keeps the version 48 serialized layout unchanged. It was bumped
+because paragraphs are now broken into lines with the Knuth-Plass total-fit
+algorithm: hyphenation points, visible hyphens and word spaces are weighed over
+the whole paragraph, justified spaces may shrink by up to a third, and the spare
+width of a justified line is spread so the line ends exactly on the margin.
+Breaks after visible hyphens and dashes are also allowed with hyphenation off.
+Cached line breaks and word positions from version 48 no longer match.
+
 ### Version 48
 
 Version 48 keeps the version 47 serialized layout unchanged. It was bumped

@@ -4,3 +4,4 @@
 #     --svgdir freeink-sdk/libs/assets/Icons/lucide/icons \
 #     --sizes 32 --out src/components/icons/headerIcons.h
 header-back = arrow-left
+header-menu = menu

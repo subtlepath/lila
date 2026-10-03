@@ -56,6 +56,9 @@ size_t byteOffsetForIndex(const std::vector<CodepointInfo>& cps, const size_t in
   return (index < cps.size()) ? cps[index].byteOffset : (cps.empty() ? 0 : cps.back().byteOffset);
 }
 
+// U+2011 exists to forbid the break an ordinary hyphen allows.
+constexpr uint32_t NON_BREAKING_HYPHEN = 0x2011;
+
 // Builds a vector of break information from explicit hyphen markers in the given codepoints.
 // Only hyphens that appear between two alphabetic characters are considered valid breaks.
 //
@@ -72,7 +75,8 @@ std::vector<Hyphenator::BreakInfo> buildExplicitBreakInfos(const std::vector<Cod
 
   for (size_t i = 1; i + 1 < cps.size(); ++i) {
     const uint32_t cp = cps[i].value;
-    if (!isExplicitHyphen(cp) || !isAlphabetic(cps[i - 1].value) || !isAlphabetic(cps[i + 1].value)) {
+    if (!isExplicitHyphen(cp) || cp == NON_BREAKING_HYPHEN || !isAlphabetic(cps[i - 1].value) ||
+        !isAlphabetic(cps[i + 1].value)) {
       continue;
     }
     // Offset points to the next codepoint so rendering starts after the hyphen marker.
@@ -269,6 +273,16 @@ std::vector<Hyphenator::BreakInfo> Hyphenator::breakOffsets(const std::string& w
     breaks.push_back({byteOffsetForIndex(cps, idx), needsHyphen});
   }
 
+  return breaks;
+}
+
+std::vector<Hyphenator::BreakInfo> Hyphenator::visibleHyphenBreakOffsets(const std::string& word) {
+  auto cps = collectCodepoints(word);
+  trimSurroundingPunctuationAndFootnote(cps);
+  auto breaks = buildExplicitBreakInfos(cps);
+  breaks.erase(
+      std::remove_if(breaks.begin(), breaks.end(), [](const BreakInfo& info) { return info.requiresInsertedHyphen; }),
+      breaks.end());
   return breaks;
 }
 

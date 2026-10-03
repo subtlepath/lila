@@ -64,6 +64,16 @@ intervals = [
     # Croatian digraphs (DŽ/Lj/Nj), Pinyin caron variants,
     # European diacritical variants, Romanian (Ș/ș/Ț/ț)
     (0x01C4, 0x021F),
+    ### Latin Extended Additional (Indic transliteration subset) ###
+    # IAST, Pali and ISO 15919: Ḍ Ḥ Ḷ Ḹ Ḻ Ṁ Ṃ Ṅ Ṇ Ṉ Ṛ Ṝ Ṟ Ṣ Ṭ and their lowercase.
+    # Text is composed to NFC before layout, so these arrive precomposed.
+    (0x1E0C, 0x1E0D),
+    (0x1E24, 0x1E25),
+    (0x1E36, 0x1E3B),
+    (0x1E40, 0x1E49),
+    (0x1E5A, 0x1E5F),
+    (0x1E62, 0x1E63),
+    (0x1E6C, 0x1E6D),
     ### Vietnamese Extended ###
     # All precomposed Vietnamese characters with tone marks
     # Ả Ấ Ầ Ẩ Ẫ Ậ Ắ Ằ Ẳ Ẵ Ặ Ẹ Ẻ Ẽ Ế Ề Ể Ễ Ệ Ỉ Ị Ọ Ỏ Ố Ồ Ổ Ỗ Ộ Ớ Ờ Ở Ỡ Ợ Ụ Ủ Ứ Ừ Ử Ữ Ự Ỳ Ỵ Ỷ Ỹ

@@ -1,5 +1,6 @@
 #include "CrossPointSettings.h"
 
+#include <GfxRenderer.h>
 #include <I18n.h>
 #include <Logging.h>
 #include <ObfuscationUtils.h>
@@ -12,6 +13,7 @@
 
 #include "I18nKeys.h"
 #include "ReaderFontSizes.h"
+#include "ReaderTypography.h"
 #include "SettingsList.h"
 #include "fontIds.h"
 
@@ -100,7 +102,7 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
   if (dictionaryName[0] != '\0') {
     doc["dictionaryName"] = dictionaryName;
   }
-  // Games player name -- edited from Library > Games, not in SettingsList
+  // Games player name -- edited from the Games screen, not in SettingsList
   if (gamesPlayerName[0] != '\0') {
     doc["gamesPlayerName"] = gamesPlayerName;
   }
@@ -291,15 +293,18 @@ CrossPointSettings::StatusBarSpec CrossPointSettings::statusBarSpec() const {
   return spec;
 }
 
-ReaderRenderSpec CrossPointSettings::readerRenderSpec(const uint16_t viewportWidth,
+ReaderRenderSpec CrossPointSettings::readerRenderSpec(const GfxRenderer& renderer, const uint16_t viewportWidth,
                                                       const uint16_t viewportHeight) const {
   ReaderRenderSpec spec;
   spec.fontId = getReaderFontId();
-  spec.lineCompression = getReaderLineCompression();
+  spec.lineCompression = getReaderLineCompression(renderer.getLineHeight(spec.fontId));
   spec.characterSpacing = getCharacterSpacing();
   spec.wordSpacingPercent = wordSpacing;
   spec.extraParagraphSpacing = extraParagraphSpacing != 0;
   spec.paragraphAlignment = paragraphAlignment;
+  if (paragraphAlignment == BOOK_STYLE && !ReaderTypography::measureJustifies(renderer, spec.fontId, viewportWidth)) {
+    spec.paragraphAlignment = LEFT_ALIGN;
+  }
   spec.viewportWidth = viewportWidth;
   spec.viewportHeight = viewportHeight;
   spec.hyphenationEnabled = hyphenationEnabled != 0;
@@ -309,7 +314,15 @@ ReaderRenderSpec CrossPointSettings::readerRenderSpec(const uint16_t viewportWid
   return spec;
 }
 
-float CrossPointSettings::getReaderLineCompression() const {
+float CrossPointSettings::getReaderLineCompression(const int naturalLineHeight) const {
+  if (sdFontFamilyName[0] == '\0' && naturalLineHeight > 0) {
+    const uint8_t pt =
+        snapToNearestPointSize(BUILTIN_READER_POINT_SIZES, std::size(BUILTIN_READER_POINT_SIZES), fontPointSize);
+    const int pitch = ReaderTypography::builtinLinePitch(fontFamily == NOTOSANS, pt, lineSpacing);
+    // A quarter pixel over the pitch, so the layout's rounding and truncating line-height paths both land on it.
+    if (pitch > 0) return (static_cast<float>(pitch) + 0.25f) / static_cast<float>(naturalLineHeight);
+  }
+
   // SD card and vector fonts get a wider scale than the built-ins: their
   // faces carry their own (often generous) natural line height, so the old
   // Bookerly-tuned 1.1/1.2 steps were visually near-indistinguishable. At
@@ -329,21 +342,7 @@ float CrossPointSettings::getReaderLineCompression() const {
     }
   }
 
-  switch (fontFamily) {
-    case NOTOSERIF:
-    default:
-      switch (lineSpacing) {
-        case TIGHT:
-          return 0.95f;
-        case NORMAL:
-        default:
-          return 1.0f;
-        case WIDE:
-          return 1.1f;
-        case EXTRA_WIDE:
-          return 1.2f;
-      }
-  }
+  return 1.0f;
 }
 
 unsigned long CrossPointSettings::getSleepTimeoutMs() const {

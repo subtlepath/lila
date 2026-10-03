@@ -16,9 +16,9 @@
 #include "boot_sleep/SleepActivity.h"
 #include "browser/OpdsBookBrowserActivity.h"
 #include "components/HeaderBackTapTarget.h"
+#include "games/GamesActivity.h"
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
-#include "home/HomeActivity.h"
 #include "library/LibraryListActivity.h"
 #include "network/CrossPointWebServerActivity.h"
 #include "network/UsbDriveActivity.h"
@@ -116,7 +116,7 @@ void ActivityManager::loop() {
     // (no status bar there to tap). Touch boards only, like the swipe itself.
     bool statusBarTap = false;
     if (mappedInput.hasTouch() &&
-        (currentActivity->name == "Home" || currentActivity->name == "FileBrowser" ||
+        (currentActivity->name == "Library" || currentActivity->name == "FileBrowser" ||
          currentActivity->name == "Settings" || currentActivity->name == "NetworkModeSelection")) {
       int tx = 0;
       int ty = 0;
@@ -268,10 +268,10 @@ void ActivityManager::goToFileBrowser(std::string path) {
   replaceActivity(std::make_unique<FileBrowserActivity>(renderer, mappedInput, std::move(path)));
 }
 
-void ActivityManager::goToLibrary(const bool gamesTab) {
-  auto activity = makeUniqueNoThrow<LibraryListActivity>(renderer, mappedInput, gamesTab);
+void ActivityManager::goToGames() {
+  auto activity = makeUniqueNoThrow<GamesActivity>(renderer, mappedInput);
   if (!activity) {
-    LOG_ERR("ACT", "OOM: library activity");
+    LOG_ERR("ACT", "OOM: games activity");
     return;
   }
   replaceActivity(std::move(activity));
@@ -320,23 +320,15 @@ void ActivityManager::goToFullScreenMessage(std::string message, EpdFontFamily::
   replaceActivity(std::make_unique<FullScreenMessageActivity>(renderer, mappedInput, std::move(message), style));
 }
 
-void ActivityManager::goHome(HomeMenuItem initialMenuItem, bool cleanInitialRefresh) {
-  if (initialMenuItem == HomeMenuItem::NONE && currentActivity) {
-    const auto& activityName = currentActivity->name;
-    if (activityName == "FileBrowser") {
-      initialMenuItem = HomeMenuItem::FILE_BROWSER;
-    } else if (activityName == "Library") {
-      initialMenuItem = HomeMenuItem::LIBRARY;
-    } else if (activityName == "OpdsBookBrowser") {
-      initialMenuItem = HomeMenuItem::OPDS_BROWSER;
-    } else if (activityName == "CrossPointWebServer") {
-      initialMenuItem = HomeMenuItem::FILE_TRANSFER;
-    } else if (activityName == "Settings") {
-      initialMenuItem = HomeMenuItem::SETTINGS_MENU;
-    }
+void ActivityManager::goHome(const bool cleanInitialRefresh) {
+  auto activity = makeUniqueNoThrow<LibraryListActivity>(renderer, mappedInput, cleanInitialRefresh);
+  if (!activity) {
+    LOG_ERR("ACT", "OOM: library activity");
+    return;
   }
-  replaceActivity(std::make_unique<HomeActivity>(renderer, mappedInput, initialMenuItem, cleanInitialRefresh));
+  replaceActivity(std::move(activity));
 }
+
 void ActivityManager::goToCrashReport() { replaceActivity(std::make_unique<CrashActivity>(renderer, mappedInput)); }
 
 void ActivityManager::pushActivity(std::unique_ptr<Activity>&& activity) {

@@ -106,7 +106,7 @@ void GameTableActivity::onEnter() {
     }
   }
   LOG_INF("GAME", "table open: mode=%u heap=%u", static_cast<unsigned>(mode), static_cast<unsigned>(ESP.getFreeHeap()));
-  // Entered from the Library on a Confirm press; its release must not act here.
+  // Entered from Games on a Confirm press; its release must not act here.
   lockConfirmRelease = mappedInput.isPressed(MappedInputManager::Button::Confirm);
   syncViewCursor();
   publishSnapshot();
@@ -215,7 +215,7 @@ void GameTableActivity::handleInput(const uint32_t nowMs) {
   const bool confirm = mappedInput.wasReleased(MappedInputManager::Button::Confirm);
   switch (currentScreen()) {
     case Screen::RadioFailed:
-      if (back || confirm) exitToLibrary();
+      if (back || confirm) exitToGames();
       break;
     case Screen::Browse:
       handleBrowseInput(nowMs);
@@ -229,7 +229,7 @@ void GameTableActivity::handleInput(const uint32_t nowMs) {
           session.browse();
           selection = 0;
         } else {
-          exitToLibrary();
+          exitToGames();
         }
       }
       break;
@@ -298,12 +298,12 @@ void GameTableActivity::handleTap(const int x, const int y, const uint32_t nowMs
       } else if (screen == Screen::Lobby) {
         confirmLeave();
       } else if (screen == Screen::Browse || screen == Screen::RadioFailed) {
-        exitToLibrary();
+        exitToGames();
       } else if (screen == Screen::Notice || screen == Screen::Joining) {
         if (mode == Mode::Join) {
           session.browse();
         } else {
-          exitToLibrary();
+          exitToGames();
         }
       }
       break;
@@ -316,7 +316,7 @@ void GameTableActivity::handleBrowseInput(const uint32_t nowMs) {
   using Button = MappedInputManager::Button;
   const int count = session.tableCount();
   if (mappedInput.wasReleased(Button::Back) || mappedInput.wasBackGesture()) {
-    exitToLibrary();
+    exitToGames();
     return;
   }
   if (count == 0) {
@@ -404,13 +404,13 @@ void GameTableActivity::runLobbyItem(const LobbyItem& item, const uint32_t nowMs
 // table asks first.
 void GameTableActivity::confirmLeave() {
   if (session.role() == TableSession::Role::Solo) {
-    exitToLibrary();
+    exitToGames();
     return;
   }
   const bool host = session.role() == TableSession::Role::Host;
   const char* options[] = {tr(STR_CANCEL), host ? tr(STR_GAMES_CLOSE_TABLE) : tr(STR_GAMES_LEAVE_TABLE)};
   popup.show(host ? tr(STR_GAMES_CLOSE_TABLE) : tr(STR_GAMES_LEAVE_TABLE), options, 2, 0, [this](const int choice) {
-    if (choice == 1) exitToLibrary();
+    if (choice == 1) exitToGames();
   });
   uiDirty = true;
 }
@@ -492,7 +492,7 @@ void GameTableActivity::showGameMenu(const bool gameOver) {
                    break;
                  case LEAVE:
                    if (session.role() == TableSession::Role::Solo) {
-                     exitToLibrary();
+                     exitToGames();
                    } else {
                      leavePromptPending = true;
                    }
@@ -503,9 +503,9 @@ void GameTableActivity::showGameMenu(const bool gameOver) {
   uiDirty = true;
 }
 
-void GameTableActivity::exitToLibrary() {
+void GameTableActivity::exitToGames() {
   exiting = true;
-  activityManager.goToLibrary(true);
+  activityManager.goToGames();
 }
 
 void GameTableActivity::publishSnapshot() {
@@ -621,7 +621,7 @@ void GameTableActivity::drawCenteredLines(const char* primary, const char* secon
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int width = renderer.getScreenWidth();
   const int height = renderer.getScreenHeight();
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, width, metrics.headerHeight}, tr(STR_LIBRARY_TAB_GAMES));
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, width, metrics.headerHeight}, tr(STR_GAMES));
   const int top = metrics.topPadding + metrics.headerHeight;
   const int bottom = height - metrics.buttonHintsHeight;
   const Rect box{SIDE_PADDING, top, width - 2 * SIDE_PADDING, (bottom - top) / 2};
@@ -704,7 +704,7 @@ void GameTableActivity::seatLabel(const Snapshot& s, const uint8_t slot, char* o
 }
 
 const char* GameTableActivity::tableTitle(const Snapshot& s, char* buf, const size_t size) const {
-  if (s.role == TableSession::Role::Solo) return tr(STR_LIBRARY_TAB_GAMES);
+  if (s.role == TableSession::Role::Solo) return tr(STR_GAMES);
   snprintf(buf, size, tr(STR_GAMES_TABLE_OF), s.seats[table::HOST_SLOT].name);
   return buf;
 }

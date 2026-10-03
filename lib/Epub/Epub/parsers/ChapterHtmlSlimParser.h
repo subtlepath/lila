@@ -121,6 +121,10 @@ class ChapterHtmlSlimParser {
 
   // Anchor-to-page mapping: tracks which page each HTML id attribute lands on
   int completedPageCount = 0;
+  // Where the last paragraph with neither first-line indent nor margins ended (page, y), or -1. A paragraph like it
+  // that starts right there gets a half-line gap, since nothing else would show where one ends.
+  int bareParagraphEndPage = -1;
+  int bareParagraphEndY = -1;
   std::vector<std::pair<std::string, uint16_t>> anchorData;
   std::string pendingAnchorId;          // deferred until after previous text block is flushed
   std::vector<std::string> tocAnchors;  // the list of anchors that are TOC chapter boundaries

@@ -28,7 +28,6 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "images/Logo120.h"
-#include "images/MoonIcon.h"
 
 namespace {
 
@@ -491,6 +490,35 @@ bool drawSleepPopupPreservingFrame(GfxRenderer& renderer) {
   return true;
 }
 
+// Current Page sleep marker: a battery-sized crescent on a paper chip at the
+// start of the status bar, where the (now stale) battery icon sits. Drawn in
+// the renderer's current orientation, inside the viewable area.
+void drawSleepIndicator(const GfxRenderer& renderer) {
+  constexpr int MOON = 14;
+  constexpr int PAD = 2;
+  constexpr int CHIP = MOON + PAD * 2;
+  int top, right, bottom, left;
+  renderer.getOrientedViewableTRBL(&top, &right, &bottom, &left);
+  const int chipX = left + UITheme::getInstance().getMetrics().statusBarHorizontalMargin + 1 - PAD;
+  const int chipY = renderer.getScreenHeight() - bottom - CHIP - 1;
+  renderer.fillRoundedRect(chipX, chipY, CHIP, CHIP, PAD * 2, Color::White);
+
+  // Disc minus an offset disc, in half-pixel units so pixel centres sample both.
+  constexpr int R = MOON;
+  constexpr int CUT_DX = 9;
+  constexpr int CUT_DY = -7;
+  constexpr int CUT_R = 11;
+  for (int row = 0; row < MOON; row++) {
+    for (int col = 0; col < MOON; col++) {
+      const int px = col * 2 + 1 - R;
+      const int py = row * 2 + 1 - R;
+      const bool inDisc = px * px + py * py <= R * R;
+      const bool inCut = (px - CUT_DX) * (px - CUT_DX) + (py - CUT_DY) * (py - CUT_DY) <= CUT_R * CUT_R;
+      if (inDisc && !inCut) renderer.drawPixel(chipX + PAD + col, chipY + PAD + row, true);
+    }
+  }
+}
+
 void releaseSdFontCachesForDecode(const GfxRenderer& renderer) {
   if (auto* fcm = renderer.getFontCacheManager()) {
     LOG_DBG("SLP", "Free heap before SD font cache release: %d bytes", ESP.getFreeHeap());
@@ -876,8 +904,15 @@ void SleepActivity::renderCoverSleepScreen() const {
 }
 
 void SleepActivity::renderLastScreenSleepScreen() const {
-  const auto pageHeight = renderer.getScreenHeight();
-  renderer.drawImage(MoonIcon, 0, pageHeight - MOONICON_HEIGHT, MOONICON_WIDTH, MOONICON_HEIGHT);
+  // The reader has already reset the renderer to Portrait; mark the page's own
+  // bottom edge, not the panel's.
+  if (APP_STATE.lastSleepFromReader) {
+    ReaderUtils::applyOrientation(renderer, SETTINGS.orientation);
+  }
+  drawSleepIndicator(renderer);
+  if (APP_STATE.lastSleepFromReader) {
+    renderer.setOrientation(GfxRenderer::Orientation::Portrait);
+  }
   // Only the moon differs from the displayed frame, so a differential FAST
   // update adds it without the flashing clean pass (which sweeps the panel
   // through the inverse — a full white flash on a night-mode page).

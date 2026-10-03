@@ -366,3 +366,96 @@ TEST(KoreanLayout, HangulGluedAcrossInlineStyleIsUnbreakable) {
   const std::vector<std::vector<std::string>> expected{{"가나"}, {"한국", "어"}};
   EXPECT_EQ(lines, expected);
 }
+
+namespace {
+
+struct LaidOutLine {
+  std::string text;
+  int x;  // left edge of the first word on the page
+  int y;
+  CssTextAlign alignment;
+};
+
+// Parses a chapter with its stylesheet through the whole pipeline and flattens the pages to lines (stub metrics:
+// 16 px lines, 12 px em).
+std::vector<LaidOutLine> layOutChapter(const std::string& body, const std::string& css, const uint8_t alignment) {
+  const auto dir = std::filesystem::temp_directory_path();
+  const std::string htmlPath = (dir / "crosspoint-rhythm.xhtml").string();
+  const std::string cssPath = (dir / "crosspoint-rhythm.css").string();
+  {
+    HalFile html;
+    html.open(htmlPath.c_str(), "wb");
+    const std::string doc =
+        "<?xml version=\"1.0\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><body>" + body + "</body></html>";
+    html.write(doc.data(), doc.size());
+    HalFile sheet;
+    sheet.open(cssPath.c_str(), "wb");
+    sheet.write(css.data(), css.size());
+  }
+  CssParser cssParser{dir.string()};
+  HalFile sheet;
+  sheet.open(cssPath.c_str(), "rb");
+  cssParser.loadFromStream(sheet);
+
+  GfxRenderer renderer;
+  std::vector<LaidOutLine> lines;
+  ChapterHtmlSlimParser parser(
+      nullptr, htmlPath, renderer, 0, 1.0f, false, alignment, 480, 800, false, false,
+      [&](std::unique_ptr<Page> page, uint16_t, uint16_t, uint32_t) {
+        for (const auto& element : page->elements) {
+          if (element->getTag() != TAG_PageLine) continue;
+          const auto& block = *static_cast<const PageLine&>(*element).getBlock();
+          std::string text;
+          for (uint16_t i = 0; i < block.wordCount(); ++i) text += std::string(i ? " " : "") + block.wordText(i);
+          lines.push_back({text, element->xPos + block.wordXpos(0), element->yPos, block.getBlockStyle().alignment});
+        }
+      },
+      true, "", "", 0, {}, nullptr, &cssParser);
+  EXPECT_TRUE(parser.parseAndBuildPages());
+  return lines;
+}
+
+constexpr uint8_t BOOK_STYLE = static_cast<uint8_t>(CssTextAlign::None);
+
+}  // namespace
+
+TEST(ParagraphRhythm, UnmarkedParagraphsGetAHalfLineGap) {
+  const auto lines = layOutChapter("<p>one</p><p>two</p><p>three<br/>four</p><p>&#160;</p><p>five</p>",
+                                   "p { text-indent: 0; margin: 0; }", BOOK_STYLE);
+  ASSERT_EQ(lines.size(), 6u);
+  EXPECT_EQ(lines[0].y, 0);
+  EXPECT_EQ(lines[1].y, 24);  // half a line below "one"
+  EXPECT_EQ(lines[2].y, 48);  // and below "two"
+  EXPECT_EQ(lines[3].y, 64);  // a <br> continues the paragraph
+  EXPECT_EQ(lines[4].y, 80);  // the empty paragraph is the book's own blank line...
+  EXPECT_EQ(lines[5].y, 96);  // ...so nothing more follows it
+  EXPECT_EQ(lines[3].x, 0);   // and the line after a <br> is not indented
+}
+
+TEST(ParagraphRhythm, IndentedParagraphsAreNotSpaced) {
+  const auto lines = layOutChapter("<p>one</p><p>two</p>", "p { text-indent: 1em; margin: 0; }", BOOK_STYLE);
+  ASSERT_EQ(lines.size(), 2u);
+  EXPECT_EQ(lines[1].y, 16);
+  EXPECT_EQ(lines[1].x, 12);
+}
+
+TEST(ParagraphRhythm, HangingIndentWithoutMarginStaysOnThePage) {
+  const auto lines =
+      layOutChapter("<p class=\"v\">a verse line long enough to turn over onto a second line of the page</p>",
+                    ".v { text-indent: -2em; margin-left: 0; text-align: left; }", BOOK_STYLE);
+  ASSERT_GE(lines.size(), 2u);
+  EXPECT_EQ(lines[0].x, 0);
+  EXPECT_EQ(lines[1].x, 24);
+}
+
+TEST(ParagraphRhythm, JustifiedSettingKeepsTheBooksCentredAndRightBlocks) {
+  const auto lines =
+      layOutChapter("<p class=\"c\">centred</p><p class=\"r\">right</p><p class=\"l\">left</p><p>body</p>",
+                    ".c { text-align: center; } .r { text-align: right; } .l { text-align: left; }",
+                    static_cast<uint8_t>(CssTextAlign::Justify));
+  ASSERT_EQ(lines.size(), 4u);
+  EXPECT_EQ(lines[0].alignment, CssTextAlign::Center);
+  EXPECT_EQ(lines[1].alignment, CssTextAlign::Right);
+  EXPECT_EQ(lines[2].alignment, CssTextAlign::Justify);
+  EXPECT_EQ(lines[3].alignment, CssTextAlign::Justify);
+}

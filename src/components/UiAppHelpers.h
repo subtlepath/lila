@@ -12,6 +12,7 @@
 #include "components/UIThemeTokens.h"
 #include "components/icons/customListIcons.h"
 #include "components/icons/listIcons.h"
+#include "components/icons/menuIcons.h"
 
 // Shared glue for activities hosting a FreeInkApp: the font-bound render
 // target and the touch snapshot FreeInkApp routing consumes.
@@ -60,6 +61,21 @@ inline void applySharedUiTheme(App& app, const freeink::ui::GfxRendererTarget& t
   app.setThemeRef(&sharedUiThemeCell());
 }
 
+// The row grammar every list screen shares: a switch is an on/off that flips
+// in place, a value is a choice that opens a picker, a bare row opens a screen
+// or runs. Values keep a little air from the row edge; switches are sized to
+// the body text and follow the theme's corner shape.
+inline void applyListControlStyle(freeink::ui::ListProps& props, const freeink::ui::ThemeTokens& theme) {
+  const bool rounded = theme.listRowRadius > 0;
+  props.valueInset = 4;
+  props.toggleWidth = 38;
+  props.toggleHeight = 22;
+  props.toggleBorderWidth = 2;
+  props.toggleKnobInset = 4;
+  props.toggleRadius = rounded ? 11 : 0;
+  props.toggleKnobRadius = rounded ? 7 : 0;
+}
+
 // Bind the uiScale fonts before FreeInkApp's constructor derives its theme
 // metrics from the body font's line height.
 inline freeink::ui::GfxRendererTarget makeUiTarget(const GfxRenderer& renderer) {
@@ -106,6 +122,8 @@ inline freeink::ui::BitmapRef listIconFor(const UIIcon icon, const int size = 24
         return freeink::ui::bitmapFromIcon(icon_bookmark_32);
       case UIIcon::Blocks:
         return freeink::ui::bitmapFromIcon(icon_blocks_32);
+      case UIIcon::Dices:
+        return freeink::ui::bitmapFromIcon(icon_dices_32);
       default:
         return {};
     }
@@ -133,6 +151,12 @@ inline freeink::ui::BitmapRef listIconFor(const UIIcon icon, const int size = 24
       return freeink::ui::bitmapFromIcon(icon_bookmark_24);
     case UIIcon::Blocks:
       return freeink::ui::bitmapFromIcon(icon_blocks_24);
+    case UIIcon::Dices:
+      return freeink::ui::bitmapFromIcon(icon_dices_24);
+    case UIIcon::Settings:
+      return freeink::ui::bitmapFromIcon(icon_menu_settings_24);
+    case UIIcon::Transfer:
+      return freeink::ui::bitmapFromIcon(icon_menu_transfer_24);
     default:
       return {};
   }

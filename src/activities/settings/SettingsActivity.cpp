@@ -103,7 +103,6 @@ void SettingsActivity::rebuildSettingsLists() {
   }
   systemSettings.push_back(SettingInfo::Action(StrId::STR_KOREADER_SYNC, SettingAction::KOReaderSync));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_OPDS_SERVERS, SettingAction::OPDSBrowser));
-  systemSettings.push_back(SettingInfo::Action(StrId::STR_CLEAR_READING_CACHE, SettingAction::ClearCache));
   // OTA fetches this board's own release asset (see OtaUpdater); boards whose
   // asset isn't published yet just report no update available.
   systemSettings.push_back(SettingInfo::Action(StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates));
@@ -111,6 +110,9 @@ void SettingsActivity::rebuildSettingsLists() {
   systemSettings.push_back(SettingInfo::Action(StrId::STR_KEYBOARD_LAYOUTS, SettingAction::KeyboardLayouts));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_ABOUT, SettingAction::About));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_LANGUAGE, SettingAction::Language));
+  // Repair tools close the list under their own heading (see rebuildRowItems()).
+  systemSettings.push_back(SettingInfo::Action(StrId::STR_REBUILD_LIBRARY, SettingAction::RebuildLibrary));
+  systemSettings.push_back(SettingInfo::Action(StrId::STR_CLEAR_READING_CACHE, SettingAction::ClearCache));
   readerSettings.insert(readerSettings.begin(),
                         SettingInfo::Action(StrId::STR_TEXT_SETTINGS, SettingAction::TextSettings));
   readerSettings.insert(readerSettings.begin() + 1,
@@ -180,9 +182,17 @@ void SettingsActivity::rebuildRowItems() {
   rowValues_.assign(settings.size(), std::string());
   rowItems_.clear();
   rowItems_.reserve(settings.size());
+  bool troubleshootingStarted = false;
   for (size_t i = 0; i < settings.size(); i++) {
     fui::ListItem item;
     item.label = I18N.get(settings[i].nameId);
+    item.toggle = settings[i].type == SettingType::TOGGLE && settings[i].valuePtr != nullptr;
+    const bool repairTool =
+        settings[i].action == SettingAction::RebuildLibrary || settings[i].action == SettingAction::ClearCache;
+    if (repairTool && !troubleshootingStarted) {
+      item.sectionHeading = tr(STR_TROUBLESHOOTING);
+      troubleshootingStarted = true;
+    }
     item.actionValue = static_cast<int16_t>(i);
     rowItems_.push_back(item);
   }
@@ -397,6 +407,12 @@ void SettingsActivity::toggleCurrentSetting() {
       case SettingAction::ClearCache:
         startActivityForResult(std::make_unique<ClearCacheActivity>(renderer, mappedInput), resultHandler);
         break;
+      case SettingAction::RebuildLibrary:
+        // The Library rebuilds a dirty index on entry, with its own progress.
+        SETTINGS.saveToFile();
+        library::markLibraryIndexDirty();
+        activityManager.goHome();
+        break;
       case SettingAction::CheckForUpdates:
         startActivityForResult(std::make_unique<OtaUpdateActivity>(renderer, mappedInput), resultHandler);
         break;
@@ -550,6 +566,12 @@ void SettingsActivity::buildScreen(UiScreen& screen) {
   // render.
   const auto& settings = *currentSettings;
   for (size_t i = 0; i < settings.size(); i++) {
+    if (rowItems_[i].toggle) {
+      // On/off reads as a switch, not as words.
+      rowItems_[i].toggleChecked = SETTINGS.*(settings[i].valuePtr) != 0;
+      rowItems_[i].value = nullptr;
+      continue;
+    }
     rowValues_[i] = settingValueText(settings[i]);
     rowItems_[i].value = rowValues_[i].empty() ? nullptr : rowValues_[i].c_str();
   }
@@ -559,14 +581,14 @@ void SettingsActivity::buildScreen(UiScreen& screen) {
   props.count = static_cast<uint16_t>(rowItems_.size());
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  props.valueInset = 8;               // air between the value and the row edge
-  // Titles match the value's font size (smallText) so both sides of a row
-  // read as one unit; labels that still don't fit wrap onto a second line.
-  // maxLines=2 also marks the style explicitly set (an all-default smallText
-  // fails textStyleUnset and the list would substitute bodyText back); the
-  // common fits-on-one-line case takes the renderer's fast path anyway.
-  props.labelText = screen.theme().smallText;
+  applyListControlStyle(props, screen.theme());
+  // Body-size names, small values: the name leads, its state follows. Names
+  // that still don't fit wrap onto a second line.
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
+  props.headerText = screen.theme().smallText;
+  props.headerText.bold = true;
+  props.headerUnderline = false;
   syncTabListViewport(screen, props);
   screen.list(props);
 }
@@ -585,12 +607,16 @@ void SettingsActivity::drawChrome() {
 
 void SettingsActivity::drawFooter() {
   const int ring = ringPos();
-  const auto confirmLabel =
-      (ring == 0) ? I18N.get(categoryNames[(selectedCategoryIndex + 1) % categoryCount])
-                  : (ring > 0 && (*currentSettings)[ring - 1].nameId == StrId::STR_TIME_TO_SLEEP ? tr(STR_SELECT)
-                                                                                                 : tr(STR_TOGGLE));
-
-  const auto labels = mappedInput.mapLabels(tr(STR_BACK), confirmLabel, tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+  // Confirm says what it will do: step to the named tab, flip a switch, or select.
+  const char* confirmLabel = tr(STR_SELECT);
+  if (ring == 0) {
+    confirmLabel = I18N.get(categoryNames[(selectedCategoryIndex + 1) % categoryCount]);
+  } else if (ring - 1 < static_cast<int>(rowItems_.size()) && rowItems_[ring - 1].toggle) {
+    confirmLabel = tr(STR_TOGGLE);
+  }
+  // Back names where it goes: from the tabs it leaves Settings.
+  const auto labels =
+      mappedInput.mapLabels(ring == 0 ? tr(STR_HOME) : tr(STR_BACK), confirmLabel, tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }
 

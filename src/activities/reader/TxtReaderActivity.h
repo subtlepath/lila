@@ -3,6 +3,7 @@
 #include <Txt.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,9 @@ class TxtReaderActivity final : public ReaderActivity {
 
   // Streaming text reader - stores file offsets for each page
   std::vector<size_t> pageOffsets;
+  // Saved byte offset restored on open. Re-saved while its page is shown, so
+  // repeated re-paginations keep the passage instead of drifting to page starts.
+  std::optional<size_t> readingAnchor;
   std::vector<std::string> currentPageLines;
   int linesPerPage = 0;
   int viewportWidth = 0;

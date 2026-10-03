@@ -160,7 +160,7 @@ void EpubReaderPercentSelectionActivity::buildPercentScreen(UiScreen& screen) {
   snprintf(hint2, sizeof(hint2), "%s %d%%", I18N.get(StrId::STR_STEP_HINT_SIDE), kLargeStep);
 
   UiSliderDialogSpec spec;
-  spec.title = tr(STR_GO_TO_PERCENT);
+  spec.title = tr(STR_GO_TO_POSITION);
   spec.readout = readout;
   spec.value = percent;
   spec.max = 100;
@@ -182,7 +182,7 @@ void EpubReaderPercentSelectionActivity::render(RenderLock&&) {
   renderUi();
 
   // Button hints follow the current front button layout.
-  const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), "-", "+");
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK_TO_BOOK), tr(STR_SELECT), "-", "+");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();

@@ -10,6 +10,7 @@
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 #include "components/icons/readerToolbarIcons.h"
 
 namespace fui = freeink::ui;
@@ -293,14 +294,19 @@ void ReaderToolbarUi::buildPanel(UiScreen& screen) {
     fui::ListItem item;
     item.label = windowLabels_[i].c_str();
     item.value = windowValues_[i].empty() ? nullptr : windowValues_[i].c_str();
+    if (model_.rowIcon) item.icon = model_.rowIcon(index);
+    const int toggle = model_.rowToggle ? model_.rowToggle(index) : -1;
+    item.toggle = toggle >= 0;
+    item.toggleChecked = toggle > 0;
     item.actionValue = static_cast<int16_t>(index);
     windowItems_[i] = item;
   }
   listProps_.items = windowItems_;
   listProps_.itemsWindowFirst = static_cast<uint16_t>(nav_.top);
   listProps_.itemsWindowCount = static_cast<uint16_t>(std::max(0, windowCount));
-  listProps_.valueText = tokens.bodyText;
-  listProps_.valueText.bold = true;
+  // Values in the small text every list uses: the row name leads, its state follows.
+  listProps_.valueText = tokens.smallText;
+  applyListControlStyle(listProps_, tokens);
   if (count > 0) {
     screen.list(listProps_);
   }

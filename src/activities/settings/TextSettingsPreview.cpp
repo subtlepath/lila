@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "CrossPointSettings.h"
+#include "ReaderTypography.h"
 #include "fontIds.h"
 
 namespace textsettings {
@@ -23,9 +24,12 @@ PreviewLayout::~PreviewLayout() = default;
 
 namespace {
 
-// Map the paragraph-alignment setting to the engine's CssTextAlign (BOOK_STYLE = justified)
-CssTextAlign toCssAlign(uint8_t align) {
-  if (align == CrossPointSettings::BOOK_STYLE) return CssTextAlign::Justify;
+// Map the paragraph-alignment setting to the engine's CssTextAlign. The sample is unstyled body text, which
+// BOOK_STYLE justifies only when the line is long enough (see CrossPointSettings::readerRenderSpec).
+CssTextAlign toCssAlign(const uint8_t align, const GfxRenderer& renderer, const int fontId, const int textWidth) {
+  if (align == CrossPointSettings::BOOK_STYLE) {
+    return ReaderTypography::measureJustifies(renderer, fontId, textWidth) ? CssTextAlign::Justify : CssTextAlign::Left;
+  }
   return static_cast<CssTextAlign>(align);
 }
 
@@ -34,7 +38,7 @@ void relayout(PreviewLayout& layout, const GfxRenderer& renderer, int fontId, in
   layout.lines.clear();
 
   BlockStyle style;
-  style.alignment = toCssAlign(SETTINGS.paragraphAlignment);
+  style.alignment = toCssAlign(SETTINGS.paragraphAlignment, renderer, fontId, textWidth);
   style.textAlignDefined = true;  // honor the user's choice; RTL auto-detected from text
 
   ParsedText parsed(SETTINGS.extraParagraphSpacing != 0, SETTINGS.hyphenationEnabled != 0,
@@ -87,7 +91,7 @@ void renderPreview(const GfxRenderer& renderer, PreviewLayout& layout, int previ
   const int textWidth = width - 2 * SETTINGS.screenMargin;
   if (textWidth <= 0) return;
 
-  const float compression = SETTINGS.getReaderLineCompression();
+  const float compression = SETTINGS.getReaderLineCompression(renderer.getLineHeight(fontId));
   const int lineAdvance = std::max(1, renderer.getLineHeight(fontId, compression));
   const int paragraphGap = SETTINGS.extraParagraphSpacing ? lineAdvance / 2 : 0;
 

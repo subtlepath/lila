@@ -13,6 +13,7 @@
 #include "MappedInputManager.h"
 #include "TimezonePickerActivity.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 #include "util/Timezones.h"
 
 namespace fui = freeink::ui;
@@ -108,8 +109,8 @@ void ClockSettingsActivity::buildScreen(UiScreen& screen) {
   props.count = ITEM_COUNT;
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  props.valueInset = 8;
-  props.labelText = screen.theme().smallText;
+  applyListControlStyle(props, screen.theme());
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncListViewport(screen, props);
   screen.list(props);

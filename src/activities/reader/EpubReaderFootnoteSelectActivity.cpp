@@ -46,8 +46,8 @@ void EpubReaderFootnoteSelectActivity::performJump() {
 }
 
 void EpubReaderFootnoteSelectActivity::drawHints() const {
-  const auto labels = mappedInput.mapDirectionalLabels(tr(STR_BACK), tr(STR_OPEN), tr(STR_DIR_LEFT), tr(STR_DIR_RIGHT),
-                                                       tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+  const auto labels = mappedInput.mapDirectionalLabels(tr(STR_BACK_TO_BOOK), tr(STR_OPEN), tr(STR_DIR_LEFT),
+                                                       tr(STR_DIR_RIGHT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }
 

@@ -8,6 +8,7 @@
 #include "OpdsServerStore.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 
 namespace fui = freeink::ui;
 
@@ -192,10 +193,9 @@ void OpdsSettingsActivity::buildScreen(UiScreen& screen) {
   props.count = static_cast<uint16_t>(getMenuItemCount());
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  props.valueInset = 8;               // air between the value and the row edge
-  // Label at the value's font size: both sides of the row read as one unit.
-  // maxLines=2 also marks the style caller-owned (see textStyleUnset).
-  props.labelText = screen.theme().smallText;
+  applyListControlStyle(props, screen.theme());
+  // Body-size names, small values: the name leads, its state follows.
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncListViewport(screen, props);
   screen.list(props);

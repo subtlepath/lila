@@ -33,6 +33,9 @@ class UiTabListActivity : public UiListActivity {
   virtual int activeTab() const = 0;
   virtual const char* tabLabel(int index) const = 0;
   virtual freeink::ui::TabIndicator tabIndicator(int) const { return freeink::ui::TabIndicator::None; }
+  // Whether the tab bar draws as the focused element. Default: the ring sits
+  // on it. Screens with focusable content above the bar narrow this.
+  virtual bool tabBarFocused() const { return ringPos() == 0; }
   // Touch tap on a tab pill (bounds already checked).
   virtual void onTabAction(int index) = 0;
   // Advance the active tab by direction (continuous-hold navigation; also what

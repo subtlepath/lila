@@ -35,6 +35,11 @@ class Hyphenator {
   //      word from overflowing the page width.
   static std::vector<BreakInfo> breakOffsets(const std::string& word, bool includeFallback);
 
+  // Breaks just after a visible hyphen or dash between two letters ("well-|known"). These are ordinary
+  // line-break opportunities (UAX #14) that insert nothing, so they apply even with hyphenation off.
+  // Soft hyphens and U+2011 NON-BREAKING HYPHEN never produce one here.
+  static std::vector<BreakInfo> visibleHyphenBreakOffsets(const std::string& word);
+
   // Provide a publication-level language hint (e.g. "en", "en-US", "ru") used to select hyphenation rules.
   static void setPreferredLanguage(const std::string& lang);
 

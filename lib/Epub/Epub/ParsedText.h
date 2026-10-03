@@ -66,6 +66,9 @@ class ParsedText {
   bool isNaturalAlign;
   bool hasRtlWord;
   bool droppedWords = false;
+  // Set once a soft flush has emitted this paragraph's first line, so a later layout pass over the
+  // remaining words does not indent its first line again.
+  bool firstLineExtracted = false;
   std::vector<std::string> reorderedWordsScratch;
   std::vector<EpdFontFamily::Style> reorderedStylesScratch;
   std::vector<uint16_t> reorderedWidthsScratch;
@@ -85,14 +88,16 @@ class ParsedText {
   int calculateRubyExtraEndOffset(size_t lineStartIdx, size_t lineBreakIdx, const GfxRenderer& renderer,
                                   int fontId) const;
   int resolveFirstLineIndent(bool isFirstLine, const GfxRenderer& renderer, int fontId) const;
+  int interwordSpace(const GfxRenderer& renderer, int fontId) const;
+  int naturalGapBefore(size_t wordIndex, const GfxRenderer& renderer, int fontId) const;
   std::vector<size_t> computeLineBreaks(const GfxRenderer& renderer, int fontId, int pageWidth,
-                                        std::vector<uint16_t>& wordWidths, std::vector<bool>& continuesVec,
-                                        std::vector<bool>& noSpaceBeforeVec);
-  std::vector<size_t> computeHyphenatedLineBreaks(const GfxRenderer& renderer, int fontId, int pageWidth,
-                                                  std::vector<uint16_t>& wordWidths, std::vector<bool>& continuesVec,
-                                                  std::vector<bool>& noSpaceBeforeVec);
+                                        std::vector<uint16_t>& wordWidths);
+  std::vector<size_t> computeGreedyLineBreaks(const GfxRenderer& renderer, int fontId, int pageWidth,
+                                              int firstLineIndent, const std::vector<uint16_t>& wordWidths) const;
   bool hyphenateWordAtIndex(size_t wordIndex, int availableWidth, const GfxRenderer& renderer, int fontId,
                             std::vector<uint16_t>& wordWidths, bool allowFallbackBreaks);
+  bool splitWordAt(size_t wordIndex, size_t byteOffset, bool insertHyphen, uint16_t prefixWidth,
+                   uint16_t remainderWidth, std::vector<uint16_t>& wordWidths);
   void extractLine(size_t breakIndex, int pageWidth, const std::vector<uint16_t>& wordWidths,
                    const std::vector<bool>& continuesVec, const std::vector<bool>& noSpaceBeforeVec,
                    const std::vector<size_t>& lineBreakIndices,
@@ -126,6 +131,8 @@ class ParsedText {
   BlockStyle& getBlockStyle() { return blockStyle; }
   size_t size() const { return words.size(); }
   bool isEmpty() const { return words.empty(); }
+  // True when every word is a space: the empty paragraphs (a lone &nbsp;) some books use to open a blank line.
+  bool isBlank() const;
   // True once any word was dropped because the text arena could not allocate.
   // Callers must treat the block as incomplete and fail the section build.
   bool hadDroppedWords() const { return droppedWords; }

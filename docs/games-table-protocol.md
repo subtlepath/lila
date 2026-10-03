@@ -1,6 +1,6 @@
 # Games table protocol
 
-Library › Games runs a *table*: one host reader plus up to five guests (or CPU
+Home › Games runs a *table*: one host reader plus up to five guests (or CPU
 players) that play one game after another without reconnecting. Readers talk
 over ESP-NOW on WiFi channel 1 without joining an access point.
 
@@ -93,7 +93,7 @@ within 4.5 s and rejoins, even when it can still hear the host.
 2. Add it to `createGame()` and cover it in `test/table_games/`.
 3. Add a `GameView` (input, cursor defaults, drawing) in `src/activities/games/`
    and register it in `gameViewFor()`.
-4. List it in `ALL_GAMES` (lobby) and `GAME_ROWS` (Library tab).
+4. List it in `ALL_GAMES` (lobby) and `GAME_ROWS` (Games screen).
 
 Bump `PROTOCOL_VERSION` whenever an existing packet or game serialization
 changes shape. Readers on other versions then ignore each other's tables

@@ -139,9 +139,15 @@ struct BlockStyle {
       blockStyle.textIndentDefined = true;
     }
     blockStyle.textAlignDefined = cssStyle.hasTextAlign();
-    // User setting overrides CSS, unless "Book's Style" alignment setting is selected
+    // "Book's Style" keeps the book's alignment. Otherwise the user setting decides body text, but a justified or
+    // left setting leaves the book's centred and right-aligned blocks (titles, epigraphs, sign-offs) where they are.
+    const bool bookPlacesBlock = blockStyle.textAlignDefined && (cssStyle.textAlign == CssTextAlign::Center ||
+                                                                 cssStyle.textAlign == CssTextAlign::Right);
     if (paragraphAlignment == CssTextAlign::None) {
       blockStyle.alignment = blockStyle.textAlignDefined ? cssStyle.textAlign : CssTextAlign::Justify;
+    } else if (bookPlacesBlock &&
+               (paragraphAlignment == CssTextAlign::Justify || paragraphAlignment == CssTextAlign::Left)) {
+      blockStyle.alignment = cssStyle.textAlign;
     } else {
       blockStyle.alignment = paragraphAlignment;
     }

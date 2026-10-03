@@ -16,6 +16,7 @@
 #include "SdCardFontSystem.h"
 #include "TextSettingsPreview.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 #include "fontIds.h"
 
 namespace fui = freeink::ui;
@@ -27,8 +28,7 @@ constexpr StrId TAB_NAME_IDS[] = {StrId::STR_FONT, StrId::STR_SIZE, StrId::STR_L
 constexpr StrId LAYOUT_ROW_NAME_IDS[] = {StrId::STR_LINE_SPACING,      StrId::STR_WORD_SPACING,
                                          StrId::STR_CHARACTER_SPACING, StrId::STR_EXTRA_SPACING,
                                          StrId::STR_ALIGNMENT,         StrId::STR_SCREEN_MARGIN};
-constexpr StrId STYLE_ROW_NAME_IDS[] = {StrId::STR_FOCUS_READING, StrId::STR_HYPHENATION, StrId::STR_EMBEDDED_STYLE,
-                                        StrId::STR_TEXT_AA};
+constexpr StrId STYLE_ROW_NAME_IDS[] = {StrId::STR_FOCUS_READING, StrId::STR_EMBEDDED_STYLE, StrId::STR_TEXT_AA};
 
 int findCurrentFontIndex(const SdCardFontRegistry* registry, const char* sdFontFamilyName, uint8_t fontFamily) {
   if (sdFontFamilyName[0] != '\0' && registry) {
@@ -236,7 +236,11 @@ void TextSettingsActivity::buildScreen(UiScreen& screen) {
       default:
         break;
     }
-    rowItems_[i].value = rowValues_[i].empty() ? nullptr : rowValues_[i].c_str();
+    // On/off rows draw a switch instead of the words.
+    const int toggle = toggleState(i);
+    rowItems_[i].toggle = toggle >= 0;
+    rowItems_[i].toggleChecked = toggle > 0;
+    rowItems_[i].value = toggle < 0 && !rowValues_[i].empty() ? rowValues_[i].c_str() : nullptr;
   }
 
   fui::ListProps props;
@@ -244,11 +248,9 @@ void TextSettingsActivity::buildScreen(UiScreen& screen) {
   props.count = static_cast<uint16_t>(rowItems_.size());
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  props.valueInset = 8;               // air between the value and the row edge
-  // Titles match the value's font size (smallText) so both sides of a row
-  // read as one unit; labels that still don't fit wrap onto a second line.
-  // maxLines=2 also marks the style explicitly set (see SettingsActivity).
-  props.labelText = screen.theme().smallText;
+  applyListControlStyle(props, screen.theme());
+  // Body-size names, small values (see SettingsActivity).
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncTabListViewport(screen, props);
   screen.list(props);
@@ -470,9 +472,6 @@ void TextSettingsActivity::confirmStyleRow(int row) {
     case StyleRow::FocusReading:
       SETTINGS.focusReadingEnabled = !SETTINGS.focusReadingEnabled;
       break;
-    case StyleRow::Hyphenation:
-      SETTINGS.hyphenationEnabled = !SETTINGS.hyphenationEnabled;
-      break;
     case StyleRow::EmbeddedStyle:
       SETTINGS.embeddedStyle = !SETTINGS.embeddedStyle;
       break;
@@ -487,12 +486,27 @@ void TextSettingsActivity::confirmStyleRow(int row) {
   requestUpdate();
 }
 
+int TextSettingsActivity::toggleState(const int row) const {
+  if (tab_ == Tab::Layout && static_cast<LayoutRow>(row) == LayoutRow::ParaSpacing) {
+    return SETTINGS.extraParagraphSpacing ? 1 : 0;
+  }
+  if (tab_ != Tab::Style) return -1;
+  switch (static_cast<StyleRow>(row)) {
+    case StyleRow::FocusReading:
+      return SETTINGS.focusReadingEnabled ? 1 : 0;
+    case StyleRow::EmbeddedStyle:
+      return SETTINGS.embeddedStyle ? 1 : 0;
+    case StyleRow::AntiAliasing:
+      return SETTINGS.textAntiAliasing ? 1 : 0;
+    default:
+      return -1;
+  }
+}
+
 std::string TextSettingsActivity::styleValueText(int row) const {
   switch (static_cast<StyleRow>(row)) {
     case StyleRow::FocusReading:
       return SETTINGS.focusReadingEnabled ? tr(STR_STATE_ON) : tr(STR_STATE_OFF);
-    case StyleRow::Hyphenation:
-      return SETTINGS.hyphenationEnabled ? tr(STR_STATE_ON) : tr(STR_STATE_OFF);
     case StyleRow::EmbeddedStyle:
       return SETTINGS.embeddedStyle ? tr(STR_STATE_ON) : tr(STR_STATE_OFF);
     case StyleRow::AntiAliasing:
@@ -508,7 +522,7 @@ std::string TextSettingsActivity::styleValueText(int row) const {
 bool TextSettingsActivity::focusedRowHasNoPreview() const {
   if (ringPos() == 0 || tab_ != Tab::Style) return false;
   const StyleRow row = static_cast<StyleRow>(ringPos() - 1);
-  return row == StyleRow::Hyphenation || row == StyleRow::EmbeddedStyle || row == StyleRow::AntiAliasing;
+  return row == StyleRow::EmbeddedStyle || row == StyleRow::AntiAliasing;
 }
 
 void TextSettingsActivity::switchTab(const int direction) {

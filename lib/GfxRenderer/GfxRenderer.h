@@ -441,8 +441,8 @@ class GfxRenderer {
 
   // Region cache: take a logical (orientation-aware) rect, hit the framebuffer
   // bytes that the rect can have touched, and pump them in or out of a caller-
-  // supplied buffer. Used by HomeActivity to snapshot just the cover tile
-  // (~16 KB in Portrait) instead of cloning the entire 48 KB framebuffer.
+  // supplied buffer. Used by HomeCoverCache to snapshot just a decoded cover
+  // instead of cloning the entire 48 KB framebuffer.
   //
   // getRegionByteSize: required buffer length for the rect at current orientation.
   // copyRegionToBuffer / copyBufferToRegion: false if `bufSize` is smaller than that.

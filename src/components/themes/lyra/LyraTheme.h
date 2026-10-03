@@ -17,33 +17,30 @@ constexpr ThemeMetrics values = {.batteryWidth = 16,
                                  .previewPadding = 12,
                                  .previewHeightPercent = 30,
                                  .contentSidePadding = 20,
-                                 .listRowHeight = 40,
+                                 // Rows, header title and info lines share one text column:
+                                 // listInset + listSidePadding == headerSidePadding.
+                                 .listRowHeight = 48,
                                  .listWithSubtitleRowHeight = 60,
                                  .listRowGap = 0,
                                  .listRowRadius = 6,
-                                 .listInset = 20,
+                                 .listInset = 16,
                                  .listSidePadding = 8,
-                                 .listSelectionStyle = 1,  // light pill
+                                 // Solid black pill: bitmap text stays on solid paper or solid ink,
+                                 // never on a dither.
+                                 .listSelectionStyle = 0,
                                  .listScrollWidth = 4,
                                  .listScrollSide = 0,
                                  .listTitleBold = false,
-                                 .headerSidePadding = 18,
+                                 .headerSidePadding = 24,
                                  .headerUnderlineSize = 3,
                                  .headerTitleAlign = 0,  // left
                                  .headerBatterySide = 0,
                                  .headerClockCentered = false,
-                                 .menuRowHeight = 64,
-                                 .menuSpacing = 8,
                                  .tabSpacing = 8,
                                  .tabBarHeight = 48,
                                  .scrollBarWidth = 4,
                                  .scrollBarRightOffset = 5,
                                  .homeTopPadding = 56,
-                                 .homeCoverHeight = 226,
-                                 .homeCoverTileHeight = 242,
-                                 .homeRecentBooksCount = 1,
-                                 .homeContinueReadingInMenu = false,
-                                 .homeMenuTopOffset = 16,
                                  .buttonHintsHeight = 40,
                                  .sideButtonHintsWidth = 30,
                                  .progressBarHeight = 16,
@@ -91,12 +88,5 @@ class LyraTheme : public BaseTheme {
   void drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
                        const char* btn4) const override;
   void drawSideButtonHints(const GfxRenderer& renderer, const char* topBtn, const char* bottomBtn) const override;
-  void drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount, int selectedIndex,
-                      const std::function<std::string(int index)>& buttonLabel,
-                      const std::function<UIIcon(int index)>& rowIcon) const override;
-  void drawRecentBookCover(GfxRenderer& renderer, Rect rect, const std::vector<RecentBook>& recentBooks,
-                           const int selectorIndex, bool& coverRendered, bool& coverBufferStored, bool& bufferRestored,
-                           std::function<bool()> storeCoverBuffer) const override;
-  void drawEmptyRecents(const GfxRenderer& renderer, const Rect rect) const;
   bool showsFileIcons() const override { return true; }
 };

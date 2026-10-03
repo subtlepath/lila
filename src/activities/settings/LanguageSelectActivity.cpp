@@ -78,9 +78,8 @@ void LanguageSelectActivity::buildScreen(UiScreen& screen) {
   props.count = static_cast<uint16_t>(totalItems);
   props.action = ACTION_ROW;
   props.inputMask = fui::InputTouch;  // physical buttons stay in loop()
-  // Label at the value's font size: both sides of the row read as one unit.
-  // maxLines=2 also marks the style caller-owned (see textStyleUnset).
-  props.labelText = screen.theme().smallText;
+  // Body-size names, small values: the name leads, its state follows.
+  props.labelText = screen.theme().bodyText;
   props.labelText.maxLines = 2;
   syncListViewport(screen, props);
   screen.list(props);
