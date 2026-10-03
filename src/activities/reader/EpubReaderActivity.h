@@ -120,6 +120,31 @@ class EpubReaderActivity final : public ReaderActivity {
   SavedPosition savedPositions[MAX_FOOTNOTE_DEPTH] = {};
   int footnoteDepth = 0;
 
+  // In-book search. Opening a result starts a session that remembers where reading was: Back on a result
+  // page reopens the results, and Back from those returns to that place. Choosing somewhere else to go
+  // (contents, a position, a bookmark) ends it.
+  struct SearchSession {
+    bool active = false;
+    SavedPosition origin{};
+    // The opened result: its row in the list, and the match, which is marked on the page that shows it.
+    int resultIndex = 0;
+    std::string query;
+    int spineIndex = -1;
+    uint32_t start = 0;
+    uint32_t end = 0;
+  };
+  SearchSession searchSession;
+  // Where reading was when Search opened; the session's origin if a result is opened from there.
+  SavedPosition searchOrigin{};
+  // The last query, to start the keyboard with.
+  std::string lastSearchQuery;
+  void openSearch(bool showResults);
+  void onSearchClosed(const ActivityResult& result);
+  void returnToSearchOrigin();
+  void endSearchSession() { searchSession.active = false; }
+  // Underlines the opened match when the page being drawn shows it.
+  void drawSearchMark(const Page& page, int marginLeft, int marginTop);
+
   uint16_t buildViewportWidth = 0;
   uint16_t buildViewportHeight = 0;
   bool partialRebuildStartFailed = false;

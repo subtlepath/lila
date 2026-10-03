@@ -430,6 +430,54 @@ if (parsedSize != fileSize) {
 }
 ```
 
+## `search.bin` — in-book search results
+
+Written by `lib/BookSearch/BookSearchWorker.cpp`, read by the reader's search
+screen (`EpubReaderSearchActivity`). One file per book, at
+`.crosspoint/epub_<hash>/search.bin`, holding the results of the last search
+in that book so the list is never held in RAM and reopening it costs nothing.
+A new query replaces it. Version 1; a file with another magic or version is
+ignored and overwritten.
+
+A result is a visible-text offset range within one spine item, counted the way
+`ChapterHtmlSlimParser` counts the offsets it records for each page (codepoints
+of `<body>` character data outside `head`, `style`, `script`, `title` and
+`rp`). Offsets do not depend on font, size, margins or orientation, so results
+stay valid across any re-layout; the reader turns one into a page with
+`Section::getPageForVisibleTextOffset`.
+
+### Header (160 bytes)
+
+| Offset | Type | Field |
+|---|---|---|
+| 0 | u32 | magic `0x3152534C` ("LSR1") |
+| 4 | u8 | version (1) |
+| 5 | u8 | state: 0 running or stopped early (resumable), 1 complete, 2 full |
+| 6 | u16 | spine count of the book the search ran over |
+| 8 | u16 | `nextSpine`: spines before it are fully searched |
+| 10 | u16 | `spineFirstResult`: index of the first result found in `nextSpine` |
+| 12 | u16 | result count (at most 500) |
+| 14 | i16 | table-of-contents index in force at the start of `nextSpine` |
+| 16 | u8 | query length in bytes (at most 120) |
+| 17 | u8[] | query, UTF-8 as typed |
+
+A search left early (a result was opened, the reader stopped it) resumes at
+`nextSpine`. Results from `spineFirstResult` to the count came from that
+partly searched spine; the resumed scan finds them again, identically, and
+skips them before appending new ones, so result indices never move.
+
+### Records (208 bytes each, from offset 160)
+
+| Offset | Type | Field |
+|---|---|---|
+| 0 | u16 | spine index |
+| 2 | i16 | table-of-contents index the match falls under, -1 for none |
+| 4 | u32 | first codepoint of the match (visible-text offset) |
+| 8 | u32 | one past its last codepoint |
+| 12 | u8 | position in the book, percent |
+| 13 | u8[3] | reserved, zero |
+| 16 | char[192] | excerpt: NUL-terminated UTF-8 (NFC), the match with up to 40 characters before and about 72 after, within its paragraph; `…` marks a cut |
+
 ## CLX1 — library index (`.crosspoint/library.idx`)
 
 Written by `lib/LibraryIndex/LibraryBuilder.cpp`, read by `LibraryIndexFile`. One

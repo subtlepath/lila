@@ -9,7 +9,7 @@
 #include "components/OptionPopup.h"
 
 // The reader menu. The first page carries only what readers reach for while
-// reading (contents, position, text, look-up, light, bookmarks); everything
+// reading (contents, search, position, text, look-up, light, bookmarks); everything
 // else sits one level down under More Options, and repair tools under More
 // Options > Troubleshooting. Back closes the menu from any page, straight to
 // the page being read.
@@ -35,7 +35,8 @@ class EpubReaderMenuActivity final : public UiListActivity {
     DICTIONARY,
     MORE_OPTIONS,
     TROUBLESHOOTING,
-    REFRESH_SCREEN
+    REFRESH_SCREEN,
+    SEARCH
   };
 
   enum class MenuPage : uint8_t { Main, More, Troubleshooting };

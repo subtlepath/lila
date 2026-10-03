@@ -16,6 +16,7 @@
 #include "components/icons/listIcons.h"
 #include "components/icons/menuIcons.h"
 #include "components/icons/readerToolbarIcons.h"
+#include "components/icons/search24.h"
 
 namespace fui = freeink::ui;
 
@@ -48,6 +49,7 @@ void EpubReaderMenuActivity::buildMenuItems(std::vector<MenuItem>& items, const 
     case MenuPage::Main:
       // Finding your way through the book.
       items.push_back({MenuAction::SELECT_CHAPTER, StrId::STR_TOOL_CONTENTS});
+      items.push_back({MenuAction::SEARCH, StrId::STR_SEARCH});
       items.push_back({MenuAction::GO_TO_PERCENT, StrId::STR_GO_TO_POSITION});
       if (context.hasFootnotes) items.push_back({MenuAction::FOOTNOTES, StrId::STR_FOOTNOTES});
       // Reading the page.
@@ -85,6 +87,8 @@ fui::BitmapRef EpubReaderMenuActivity::iconFor(const MenuAction action, const Me
   switch (action) {
     case MenuAction::SELECT_CHAPTER:
       return fui::bitmapFromIcon(icon_reader_contents_24);
+    case MenuAction::SEARCH:
+      return fui::bitmapFromIcon(Search24Icon);
     case MenuAction::GO_TO_PERCENT:
       return fui::bitmapFromIcon(icon_menu_position_24);
     case MenuAction::FOOTNOTES:

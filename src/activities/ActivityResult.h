@@ -67,9 +67,22 @@ struct FilePathResult {
   std::string path;
 };
 
+// A search result to open: visible-text offsets in a spine (see SpineTextScanner), which survive any re-layout.
+// Also sent, cancelled, when the search screen closes without one.
+struct SearchResult {
+  int spineIndex = 0;
+  uint32_t start = 0;
+  uint32_t end = 0;
+  // Its row in the result list, so Back can return to it.
+  int resultIndex = 0;
+  std::string query;
+  // Cancelled from the result list rather than the keyboard: Back goes on to where the search began.
+  bool fromResults = false;
+};
+
 using ResultVariant =
     std::variant<std::monostate, WifiResult, KeyboardResult, MenuResult, ChapterResult, PercentResult, IntervalResult,
-                 PageResult, ProgressChangeResult, NetworkModeResult, FootnoteResult, FilePathResult>;
+                 PageResult, ProgressChangeResult, NetworkModeResult, FootnoteResult, FilePathResult, SearchResult>;
 
 struct ActivityResult {
   bool isCancelled = false;

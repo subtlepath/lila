@@ -669,7 +669,7 @@ See [docs/dictionary.md](docs/dictionary.md) for supported formats, setup, and w
 
 * **Return to Home:** Press the **Back** button to close the book and return to the **[Home](#31-home-screen)** screen.
 * **Return to Browse Files:** Press and hold the **Back** button to close the book and return to the **[Browse Files](#33-browse-files-screen)** screen.
-* **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**: contents, position, text, look-up, light and bookmarks, with everything else under **More Options**.
+* **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**: contents, search, position, text, look-up, light and bookmarks, with everything else under **More Options**.
 * **Long-press Confirm (configurable):** Holding **Confirm** runs the function chosen by the **Long-press Menu** setting in **[Controls Settings](#373-controls)** — "Bookmark" (default) drops a bookmark, "KOSync" launches KOReader Sync, "Dictionary" starts a word lookup, "Disabled" does nothing. A short press always opens the Reader Menu.
 
 ### Supported Languages
@@ -690,6 +690,7 @@ The UI includes Arabic and Hebrew (menus use built-in fonts with presentation-fo
 Press **Confirm** while reading to open the Reader Menu. Under the book's title it shows where you are (chapter, page, and how far into the book), then the things you reach for while reading:
 
 - **Contents** – Jump to a chapter (see [Contents](#51-contents) below).
+- **Search** – Find a word or phrase in the book (see [Search](#53-search) below).
 - **Go to Position** – Jump to a percentage of the book.
 - **Footnotes** – Follow a footnote on this page *(only shown when the page has footnotes)*.
 - **Text** – Font, size, spacing and alignment; the row shows the current font and size.
@@ -711,7 +712,7 @@ Press **Confirm** while reading to open the Reader Menu. Under the book's title 
 
 Rows follow one rule throughout lila: a switch flips in place, a value opens a short list of choices, and a plain row opens a screen or does what it says.
 
-**Back** always returns to your page, from every level of the menu and from every screen it opens (Contents, Bookmarks, Text, Go to Position, Look Up). Your place is kept, including after a change to the text or the orientation.
+**Back** always returns to your page, from every level of the menu and from every screen it opens (Contents, Search, Bookmarks, Text, Go to Position, Look Up). Your place is kept, including after a change to the text or the orientation.
 
 ### 5.1 Contents
 
@@ -732,6 +733,21 @@ To create a bookmark, hold **Confirm** for about half a second while inside a bo
 To open bookmarks, press **Confirm** while inside a book. Then navigate to the **Bookmarks** menu. Bookmarks can be opened by navigating to them and pressing **Confirm**, which will redirect you to that place in the book. You can delete bookmarks by holding **Confirm** for about 0.7 seconds, and then pressing **Confirm** again to confirm deletion, or **Back** to cancel.
 
 Bookmarks are stored in the `.crosspoint/bookmarks` folder in the JSON format.
+
+---
+
+### 5.3 Search
+
+Choose **Search** in the Reader Menu, type a word or phrase and press **OK**. The book is searched while you watch: results appear as they are found, each with a short excerpt, the section it is in and how far into the book it is. The top row shows your search and its progress; select it to change the search.
+
+- Press **Confirm** on a result to open the page with that passage. The match is underlined.
+- On that page, **Back** returns to the results, where you left them. **Back** again returns to the page you were reading before you searched.
+- **Back** stops the search at any point: on the keyboard, while results are still coming in, or on the result list. Hold **Back** on a result page to leave the book as usual.
+- Choosing somewhere else to go (Contents, Go to Position, a bookmark) keeps you there instead.
+
+Search ignores capitals, accents and punctuation between words: *nirvana* finds *Nirvāṇa*, and *to be or not* finds *To be, or not*. An apostrophe inside a word counts, in either form: *don't* finds *don’t*, *dont* does not. A search finds words that **begin** with what you type, so *vajra* also finds *Vajrasattva*. Phrases are found across italics and other formatting.
+
+Results are kept with the book, so returning to them, or searching for the same thing later, is instant; they stay right after any change to the text size, font or orientation. A search keeps its first 500 results; a longer phrase narrows it down. Search covers EPUB books.
 
 ## 6. Current Limitations & Roadmap
 

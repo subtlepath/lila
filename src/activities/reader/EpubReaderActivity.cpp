@@ -1,5 +1,6 @@
 #include "EpubReaderActivity.h"
 
+#include <BookSearchText.h>
 #include <Epub/Page.h>
 #include <Epub/blocks/TextBlock.h>
 #include <FontCacheManager.h>
@@ -15,6 +16,7 @@
 #include <esp_system.h>
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -28,6 +30,7 @@
 #include "EpubReaderChapterSelectionActivity.h"
 #include "EpubReaderFootnoteSelectActivity.h"
 #include "EpubReaderPercentSelectionActivity.h"
+#include "EpubReaderSearchActivity.h"
 #include "EpubReaderUtils.h"
 #include "KOReaderCredentialStore.h"
 #include "KOReaderSyncActivity.h"
@@ -639,6 +642,13 @@ void EpubReaderActivity::loop() {
     return;
   }
 
+  // On a search result, Back goes to the results first; holding Back still leaves the book.
+  if (searchSession.active && mappedInput.wasReleased(MappedInputManager::Button::Back) &&
+      mappedInput.getHeldTime() < ReaderUtils::GO_BACK_OR_HOME_MS) {
+    openSearch(/*showResults=*/true);
+    return;
+  }
+
   if (handleBackNavigation()) {
     return;
   }
@@ -726,6 +736,7 @@ void EpubReaderActivity::jumpToPercent(int percent) {
   if (bookSize == 0) return;
 
   percent = clampPercent(percent);
+  endSearchSession();
 
   size_t targetSize =
       (bookSize / 100) * static_cast<size_t>(percent) + (bookSize % 100) * static_cast<size_t>(percent) / 100;
@@ -769,6 +780,7 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
     if (result.isCancelled) {
       requestUpdate();
     } else {
+      endSearchSession();
       const auto& sync = std::get<ProgressChangeResult>(result.data);
 
       if (sync.hasVisibleTextOffset && sync.spineIndex >= 0 && sync.spineIndex < epub->getSpineItemsCount()) {
@@ -846,6 +858,7 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
               return;
             }
             const auto& chapterResult = std::get<ChapterResult>(result.data);
+            endSearchSession();
             RenderLock lock;
             clearDeferredReposition();
             currentSpineIndex = chapterResult.spineIndex;
@@ -858,6 +871,10 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
     }
     case EpubReaderMenuActivity::MenuAction::FOOTNOTES: {
       openFootnoteSelect();
+      break;
+    }
+    case EpubReaderMenuActivity::MenuAction::SEARCH: {
+      openSearch(/*showResults=*/false);
       break;
     }
     case EpubReaderMenuActivity::MenuAction::TEXT_SETTINGS: {
@@ -1282,9 +1299,12 @@ void EpubReaderActivity::renderBook() {
         const int target = pendingPageJump.has_value() ? *pendingPageJump : (nextPageNumber < 0 ? 0 : nextPageNumber);
         const bool anchorJump = !pendingAnchor.empty();
 
+        // An offset jump (search result, bookmark, resume) needs the partial to reach that text; its page
+        // number from another layout says nothing.
         if (section->isPartial() &&
-            (anchorJump ? section->getPageForAnchor(pendingAnchor).has_value()
-                        : target + PARTIAL_REBUILD_START_MARGIN < static_cast<int>(section->pageCount))) {
+            (anchorJump               ? section->getPageForAnchor(pendingAnchor).has_value()
+             : offsetJump.has_value() ? section->getPageForVisibleTextOffset(*offsetJump).has_value()
+                                      : target + PARTIAL_REBUILD_START_MARGIN < static_cast<int>(section->pageCount))) {
           LOG_DBG("ERS", "Partial covers target %d of %d; deferring extension build", target, section->pageCount);
         } else {
           const size_t spineBytes =
@@ -1694,6 +1714,7 @@ void EpubReaderActivity::renderContents(std::unique_ptr<Page> page, const int or
   }
 
   page->render(renderer, fontId, orientedMarginLeft, orientedMarginTop);
+  drawSearchMark(*page, orientedMarginLeft, orientedMarginTop);
   renderStatusBar();
   const auto tBwRender = millis();
 
@@ -2697,6 +2718,149 @@ void EpubReaderActivity::restoreSavedPosition() {
     section.reset();
   }
   requestUpdate();
+}
+
+void EpubReaderActivity::openSearch(const bool showResults) {
+  // The section goes while the search runs, as for the contents list: reading a chapter out of the EPUB
+  // needs the inflater's ~40 KB, and the page is rebuilt from the cached position on return.
+  {
+    RenderLock lock;
+    if (!searchSession.active) {
+      const ChapterPosition position = chapterPosition();
+      std::optional<uint32_t> offset = cachedVisibleTextOffset;
+      if (section && position.pageIndex < section->pageCount) offset = readingOffsetForPage(position.pageIndex);
+      searchOrigin = {currentSpineIndex, position.pageIndex, position.totalPages, offset};
+    }
+    if (section) {
+      rememberCurrentContentOffset();
+      cachedSpineIndex = currentSpineIndex;
+      cachedChapterTotalPageCount = section->pageCount;
+      nextPageNumber = section->currentPage;
+    }
+    section.reset();
+  }
+  const std::string& query = searchSession.active ? searchSession.query : lastSearchQuery;
+  auto search = makeUniqueNoThrow<EpubReaderSearchActivity>(renderer, mappedInput, epub, query, showResults,
+                                                            searchSession.resultIndex);
+  if (!search) {
+    LOG_ERR("ERS", "OOM: search screen");
+    requestUpdate();
+    return;
+  }
+  startActivityForResult(std::move(search), [this](const ActivityResult& result) { onSearchClosed(result); });
+}
+
+void EpubReaderActivity::onSearchClosed(const ActivityResult& result) {
+  const auto* found = std::get_if<SearchResult>(&result.data);
+  if (found && !found->query.empty()) lastSearchQuery = found->query;
+  if (result.isCancelled || !found) {
+    // Back from the results returns to where the search began; leaving the keyboard keeps this page.
+    if (found && found->fromResults && searchSession.active) {
+      returnToSearchOrigin();
+    } else {
+      requestUpdate();
+    }
+    return;
+  }
+  if (found->spineIndex < 0 || found->spineIndex >= epub->getSpineItemsCount()) {
+    requestUpdate();
+    return;
+  }
+
+  if (!searchSession.active) {
+    searchSession.active = true;
+    searchSession.origin = searchOrigin;
+  }
+  searchSession.resultIndex = found->resultIndex;
+  searchSession.query = found->query;
+  searchSession.spineIndex = found->spineIndex;
+  searchSession.start = found->start;
+  searchSession.end = found->end;
+
+  RenderLock lock;
+  clearDeferredReposition();
+  currentSpineIndex = found->spineIndex;
+  nextPageNumber = 0;
+  // An offset, not a page: it opens on the passage under any font, size or orientation, and the anchor
+  // keeps it on screen through a later change of text settings.
+  pendingOffsetJump = found->start;
+  readingAnchor = found->start;
+  readingAnchorSpine = found->spineIndex;
+  section.reset();
+  requestUpdate();
+}
+
+void EpubReaderActivity::returnToSearchOrigin() {
+  const SavedPosition origin = searchSession.origin;
+  endSearchSession();
+  RenderLock lock;
+  clearDeferredReposition();
+  currentSpineIndex = origin.spineIndex;
+  nextPageNumber = origin.pageNumber;
+  pendingOffsetJump = origin.textOffset;
+  readingAnchor = origin.textOffset;
+  readingAnchorSpine = origin.spineIndex;
+  section.reset();
+  requestUpdate();
+}
+
+void EpubReaderActivity::drawSearchMark(const Page& page, const int marginLeft, const int marginTop) {
+  if (!searchSession.active || searchSession.spineIndex != currentSpineIndex || !section) return;
+  const auto matchPage = section->getPageForVisibleTextOffset(searchSession.start);
+  if (!matchPage || *matchPage != section->currentPage) return;
+
+  // Pages keep words, not offsets, so the match is found again among them; where it sits in the page's
+  // text decides between repeats.
+  auto locator = makeUniqueNoThrow<booksearch::PageMatchLocator>();
+  if (!locator || !locator->setQuery(searchSession.query)) return;
+  uint16_t index = 0;
+  for (const auto& element : page.elements) {
+    if (element->getTag() != TAG_PageLine) continue;
+    const TextBlock& block = *static_cast<const PageLine&>(*element).getBlock();
+    for (uint16_t w = 0; w < block.wordCount(); w++) locator->addWord(block.wordText(w), index++);
+  }
+  float position = 0.5f;
+  const auto nextPageStart = section->getVisibleTextOffsetForPage(static_cast<uint16_t>(section->currentPage + 1));
+  if (nextPageStart && *nextPageStart > page.visibleTextOffset && searchSession.start >= page.visibleTextOffset) {
+    position = static_cast<float>(searchSession.start - page.visibleTextOffset) /
+               static_cast<float>(*nextPageStart - page.visibleTextOffset);
+  }
+  uint16_t first = 0;
+  uint16_t last = 0;
+  if (!locator->nearest(position, first, last)) return;
+
+  // A solid bar under the matched words, one per line the match spans.
+  constexpr int MARK_GAP = 2;
+  constexpr int MARK_THICKNESS = 3;
+  const int fontId = SETTINGS.getReaderFontId();
+  const int ascender = renderer.getFontAscenderSize(fontId);
+  index = 0;
+  for (const auto& element : page.elements) {
+    if (element->getTag() != TAG_PageLine) continue;
+    const TextBlock& block = *static_cast<const PageLine&>(*element).getBlock();
+    int left = -1;
+    int right = -1;
+    for (uint16_t w = 0; w < block.wordCount(); w++, index++) {
+      if (index < first || index > last) continue;
+      const char* word = block.wordText(w);
+      int x = marginLeft + element->xPos + block.wordXpos(w);
+      // Skip the synthetic em-space that indents a paragraph's first word.
+      if (strncmp(word, "\xE2\x80\x83", 3) == 0) {
+        x += renderer.getTextAdvanceX(fontId, "\xE2\x80\x83", block.wordStyle(w),
+                                      block.getBlockStyle().characterSpacing);
+        word += 3;
+      }
+      const int width =
+          renderer.getTextAdvanceX(fontId, word, block.wordStyle(w), block.getBlockStyle().characterSpacing,
+                                   BidiUtils::BidiBaseDir::AUTO, GfxRenderer::TextMeasureMode::Rendered);
+      if (left < 0 || x < left) left = x;
+      right = std::max(right, x + width);
+    }
+    if (left >= 0 && right > left) {
+      const int baseline = marginTop + element->yPos + block.getRubyShift(ascender) + ascender;
+      renderer.fillRect(left, baseline + MARK_GAP, right - left, MARK_THICKNESS, true);
+    }
+  }
 }
 
 void EpubReaderActivity::loadCachedBookmarks() {
