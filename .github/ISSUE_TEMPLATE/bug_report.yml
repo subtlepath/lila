@@ -12,7 +12,7 @@ body:
     id: device
     attributes:
       label: Device
-      description: Which device does this happen on? Pick "Other" for boards CrossPoint does not release firmware for — those are maintained in their own port repositories.
+      description: Which device does this happen on? Pick "Other" for boards lila does not release firmware for — those are maintained in their own port repositories.
       options:
         - Xteink X3
         - Xteink X4

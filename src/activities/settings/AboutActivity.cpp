@@ -19,6 +19,7 @@ namespace {
 enum MenuItem {
   ITEM_DEVICE = 0,
   ITEM_FIRMWARE,
+  ITEM_BASED_ON,
   ITEM_CHIP,
   ITEM_FLASH,
   ITEM_DISPLAY,
@@ -34,8 +35,8 @@ enum MenuItem {
 // these screenshots across every device language, so the labels must be
 // identical on every unit.
 const char* const menuNames[AboutActivity::ITEM_COUNT] = {
-    "Device", "Firmware",          "Chip",        "Flash", "Display Controller", "Resolution", "Touch", "Frontlight",
-    "RTC",    "Tilt Sensor (IMU)", "MAC Address",
+    "Device",     "Firmware", "Based on",          "Chip",        "Flash", "Display Controller", "Resolution", "Touch",
+    "Frontlight", "RTC",      "Tilt Sensor (IMU)", "MAC Address",
 };
 
 // Chip part numbers, not user prose — deliberately untranslated.
@@ -99,6 +100,7 @@ void AboutActivity::onEnter() {
   // controller to the panel actually found on the bus.
   rowValues_[ITEM_DEVICE] = BoardConfig::ACTIVE.name;
   rowValues_[ITEM_FIRMWARE] = CROSSPOINT_VERSION;
+  rowValues_[ITEM_BASED_ON] = "CrossPoint " CROSSPOINT_UPSTREAM_VERSION;
   snprintf(buf, sizeof(buf), "%s rev %u", ESP.getChipModel(), static_cast<unsigned>(ESP.getChipRevision()));
   rowValues_[ITEM_CHIP] = buf;
   snprintf(buf, sizeof(buf), "%u MB", static_cast<unsigned>(ESP.getFlashChipSize() / (1024u * 1024u)));

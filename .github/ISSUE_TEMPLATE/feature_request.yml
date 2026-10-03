@@ -1,38 +1,28 @@
 name: Feature Request
-description: Propose a new feature, enhancement, or change to CrossPoint
+description: Propose a change to lila
 title: "Short, descriptive title of the request"
-labels: ["enhancement", "needs-scope-review"]
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to propose a change to CrossPoint!
+        Thanks for taking the time to propose a change to lila!
 
-        **Before you continue, please read [SCOPE.md](https://github.com/crosspoint-reader/crosspoint-reader/blob/master/SCOPE.md) and [ROADMAP.md](https://github.com/crosspoint-reader/crosspoint-reader/blob/master/ROADMAP.md).**
+        lila is opinionated on purpose: it trades settings for designed defaults. Please read
+        [What makes lila opinionated](https://github.com/subtlepath/lila#what-makes-lila-opinionated) first.
+        General features that don't depend on those opinions belong upstream in
+        [CrossPoint](https://github.com/crosspoint-reader/crosspoint-reader), where every fork benefits.
 
-        CrossPoint is intentionally narrow. Most rejected proposals are rejected for scope reasons that are already
-        documented. The checklist below exists to save both of us time.
-
-        If you are not sure whether your idea fits, open a [Discussion](../../discussions) first instead of filing
-        this issue.
+        If you are not sure whether your idea fits, open a [Discussion](../../discussions) first.
 
   - type: checkboxes
-    id: scope-check
+    id: fit-check
     attributes:
-      label: Scope Self-Check (required)
-      description: Please confirm each of the following. If any are unchecked, your issue will likely be closed.
+      label: Fit check (required)
       options:
-        - label: I have read SCOPE.md and ROADMAP.md.
+        - label: I have read "What makes lila opinionated" in the README.
           required: true
-        - label: This is **not** a new theme or theming change (themes are temporarily closed pending the move to SD-loaded themes).
-          required: true
-        - label: This is **not** a new external network connector (sync engine, cloud storage, remote file access, or any new "talk to a server" feature). Improvements to the existing OPDS support are in scope and do not count as a new connector.
-          required: true
-        - label: This is **not** an interactive app (game, calculator, notepad), writing/authoring tool, RSS/news/browser feature, media playback feature, or PDF rendering.
-          required: true
-        - label: The stock firmware does **not** already handle this well.
-          required: true
-        - label: No other popular CrossPoint fork already handles this well (or, if one does, I explain below why CrossPoint still needs it).
+        - label: This is about lila's reading experience, not a general CrossPoint feature.
           required: true
 
   - type: textarea
@@ -47,8 +37,8 @@ body:
   - type: textarea
     id: stock-gap
     attributes:
-      label: Why the stock firmware (and other forks) do not already solve this
-      description: Explain which existing solutions you checked and why they fall short. This is the core scope filter.
+      label: Why lila does not already solve this
+      description: What did you try in lila (and CrossPoint) and why does it fall short?
     validations:
       required: true
 
@@ -65,7 +55,7 @@ body:
     attributes:
       label: Memory / flash / complexity cost
       description: |
-        CrossPoint runs on 380KB of RAM. Roughly how much DRAM, flash, or code complexity does this add?
+        lila runs on 380KB of RAM. Roughly how much DRAM, flash, or code complexity does this add?
         "Don't know" is a valid answer, but please attempt an estimate.
       placeholder: e.g., "Adds ~2KB flash for the new font tables, no DRAM impact at runtime."
     validations:

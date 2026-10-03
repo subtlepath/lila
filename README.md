@@ -1,101 +1,76 @@
-# CrossPoint Reader
+<p align="center"><img src="src/images/Logo120.png" width="120" alt="lila, a small black pug"></p>
 
-[![Fund contributors](https://img.shields.io/badge/%F0%9F%91%91_Fund_contributors-royalty.dev-BB953A?style=for-the-badge&labelColor=1a1a1a)](https://app.royalty.dev/crosspoint-reader/crosspoint-reader)
+# lila
 
-CrossPoint is open-source e-reader firmware - community-built, fully hackable, free forever. It's maintained by a growing community of developers and readers who believe your device should do what you want - not what a manufacturer decided for you.
+**An opinionated fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)** for Xteink e-readers.
 
-### Now running on:
-- **ESP32C3-based** Xteink X4 and X3.
-- **ESP32S3-based** Xteink X4Pro and X4Classic, Seeed reTerminal Sticky, M5PaperMono
+Named for Lila, a very small black pug who was a little awkward, and perfect.
 
-Check [our Devices page](https://crosspointreader.com/devices) for the full list.
+## What makes lila opinionated
 
-![CrossPoint Reader running on Xteink device](./docs/images/cover.jpg)
+CrossPoint gives you a lot of controls. lila picks the defaults and designs around them, so the device feels finished
+rather than configurable.
 
-> If you're planning to buy an Xteink device, consider purchasing an **X3/X4 Developer Edition** through https://crosspointreader.com. CrossPoint receives a small share of each sale, helping fund development costs.
+- **Every book opens to a page someone has carefully designed.** Leading, measure, justification, hyphenation and
+  paragraph rhythm are tuned together, with Knuth-Plass line breaking and hand-edited Times and Helvetica bitmap fonts.
+  Text size and other comfort controls stay.
+- **The device wakes into your reading life.** Home is your Library: the book you're reading sits on top, ready to
+  resume, with the rest of your shelf, progress and search beneath it.
+- **You never hunt for your place.** Sleep shows the page you were on. Footnotes, notes, settings changes, sleep and
+  restarts all bring you back to the same spot.
+- **One menu language.** The reader menu keeps everyday actions on its first page, moves the rest a level down, and
+  Back always returns to the page. Library and Settings follow the same rules.
+- **Games at the table.** One reader hosts and up to five others join (or CPU players fill in), over ESP-NOW with no
+  Wi-Fi network needed.
 
-## What can CrossPoint do?
+lila is early. It's developed on the Xteink X4; release builds also cover the X3, X4Pro, X4Classic, Seeed reTerminal
+Sticky and M5PaperMono, but those get less testing.
 
-- **Reader engine**: EPUB 2/3 rendering with embedded-style option, image handling, hyphenation, kerning, adaptive table layouts, native CJK ruby annotations, chapter navigation, footnotes, bookmarks, dictionary lookups ([StarDict](docs/dictionary.md)), go-to-percent, auto page turn, orientation control, focus reading, KOReader progress sync and more.
+## Everything else is CrossPoint
 
-- **Various formats**: native handling for `.epub`, `.xtc/.xtch`, `.txt`, and `.bmp`.
+lila tracks CrossPoint's `develop` branch and merges it regularly, so most of what it does is CrossPoint's work: the
+EPUB 2/3 engine (images, hyphenation, kerning, tables, CJK ruby, footnotes, bookmarks, StarDict dictionaries), `.epub`,
+`.xtc`, `.txt` and `.bmp` support, touch reading, custom SD-card fonts, the Wi-Fi tools (file transfer, web settings,
+WebDAV, Calibre wireless, OPDS), KOReader progress sync, and 34 UI languages including CJK and right-to-left scripts.
+The [CrossPoint README](https://github.com/crosspoint-reader/crosspoint-reader#readme) has the full list.
 
-- **Touch reading**: follow EPUB links and look up words in the dictionary on touch-enabled devices.
+To support that work, [fund CrossPoint's contributors](https://app.royalty.dev/crosspoint-reader/crosspoint-reader) or
+buy an X3/X4 Developer Edition through [crosspointreader.com](https://crosspointreader.com).
 
-- **Screenshots.**
+Some things keep CrossPoint's names and services on purpose:
 
-- **Custom fonts**: install your favorite fonts on the SD card.
-
-- **Tilt page turn (X3 and Sticky)**.
-
-- **USB Drive mode (X4Pro)**: access the SD card as USB mass storage.
-
-- **Library workflow**: indexed title/author search, recently-added and alphabetical views, multilingual grouping, folder browser, recent books, and SD-cache management.
-
-- **Wireless workflows**:
-  
-  - File transfer web UI
-  - EPUB Optimizer
-  - Web settings UI/API (edit many device settings from browser)
-  - WebSocket fast uploads
-  - WebDAV handler
-  - AP mode (hotspot) and STA mode (join existing Wi-Fi), both with QR helpers
-  - Calibre wireless connect flow
-  - OPDS browser with saved servers (up to 8), search, pagination, and direct download
-  - OTA update checks and installs from GitHub releases
-
-- **Customization**: night mode, multiple themes (Classic, Lyra, Lyra Extended, RoundedRaff), sleep screen modes including transparent overlays, front/side button remapping, status bar controls, power-button behavior, refresh cadence, and more.
-
-- **Localization**: 34 UI languages and counting, including CJK font fallback and RTL support.
-
-### Coming soon:
-
-- More themes.
-
-- Web plugins.
-
-- Bluetooth pageturner.
-
-- Much more! stay tuned.
+- **Your SD card stays compatible.** lila uses the same `/.crosspoint/` data folder, so moving over from CrossPoint
+  doesn't need a fresh card. Caches whose format changed are rebuilt automatically.
+- **Calibre** sends books through the CrossPoint Reader plugin, and **KOReader sync** defaults to CrossPoint's sync
+  server.
+- **Font downloads** come from CrossPoint's font repository.
 
 ---
 
-## USB-locked devices (Xteink Unlocker)
-
-Some Xteink units purchased from third-party stores (e.g. AliExpress) ship with USB flashing locked from the factory.
-If your device is locked, you will need to use the **Xteink Unlocker** tool available at
-https://crosspointreader.com/#unlock-tool before you can flash CrossPoint.
-
-**You do not need this tool if you bought your device directly from xteink.com.** Those units are not locked.
-
-**Not sure if your device is locked?** Power it on, connect the USB-C cable, and try flashing via the web flasher first (see
-[Install firmware](#install-firmware) below). If the browser's serial device picker does not show your device, try a different
-USB port or browser before assuming the device is locked. Only reach for the unlocker if the device still doesn't appear.
-
-> ### ⚠️ WARNING: READ THIS BEFORE USING THE UNLOCKER ⚠️
-> 
-> **The only officially supported firmwares in the unlock tool are CrossPoint and CrossInk.**
-> 
-> Flashing any other firmware on a USB-locked device may **permanently brick the device** or leave it **permanently
-> stuck on that firmware with no recovery path**. Once USB flashing is re-locked, your only way back is via OTA, and if
-> the firmware you flashed doesn't support OTA, **there is no way out**.
-
 ## Install firmware
 
-### Web installer (recommended)
+### Web installer
 
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Go to https://crosspointreader.com/#flash-tools, select your device (X3, X4, Xteink X4Pro, Seeed reTerminal Sticky, or M5PaperMono), and choose an official CrossPoint release.
+1. Download the firmware file for your device from [lila's releases](https://github.com/subtlepath/lila/releases).
+2. Connect your device to your computer via USB-C and wake/unlock it.
+3. Go to CrossPoint's web flasher at https://crosspointreader.com/#flash-tools, select your device, click
+   "Custom .bin" and upload the firmware file.
 
-### Web installer (specific version)
+### Updates
 
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Download the firmware file for your device from [Releases](https://github.com/crosspoint-reader/crosspoint-reader/releases), or compile yourself.
-3. Go to https://crosspointreader.com/#flash-tools, select your device, click "Custom .bin" and upload the firmware file.
+Once lila is installed, **Settings › System › Check for Updates** installs new lila releases over Wi-Fi.
 
-### Revert to Official Firmware
+### Going back to CrossPoint
 
-To revert to the official firmware, you can also flash the latest official firmware using https://crosspointreader.com/#flash-tools.
+Flash the official firmware from https://crosspointreader.com/#flash-tools. Your books stay on the SD card.
+
+### USB-locked devices
+
+Some Xteink units bought from third-party stores (e.g. AliExpress) ship with USB flashing locked. The Xteink Unlocker
+only supports CrossPoint and CrossInk, and flashing other firmware onto a locked device can leave it stuck or bricked.
+**Don't install lila on a USB-locked device.** CrossPoint's
+[unlock notes](https://github.com/crosspoint-reader/crosspoint-reader#usb-locked-devices-xteink-unlocker) explain how
+to tell whether yours is locked.
 
 ### Command line
 
@@ -105,7 +80,7 @@ To revert to the official firmware, you can also flash the latest official firmw
 pip install esptool
 ```
 
-2. Download the firmware file for your device from the [releases page](https://github.com/crosspoint-reader/crosspoint-reader/releases).
+2. Download the firmware file for your device from [lila's releases](https://github.com/subtlepath/lila/releases).
 3. Connect your device via USB-C.
 4. Find the device port. On Linux, run `dmesg` after connecting. On macOS:
 
@@ -133,13 +108,13 @@ See [Development quick start](#development-quick-start) below.
 
 ## Custom SD-card fonts
 
-On devices with external RAM enabled in CrossPoint, copy `.ttf`, `.otf`, or `.ttc` files to the SD card and select them as reader fonts. Put one file in `/fonts/` or `/.fonts/`, or put one family's files in a subfolder. See the [SD card font guide](./docs/sd-card-fonts.md) for the folder layout and styles.
+On devices with external RAM enabled, copy `.ttf`, `.otf`, or `.ttc` files to the SD card and select them as reader fonts. Put one file in `/fonts/` or `/.fonts/`, or put one family's files in a subfolder. See the [SD card font guide](./docs/sd-card-fonts.md) for the folder layout and styles.
 
 On other devices, convert the font to `.cpfont` first. `.cpfont` files also work on devices with external RAM enabled and have better performance. No firmware reflash is needed to add fonts.
 
 To make `.cpfont` files:
 
-1. Go to https://crosspointreader.com/fonts and open the "SD-card font builder" form.
+1. Go to CrossPoint's font builder at https://crosspointreader.com/fonts and open the "SD-card font builder" form.
 2. Upload up to four styles (regular, bold, italic, bold-italic), set the family name, point sizes, and Unicode range.
 3. Download the generated `.cpfont` files.
 4. Copy them to your SD card under `/fonts/YourFont/` (or `/.fonts/YourFont/` to hide the folder).
@@ -154,7 +129,7 @@ Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` 
 - [User Guide](./USER_GUIDE.md)
 - [Web server usage](./docs/webserver.md)
 - [Web server endpoints](./docs/webserver-endpoints.md)
-- [Project scope](./SCOPE.md)
+- [CrossPoint project scope](./SCOPE.md) (upstream's; lila's opinions are listed above)
 - [Contributing docs](./docs/contributing/README.md)
 - [Touch and UI development](./docs/contributing/touch-and-ui.md) - how to build new screens on the FreeInkUI activity bases (UiListActivity and friends), plus build envs for the non-Xteink touch devices
 
@@ -172,8 +147,9 @@ Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` 
 ### Setup
 
 ```bash
-git clone --recursive https://github.com/crosspoint-reader/crosspoint-reader
-cd crosspoint-reader
+git clone --recursive https://github.com/subtlepath/lila
+cd lila
+git remote add upstream https://github.com/crosspoint-reader/crosspoint-reader
 
 # if cloned without --recursive:
 git submodule update --init --recursive
@@ -238,12 +214,12 @@ Minor adjustments may be required for Windows.
 
 ## Internals
 
-CrossPoint Reader is pretty aggressive about caching data down to the SD card to minimise RAM usage. The ESP32-C3 only has ~380KB of usable RAM, so we have to be careful. A lot of the decisions made in the design of the firmware were based on this constraint.
+Like CrossPoint, lila is aggressive about caching data down to the SD card to minimise RAM usage. The ESP32-C3 only has ~380KB of usable RAM, so we have to be careful. A lot of the decisions made in the design of the firmware were based on this constraint.
 
 ### Data caching
 
 The first time chapters of a book are loaded, they are cached to the SD card. Subsequent loads are served from the
-cache. This cache directory exists at `.crosspoint` on the SD card. The structure is as follows:
+cache. This cache directory exists at `.crosspoint` on the SD card; lila keeps CrossPoint's folder name so cards move between the two. The structure is as follows:
 
 ```text
 .crosspoint/
@@ -270,28 +246,15 @@ For more details on the internal file structures, see the [file formats document
 
 ## Contributing
 
-Contributions are welcome. If you're new to the codebase, start with the [contributing docs](./docs/contributing/README.md). For things to work on, check the [ideas discussion board](https://github.com/crosspoint-reader/crosspoint-reader/discussions/categories/ideas) — leave a comment before starting so we don't duplicate effort.
+lila is a personal project with a point of view. Bug reports are welcome in
+[Issues](https://github.com/subtlepath/lila/issues); ideas belong in
+[Discussions](https://github.com/subtlepath/lila/discussions) first.
 
-Everyone here is a volunteer, so please be respectful and patient. For governance and community expectations, see [GOVERNANCE.md](./GOVERNANCE.md).
-
----
-
-## Community forks
-
-One of the best things about open source is that anyone can take the code in a different direction. If you need something outside CrossPoint's [scope](./SCOPE.md), check out the community forks:
-
-- [CrossInk](https://github.com/uxjulia/CrossInk) — UX focused with minimal reading stats and broader customizations for the reading experience.
-
-- [papyrix-reader](https://github.com/bigbag/papyrix-reader) — Adds FB2 and MD format support. Actively maintained with Arabic script support. Custom themes.
-
-- [inx](https://github.com/obijuankenobiii/inx) — Completely reimagines the user interface with tabbed navigation.
-
-- [Witch(hunt) Reader](https://github.com/jpirnay/witchhunt-reader) — More faithful CSS styling and background work for slightly snappier interaction. Weather information panel. Markdown support.
-
-**Note:** Many of these features will make their way into CrossPoint over time. Each project chooses its own priorities and tradeoffs.
-
-Want to build your own device? Be sure to check out the [de-link](https://github.com/iandchasse/de-link) project or [OnePage Reader](https://github.com/MoveCall/onepage-reader).
+Please don't report lila bugs to CrossPoint. If a bug also happens on official CrossPoint firmware, report it there so
+every fork gets the fix. lila sends general fixes upstream too.
 
 ---
 
-CrossPoint Reader is **not affiliated with Xteink or any device manufacturer**.
+## License
+
+MIT, like CrossPoint. [LICENSE](./LICENSE) keeps CrossPoint's copyright notice alongside lila's.
