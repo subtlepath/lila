@@ -1,0 +1,43 @@
+title: La semana de Sofía
+title_en: Sofía's week
+level: A1
+kind: reading
+lesson: u06.l03
+lines:
+  - es: "Sofía es ingeniera y trabaja en una oficina en el centro."
+    en: "Sofía is an engineer, and she works in an office downtown."
+  - es: "Trabaja de lunes a viernes."
+    en: "She works Monday to Friday."
+  - es: "Empieza a las nueve de la [mañana|mañana#morning] y regresa a casa a las siete de la noche."
+    en: "She starts at nine in the morning and gets home at seven in the evening."
+  - es: "La comida es a las tres. A veces [come|comer] con Mariana, su compañera de [trabajo|trabajo]."
+    en: "Lunch is at three. Sometimes she eats with Mariana, a coworker."
+  - es: "Los sábados, Sofía duerme mucho."
+    en: "On Saturdays, Sofía sleeps late."
+    paragraph: true
+  - es: "En la [tarde|tarde], juega futbol en el parque con su hermano Memo."
+    en: "In the afternoon, she plays soccer in the park with her brother Memo."
+  - es: "El domingo es para la familia."
+    en: "Sunday is for family."
+    paragraph: true
+  - es: "Sofía y su mamá cocinan, y toda la familia [come|comer] a las tres."
+    en: "Sofía and her mom cook, and the whole family has lunch at three."
+  - es: "Después, todos platican mucho."
+    en: "Afterwards, everyone sits and talks for a long time."
+    reviewer_notes: "The translation adds the after-meal talk (sobremesa). Too free?"
+  - es: "En la noche, Sofía lee un libro. ¡El lunes empieza otra semana!"
+    en: "At night, Sofía reads a book. On Monday another week begins!"
+questions:
+  - q: "¿Qué días trabaja Sofía?"
+    options: ["De lunes a viernes", "Los sábados", "Todos los días"]
+    answer: 0
+  - q: "¿A qué hora regresa Sofía a casa?"
+    options: ["A las nueve", "A las tres", "A las siete"]
+    answer: 2
+  - q: "What does Sofía do on Saturday afternoons?"
+    lang: en
+    options: ["She plays soccer", "She cooks with her mom", "She works", "She reads a book"]
+    answer: 0
+  - q: "¿Con quién cocina Sofía el domingo?"
+    options: ["Con su mamá", "Con Mariana", "Con Memo"]
+    answer: 0

@@ -1,0 +1,128 @@
+number: 2
+title: Mi casa es su casa
+title_en: My home is your home
+level: A1
+new: [vivir, departamento, edificio, piso, puerta, sala, cuarto, recámara, baño, azotea, vecino, nuestro]
+conjugate: ["vivir:pres"]
+reviewer_notes:
+  - "Rooms note: the primer piso is usually one floor up from the planta baja. Translations keep the Spanish number ('tercer piso' = 'third floor'). Is Mexican usage mixed enough to keep that, or should the English shift by one floor?"
+  - "Culture note: azoteas with the tinaco, the gas tank, laundry lines and a dog keeping watch. Accurate?"
+notes:
+  - kind: grammar
+    title: Whose is it?
+    text: |
+      The possessives go before the noun and agree with the *thing owned*, not with the owner:
+
+      - _mi casa_, _mis llaves_ — my
+      - _tu cuarto_, _tus primos_ — your (a friend)
+      - _su departamento_, _sus vecinos_ — his, her, its, their, your (usted or ustedes)
+      - _nuestro edificio_, _nuestra sala_, _nuestros hijos_, _nuestras sillas_ — our
+
+      _Su_ has many meanings. When it is not clear, say _de_ + the person: _la casa de Ana_ (Ana's house), _el cuarto de ustedes_ (your room). Spanish has no _'s_: _el carro de mi papá_ is my dad's car.
+  - kind: usage
+    title: Rooms and floors
+    allow: [piso]
+    text: |
+      - _la recámara_ — the bedroom. It is the Mexican word; _el cuarto_ (the room) also works for a bedroom.
+      - _la sala_ — the living room
+      - _el baño_ — the bathroom, and the restroom in a restaurant
+      - _el piso_ — a floor or story of a building: _Vivo en el tercer piso._
+
+      A _piso_ is never an apartment in Mexico: that is a _departamento_ (~piso~ in that sense is Spanish from Spain). The ground floor is the _planta baja_, and the _primer piso_ is usually one floor up.
+  - kind: culture
+    title: Mi casa es su casa
+    text: |
+      _Mi casa es su casa_ (my home is your home) is how Mexicans welcome a guest, and they mean it: expect to be offered something to eat or drink. Among friends it becomes _mi casa es tu casa_.
+
+      Most people in the big cities live in a _departamento_. Mexican roofs are flat, and the _azotea_ holds the water tank (_tinaco_), the gas tank and the laundry lines. On many azoteas there is also a dog keeping watch.
+sentences:
+  - es: "{Vivo} en la Ciudad de México."
+    en: "I live in Mexico City."
+  - es: "¿Tú dónde {vives}?"
+    en: "Where do you live?"
+  - es: "Mis papás {viven} en Guadalajara."
+    en: "My parents live in Guadalajara."
+  - es: "Mi {departamento} es chico, pero tiene dos baños."
+    en: "My apartment is small, but it has two bathrooms."
+  - es: "Ana vive en un {departamento} en la calle Xola."
+    en: "Ana lives in an apartment on Xola Street."
+  - es: "El {edificio} tiene cinco pisos."
+    en: "The building has five floors."
+    allow: [piso]
+  - es: "Vivo en un {edificio} muy grande."
+    en: "I live in a very big building."
+  - es: "Vivo en el tercer {piso}."
+    en: "I live on the third floor."
+    allow: [piso]
+  - es: "¿En qué {piso} vives?"
+    en: "What floor do you live on?"
+    allow: [piso]
+    order: true
+  - es: "La {puerta} de la casa es roja."
+    en: "The front door is red."
+  - es: "Alguien está en la {puerta}."
+    en: "Someone's at the door."
+  - es: "La {sala} es grande."
+    en: "The living room is big."
+  - es: "Mis abuelos están en la {sala}."
+    en: "My grandparents are in the living room."
+    order: true
+  - es: "Mi {cuarto} es chico."
+    en: "My room is small."
+  - es: "Es el {cuarto} de mi hermano."
+    en: "It's my brother's room."
+  - es: "El departamento tiene dos {recámaras}."
+    en: "The apartment has two bedrooms."
+  - es: "La {recámara} de mis papás está arriba."
+    en: "My parents' bedroom is upstairs."
+  - es: "¿El {baño}? Está arriba, señora."
+    en: "The bathroom? It's upstairs, ma'am."
+  - es: "La casa tiene dos {baños}."
+    en: "The house has two bathrooms."
+    order: true
+  - es: "El perro de mi vecino vive en la {azotea}."
+    en: "My neighbor's dog lives on the roof."
+    reviewer_notes: "A rooftop dog: a familiar city sight, or a cliché to avoid?"
+  - es: "Tomamos café en la {azotea}."
+    en: "We have coffee up on the roof."
+  - es: "Doña Laura es mi {vecina}."
+    en: "Doña Laura is my neighbor."
+  - es: "Mis {vecinos} hablan mucho."
+    en: "My neighbors talk a lot."
+    reviewer_notes: "Does 'hablan mucho' read as 'they talk a lot' (chatty) and not as gossip?"
+  - es: "{Nuestro} departamento está en el tercer piso."
+    en: "Our apartment is on the third floor."
+    allow: [piso]
+  - es: "Ella es {nuestra} vecina."
+    en: "She's our neighbor."
+dialogue:
+  title: Bienvenido
+  title_en: Welcome
+  reviewer_notes: "Ana says Pásale (tú) to Tom, and Mi casa es su casa (usted) to doña Laura, who says tú to Ana. The note says friends say mi casa es tu casa. Is the address right throughout?"
+  lines:
+    - speaker: Ana
+      es: "¡Bienvenido, Tom! Pásale. Aquí está la sala."
+      en: "Welcome, Tom! Come on in. This is the living room."
+    - speaker: Tom
+      es: "Gracias. ¿Y cuántas recámaras tiene el departamento?"
+      en: "Thanks. And how many bedrooms does the apartment have?"
+    - speaker: Ana
+      es: "Dos, y un baño. Vivo en el tercer piso, y arriba está la azotea."
+      en: "Two, and one bathroom. I live on the third floor, and the roof terrace is right above."
+      allow: [piso]
+    - speaker: Laura
+      es: "Buenas tardes, Ana. ¿Quién es tu amigo?"
+      en: "Good afternoon, Ana. Who's your friend?"
+    - speaker: Ana
+      es: "Buenas tardes, doña Laura. Él es Tom."
+      en: "Good afternoon, doña Laura. This is Tom."
+    - speaker: Tom
+      es: "Mucho gusto, señora. ¿Usted también vive aquí?"
+      en: "Nice to meet you, ma'am. Do you live here too?"
+    - speaker: Laura
+      es: "Sí, en el segundo piso. ¡Bienvenido a nuestro edificio!"
+      en: "Yes, on the second floor. Welcome to our building!"
+      allow: [piso]
+    - speaker: Ana
+      es: "Pase, doña Laura. Mi casa es su casa."
+      en: "Come in, doña Laura. My home is your home."

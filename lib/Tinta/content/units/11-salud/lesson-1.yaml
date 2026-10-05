@@ -1,0 +1,122 @@
+number: 1
+title: Me duele la cabeza
+title_en: I have a headache
+level: A2
+reviewer_notes:
+  - "Home remedies in the culture note (té de manzanilla, caldo de pollo, Vaporub): fair and respectful?"
+new: [cuerpo, cabeza, ojo, garganta, estómago, espalda, brazo, mano, pierna, pie, muela, doler]
+conjugate: ["doler:pres.3s", "doler:pres.3p"]
+notes:
+  - kind: grammar
+    title: Doler works like gustar
+    text: |
+      _Doler_ (to hurt) works like _gustar_: the part that hurts is the subject, and the person it hurts comes first as _me, te, le, nos, les_.
+
+      - _Me duele la cabeza._ — My head hurts. (one thing: _duele_)
+      - _Me duelen los pies._ — My feet hurt. (more than one: _duelen_)
+      - _¿Qué te duele?_ — What hurts? (to a friend)
+      - _¿Qué le duele?_ — What hurts? (to a patient, with usted)
+
+      Body parts take _el_ or _la_, not _mi_: say _Me duele *la* mano_, not _mi mano_. The _me_ already says whose hand it is.
+  - kind: usage
+    title: Body words
+    text: |
+      A few body words need care:
+
+      - _la mano_ is feminine although it ends in _-o_: _la mano derecha_, _las manos_.
+      - a _muela_ is a back tooth; _diente_ is any tooth. A toothache is _Me duele una muela._
+      - _el estómago_ is the stomach; among friends many people say _la panza_ (belly).
+      - _el pie_, _los pies_; _a pie_ means on foot: _Voy a pie._
+
+      _¡Ojo!_ (eye!) is an everyday way to say "watch out" or "pay attention".
+  - kind: culture
+    title: Home remedies
+    text: |
+      For small aches, many Mexicans reach for a home remedy before the pharmacy:
+
+      - _té de manzanilla_ (chamomile tea) for an upset stomach
+      - _caldo de pollo_ (chicken soup) for a cold
+      - a rub of _Vaporub_ on the chest, a remedy many grandmothers swear by
+
+      When someone sneezes, say _¡Salud!_ (bless you). The same word is a toast.
+sentences:
+  - es: "Me duele todo el {cuerpo}."
+    en: "My whole body hurts."
+  - es: "El agua es buena para el {cuerpo}."
+    en: "Water is good for your body."
+  - es: "Me duele la {cabeza}."
+    en: "I have a headache."
+    order: true
+  - es: "Ponte algo en la {cabeza}, hace mucho sol."
+    en: "Put something on your head; it's really sunny."
+  - es: "Me duelen los {ojos}."
+    en: "My eyes hurt."
+  - es: "Memo tiene los {ojos} azules."
+    en: "Memo has blue eyes."
+  - es: "Me duele la {garganta}."
+    en: "I have a sore throat."
+  - es: "Toma agua caliente con limón para la {garganta}."
+    en: "Drink hot water with lime for your throat."
+  - es: "Me duele el {estómago}."
+    en: "I have a stomachache."
+  - es: "Tengo el {estómago} lleno."
+    en: "I'm full."
+  - es: "Me duele la {espalda}."
+    en: "My back hurts."
+  - es: "Mi abuelo tiene problemas de {espalda}."
+    en: "My grandpa has back problems."
+  - es: "Tom se cayó y le duele el {brazo}."
+    en: "Tom fell, and his arm hurts."
+  - es: "Memo se rompió el {brazo} jugando futbol."
+    en: "Memo broke his arm playing soccer."
+  - es: "Me duele la {mano}."
+    en: "My hand hurts."
+  - es: "Lávate las {manos} antes de comer."
+    en: "Wash your hands before you eat."
+  - es: "Tom no puede caminar: le duele una {pierna}."
+    en: "Tom can't walk: one of his legs hurts."
+  - es: "Corrí mucho y ahora me duelen las {piernas}."
+    en: "I ran a lot, and now my legs hurt."
+  - es: "Me duelen los {pies}."
+    en: "My feet hurt."
+  - es: "Voy a la escuela a {pie}."
+    en: "I walk to school."
+    order: true
+  - es: "Me duele una {muela}."
+    en: "I have a toothache."
+  - es: "¿Todavía te duele la {muela}?"
+    en: "Does your tooth still hurt?"
+  - es: "¿Qué te {duele}?"
+    en: "What hurts?"
+    order: true
+  - es: "A Tom le {duele} la espalda."
+    en: "Tom's back hurts."
+  - es: "¿Le {duelen} los pies, señora?"
+    en: "Do your feet hurt, ma'am?"
+  - es: "Nos {duelen} las piernas."
+    en: "Our legs hurt."
+dialogue:
+  title: ¿Qué te duele?
+  title_en: What hurts?
+  lines:
+    - speaker: Sofía
+      es: "Tom, ¿qué te pasa? Caminas muy despacio."
+      en: "Tom, what's wrong? You're walking really slowly."
+    - speaker: Tom
+      es: "Ayer jugué futbol. Ahora me duelen las piernas y la espalda."
+      en: "I played soccer yesterday. Now my legs and my back hurt."
+    - speaker: Sofía
+      es: "¡Es que nunca haces ejercicio!"
+      en: "That's because you never exercise!"
+    - speaker: Tom
+      es: "Sí hago ejercicio... a veces. Y también me duele una muela."
+      en: "I do exercise... sometimes. And I have a toothache too."
+    - speaker: Sofía
+      es: "¡Ay, Tom! ¿Te duele mucho?"
+      en: "Oh, Tom! Does it hurt a lot?"
+    - speaker: Tom
+      es: "Sí, y ahora me duele la cabeza también."
+      en: "Yes, and now I have a headache too."
+    - speaker: Sofía
+      es: "Entonces tienes que descansar."
+      en: "Then you need to rest."

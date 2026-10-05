@@ -1,0 +1,298 @@
+title: "Frecuentes A, parte dos"
+sentences:
+  # 51 cualquier
+  - es: "Puedes venir {cualquier} día."
+    en: "You can come any day."
+    order: true
+  - es: "Lo venden en {cualquier} tienda."
+    en: "They sell it at any store."
+    note: "Cualquier never changes before a noun: cualquier día, cualquier tienda."
+  # 52 manera
+  - es: "De esta {manera} es más fácil."
+    en: "It's easier this way."
+  - es: "No hay {manera} de llegar a tiempo."
+    en: "There's no way to get there on time."
+  # 53 meter
+  - es: "Toño, {mete|meter:imp.2s} la ropa en la maleta."
+    en: "Toño, put the clothes in the suitcase."
+    note: "Meter is to put into something; poner is to put on or somewhere."
+  - es: "{Metí} las llaves en tu bolsa."
+    en: "I put the keys in your bag."
+  # 54 acabarse
+  - es: "Ayer se {acabaron} las vacaciones."
+    en: "Our vacation ended yesterday."
+  - es: "Se me {acabó|acabarse} el dinero."
+    en: "I ran out of money."
+    note: "Se me acabó...: I ran out of... The thing that runs out is the subject."
+  # 54 contar
+  - es: "Mi abuelo nos {contó} una historia."
+    en: "My grandfather told us a story."
+    note: "Contar is to tell (a story, what happened) and to count. Te cuento: let me tell you."
+  - es: "Mi hijo ya sabe {contar} hasta cien."
+    en: "My son can already count to a hundred."
+  # 55 enviar
+  - es: "Mis papás me {envían} dinero cada mes."
+    en: "My parents send me money every month."
+    note: "Mandar is the more common word: me mandan dinero."
+  - es: "Le {envié} un mensaje a Ana."
+    en: "I sent Ana a message."
+  # 56 contra
+  - es: "Hoy México juega {contra} Estados Unidos."
+    en: "Today Mexico is playing against the United States."
+  # 57 durante
+  - es: "Viví en Oaxaca {durante} dos años."
+    en: "I lived in Oaxaca for two years."
+  # 58 palabra
+  - es: "No entiendo esta {palabra}."
+    en: "I don't understand this word."
+    order: true
+  - es: "Te doy mi {palabra}."
+    en: "I give you my word."
+    order: true
+  # 59 importante
+  - es: "[Mañana|mañana] tengo una reunión muy {importante}."
+    en: "I have a very important meeting tomorrow."
+  - es: "Lo más {importante} es la salud."
+    en: "The most important thing is your health."
+    note: "Lo más + adjective: the most ... thing."
+  # 60 dentro
+  - es: "Las llaves están {dentro} de la caja."
+    en: "The keys are inside the box."
+  - es: "Llego {dentro} de una hora."
+    en: "I'll be there in an hour."
+    note: "Dentro de + a time: in (an hour, a week) from now."
+  # 61 casi
+  - es: "{Casi} nunca [como|comer] carne."
+    en: "I hardly ever eat meat."
+    note: "Casi nunca: hardly ever."
+  - es: "Ya {casi} llegamos."
+    en: "We're almost there."
+    order: true
+  # 62 hacia
+  - es: "Toño caminó {hacia} la puerta."
+    en: "Toño walked toward the door."
+  # 63 quizás
+  - es: "{Quizás} tienes razón."
+    en: "Maybe you're right."
+    order: true
+    note: "Also quizá. Everyday Mexican speech often says a lo mejor."
+  - es: "¿Vienes [mañana|mañana]? —{Quizás}."
+    en: "Are you coming tomorrow? —Maybe."
+  # 64 corazón
+  - es: "Mi abuelo está [mal|mal] del {corazón}."
+    en: "My grandfather has heart trouble."
+  - es: "Te lo digo de {corazón}."
+    en: "I mean it from the bottom of my heart."
+  # 65 pronto
+  - es: "Mi hermana va a tener un bebé muy {pronto}."
+    en: "My sister is going to have a baby very soon."
+  # 66 funcionar
+  - es: "La regadera no {funciona}."
+    en: "The shower doesn't work."
+    order: true
+    note: "Funcionar is for machines. For people working, use trabajar."
+  - es: "¿Cómo {funciona} el metro aquí?"
+    en: "How does the metro work here?"
+  # 67 punto
+  - es: "[Llegamos|llegar:pret.1p] a las tres en {punto}."
+    en: "We got there at three o'clock sharp."
+  - es: "Estoy a {punto} de salir."
+    en: "I'm about to leave."
+    order: true
+    note: "Estar a punto de: to be about to."
+  # 68 preparar
+  - es: "Mi abuela {prepara} el mejor mole."
+    en: "My grandma makes the best mole."
+  - es: "¿Ya {preparaste} tu maleta?"
+    en: "Have you packed your suitcase yet?"
+  # 69 justo
+  - es: "¡No es {justo}!"
+    en: "It's not fair!"
+    order: true
+  - es: "Llegaste {justo} a tiempo."
+    en: "You got here just in time."
+  # 70 mostrar
+  - es: "¿Me {muestra} su pasaporte, señor?"
+    en: "Can you show me your passport, sir?"
+  - es: "Te voy a {mostrar} mi colonia."
+    en: "I'm going to show you my neighborhood."
+    note: "Enseñar is the more common everyday word for 'to show'."
+  # 71 realidad
+  - es: "Mi sueño se hizo {realidad}."
+    en: "My dream came true."
+  - es: "En {realidad}, no me gusta el futbol."
+    en: "Actually, I don't like soccer."
+    note: "En realidad: actually, in fact. Not 'really' as in 'very'."
+  # 72 miedo
+  - es: "Le tengo {miedo} a los perros."
+    en: "I'm afraid of dogs."
+    note: "Tener miedo: to be afraid. Le tengo miedo a...: I'm afraid of..."
+  - es: "Me da {miedo} manejar en la noche."
+    en: "Driving at night scares me."
+  # 73 desear
+  - es: "¿Qué {desea}, señora?"
+    en: "What would you like, ma'am?"
+    note: "Shop staff say ¿Qué desea? Among friends, use querer."
+  - es: "Te {deseo} un feliz cumpleaños."
+    en: "I wish you a happy birthday."
+    order: true
+  # 74 dios
+  - es: "Gracias a {Dios}, no pasó nada."
+    en: "Thank God, nothing happened."
+  - es: "¡Ay, {Dios} mío! ¿Qué pasó?"
+    en: "Oh my God! What happened?"
+    note: "Dios is everywhere in Mexican speech and is not rude."
+  # 75 equipo
+  - es: "¿A qué {equipo} le vas?"
+    en: "Which team do you root for?"
+    note: "Irle a un equipo: to root for a team. Very Mexican."
+  - es: "Mi {equipo} ganó el partido."
+    en: "My team won the game."
+    order: true
+  # 76 suficiente
+  - es: "No tengo {suficiente} dinero."
+    en: "I don't have enough money."
+    order: true
+  - es: "Con eso es {suficiente}, gracias."
+    en: "That's enough, thanks."
+  # 77 coche
+  - es: "Vamos en mi {coche}."
+    en: "Let's go in my car."
+    order: true
+    note: "Carro is the everyday word in most of Mexico."
+    reviewer_notes: "Coche kept for Mexico City speakers. Is 'Vamos en mi coche' natural there?"
+  # 78 recibir
+  - es: "¿{Recibiste} mi mensaje? Te lo mandé ayer."
+    en: "Did you get my message? I sent it to you yesterday."
+  - es: "Ayer {recibimos|recibir:pret.1p} una carta de mi tío."
+    en: "Yesterday we got a letter from my uncle."
+  # 79 beber
+  - es: "Si va a {beber}, no [maneje|manejar:impneg.3s]."
+    en: "If you're going to drink, don't drive."
+    note: "Beber sounds formal, as on signs. In conversation, Mexicans say tomar."
+  - es: "El doctor dice que debo {beber} más agua."
+    en: "The doctor says I should drink more water."
+  # 80 bastante
+  - es: "Hablas español {bastante} bien."
+    en: "You speak Spanish pretty well."
+  # 81 adelante
+  - es: "¿Se puede? —¡{Adelante}!"
+    en: "May I come in? —Come in!"
+  - es: "Más {adelante} hay una farmacia."
+    en: "There's a pharmacy further ahead."
+  # 82 igual
+  - es: "Me da {igual}."
+    en: "I don't mind either way."
+    note: "Me da igual: it's all the same to me."
+  - es: "Tu celular es {igual} al mío."
+    en: "Your cell phone is just like mine."
+  # 83 nada más
+  - es: "{Nada más} quiero un café."
+    en: "I just want a coffee."
+  - es: "Son {nada más} cinco minutos."
+    en: "It's only five minutes."
+    note: "Nomás is the short, colloquial form."
+  # 84 prometer
+  - es: "Te lo {prometo}."
+    en: "I promise."
+    order: true
+  - es: "Me {prometiste} que ibas a venir."
+    en: "You promised me you'd come."
+  # 85 tirar
+  - es: "¿Dónde {tiro} esto?"
+    en: "Where do I throw this away?"
+    note: "Tirar is to throw away. In Mexico it never means 'to pull': that is jalar."
+  - es: "El niño {tiró} el vaso."
+    en: "The boy knocked over the glass."
+  # 86 probar
+  - es: "¿Quieres {probar} el mole?"
+    en: "Do you want to try the mole?"
+    order: true
+  - es: "{Prueba|probar:imp.2s} esta salsa, Memo."
+    en: "Try this salsa, Memo."
+    note: "Probar is to taste or try. Trying on clothes is probarse."
+  # 87 preocuparse
+  - es: "No te {preocupes}."
+    en: "Don't worry."
+    order: true
+  - es: "Mi mamá se {preocupa} por todo."
+    en: "My mom worries about everything."
+    order: true
+  # 88 permitir
+  - es: "Aquí no {permiten} perros."
+    en: "They don't allow dogs here."
+  - es: "Cuando era niña, mis papás no me {permitían} salir en la noche."
+    en: "When I was a girl, my parents wouldn't let me go out at night."
+  # 89 fuerte
+  - es: "Ayer llovió muy {fuerte}."
+    en: "It rained really hard yesterday."
+    note: "Fuerte: strong, but also loud (voice, music) and heavy (rain)."
+  - es: "Mi hermano es muy {fuerte}."
+    en: "My brother is very strong."
+  # 90 durar
+  - es: "¿Cuánto {dura} la película?"
+    en: "How long is the movie?"
+    order: true
+  - es: "La fiesta {duró} hasta las tres de la [mañana|mañana#morning]."
+    en: "The party lasted until three in the morning."
+  # 91 incluso
+  - es: "[Trabajo|trabajar] todos los días, {incluso} los domingos."
+    en: "I work every day, even on Sundays."
+    note: "In conversation, hasta is just as common: hasta los domingos."
+  # 92 aunque
+  - es: "{Aunque} está lloviendo, vamos a salir."
+    en: "Even though it's raining, we're going out."
+  # 93 perdonar
+  - es: "Ana, ¿me {perdonas}?"
+    en: "Ana, do you forgive me?"
+  - es: "{Perdone|perdonar:imp.3s}, señor, ¿dónde está el baño?"
+    en: "Excuse me, sir, where's the restroom?"
+    note: "Perdone (usted) to get a stranger's attention or apologize."
+  # 94 decidir
+  - es: "¿Ya {decidiste} qué vas a pedir?"
+    en: "Have you decided what you're going to order?"
+  - es: "Mis papás {decidieron} vender la casa."
+    en: "My parents decided to sell the house."
+    order: true
+  # 95 oportunidad
+  - es: "Es una buena {oportunidad}."
+    en: "It's a good opportunity."
+    order: true
+  - es: "Dame otra {oportunidad}."
+    en: "Give me another chance."
+  # 96 teléfono
+  - es: "El {teléfono} de la casa no sirve."
+    en: "The house phone doesn't work."
+  # 97 final
+  - es: "Al {final}, todo salió bien."
+    en: "In the end, everything turned out fine."
+    note: "Al final: in the end."
+  - es: "El {final} de la película es muy triste."
+    en: "The ending of the movie is very sad."
+  # 98 presentar
+  - es: "Te {presento} a mi novia, Sofía."
+    en: "This is my girlfriend, Sofía."
+    note: "Te presento a...: let me introduce..., this is..."
+  - es: "Ana me {presentó} a su familia."
+    en: "Ana introduced me to her family."
+    order: true
+  # 99 molestar
+  - es: "¿Te {molesta} la música?"
+    en: "Does the music bother you?"
+    note: "Molestar works like gustar: the thing that bothers is the subject."
+  - es: "Perdón por {molestar}."
+    en: "Sorry to bother you."
+  # 100 muchacho
+  - es: "Un {muchacho} me ayudó con las maletas."
+    en: "A young man helped me with my suitcases."
+  - es: "Las {muchachas} de la oficina me invitaron a comer."
+    en: "The girls from the office invited me to lunch."
+    reviewer_notes: "Is 'las muchachas de la oficina' friendly and natural, or could it sound condescending?"
+    note: "Muchacho and muchacha: everyday words for young people, even at work."
+  # 100 solo#alone
+  - es: "Mi abuela vive {sola|solo#alone}."
+    en: "My grandmother lives alone."
+    order: true
+    note: "Solo as an adjective (alone) agrees: sola, solos. Solo meaning 'only' never changes."
+  - es: "No me gusta comer {solo|solo#alone}."
+    en: "I don't like eating alone."

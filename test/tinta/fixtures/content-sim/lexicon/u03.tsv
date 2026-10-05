@@ -1,0 +1,57 @@
+# Unit 3: En la taquería / At the taco stand. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u03.l01 ¿Qué quieres? (querer). Also new here, rows in core.tsv: grande, chico, comer, tomar
+taquería		noun	f	taco stand; taco restaurant	A1		x	food				
+refresco		noun	m	soda; soft drink	A1			food				
+torta		noun	f	Mexican sandwich (on a roll)	A1		x	food			Not a cake (that is un pastel).	
+quesadilla		noun	f	quesadilla	A1		x	food			In Mexico City ask con queso: it may come without cheese.	
+tortilla		noun	f	tortilla (corn or flour)	A1		x	food			In Mexico, never an omelet.	
+carne		noun	f	meat; beef	A1			food				
+queso		noun	m	cheese	A1			food				
+querer		verb		to want; to love (someone)	A1			grammar			Quiero: I want. Te quiero: I love you.	
+# --- u03.l02 Me encanta el picante (gustar). Also new here, rows in core.tsv: bueno, rico, picante, picar, salsa, cebolla
+gustar		verb		to like	A1			feelings			Me gusta el café. Plural thing: me gustan los tacos.	
+encantar		verb		to love (something)	A1			feelings			Works like gustar: me encanta.	
+dulce		adj		sweet	A1			food			Los dulces: candy.	
+cilantro		noun	m	cilantro; coriander	A1			food				
+aguacate		noun	m	avocado	A1			food			From Nahuatl ahuacatl.	
+jitomate		noun	m	tomato	A1		x	food		tomate	In central Mexico, tomate is the green tomatillo.	
+# --- u03.l03 ¿Me trae la cuenta? (polite requests). Also new here, rows in core.tsv: mesero, cuenta, dar, pasar, llevar
+orden		noun	f	order; serving (of tacos)	A1		x	food			Una orden de tacos: a plate of tacos.	
+vaso		noun	m	glass (for drinking)	A1			food				
+popote		noun	m	drinking straw	A1		x	food		pajita; pitillo	From Nahuatl.	
+servilleta		noun	f	napkin	A1			food				
+sal		noun	f	salt	A1			food				
+traer		verb		to bring	A1			things			¿Me trae...?: Could you bring me...?	
+poder		verb		can; to be able to	A1			grammar			¿Me puede...?: Could you...?	
+# --- u03.l04 ¿Cuánto es? (numbers 40-100, prices)
+cuarenta		num		forty	A1			numbers				
+cincuenta		num		fifty	A1			numbers				
+sesenta		num		sixty	A1			numbers				
+setenta		num		seventy	A1			numbers				
+ochenta		num		eighty	A1			numbers				
+noventa		num		ninety	A1			numbers				
+cien		num		one hundred	A1			numbers			101 to 199 use ciento: ciento veinte.	
+peso		noun	m	peso (Mexican money); weight	A1			money				
+costar		verb		to cost	A1			money			¿Cuánto cuesta?: How much is it?	
+pagar		verb		to pay; to pay for	A1			money			Pagar la cuenta: to pay the check.	
+tarjeta		noun	f	card (credit or debit)	A1			money				
+propina		noun	f	tip (for service)	A1			money				
+# --- supporting (no lesson introduces these; usable from Unit 3 on)
+nos		pron		us; (to) us; ourselves	A1			people				
+mí		pron		me (after a preposition)	A1			people			A mí me gusta. Para mí.	
+ti		pron		you (after a preposition)	A1			people			¿Y a ti? Para ti.	
+otro		det		other; another	A1			grammar	f=otra; mpl=otros; fpl=otras		Never un otro: otro taco, por favor.	
+si		conj		if	A1			grammar				
+tampoco		adv		neither; not either	A1			grammar			A mí tampoco: me neither.	
+rojo		adj		red	A1			describing				
+verde		adj		green	A1			describing				
+mediano		adj		medium (size)	A1			describing				
+maíz		noun	m	corn; maize	A1			food				
+horchata		noun	f	horchata (sweet rice drink)	A1		x	food				
+jamaica		noun	f	hibiscus (agua de jamaica)	A1		x	food				
+aceptar		verb		to accept	A1			money			¿Aceptan tarjeta?: Do you take cards?	
+# --- names
+Chuy		propn		Chuy (short for Jesús)	A1							

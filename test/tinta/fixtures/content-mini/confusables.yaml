@@ -1,0 +1,6 @@
+- name: ser / estar
+  lemmas: [ser, estar]
+  note: Ser for identity and origin; estar for location and states.
+- name: por / para
+  lemmas: [por, para]
+  note: Por for cause and exchange; para for purpose and destination.

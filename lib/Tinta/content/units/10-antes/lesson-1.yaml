@@ -1,0 +1,135 @@
+number: 1
+title: Cuando era niño
+title_en: When I was a kid
+level: A2
+reviewer_notes:
+  - "Culture note: caricaturas after school, lotería, canicas, trompo, papalotes in the windy months, the corner tiendita, vacations at the grandparents' pueblo or rancho. Fair picture?"
+  - "'Jugar futbol' without 'al' is taught as the Mexican default. Confirm."
+  - "'De niño / de niña' and 'de chico / de chica' both offered for 'as a kid'. Natural?"
+new: [juguete, pelota, muñeca, bicicleta, caricatura, árbol, pueblo, rancho, travieso, crecer, acordarse, extrañar]
+conjugate: ["ser:impf", "ir:impf", "ver:impf", "jugar:impf"]
+notes:
+  - kind: grammar
+    title: The imperfect
+    text: |
+      The imperfect describes the past as it used to be: what you did again and again, and what people and places were like. English often says "used to" or "would".
+
+      - _-ar_ verbs: _jugaba, jugabas, jugaba, jugábamos, jugaban_
+      - _-er_ and _-ir_ verbs share one set of endings: _comía, comías, comía, comíamos, comían_; _vivía, vivías..._
+      - only three verbs are irregular: _ser_ (_era_), _ir_ (_iba_) and _ver_ (_veía_)
+
+      The yo and él forms are the same, so add the subject when it is not clear: _Yo jugaba futbol y él veía caricaturas._
+
+      _Había_ is the past of _hay_: _Había un árbol muy grande._ (There was a very big tree.)
+  - kind: usage
+    title: Remembering and missing
+    text: |
+      _Acordarse de_ is the everyday Mexican way to say "remember". It is reflexive, and _de_ comes before what you remember:
+
+      - _¿Te acuerdas del rancho?_ — Do you remember the ranch?
+      - _Me acuerdo de mi abuelo._ — I remember my grandfather.
+      - _No me acuerdo._ — I don't remember.
+
+      _Recordar_ means the same but sounds more formal.
+
+      _Extrañar_ is "to miss": _Te extraño._ (I miss you.) With people, add _a_: _Extraño a mis abuelos._
+
+      To set the scene, start with _de niño_, _de niña_ (as a kid) or _cuando era niño_. Many Mexicans also say _de chico_, _de chica_.
+  - kind: culture
+    title: A Mexican childhood
+    text: |
+      Ask Mexicans about their childhood and you will hear about:
+
+      - _caricaturas_ (cartoons) on TV after school; in Mexico a _caricatura_ is a cartoon, not a caricature
+      - games of _lotería_ (a picture bingo), _canicas_ (marbles) and the _trompo_ (spinning top)
+      - flying a _papalote_ (kite) in the windy months
+      - the corner _tiendita_ for sweets and a _refresco_
+      - vacations at the grandparents' _pueblo_ (hometown) or _rancho_ (a small farm in the countryside)
+
+      Many city families still have roots in a _pueblo_ and go back for its feast days.
+sentences:
+  - es: "De niño tenía muchos {juguetes}."
+    en: "As a kid, I had lots of toys."
+  - es: "Mi abuelo me hacía {juguetes}."
+    en: "My grandpa used to make me toys."
+  - es: "Jugábamos con una {pelota} en la calle."
+    en: "We used to play ball in the street."
+  - es: "¿Me pasas la {pelota}?"
+    en: "Can you pass me the ball?"
+  - es: "Sofía tenía una {muñeca} muy bonita."
+    en: "Sofía had a really pretty doll."
+  - es: "Mi {muñeca} se llamaba Lupe."
+    en: "My doll was called Lupe."
+  - es: "Iba a la escuela en {bicicleta}."
+    en: "I used to ride my bike to school."
+  - es: "Tom tenía una {bicicleta} azul."
+    en: "Tom had a blue bike."
+  - es: "Después de la escuela, veíamos {caricaturas}."
+    en: "After school, we used to watch cartoons."
+    note: "In Mexico, caricaturas are cartoons."
+  - es: "Las {caricaturas} empezaban a las cuatro."
+    en: "The cartoons started at four."
+  - es: "Había un {árbol} muy grande enfrente de la casa."
+    en: "There was a very big tree in front of the house."
+  - es: "Memo se subía a los {árboles}."
+    en: "Memo used to climb the trees."
+  - es: "Mis abuelos vivían en un {pueblo} de Puebla."
+    en: "My grandparents lived in a little town in Puebla."
+  - es: "En el {pueblo} todos se conocían."
+    en: "In the town, everybody knew each other."
+  - es: "En vacaciones íbamos al {rancho} de mis abuelos."
+    en: "During vacations, we went to my grandparents' ranch."
+  - es: "En el {rancho} no había tele."
+    en: "There was no TV at the ranch."
+  - es: "Memo era muy {travieso}."
+    en: "Memo was really naughty."
+    order: true
+  - es: "¡Qué niña tan {traviesa}!"
+    en: "What a mischievous little girl!"
+  - es: "{Crecí} en Chicago."
+    en: "I grew up in Chicago."
+  - es: "Los niños {crecen} muy rápido."
+    en: "Kids grow up so fast."
+  - es: "¿Te {acuerdas} del rancho?"
+    en: "Do you remember the ranch?"
+    order: true
+  - es: "No me {acuerdo} de su nombre."
+    en: "I don't remember his name."
+  - es: "{Extraño} a mis abuelos."
+    en: "I miss my grandparents."
+    order: true
+  - es: "Y tú, ¿{extrañas} Chicago?"
+    en: "And you, do you miss Chicago?"
+  - es: "Cuando {era} niño, vivía en un rancho."
+    en: "When I was a kid, I lived on a ranch."
+  - es: "De niña, {jugaba} futbol con mis primos."
+    en: "As a girl, I used to play soccer with my cousins."
+    note: "Mexicans usually say jugar futbol, without al."
+dialogue:
+  title: El rancho del abuelo
+  title_en: Grandpa's ranch
+  lines:
+    - speaker: Memo
+      es: "Sofía, ¿te acuerdas del rancho de los abuelos?"
+      en: "Sofía, do you remember Grandma and Grandpa's ranch?"
+    - speaker: Sofía
+      es: "¡Sí! Íbamos todas las vacaciones. Quedaba cerca de Puebla."
+      en: "Yes! We went every vacation. It was near Puebla."
+    - speaker: Tom
+      es: "¿Y qué hacían allá?"
+      en: "And what did you do there?"
+    - speaker: Memo
+      es: "Jugábamos con una pelota todo el día y nos subíamos a los árboles."
+      en: "We played ball all day and climbed the trees."
+    - speaker: Sofía
+      es: "En la noche veíamos caricaturas con el abuelo. ¡Y Memo era muy travieso!"
+      en: "At night we watched cartoons with Grandpa. And Memo was really naughty!"
+    - speaker: Memo
+      es: "Y tú siempre jugabas con tu muñeca. ¿Y tú, Tom? ¿Dónde creciste?"
+      en: "And you always played with your doll. What about you, Tom? Where did you grow up?"
+    - speaker: Tom
+      es: "Crecí en Chicago. Iba a la escuela en bicicleta."
+      en: "I grew up in Chicago. I rode my bike to school."
+    - speaker: Sofía
+      es: "Ay, extraño el pueblo."
+      en: "Oh, I miss the old town."

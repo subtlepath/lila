@@ -1,0 +1,123 @@
+number: 2
+title: En la secundaria
+title_en: In middle school
+level: A2
+reviewer_notes:
+  - "Culture note facts: primaria six years, secundaria three, prepa three; the UNAM described as the largest university in Mexico; many schools hold honores a la bandera on Monday mornings. Accurate?"
+  - "'Primero de secundaria' translated as 'seventh grade'. OK?"
+  - "'¿Me puede cambiar un billete de quinientos?' for 'Can you break a 500?'. Natural?"
+  - "Doña Laura (older) says tú to Tom; Tom says usted to her."
+new: [primaria, secundaria, prepa, universidad, clase, examen, enseñar, difícil, fácil, barrio, vida, cambiar]
+conjugate: ["tener:impf", "estudiar:impf", "vivir:impf"]
+notes:
+  - kind: grammar
+    title: Habits and descriptions in the past
+    text: |
+      Use the imperfect for the background of the past:
+
+      - what used to happen: _Siempre estudiaba en la noche._ (I always studied at night.)
+      - what things and people were like: _La escuela era chica._
+      - age and time: _Tenía doce años._ _Eran las ocho._
+
+      To compare then and now, pair the imperfect with the present: _Antes vivía en Puebla; ahora vivo aquí._
+
+      _Ya no_ means "not any more": _Ya no estudio._ (I don't study any more.) _El barrio ya no es tranquilo._ (The neighborhood isn't quiet any more.)
+  - kind: culture
+    title: School in Mexico
+    text: |
+      Mexican schooling has four steps:
+
+      - _primaria_ — elementary school, six years, from about age six
+      - _secundaria_ — middle school, three years (grades seven to nine)
+      - _prepa_, short for _preparatoria_ — high school, three years
+      - _universidad_ — university; the UNAM in Mexico City is the largest in the country
+
+      School years are counted inside each step: _primero de secundaria_ is seventh grade.
+
+      Many schools have uniforms, and on Monday mornings many hold _honores a la bandera_, a short ceremony to the flag with the national anthem.
+sentences:
+  - es: "Mi mamá era maestra de {primaria}."
+    en: "My mom was an elementary school teacher."
+  - es: "En la {primaria} tenía una maestra muy amable."
+    en: "In elementary school, I had a very kind teacher."
+  - es: "Mi hermano menor va a la {secundaria}."
+    en: "My younger brother is in middle school."
+  - es: "Tenía doce años en primero de {secundaria}."
+    en: "I was twelve in seventh grade."
+    note: "Primero de secundaria: the first year of middle school."
+  - es: "En la {prepa} jugaba futbol."
+    en: "In high school, I played soccer."
+  - es: "Mariana y Sofía eran amigas en la {prepa}."
+    en: "Mariana and Sofía were friends in high school."
+  - es: "Después de la prepa, [fui|ir] a la {universidad}."
+    en: "After high school, I went to college."
+  - es: "La {universidad} queda lejos de mi casa."
+    en: "The university is far from my house."
+  - es: "La {clase} empezaba a las siete."
+    en: "Class started at seven."
+  - es: "Ya no tengo {clases} los sábados."
+    en: "I don't have classes on Saturdays any more."
+    order: true
+  - es: "[Mañana|mañana] tengo un {examen}."
+    en: "I have a test tomorrow."
+    order: true
+  - es: "El {examen} [fue|ser] muy difícil."
+    en: "The exam was really hard."
+  - es: "Doña Laura {enseñaba|enseñar:impf.3s} español."
+    en: "Doña Laura used to teach Spanish."
+    order: true
+  - es: "¿Me {enseñas} tu barrio?"
+    en: "Will you show me your neighborhood?"
+    note: "Enseñar is to teach, and also to show."
+  - es: "La tarea era muy {difícil}."
+    en: "The homework was really hard."
+  - es: "Es {difícil} encontrar departamento."
+    en: "It's hard to find an apartment."
+  - es: "No es {fácil}, pero puedes."
+    en: "It isn't easy, but you can do it."
+  - es: "Para mí, el inglés era {fácil}."
+    en: "For me, English was easy."
+  - es: "Crecí en un {barrio} muy tranquilo."
+    en: "I grew up in a very quiet neighborhood."
+  - es: "¿En qué {barrio} vivías?"
+    en: "What neighborhood did you live in?"
+  - es: "La {vida} en el pueblo era muy tranquila."
+    en: "Life in the town was very quiet."
+  - es: "Antes la {vida} era más barata."
+    en: "Life used to be cheaper."
+  - es: "La ciudad {cambió} mucho."
+    en: "The city has changed a lot."
+  - es: "¿Me puede {cambiar} un billete de quinientos?"
+    en: "Can you break a five-hundred-peso bill for me?"
+  - es: "Cuando {tenía} quince años, trabajaba en una tienda."
+    en: "When I was fifteen, I worked in a store."
+  - es: "Antes {vivía} en Puebla; ahora vivo aquí."
+    en: "I used to live in Puebla; now I live here."
+dialogue:
+  title: Antes y ahora
+  title_en: Then and now
+  lines:
+    - speaker: Tom
+      es: "Buenas tardes, doña Laura. ¿Le ayudo con las bolsas?"
+      en: "Good afternoon, doña Laura. Can I help you with your bags?"
+    - speaker: Laura
+      es: "Ay, gracias, Tom. Eres muy amable."
+      en: "Oh, thank you, Tom. You're very kind."
+    - speaker: Tom
+      es: "Doña Laura, ¿usted era maestra?"
+      en: "Doña Laura, were you a teacher?"
+    - speaker: Laura
+      es: "Sí, [fui|ser] maestra de primaria treinta años. Enseñaba español."
+      en: "Yes, I was an elementary school teacher for thirty years. I taught Spanish."
+    - speaker: Tom
+      es: "¿Y cómo era el barrio antes?"
+      en: "And what was the neighborhood like back then?"
+    - speaker: Laura
+      es: "Era más tranquilo. No había metro, y yo caminaba a la escuela todos los días."
+      en: "It was quieter. There was no metro, and I walked to school every day."
+    - speaker: Tom
+      es: "¿Y era difícil?"
+      en: "And was it hard?"
+    - speaker: Laura
+      es: "Los niños eran muy traviesos, pero la vida era más fácil. Todo cambió."
+      en: "The kids were very naughty, but life was easier. Everything has changed."

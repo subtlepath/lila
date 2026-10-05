@@ -1,0 +1,23 @@
+# Dictionary-only verbs s-z (content/lexicon/dictionary-s-z.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (sentar, sonar,
+# soñar, volar, vaciar, variar, vestir...) are not repeated.
+
+satisfacer:                 # satisfago, satisfice, satisfizo, satisfaré, satisfecho
+  yo: satisfago
+  pret: satisfic
+  fut: satisfar
+  imp: {2s: satisfaz}
+  participle: satisfecho
+sembrar: {stem: e>ie}       # siembro, siembra
+soler: {stem: o>ue}         # suelo, suele (no future or preterite in use)
+soltar: {stem: o>ue}        # suelto, suelta
+sostener: {like: tener}     # sostengo, sostuvo
+sugerir: {stem: e>ie}       # sugiero, sugirió
+tender: {stem: e>ie}        # tiendo, tiende
+teñir: {stem: e>i}          # tiño, tiñó, tiñeron
+torcer: {stem: o>ue}        # tuerzo, tuerce
+tostar: {stem: o>ue}        # tuesto, tuesta
+tronar: {stem: o>ue}        # truena, tronó
+tropezar: {stem: e>ie}      # tropiezo, tropecé
+volcar: {stem: o>ue}        # vuelca, volqué

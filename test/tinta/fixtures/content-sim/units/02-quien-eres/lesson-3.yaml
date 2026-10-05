@@ -1,0 +1,139 @@
+number: 3
+title: "¿Cómo estás?"
+title_en: How are you?
+level: A1
+reviewer_notes:
+  - "Usage note: estoy feliz and soy feliz both common; enojado rather than enfadado. Agree?"
+new: [estar, hoy, cansado, contento, feliz, triste, enojado, enfermo, ocupado, aburrido, listo, mal]
+conjugate: ["estar:pres"]
+notes:
+  - kind: grammar
+    title: "Estar: where and how"
+    text: |
+      _Estar_ is the second verb "to be". Learn the present tense by heart:
+
+      - _yo estoy_ — I am
+      - _tú estás_ — you are
+      - _él, ella, usted está_ — he is, she is, you are
+      - _nosotros estamos_ — we are
+      - _ellos, ellas, ustedes están_ — they are, you all are
+
+      Use it for where someone or something is: _Estoy en la oficina._ _La escuela está en Coyoacán._ And for how someone is right now: _Estoy cansado._
+
+      The adjective matches the person: _cansado_ for a man, _cansada_ for a woman, _cansados_ for a group. _Feliz_ and _triste_ do not change for a woman.
+  - kind: grammar
+    title: Ser or estar?
+    text: |
+      _Ser_ says who or what someone is: name, job, origin. _Estar_ says where they are and how they are right now.
+
+      - _Soy maestra._ — I'm a teacher. (job)
+      - _Es de Puebla._ — She's from Puebla. (origin)
+      - _Está en Puebla._ — She's in Puebla. (place)
+      - _Estoy cansada._ — I'm tired. (how I am now)
+
+      _Aburrido_ changes meaning with the verb: _estoy aburrido_ is "I'm bored", but _es aburrido_ is "it's boring".
+  - kind: usage
+    title: How are you, Mexican style
+    text: |
+      Answers to _¿Cómo estás?_, from good to bad:
+
+      - _muy bien_ — very well
+      - _bien_ — fine
+      - _más o menos_ — so-so
+      - _cansado_, _cansada_ — tired
+      - _mal_ — not well
+
+      Mexico says _enojado_ for angry; ~enfadado~ sounds Spanish. _Estoy feliz_ (I'm happy right now) and _soy feliz_ (I'm a happy person) are both common.
+sentences:
+  - es: "{Estoy} en casa."
+    en: "I'm at home."
+    note: "En casa: at home, with no article."
+  - es: "Sofía es de Puebla, pero {está} en Monterrey."
+    en: "Sofía is from Puebla, but she's in Monterrey."
+    note: "Ser for where you are from, estar for where you are."
+  - es: "Ana y Luis {están} en la fonda."
+    en: "Ana and Luis are at the fonda."
+    order: true
+  - es: "{Hoy} no [trabajo|trabajar]."
+    en: "I'm not working today."
+  - es: "¿Cómo estás {hoy}?"
+    en: "How are you today?"
+    order: true
+  - es: "Estoy muy {cansado}."
+    en: "I'm very tired."
+  - es: "Ana está {cansada} hoy."
+    en: "Ana is tired today."
+    note: "Cansada: the adjective matches Ana."
+  - es: "Estamos muy {contentos} en México."
+    en: "We're really glad to be in Mexico."
+    note: "Contentos: plural, for a group."
+  - es: "La maestra está {contenta} con los estudiantes."
+    en: "The teacher is pleased with the students."
+  - es: "¡{Feliz} Día del Maestro!"
+    en: "Happy Teacher's Day!"
+    reviewer_notes: "Fact in the sentence note: Mexico celebrates Día del Maestro on May 15. Correct?"
+    note: "Mexico celebrates its teachers on May 15."
+  - es: "Sofía es una persona muy {feliz}."
+    en: "Sofía is a very happy person."
+    reviewer_notes: "Ser feliz for a happy person: natural?"
+  - es: "Luis está {triste} hoy."
+    en: "Luis is sad today."
+  - es: "¿[Por qué|por qué] estás {triste}?"
+    en: "Why are you sad?"
+  - es: "El maestro está muy {enojado}."
+    en: "The teacher is really angry."
+  - es: "¿Estás {enojada} conmigo?"
+    en: "Are you mad at me?"
+    note: "Enojada: asked of a woman."
+  - es: "Hoy estoy {enfermo}."
+    en: "I'm sick today."
+  - es: "Mi mamá está {enferma}."
+    en: "My mom is sick."
+    order: true
+  - es: "Mariana está muy {ocupada}."
+    en: "Mariana is very busy."
+  - es: "¿Estás {ocupado}? —Un poco."
+    en: "Are you busy? —A little."
+  - es: "El trabajo es {aburrido}."
+    en: "The job is boring."
+    note: "Ser aburrido: boring. Estar aburrido: bored."
+  - es: "Los estudiantes están {aburridos}."
+    en: "The students are bored."
+  - es: "¿Estás {listo}?"
+    en: "Are you ready?"
+  - es: "Ya estamos {listos}."
+    en: "We're ready now."
+  - es: "¿Cómo estás? —{Mal|mal}, muy [mal|mal]."
+    en: "How are you? —Not good, not good at all."
+  - es: "Ana está {mal|mal} hoy."
+    en: "Ana isn't well today."
+dialogue:
+  title: "¿Dónde estás?"
+  title_en: Where are you?
+  lines:
+    - speaker: Tom
+      es: "¿[Bueno|bueno#hello]?"
+      en: "Hello?"
+    - speaker: Sofía
+      es: "Hola, Tom, soy Sofía. ¿Dónde estás?"
+      en: "Hi, Tom, it's Sofía. Where are you?"
+    - speaker: Tom
+      es: "Estoy en casa. Estoy cansado y [un poco|un poco] enfermo."
+      en: "I'm at home. I'm tired and a bit sick."
+    - speaker: Sofía
+      es: "¡Ay, no! Yo estoy en la oficina, muy ocupada. Y mi jefe está enojado hoy."
+      en: "Oh, no! I'm at the office, really busy. And my boss is angry today."
+      reviewer_notes: "jefe is a new supporting row tagged neutral: right?"
+    - speaker: Tom
+      es: "Hoy estoy [mal|mal]. ¿[Mañana|mañana]?"
+      en: "I'm not up to it today. Tomorrow?"
+      reviewer_notes: "Does Hoy estoy mal read as 'I'm not up to it today' here?"
+    - speaker: Sofía
+      es: "Sí, [mañana|mañana] está bien. Pero estoy triste, Tom."
+      en: "Yes, tomorrow's fine. But I'm sad, Tom."
+    - speaker: Tom
+      es: "¿Triste? ¿Por qué?"
+      en: "Sad? Why?"
+    - speaker: Sofía
+      es: "¡Porque estoy aburrida! El trabajo es muy aburrido."
+      en: "Because I'm bored! Work is so boring."

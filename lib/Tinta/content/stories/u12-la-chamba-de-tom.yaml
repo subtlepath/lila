@@ -1,0 +1,43 @@
+title: La chamba nueva de Tom
+title_en: Tom's new job
+level: A2
+reviewer_notes:
+  - "A prepa student says '¿Neta es de Chicago, maestro?': slang together with usted to a teacher. Plausible?"
+kind: reading
+lesson: u12.l02
+lines:
+  - es: "Tom tiene chamba nueva: enseña inglés en una escuela cerquita de su casa."
+    en: "Tom has a new job: he teaches English at a school really close to his place."
+  - es: "Sus estudiantes son chavos de prepa, muy simpáticos pero un poquito traviesos."
+    en: "His students are high school kids, really nice but a little bit naughty."
+  - es: "El primer día, un chavo le preguntó: “¿Neta es de Chicago, maestro?”"
+    en: "On the first day, one kid asked him: “Are you really from Chicago, sir?”"
+  - es: "En la [tarde|tarde], Tom pasó a la tienda de doña Lupe por un cafecito."
+    en: "In the afternoon, Tom stopped by doña Lupe's store for a coffee."
+    paragraph: true
+  - es: "“¿Cómo le [fue|ir], joven?”, le preguntó doña Lupe."
+    en: "“How did it go, young man?” doña Lupe asked him."
+  - es: "“Bien, pero estoy muy cansado”, contestó Tom."
+    en: "“Fine, but I'm really tired,” Tom answered."
+  - es: "“¡Ni modo! ¡Échele [ganas|ganas]!”, le dijo ella."
+    en: "“Oh well! Give it your all!” she told him."
+  - es: "En la noche, Tom les marcó a sus cuates, Memo y Chuy."
+    en: "In the evening, Tom called his buddies, Memo and Chuy."
+    paragraph: true
+  - es: "“¡Qué padre, güey! ¿Y te pagan bien?”, preguntó Memo."
+    en: "“That's awesome, dude! And do they pay you well?” Memo asked."
+  - es: "“La neta, no es mucha lana, pero me gusta”, contestó Tom."
+    en: "“Honestly, it's not much money, but I like it,” Tom answered."
+  - es: "“¡Ándale! El sábado te invitamos unos tacos”, dijo Chuy."
+    en: "“All right! On Saturday the tacos are on us,” Chuy said."
+questions:
+  - q: "¿Dónde trabaja Tom ahora?"
+    options: ["En una escuela", "En una tienda", "En una taquería"]
+    answer: 0
+  - q: "¿Cómo son sus estudiantes?"
+    options: ["Simpáticos, pero un poco traviesos", "Muy aburridos", "Mayores que Tom"]
+    answer: 0
+  - q: "What does Tom mean by “La neta, no es mucha lana”?"
+    lang: en
+    options: ["Honestly, it isn't much money", "The truth is, I need wool", "It's a lot of money"]
+    answer: 0

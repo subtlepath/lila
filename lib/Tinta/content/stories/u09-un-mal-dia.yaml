@@ -1,0 +1,39 @@
+title: Un mal día
+title_en: A bad day
+level: A2
+kind: reading
+lesson: u09.l03
+lines:
+  - es: "El lunes, Diego tuvo un [mal|malo] día."
+    en: "On Monday, Diego had a bad day."
+  - es: "Primero, se despertó [tarde|tarde#late] y perdió el camión."
+    en: "First, he woke up late and missed the bus."
+  - es: "Entonces tomó un taxi, pero el taxi chocó con un pesero."
+    en: "So he took a taxi, but the taxi crashed into a minibus."
+  - es: "¡Qué susto! Por suerte, no le pasó nada a nadie."
+    en: "What a scare! Luckily, nobody got hurt."
+  - es: "Diego llegó a la oficina a las once."
+    en: "Diego got to the office at eleven."
+  - es: "En la noche, Diego y Mariana [fueron|ir] a cenar."
+    en: "In the evening, Diego and Mariana went out for dinner."
+    paragraph: true
+  - es: "Diego buscó su cartera para pagar, pero no la encontró."
+    en: "Diego looked for his wallet to pay, but he couldn't find it."
+  - es: "¡Se le olvidó en la oficina!"
+    en: "He'd left it at the office!"
+  - es: "“¡Qué mala suerte!”, dijo Diego."
+    en: "“What bad luck!” said Diego."
+    paragraph: true
+  - es: "“Tranquilo”, le dijo Mariana. “Hoy invito yo.”"
+    en: "“Relax,” Mariana told him. “Tonight it's on me.”"
+questions:
+  - q: "¿Por qué llegó tarde Diego?"
+    options: ["Le robaron la cartera", "Perdió el camión y el taxi chocó", "Se quedó en casa"]
+    answer: 1
+  - q: "¿Dónde se le olvidó la cartera?"
+    options: ["En el taxi", "En el pesero", "En la oficina"]
+    answer: 2
+  - q: "Who paid for dinner?"
+    lang: en
+    options: ["Mariana", "Diego", "Nobody"]
+    answer: 0

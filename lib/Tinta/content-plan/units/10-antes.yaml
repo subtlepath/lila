@@ -1,0 +1,124 @@
+# Course plan for Unit 10. Format: content-plan/README.md.
+unit: 10
+dir: units/10-antes
+title: "Antes"
+title_en: "Back then"
+level: A2
+goals:
+  - "Describe what life was like and what you used to do as a child, with the imperfect."
+  - "Talk about school, your old neighborhood and how things have changed."
+  - "Say what was happening when something else happened, with the preterite and imperfect together."
+grammar_scope: >-
+  Imperfect (regular; ser, ir, ver; había); preterite from Unit 9; preterite versus
+  imperfect; mientras + imperfect, cuando + preterite. No subjunctive.
+lexicon: content/lexicon/u10.tsv
+supporting: []
+names: []
+lessons:
+  - id: u10.l01
+    number: 1
+    title: "Cuando era niño"
+    title_en: "When I was a kid"
+    level: A2
+    grammar:
+      focus: "The imperfect for habits and descriptions in the past: -aba, -ía; ser (era), ir (iba), ver (veía); había."
+      can_do: "Describe your childhood: where you lived, what you played and what you used to do."
+    new: [juguete, pelota, muñeca, bicicleta, caricatura, árbol, pueblo, rancho, travieso, crecer, acordarse, extrañar]
+    rows_in_core: []
+    conjugate: ["ser:impf", "ir:impf", "ver:impf", "jugar:impf"]
+    dialogue:
+      title: "El rancho del abuelo"
+      title_en: "Grandpa's ranch"
+      where: "Sofía's family home; Memo and Sofía show Tom where they spent their summers."
+      who: "Sofía, Memo and Tom."
+      address: "tú: siblings and a friend."
+      happens: "Memo: ¿Te acuerdas del rancho? As children they went to their grandparents' rancho near Puebla every vacation, played with a ball, climbed the trees and watched cartoons. Memo was very travieso; Sofía had a doll. Tom grew up in Chicago and rode his bike. Sofía: Extraño el pueblo."
+    notes:
+      - kind: grammar
+        title: "The imperfect"
+        covers: "-ar: jugaba, jugabas, jugaba, jugábamos, jugaban. -er/-ir: comía, vivía. Only three irregulars: ser (era), ir (iba), ver (veía). Use it for what used to happen and what things were like: De niño jugaba futbol. Había un árbol muy grande."
+      - kind: usage
+        title: "Remembering"
+        covers: "Acordarse de (Me acuerdo de mi abuelo) is the everyday Mexican verb; recordar is more formal. Extrañar = to miss (Te extraño). De niño, de niña, cuando era niño set the scene."
+      - kind: culture
+        title: "A Mexican childhood"
+        covers: "Caricaturas after school, games of lotería, canicas and trompo, kites (papalotes, Unit 12), the corner tiendita, and vacations at the grandparents' pueblo or rancho."
+    confusables: []
+    cautions:
+      - "había (there was/were) is haber's imperfect: it links to haber; it is not drilled."
+      - "caricatura means cartoon in Mexico, not caricature: translate accordingly."
+      - "muñeca is doll and wrist: context must decide."
+      - "acordarse de: 'Me acuerdo de mi abuelo'."
+      - "Habits and descriptions only here; the preterite-imperfect contrast is lesson 3."
+      - "papalote is u12.l03: keep it out."
+
+  - id: u10.l02
+    number: 2
+    title: "En la secundaria"
+    title_en: "In middle school"
+    level: A2
+    grammar:
+      focus: "Imperfect for repeated actions, descriptions, age and time in the past; antes versus ahora; ya no."
+      can_do: "Describe your school days and your old neighborhood, and compare them with now."
+    new: [primaria, secundaria, prepa, universidad, clase, examen, enseñar, difícil, fácil, barrio, vida, cambiar]
+    rows_in_core: [vida]
+    conjugate: ["tener:impf", "estudiar:impf", "vivir:impf"]
+    dialogue:
+      title: "Antes y ahora"
+      title_en: "Then and now"
+      where: "The stairs of Ana's building; Tom helps doña Laura with her shopping bags."
+      who: "Tom and doña Laura."
+      address: "Tom says usted; doña Laura says tú (older to younger)."
+      happens: "Doña Laura was a primaria teacher for thirty years: enseñaba español. The barrio was quieter; there was no metro; she walked to the school every day. Tom: ¿Era difícil? Laura: Los niños eran muy traviesos, pero la vida era más fácil. Todo cambió."
+    notes:
+      - kind: grammar
+        title: "Habits and descriptions in the past"
+        covers: "The imperfect says what used to happen (Siempre estudiaba en la noche), what things were like (La escuela era chica), age and time (Tenía doce años; Eran las ocho). Contrast with now: Antes vivía en Puebla; ahora vivo aquí. Ya no = not any more."
+      - kind: culture
+        title: "School in Mexico"
+        covers: "Primaria (6 years), secundaria (3), prepa or preparatoria (3), then universidad (the UNAM is the largest). Uniforms are normal, and many schools hold honores a la bandera on Monday mornings."
+    confusables: []
+    cautions:
+      - "cambiar: '(yo) cambio' collides with the noun cambio (u07): write [cambio|cambiar]."
+      - "prepa is the clipped form, neutral in speech; la preparatoria is not a lemma."
+      - "School years: 'en primero de secundaria' uses the supporting ordinal rows (u05)."
+      - "Age in the past is imperfect: 'Tenía doce años'."
+      - "'la UNAM' needs a propn row if you use it."
+      - "School subjects (matemáticas, historia) are not lemmas: add rows or avoid."
+
+  - id: u10.l03
+    number: 3
+    title: "Cuando tembló"
+    title_en: "When the earthquake hit"
+    level: A2
+    grammar:
+      focus: "Preterite and imperfect together: imperfect for the background (estaba, llovía), preterite for the event (sonó, tembló); mientras and cuando."
+      can_do: "Say where you were and what you were doing when something happened, and what you did next."
+    new: [temblor, temblar, alerta, simulacro, sonar, mientras, escalera, caerse, romperse, gritar, empujar, asustado]
+    rows_in_core: []
+    conjugate: ["estar:impf", "caerse:pret", "sonar:pret.3s", "temblar:pret.3s"]
+    dialogue:
+      title: "¿Dónde estabas?"
+      title_en: "Where were you?"
+      where: "Ana and Mariana's apartment, after a moderate earthquake in Mexico City."
+      who: "Ana and Mariana."
+      address: "tú: roommates."
+      happens: "Mariana: ¿Dónde estabas cuando tembló? Ana was in the office on the tenth floor, working, when the alerta sonó. Everybody went down the stairs calmly: No grito, no corro, no empujo, like in the simulacro. A glass fell and broke. She was scared, but nobody was hurt. Mariana was in the metro and felt nothing."
+    notes:
+      - kind: grammar
+        title: "Preterite and imperfect together"
+        covers: "The imperfect sets the scene (Estaba en la oficina. Llovía.); the preterite tells what happened (Sonó la alerta. Tembló.). Mientras + imperfect for the background; cuando + preterite for the event."
+      - kind: culture
+        title: "Earthquakes in Mexico City"
+        covers: "The alerta sísmica sounds 30-60 seconds before strong quakes. The city holds simulacros (drills), often on 19 September, the date of the 1985 and 2017 earthquakes. The drill motto: No grito, no corro, no empujo."
+      - kind: usage
+        title: "Temblor"
+        covers: "Mexicans say tembló and un temblor for any earthquake; terremoto is for a big one. ¡Está temblando! = There's an earthquake!"
+    confusables: []
+    cautions:
+      - "Keep the earthquake calm and factual: no injuries or deaths; focus on what people did."
+      - "temblar is impersonal here: 'Tembló', 'Está temblando'."
+      - "Accent pairs: grito (I shout) vs gritó (he shouted), suena (it rings) vs sonó (it rang): check the cloze options."
+      - "'No grito, no corro, no empujo' is the drill motto: keep it intact."
+      - "piso for the floor needs allow: [piso]; ventana is not a lemma (add a row or avoid)."
+      - "'Se cayó el vaso', 'Se rompió': reflexive caerse/romperse with things."

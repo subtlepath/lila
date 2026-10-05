@@ -1,0 +1,40 @@
+title: Un día en la oficina
+title_en: A day at the office
+level: A1
+kind: reading
+lesson: u02.l04
+reviewer_notes:
+  - "Su computadora es la número veinticinco: natural, or la veinticinco?"
+lines:
+  - es: "Mariana es ingeniera. Trabaja en una oficina en la calle Juárez."
+    en: "Mariana is an engineer. She works in an office on Juárez Street."
+  - es: "En la oficina trabajan veintisiete personas."
+    en: "Twenty-seven people work in the office."
+  - es: "Hoy es el primer día de Diego."
+    en: "Today is Diego's first day."
+    paragraph: true
+  - es: "Diego también es ingeniero. Su computadora es la número veinticinco."
+    en: "Diego is an engineer too. His computer is number twenty-five."
+  - es: "Diego está contento, pero no habla mucho."
+    en: "Diego is happy, but he doesn't talk much."
+  - es: "Mariana manda veintinueve mensajes por WhatsApp todos los días."
+    en: "Mariana sends twenty-nine WhatsApp messages every day."
+    paragraph: true
+  - es: "Hoy, un mensaje es para Diego: “¡Bienvenido a la oficina!”"
+    en: "Today, one message is for Diego: “Welcome to the office!”"
+  - es: "Diego está muy feliz. ¡Ya es amigo de Mariana!"
+    en: "Diego is very happy. He's already Mariana's friend!"
+questions:
+  - q: "¿Cuántas personas trabajan en la oficina?"
+    options: ["Diecisiete", "Veintisiete", "Veinticinco"]
+    answer: 1
+  - q: "¿Cuál es la computadora de Diego?"
+    options: ["La número doce", "La número quince", "La número veinticinco"]
+    answer: 2
+  - q: "¿Cómo está Diego?"
+    options: ["Contento", "Enojado", "Enfermo"]
+    answer: 0
+  - q: "How does Mariana welcome Diego?"
+    lang: en
+    options: ["With a WhatsApp message", "With a phone call", "With a coffee"]
+    answer: 0

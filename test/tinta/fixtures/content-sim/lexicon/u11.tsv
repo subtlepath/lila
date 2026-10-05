@@ -1,0 +1,11 @@
+# Unit 11: Salud y emergencias / Health and emergencies. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u11.l01 Me duele la cabeza (doler)
+# --- u11.l02 ¿Qué tiene? (symptoms, tener que, deber). Also new here, row in core.tsv: doctor
+deber		verb		should; must; to owe	A2			grammar			Debes descansar: you should rest.	
+# --- u11.l03 ¡Auxilio! (usted commands, emergencies)
+# --- supporting (no lesson introduces these; usable from Unit 11 on)
+# --- names
+Cruz Roja		propn		the Red Cross (ambulance service)	A1							

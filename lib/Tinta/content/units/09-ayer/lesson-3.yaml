@@ -1,0 +1,135 @@
+number: 3
+title: "¿Qué pasó?"
+title_en: What happened?
+level: A2
+new: [de repente, susto, suerte, cartera, robar, quitar, policía, chocar, multa, avisar, preocupado, tranquilo]
+conjugate: ["decir:pret", "poder:pret", "venir:pret"]
+reviewer_notes: "Safety note: front metro cars for women and children at rush hour; traffic fines paid later, not to the officer; wait for the ajustador after a crash. Accurate and current?"
+notes:
+  - kind: grammar
+    title: Telling a story in order
+    text: |
+      Tell the events in the preterite and link them with these words:
+
+      - _primero_ — first
+      - _luego_, _después_ — then, after that
+      - _entonces_ — so, then
+      - _de repente_ — suddenly
+      - _al final_ — in the end
+
+      _Primero no vi nada. De repente, busqué mi cartera y no la encontré. Entonces llamé al banco._
+
+      When it doesn't matter or you don't know who did something, Spanish uses the _ellos_ form with no subject. English uses the passive or "someone":
+
+      - _Me robaron la cartera._ — My wallet was stolen.
+      - _Me dieron una multa._ — I got a ticket.
+  - kind: usage
+    title: Reacting
+    text: |
+      When a friend tells you their news, react:
+
+      - _¿Qué pasó?_ — What happened?
+      - _¿Estás bien?_ — Are you OK?
+      - _¡No me digas!_ — No way! (literally "don't tell me")
+      - _¡Qué susto!_ — What a scare!
+      - _¡Qué mala suerte!_ — What bad luck!
+      - _¡Qué bueno!_ — Great! I'm so glad!
+
+      To calm someone down, say _tranquilo_ to a man and _tranquila_ to a woman: "take it easy, it's OK".
+  - kind: culture
+    title: Staying safe
+    text: |
+      Mexico City's metro is cheap and fast, but at rush hour it is packed, and pickpockets work the busiest lines. Keep your phone and wallet in a front pocket or in a bag in front of you. At rush hour, the front cars of many trains are reserved for women and children.
+
+      For any emergency, police, fire or ambulance, call 911.
+
+      If a traffic officer gives you a _multa_ (ticket), it is paid later, at an office or online. After a minor crash, don't move the cars: call your insurance company and wait for the _ajustador_ (insurance adjuster), who settles it on the spot.
+sentences:
+  - es: "{De repente}, empezó a llover."
+    en: "Suddenly it started to rain."
+  - es: "Y {de repente} se [fue|irse] la luz."
+    en: "And all of a sudden the power went out."
+    note: "Se fue la luz: the power went out."
+  - es: "¡Qué {susto}!"
+    en: "What a scare!"
+  - es: "¡Ay, me diste un {susto}!"
+    en: "Oh, you scared me!"
+  - es: "¡Qué mala {suerte}!"
+    en: "What bad luck!"
+    order: true
+  - es: "Tuvimos mucha {suerte}."
+    en: "We were very lucky."
+  - es: "Me robaron la {cartera} en el metro."
+    en: "My wallet was stolen on the metro."
+  - es: "Busqué mi {cartera} y no la encontré."
+    en: "I looked for my wallet and couldn't find it."
+  - es: "A Luis le {robaron} el carro."
+    en: "Luis's car was stolen."
+  - es: "Me {robaron} el celular."
+    en: "My phone was stolen."
+    order: true
+    note: "Robaron with no subject: someone stole it."
+    reviewer_notes: "English passive as the plan asks; the cloze also offers robó (he stole). Clear enough?"
+  - es: "{Quita|quitar:imp.2s} tu bolsa de la silla, por favor."
+    reviewer_notes: "quitar for 'move your bag off the chair': natural?"
+    en: "Please move your bag off the chair."
+  - es: "Mi mamá me {quitó} el celular."
+    en: "My mom took my phone away."
+  - es: "Después vino un {policía}."
+    en: "Then a police officer came."
+    order: true
+  - es: "Entonces llamé a la {policía}."
+    en: "So I called the police."
+    note: "El policía, la policía: the officer. La policía: the police."
+  - es: "Mi papá {chocó} el carro."
+    reviewer_notes: "Transitive chocó el carro (crashed the car): natural?"
+    en: "My dad crashed the car."
+  - es: "Un taxi {chocó} con un camión."
+    en: "A taxi crashed into a bus."
+  - es: "Me dieron una {multa}."
+    en: "I got a ticket."
+  - es: "La {multa} es de quinientos pesos."
+    en: "The fine is five hundred pesos."
+  - es: "Yo te {aviso}."
+    en: "I'll let you know."
+    order: true
+  - es: "¿Ya le {avisaste} al banco?"
+    en: "Have you told the bank yet?"
+  - es: "Estoy muy {preocupada}."
+    en: "I'm really worried."
+  - es: "Tom está {preocupado} por su maleta."
+    en: "Tom is worried about his suitcase."
+  - es: "¡{Tranquila}! Todo está bien."
+    en: "Calm down! Everything's fine."
+  - es: "Mi colonia es muy {tranquila}."
+    en: "My neighborhood is very quiet."
+  - es: "¿Qué te {dijo} el policía?"
+    en: "What did the officer tell you?"
+dialogue:
+  title: "¡Qué susto!"
+  title_en: What a scare!
+  lines:
+    - speaker: Sofía
+      es: "Ana, ¿qué pasó? ¿Estás bien?"
+      en: "Ana, what happened? Are you OK?"
+    - speaker: Ana
+      es: "Sí, pero en el metro me robaron la cartera."
+      en: "Yes, but someone stole my wallet on the metro."
+    - speaker: Sofía
+      es: "¡No me digas! ¿Cómo?"
+      en: "No way! How?"
+    - speaker: Ana
+      es: "Primero no vi nada. De repente, busqué mi cartera y no la encontré."
+      en: "At first I didn't notice anything. Then suddenly I reached for my wallet, and it was gone."
+    - speaker: Sofía
+      es: "¡Qué susto! ¿Y qué hiciste?"
+      en: "What a scare! So what did you do?"
+    - speaker: Ana
+      es: "Le avisé a un policía, y me dijo: “[Llame|llamar:imp.3s] al banco”."
+      en: "I told a police officer, and he said, “Call your bank.”"
+    - speaker: Sofía
+      es: "¡Qué mala suerte! Tranquila. ¿Ya le avisaste al banco?"
+      en: "What bad luck! Take it easy. Have you told the bank yet?"
+    - speaker: Ana
+      es: "Sí, ya. Pero todavía estoy [un poco|un poco] preocupada."
+      en: "Yes, I did. But I'm still a little worried."

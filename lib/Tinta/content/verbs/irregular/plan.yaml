@@ -1,0 +1,8 @@
+# Verbs planned for Units 2-12 (content-plan/) that the conjugator cannot infer.
+# Same keys as content/verbs/irregular.yaml (see its header). Verbs already
+# declared there (tener, pensar, acostar, vestir, probar, mover...) are not
+# repeated: a verb may be defined in one file only.
+
+acordar: {stem: o>ue}     # acordarse (u10.l01): me acuerdo, te acuerdas
+temblar: {stem: e>ie}     # u10.l03: tiembla; preterite tembló is regular
+sonar: {stem: o>ue}       # u10.l03: suena; preterite sonó is regular

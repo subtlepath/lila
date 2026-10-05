@@ -1,0 +1,17 @@
+# Dictionary-only verbs h-o (content/lexicon/dictionary-h-o.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (hacer, medir,
+# mover, nevar, obtener, oponer...) are not repeated.
+
+helar: {stem: e>ie}         # hiela; heló
+herir: {stem: e>ie}         # hiero, hirió, hiriendo
+hervir: {stem: e>ie}        # hierve, hirvió, hirviendo
+impedir: {stem: e>i}        # impido, impidió
+imponer: {like: poner}      # impongo, impuso, impuesto
+imprimir: {participle: impreso}   # imprimido is also correct; impreso is the usual form
+inscribir: {participle: inscrito} # inscribirse
+invertir: {stem: e>ie}      # invierto, invirtió
+merendar: {stem: e>ie}      # meriendo
+moler: {stem: o>ue}         # muelo, muele (not on verb_patterns.tsv)
+morder: {stem: o>ue}        # muerdo, muerde
+negar: {stem: e>ie}         # niego; negué

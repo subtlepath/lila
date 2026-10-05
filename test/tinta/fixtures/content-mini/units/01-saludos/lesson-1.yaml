@@ -1,0 +1,51 @@
+number: 1
+title: ¡Hola!
+title_en: Hello!
+level: A1
+new: [hola, adiós, buenos días, gracias, de nada, por favor, yo, tú, usted, ser, llamarse]
+conjugate: ["ser:pres"]
+notes:
+  - kind: grammar
+    title: tú and usted
+    text: |
+      Use _tú_ with friends and _usted_ with *strangers* and elders: _¿Cómo *está* usted?_
+
+      Mexico never uses ~vosotros~. For a group, say _ustedes_ (`oos-TEH-dehs`).
+
+      - _yo soy_ — I am
+      - _usted es_ — you are
+sentences:
+  - es: "{Hola}, me llamo Ana."
+    en: "Hi, my name is Ana."
+  - es: "{Buenos días}, señora."
+    en: "Good morning, ma'am."
+  - es: "Yo {soy|ser:pres.1s} de México."
+    en: "I'm from Mexico."
+  - es: "¿Usted {es|ser:pres.3s} de aquí?"
+    en: "Are you from here?"
+    note: "Usted takes the él/ella form of the verb."
+  - es: "Tú {eres|ser:pres.2s} mi amigo."
+    en: "You are my friend."
+    order: true
+  - es: "{Gracias}. —{De nada}."
+    en: "Thanks. —You’re welcome."
+  - es: "Un taco, {por favor}."
+    en: "A taco, please."
+  - es: "{Adiós}, Luis."
+    en: "Goodbye, Luis."
+  - es: "¿Cómo te {llamas|llamarse}? —Me llamo Luis."
+    en: "What’s your name? —My name is Luis."
+  - es: "Ayúdeme, por favor."
+    en: "Help me, please."
+  - es: "Ellos {son|ser:pres.3p} de aquí."
+    en: "They are from here."
+dialogue:
+  title: En la calle
+  title_en: In the street
+  lines:
+    - speaker: Ana
+      es: "¡Hola, Luis! ¿Qué onda?"
+      en: "Hi, Luis! What's up?"
+    - speaker: Luis
+      es: "¡Órale, Ana! Muy bien, gracias."
+      en: "Hey, Ana! Very well, thanks."

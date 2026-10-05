@@ -1,0 +1,130 @@
+# Course plan for Unit 12. Format: content-plan/README.md.
+unit: 12
+dir: units/12-asi-se-habla
+title: "Así se habla en México"
+title_en: "How Mexico talks"
+level: A2
+goals:
+  - "Understand everyday Mexican slang and use it with friends, knowing when not to."
+  - "Soften requests the Mexican way with diminutives and courtesy formulas."
+  - "Recognise the Nahuatl words in everyday Mexican Spanish."
+grammar_scope: >-
+  Everything so far. Diminutives in -ito, -ita, -cito (each one its own lexicon row).
+  No new tenses; the subjunctive only in fixed formulas (Que te mejores).
+lexicon: content/lexicon/u12.tsv
+supporting: [rosca, náhuatl, sale#ok, aguas#cuidado]
+names: [Candelaria, Tomás]
+lessons:
+  - id: u12.l01
+    number: 1
+    title: "Entre cuates"
+    title_en: "Among friends"
+    level: A2
+    grammar:
+      focus: "Register: informal slang and reactions, and the one vulgar word learners must recognise."
+      can_do: "Understand and use common slang with friends your age, and switch back to neutral Spanish with others."
+    new: [cuate, güey, chavo, neta, chido, padre#cool, qué padre, no manches, híjole, ándale, lana#money, pinche]
+    rows_in_core: []
+    conjugate: []
+    dialogue:
+      title: "¿Qué onda?"
+      title_en: "What's up?"
+      where: "Memo's birthday party, late at night."
+      who: "Memo, his friend Chuy (the taquero, now a cuate), Tom, and Memo's grandmother."
+      address: "tú and slang among the young men; Memo switches to usted and neutral Spanish when his abuela appears."
+      happens: "Memo: ¿Qué onda, güey? The party is chido; Chuy: ¡Qué padre! Tom says he got a new job; Memo: ¿Neta? ¡No manches! Chuy has no lana for more drinks: ¡Híjole! Memo: ¡Ándale, vamos por tacos! The abuela walks in: Memo, suddenly polite: Buenas noches, abuela, ¿cómo está?"
+    notes:
+      - kind: usage
+        title: "Who you can say it to"
+        covers: "Informal words (cuate, chido, padre, neta, no manches, lana) are fine with friends your age, not with your boss, a police officer or an older stranger. Vulgar words like pinche: understand them, don't use them. Tinta hides vulgar words unless you switch them on."
+      - kind: usage
+        title: "Güey"
+        covers: "Güey (also written wey) once meant ox, then fool; now young Mexicans use it like dude, every few words. Between friends it is affectionate; to a stranger it is rude. No manches is the polite cousin of ~no mames~, which is vulgar."
+      - kind: culture
+        title: "Mexican reactions"
+        covers: "¡Híjole! (oh no), ¡Ándale! (come on, that's it), ¡No manches! (no way), ¿Neta? (really?), ¡Qué padre! (how cool). For OK, Mexicans say sale, va or órale; ~vale~ sounds Spanish."
+    confusables: []
+    cautions:
+      - "Give every informal sentence the note 'Informal: only with friends.' and every vulgar one 'Vulgar: understand it, don't use it.'"
+      - "pinche is register vulgar and hidden by default: keep its sentences mild ('¡Qué pinche frío!'); never aimed at a person."
+      - "padre#cool is the only padre row: plain 'padre' links to it silently; '¡Qué padre!' standing alone links the multi-word lemma."
+      - "'sale' (OK) and '¡aguas!' (watch out) are deliberately not lemmas: every 'sale' of salir and every plural 'aguas' would then warn. Use them in notes only."
+      - "lana#money: write [lana|lana#money] if the compiler asks."
+      - "Do not add chingar, pendejo, cabrón or other vulgar items; the plan keeps the vulgar set to pinche."
+      - "cuate and amigo are linked as synonyms (never offered against each other)."
+
+  - id: u12.l02
+    number: 2
+    title: "Un ratito"
+    title_en: "Just a moment"
+    level: A2
+    grammar:
+      focus: "Diminutives (-ito, -ita, -cito) that soften rather than shrink; courtesy formulas (¿Me regala...?, A sus órdenes); echar and ganas in ¡Échale ganas!"
+      can_do: "Ask for things and offer help with Mexican softeners and courtesy formulas, and encourage someone."
+    new: [poquito, ratito, tantito, cerquita, chiquito, cafecito, a sus órdenes, ni modo, regalar, echar, ganas, chamba]
+    rows_in_core: []
+    conjugate: []
+    dialogue:
+      title: "En la tiendita"
+      title_en: "At the corner store"
+      where: "Doña Lupe's corner store, early morning."
+      who: "Tom and doña Lupe."
+      address: "usted both ways (Lupe may slip into tú, as older shopkeepers do with regulars)."
+      happens: "Lupe: Buenos días, a sus órdenes. Tom: ¿Me regala una bolsa? and asks for un cafecito. Lupe: Espéreme tantito / un ratito. Tom has a new chamba cerquita de aquí. Lupe has no change: Ni modo, mañana me paga. Lupe: ¡Échele ganas!"
+    notes:
+      - kind: grammar
+        title: "Diminutives"
+        covers: "-ito, -ita (poco, poquito; rato, ratito; chico, chiquito; cerca, cerquita) and -cito after -e, -n, -r or an accented vowel (café, cafecito). In Mexico they soften and make friendly more than small: un cafecito is a friendly coffee; ahorita is not exactly now."
+      - kind: usage
+        title: "Courtesy formulas"
+        covers: "¿Me regala...? = Could I have...? (regalar, give, without a gift). A sus órdenes = at your service; para servirle; con mucho gusto. ¿Gusta? offers food. Ni modo = oh well, nothing to be done."
+      - kind: culture
+        title: "¡Échale ganas!"
+        covers: "Echarle ganas = to give it your all: heard at school, at work and in sports. Tantito (a tiny bit) is very Mexican: espérame tantito."
+    confusables: []
+    cautions:
+      - "Each diminutive is its own row (the compiler does not generate them): don't invent other diminutives without adding rows."
+      - "regalar in requests is not a gift: '¿Me regala un vaso de agua?' = Could I have a glass of water?"
+      - "'¡Échale ganas!' is echar + le: not a target; target echar in another sentence, e.g. 'Le echo sal al taco'."
+      - "ganas is plural-only (fpl) and also a form of ganar (u09): mark [ganas|ganas] when it warns."
+      - "chamba is informal: note 'Informal'."
+      - "a sus órdenes is a multi-word lemma: standing alone it links ('A sus órdenes.'); inside a clause mark it."
+      - "'Con mucho gusto' inside a sentence splits (con + mucho gusto or word by word): check the link lines."
+
+  - id: u12.l03
+    number: 3
+    title: "Palabras del náhuatl"
+    title_en: "Words from Nahuatl"
+    level: A2
+    grammar:
+      focus: "Vocabulary from Nahuatl in food, home and feelings; tl and the readings of x (review of Unit 0)."
+      can_do: "Recognise and use the everyday Mexican words that come from Nahuatl, especially food and festivals."
+    new: [elote, tamal, atole, mole, guajolote, chapulín, cacahuate, molcajete, papalote, tocayo, apapachar, mitote]
+    rows_in_core: [mole]
+    conjugate: ["apapachar:pres"]
+    dialogue:
+      title: "Día de la Candelaria"
+      title_en: "Candlemas Day"
+      where: "Sofía's family home on 2 February (spelled out: el dos de febrero)."
+      who: "Sofía, Memo, their abuela and Tom."
+      address: "tú among the young people and with the abuela, who says tú to everyone; the young say usted to the abuela."
+      happens: "Memo found the baby figure in the rosca on 6 January, so today he brings tamales and atole. The abuela made mole de guajolote too. Tom tries chapulines from Oaxaca. The abuela hugs him (lo apapacha); someone at the table is also called Tomás: ¡Tocayo! The children make a mitote in the patio."
+    notes:
+      - kind: culture
+        title: "Nahuatl in everyday Spanish"
+        covers: "Nahuatl, the language of the Mexica, is still spoken by more than a million and a half people. Spanish took hundreds of words from it; the ending -tl became -te: aguacate (ahuacatl), jitomate, elote, atole, mole, tamal, guajolote, chapulín, cacahuate, molcajete, papalote, popote, tianguis, cuate, chocolate."
+      - kind: pronunciation
+        title: "tl and x"
+        covers: "Tl stays together at the start of a syllable: náhuatl `NAH-wahtl`, tlapalería. X has four readings: México (h), Xola (sh), Xochimilco (s), taxi (ks). Copy respellings from the dump or review page."
+      - kind: culture
+        title: "Feast days and food"
+        covers: "On 6 January families share a rosca de reyes; whoever finds the baby figure pays for tamales and atole on 2 February. Mole de guajolote is wedding food. Elotes and esquites sell on street corners every evening."
+    confusables: []
+    cautions:
+      - "mitote is informal (note it); apapachar and tocayo are neutral and warm."
+      - "tamal: plural tamales; Spanish has no 'tamale'."
+      - "Present chapulines as a normal snack, without 'gross food' jokes."
+      - "Keep etymologies to the well-documented ones above; the reviewer list asks to confirm cuate, tocayo, apapachar, mitote."
+      - "rosca, Candelaria, Tomás, patio and esquites are not lexicon rows: add rows (Tomás and Candelaria as names) or keep them in notes."
+      - "Dates spelled out: 'el dos de febrero', 'el seis de enero' (months are u08 supporting rows)."
+      - "The pronunciation note's respellings must match the generated ones: run --dump and copy them."

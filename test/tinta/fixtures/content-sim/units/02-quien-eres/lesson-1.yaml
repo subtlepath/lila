@@ -1,0 +1,134 @@
+number: 1
+title: "¿A qué te dedicas?"
+title_en: What do you do?
+level: A1
+reviewer_notes:
+  - "Titles note: licenciado/a for anyone with a university degree (Lic.), ingeniero (Ing.), and maestro/a also for skilled tradespeople. Accurate?"
+  - "Is ¿A qué te dedicas? / ¿A qué se dedica? the natural way to ask what someone does?"
+  - "Dialogue: Tom and Mariana (twenties, language exchange) use tú from the first line. Right?"
+new: [estudiante, maestro, ingeniero, compañero, amigo, escuela, oficina, trabajo, día, trabajar, estudiar, hablar]
+conjugate: ["trabajar:pres", "estudiar:pres", "hablar:pres"]
+notes:
+  - kind: grammar
+    title: Masculine and feminine nouns
+    text: |
+      Every Spanish noun is masculine or feminine, and the article shows which:
+
+      - masculine: _el_ (the), _un_ (a) — _el trabajo_, _un amigo_
+      - feminine: _la_ (the), _una_ (a) — _la escuela_, _una oficina_
+
+      Most nouns ending in _-o_ are masculine and most ending in _-a_ are feminine. For the others, learn the noun together with its article: _el café_, _el hotel_, _la llave_, _la calle_.
+
+      Two to watch: _el día_ is masculine although it ends in _-a_, and _el agua_ is feminine but takes _el_ because it starts with a stressed _a_.
+  - kind: grammar
+    title: "Jobs: no article"
+    text: |
+      After _ser_, a job takes no article: _Soy maestra._ (I'm a teacher.) _Tom es estudiante._ English needs "a"; Spanish does not.
+
+      Most words for people change their ending for a woman:
+
+      - _maestro_, _maestra_ — teacher
+      - _ingeniero_, _ingeniera_ — engineer
+      - _compañero_, _compañera_ — classmate, coworker
+      - _amigo_, _amiga_ — friend
+
+      _Estudiante_ is the same for both, and the article tells you who: _el estudiante_, _la estudiante_. A group of men and women takes the masculine: _mis amigos_.
+  - kind: culture
+    title: Titles at work
+    text: |
+      Mexicans address professionals by their title, often followed by the surname:
+
+      - _licenciado_, _licenciada_ — anyone with a university degree, written _Lic._
+      - _ingeniero_, _ingeniera_ — written _Ing._: _el ingeniero Ortega_
+      - _maestro_, _maestra_ — teachers, and also skilled tradespeople
+      - _doctor_, _doctora_ — physicians, written _Dr._ and _Dra._
+
+      To ask what someone does, say _¿A qué te dedicas?_ to a friend and _¿A qué se dedica?_ to a stranger. It sounds friendlier than asking about their job.
+sentences:
+  - es: "Soy {estudiante} de español."
+    en: "I'm a student of Spanish."
+    order: true
+  - es: "La {estudiante} es de Canadá."
+    en: "The student is from Canada."
+    note: "La estudiante is a woman; el estudiante is a man."
+  - es: "Elena es {maestra}."
+    en: "Elena is a teacher."
+    note: "No article with a job after ser: es maestra."
+  - es: "El {maestro} es de Puebla."
+    en: "The teacher is from Puebla."
+  - es: "Soy {ingeniera}. ¿Y tú?"
+    en: "I'm an engineer. And you?"
+    note: "Ingeniera: a woman engineer."
+  - es: "Mi papá es {ingeniero}."
+    en: "My dad is an engineer."
+  - es: "Luis es mi {compañero} de [trabajo|trabajo]."
+    en: "Luis is my coworker."
+  - es: "Somos {compañeros} de escuela."
+    en: "We're classmates."
+  - es: "Sofía es una {amiga} de Tom."
+    en: "Sofía is a friend of Tom's."
+  - es: "Ellos son mis {amigos}."
+    en: "They're my friends."
+    note: "Amigos: a group of men, or of men and women."
+    order: true
+  - es: "Estudio en una {escuela} de español."
+    en: "I study at a Spanish school."
+  - es: "Mi mamá es maestra en una {escuela} de Oaxaca."
+    en: "My mom teaches at a school in Oaxaca."
+  - es: "Mariana trabaja en una {oficina}."
+    en: "Mariana works in an office."
+  - es: "¿Es la {oficina} del ingeniero Ortega?"
+    en: "Is this Mr. Ortega's office?"
+    reviewer_notes: "Ingeniero + surname as a form of address, translated Mr.: right?"
+    note: "Ingeniero works as a title, like Mr. or Ms."
+  - es: "¿Hablas inglés en el {trabajo}?"
+    en: "Do you speak English at work?"
+  - es: "Es un {trabajo} de oficina."
+    en: "It's an office job."
+  - es: "Hablo español todo el {día}."
+    en: "I speak Spanish all day."
+  - es: "[Trabajo|trabajar] todos los {días}."
+    en: "I work every day."
+  - es: "{Trabajo|trabajar} en una escuela."
+    en: "I work at a school."
+  - es: "Sofía {trabaja} con Mariana."
+    en: "Sofía works with Mariana."
+  - es: "{Estudio} español en México."
+    en: "I'm studying Spanish in Mexico."
+    order: true
+  - es: "Ana y Tom {estudian} español."
+    en: "Ana and Tom are studying Spanish."
+  - es: "¿Tú {hablas} inglés?"
+    en: "Do you speak English?"
+  - es: "Nosotros {hablamos} español en la oficina."
+    en: "We speak Spanish at the office."
+  - es: "La maestra {habla} muy despacio."
+    en: "The teacher speaks very slowly."
+dialogue:
+  title: En el intercambio
+  title_en: At the language exchange
+  lines:
+    - speaker: Mariana
+      es: "Hola, ¿qué tal? Soy Mariana."
+      en: "Hi, how's it going? I'm Mariana."
+    - speaker: Tom
+      es: "Hola, Mariana. Me llamo Tom. Mucho gusto."
+      en: "Hi, Mariana. My name is Tom. Nice to meet you."
+    - speaker: Mariana
+      es: "Igualmente. ¿A qué te dedicas, Tom?"
+      en: "Likewise. What do you do, Tom?"
+    - speaker: Tom
+      es: "Soy estudiante. Estudio español en una escuela de aquí. ¿Y tú?"
+      en: "I'm a student. I study Spanish at a school here. And you?"
+    - speaker: Mariana
+      es: "Soy ingeniera. [Trabajo|trabajar] en una oficina con un compañero de Monterrey."
+      en: "I'm an engineer. I work in an office with a coworker from Monterrey."
+    - speaker: Tom
+      es: "¿Y hablas inglés en el trabajo?"
+      en: "And do you speak English at work?"
+    - speaker: Mariana
+      es: "Sí, todos los días. ¡Y tú hablas muy bien español!"
+      en: "Yes, every day. And your Spanish is very good!"
+    - speaker: Tom
+      es: "Gracias, pero hablo [un poco|un poco]. ¡Hasta luego, Mariana!"
+      en: "Thanks, but I only speak a little. See you later, Mariana!"

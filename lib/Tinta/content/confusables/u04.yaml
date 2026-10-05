@@ -1,0 +1,4 @@
+# Unit 4 confusable sets (fragment of confusables.yaml).
+- name: picante / caliente
+  lemmas: [picante, caliente]
+  note: Picante is spicy, hot with chile. Caliente is hot to the touch, like coffee or water.

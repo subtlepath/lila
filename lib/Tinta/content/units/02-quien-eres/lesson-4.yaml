@@ -1,0 +1,124 @@
+number: 4
+title: "¿Cuál es tu número?"
+title_en: What's your number?
+level: A1
+reviewer_notes:
+  - "Notes: Mexican numbers have ten digits and Mexico City numbers start with 55; shops, doctors, schools and landlords answer on WhatsApp; celular is often shortened to el cel. Accurate?"
+  - "Dialogue: Mariana and Diego, young coworkers, use tú on his first day. Right?"
+new: [once, doce, trece, catorce, quince, veinte, treinta, número, celular, computadora, mensaje, mandar]
+conjugate: ["mandar:pres"]
+notes:
+  - kind: grammar
+    title: Numbers 11-30
+    text: |
+      _Once_, _doce_, _trece_, _catorce_ and _quince_ (11 to 15) have their own names. After that, the numbers are built and written as one word:
+
+      - _dieciséis_, _diecisiete_, _dieciocho_, _diecinueve_ — 16 to 19 (ten and six...)
+      - _veinte_ — 20
+      - _veintiuno_, _veintidós_, _veintitrés_... _veintinueve_ — 21 to 29
+      - _treinta_ — 30, then _treinta y uno_ as three words
+
+      _Dieciséis_, _veintidós_, _veintitrés_ and _veintiséis_ carry a written accent. Before a masculine noun, _veintiuno_ becomes _veintiún_: _veintiún pesos_.
+  - kind: usage
+    title: Phone numbers
+    text: |
+      Mexican phone numbers have ten digits, and in Mexico City they start with 55. People read them digit by digit or in pairs, so _cinco, cinco, doce, veinte..._ is normal. You will learn _cincuenta y cinco_ (55) in Unit 3.
+
+      Ask for a number with _¿cuál?_, not _¿qué?_: _¿Cuál es tu número?_ _¿Cuál es tu número de celular?_ In Spanish, _¿qué es?_ asks for a definition.
+  - kind: culture
+    title: Mexico runs on WhatsApp
+    text: |
+      In Mexico almost everyone has WhatsApp, and shops, doctors, schools and landlords answer on it. A business card often shows just a cell number.
+
+      _Mandar_ is the everyday verb for sending: _Te mando un mensaje._ (I'll text you.) _¿Me mandas tu número?_ (Can you send me your number?)
+
+      The Mexican words are _celular_, often shortened to _el cel_, and _la computadora_. Spain's ~móvil~ and ~ordenador~ sound foreign here.
+sentences:
+  - es: "En la oficina somos {once}."
+    en: "There are eleven of us at the office."
+  - es: "Mi número es cinco, cinco, {once}, veinte, dieciséis, cero, siete."
+    en: "My number is 55 11 20 16 07."
+    reviewer_notes: "Do people read numbers in this mix of pairs and single digits (cinco, cinco, once, veinte...)?"
+  - es: "{Doce} tacos para la oficina, por favor."
+    en: "Twelve tacos for the office, please."
+  - es: "El número de Sofía es cinco, cinco, veinticuatro, {doce}, diecisiete, veintiocho."
+    en: "Sofía's number is 55 24 12 17 28."
+  - es: "¿{Trece} o tres? —Tres."
+    en: "Thirteen or three? —Three."
+  - es: "El celular de Luis es ocho, uno, {trece}, veintiuno, dieciocho, cero, cinco."
+    en: "Luis's cell number is 81 13 21 18 05."
+    reviewer_notes: "Fact in the sentence note: 81 is the Monterrey area code. Correct?"
+    note: "Eighty-one is the area code of Monterrey."
+  - es: "Hoy es {catorce} de febrero."
+    en: "Today is February fourteenth."
+    reviewer_notes: "Sentence note: Valentine's Day is el Día del Amor y la Amistad, for friends too. Correct?"
+    note: "In Mexico, Valentine's Day is el Día del Amor y la Amistad, for friends too."
+    order: true
+  - es: "¡{Catorce} mensajes de mi mamá!"
+    en: "Fourteen messages from my mom!"
+  - es: "Estoy en México {quince} días."
+    en: "I'm in Mexico for two weeks."
+    reviewer_notes: "Natural word order, or Estoy quince días en México?"
+    note: "Mexicans say quince días for two weeks."
+  - es: "La oficina está en la calle Juárez {quince}."
+    en: "The office is at 15 Juárez Street."
+  - es: "Mariana manda {veinte} mensajes al día."
+    en: "Mariana sends twenty messages a day."
+  - es: "{Veinte}, veintiuno, veintidós, veintitrés..."
+    en: "Twenty, twenty-one, twenty-two, twenty-three..."
+  - es: "Hoy es {treinta} de abril: ¡Día del Niño!"
+    en: "Today is April thirtieth: Children's Day!"
+    reviewer_notes: "Día del Niño on April 30: correct?"
+  - es: "En la escuela somos {treinta} y uno."
+    en: "There are thirty-one of us at the school."
+  - es: "¿Cuál es tu {número} de celular?"
+    en: "What's your cell number?"
+    order: true
+  - es: "Es la computadora {número} doce."
+    en: "It's computer number twelve."
+  - es: "Te mando un mensaje al {celular}."
+    en: "I'll send a message to your cell."
+  - es: "Mi {celular} está en la oficina."
+    en: "My cell phone is at the office."
+    order: true
+  - es: "[Trabajo|trabajar] con la {computadora} todo el día."
+    en: "I work on the computer all day."
+  - es: "¿Es tu {computadora}?"
+    en: "Is this your computer?"
+  - es: "Es un {mensaje} de Sofía."
+    en: "It's a message from Sofía."
+  - es: "Te mando un {mensaje} por WhatsApp."
+    en: "I'll send you a message on WhatsApp."
+  - es: "Te {mando} mi número."
+    en: "I'll send you my number."
+    note: "The present tense often means I'll do it now."
+  - es: "Mis amigos me {mandan} mensajes por WhatsApp."
+    en: "My friends send me messages on WhatsApp."
+dialogue:
+  title: En la oficina
+  title_en: At the office
+  lines:
+    - speaker: Diego
+      es: "Mariana, ¿cuál es tu número de celular?"
+      en: "Mariana, what's your cell number?"
+    - speaker: Mariana
+      es: "Es el cinco, cinco, dieciocho, cero, tres, veintiséis, diecinueve."
+      en: "It's 55 18 03 26 19."
+    - speaker: Diego
+      es: "Cinco, cinco, dieciocho, cero... ¿trece?"
+      en: "Five, five, eighteen, zero... thirteen?"
+    - speaker: Mariana
+      es: "No, tres. Cero, tres, veintiséis, diecinueve. Te mando un mensaje por WhatsApp."
+      en: "No, three. Zero, three, twenty-six, nineteen. I'll send you a WhatsApp message."
+    - speaker: Diego
+      es: "Gracias. ¿Y cuál es mi computadora?"
+      en: "Thanks. And which computer is mine?"
+    - speaker: Mariana
+      es: "La computadora número doce, ahí."
+      en: "Computer number twelve, right there."
+    - speaker: Diego
+      es: "Gracias, Mariana. ¡Hasta mañana!"
+      en: "Thanks, Mariana. See you tomorrow!"
+    - speaker: Mariana
+      es: "¡Hasta mañana, Diego!"
+      en: "See you tomorrow, Diego!"

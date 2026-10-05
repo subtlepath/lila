@@ -1,0 +1,126 @@
+number: 3
+title: ¿Hay agua caliente?
+title_en: Is there hot water?
+level: A1
+new: [haber, cama, silla, clóset, regadera, estufa, refrigerador, luz, gas, caliente, rentar, necesitar]
+conjugate: ["necesitar:pres"]
+reviewer_notes:
+  - "Renting note: deposit plus a month in advance, la luz as the electricity bill, the calentador, the gas truck's song. Accurate for Mexico City today?"
+  - "Usage note warns that 'estoy caliente' is sexual in Mexico. Is the wording appropriate for learners?"
+notes:
+  - kind: grammar
+    title: "Hay: there is, there are"
+    text: |
+      _Hay_ means both "there is" and "there are". It never changes, and it is followed by _un_, _una_, a number or no article at all:
+
+      - _Hay una cama._ — There's a bed.
+      - _Hay dos sillas._ — There are two chairs.
+      - _¿Hay agua caliente?_ — Is there hot water?
+      - _No hay gas._ — There's no gas.
+
+      Never put _el_ or _la_ after _hay_. To say where a thing you already know about is, use _estar_: _La estufa está en la cocina._ (The stove is in the kitchen.)
+  - kind: culture
+    title: Renting in Mexico
+    text: |
+      A sign that says _Se renta_ means "for rent". The monthly rent is _la renta_, and the landlord usually asks for a deposit and a month in advance.
+
+      Ask what is included. _La luz_ (the electricity bill) is often separate. Hot water comes from a gas heater, the _calentador_, so the _regadera_ (shower) and the _estufa_ (stove) both need gas. Many buildings use a gas tank that a truck refills: listen for its song in the street.
+  - kind: usage
+    title: Caliente, picante, calor
+    text: |
+      _Caliente_ means hot to the touch: _agua caliente_, _el café está caliente_. Food that burns your mouth with chile is _picante_ (spicy).
+
+      For the weather and for how you feel, Spanish uses _calor_ (heat), which comes later: _hace calor_ (it's hot), _tengo calor_ (I'm hot).
+
+      Never say ~estoy caliente~ for "I'm hot". In Mexico it means you are sexually aroused.
+sentences:
+  - es: "¿{Hay} agua caliente?"
+    en: "Is there hot water?"
+  - es: "{Hay} dos sillas en la cocina."
+    en: "There are two chairs in the kitchen."
+    order: true
+  - es: "No {hay} problema."
+    en: "No problem."
+    reviewer_notes: "Used both as 'No problem' and literally. Fine?"
+  - es: "Hay una {cama} en la recámara."
+    en: "There's a bed in the bedroom."
+  - es: "Necesito una {cama} grande."
+    en: "I need a big bed."
+  - es: "Necesito dos {sillas} más."
+    en: "I need two more chairs."
+  - es: "Hay una mesa y una {silla}."
+    en: "There's a table and a chair."
+  - es: "La recámara tiene un {clóset} grande."
+    en: "The bedroom has a big closet."
+  - es: "Los zapatos están en el {clóset}."
+    en: "The shoes are in the closet."
+  - es: "¿La {regadera} tiene agua caliente?"
+    en: "Does the shower have hot water?"
+  - es: "Hay un baño con {regadera}."
+    en: "There's a bathroom with a shower."
+  - es: "La {estufa} está en la cocina."
+    en: "The stove is in the kitchen."
+    note: "Hay says that something exists; estar says where a known thing is."
+  - es: "La {estufa} es de gas."
+    en: "The stove runs on gas."
+  - es: "¿Hay {refrigerador}?"
+    en: "Is there a fridge?"
+    note: "Many Mexicans say el refri."
+  - es: "La leche está en el {refrigerador}."
+    en: "The milk is in the fridge."
+  - es: "No hay {luz}."
+    en: "The power's out."
+    reviewer_notes: "'The power's out' for No hay luz: natural?"
+  - es: "Necesito pagar la {luz}."
+    en: "I need to pay the electric bill."
+    note: "La luz: the light, and also the electricity."
+  - es: "No hay {gas}."
+    en: "We're out of gas."
+    reviewer_notes: "Translated 'We're out of gas' (the tank is empty). Right sense?"
+  - es: "La regadera y la estufa son de {gas}."
+    en: "The shower and the stove run on gas."
+  - es: "El café está muy {caliente}."
+    en: "The coffee is very hot."
+  - es: "No hay agua {caliente} en la regadera."
+    en: "There's no hot water in the shower."
+  - es: "Se {renta} departamento."
+    en: "Apartment for rent."
+    reviewer_notes: "Sign wording without an article, as on real signs?"
+    note: "The sign you see on buildings."
+  - es: "{Rento} un cuarto en la Condesa."
+    en: "I rent a room in the Condesa."
+  - es: "{Necesito} una mesa y dos sillas."
+    en: "I need a table and two chairs."
+    order: true
+  - es: "Ana {necesita} una cama."
+    en: "Ana needs a bed."
+  - es: "Nosotros {necesitamos} muchas cosas para la casa."
+    en: "We need lots of things for the house."
+dialogue:
+  title: Se renta departamento
+  title_en: Apartment for rent
+  lines:
+    - speaker: Tom
+      es: "Buenas tardes, señora. ¿Se renta el departamento?"
+      en: "Good afternoon, ma'am. Is the apartment for rent?"
+    - speaker: Lupe
+      es: "Sí, pase. Tiene una recámara, sala, [cocina|cocina] y baño."
+      en: "Yes, come in. It has a bedroom, a living room, a kitchen and a bathroom."
+    - speaker: Tom
+      es: "¿Hay refrigerador? ¿Y hay agua caliente?"
+      en: "Is there a fridge? And is there hot water?"
+    - speaker: Lupe
+      es: "Sí. La regadera y la estufa son de gas. Usted paga la luz."
+      en: "Yes. The shower and the stove run on gas. You pay the electricity."
+    - speaker: Tom
+      es: "Muy bien. Hay una cama, pero solo hay una silla."
+      en: "Very good. There's a bed, but there's only one chair."
+    - speaker: Lupe
+      es: "¿Necesita más sillas?"
+      en: "Do you need more chairs?"
+    - speaker: Tom
+      es: "Sí, necesito una mesa y dos sillas."
+      en: "Yes, I need a table and two chairs."
+    - speaker: Lupe
+      es: "No hay problema."
+      en: "No problem."

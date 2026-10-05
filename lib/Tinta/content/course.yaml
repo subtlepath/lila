@@ -1,0 +1,5 @@
+# Tinta: Mexican Spanish for English speakers (PLAN.md section 7).
+# Bump `version` whenever a release changes the content.
+title: Tinta
+version: 1
+locale: es-MX

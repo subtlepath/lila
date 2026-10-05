@@ -1,0 +1,119 @@
+number: 4
+title: Me levanto temprano
+title_en: I get up early
+level: A1
+reviewer_notes:
+  - "Usage note: me baño usually means I take a shower; most homes have a regadera; people shower every morning. Correct?"
+  - "Is arreglarse glossed well as get ready, or dress up for an occasion?"
+new: [despertarse, levantarse, bañarse, lavarse, diente, vestirse, arreglarse, salir, irse, acostarse, temprano, tarde#late]
+conjugate: ["levantarse:pres", "acostarse:pres", "vestirse:pres", "salir:pres.1s"]
+notes:
+  - kind: grammar
+    title: Reflexive verbs
+    text: |
+      Verbs that end in _-se_ describe something you do to or for yourself. They take a pronoun that matches the subject:
+
+      - _me levanto_ — I get up
+      - _te levantas_ — you get up
+      - _se levanta_ — he, she gets up; you (_usted_) get up
+      - _nos levantamos_ — we get up
+      - _se levantan_ — they get up; you all get up
+
+      The pronoun goes before the verb, or on the end of an infinitive: _Me baño._ _Quiero bañarme._
+
+      Some verbs change meaning with _-se_. _Ir_ is to go; _irse_ is to leave: _Voy a la oficina_ (I'm going to the office), but _Ya me voy_ (I'm off). _Salir_ (to go out, to leave a place) is regular except for _yo_: _salgo_.
+  - kind: usage
+    title: Bañarse and arreglarse
+    text: |
+      In Mexico _me baño_ usually means I take a shower: most homes have a _regadera_, and people shower every morning before work or school.
+
+      - _lavarse los dientes_ — to brush your teeth
+      - _vestirse_ — to get dressed: _me visto, te vistes, se viste_ (e to i)
+      - _arreglarse_ — to get ready, or to dress up for an occasion: _Mariana se arregla._
+
+      Body parts take _el, la, los, las_, not _mi_: _Me lavo los dientes._ _Me lavo la cara._
+sentences:
+  - es: "Me {despierto} a las seis."
+    en: "I wake up at six."
+    order: true
+  - es: "¿A qué hora te {despiertas}?"
+    en: "What time do you wake up?"
+  - es: "Me {levanto} y [desayuno|desayunar]."
+    en: "I get up and have breakfast."
+  - es: "Los sábados nos {levantamos} [tarde|tarde#late]."
+    en: "On Saturdays we get up late."
+  - es: "Me {baño} en la [mañana|mañana#morning]."
+    en: "I shower in the morning."
+    note: "In Mexico, bañarse usually means to take a shower."
+  - es: "¿Te {bañas} en la noche?"
+    en: "Do you shower at night?"
+  - es: "Me {lavo} los dientes."
+    en: "I brush my teeth."
+    order: true
+  - es: "¿Te {lavas} los dientes después de comer?"
+    en: "Do you brush your teeth after you eat?"
+  - es: "Me lavo los {dientes} tres veces al día."
+    en: "I brush my teeth three times a day."
+    note: "Body parts take los, not mis: los dientes."
+  - es: "Mi hijo tiene un {diente} nuevo."
+    en: "My son has a new tooth."
+  - es: "Me {visto} rápido."
+    en: "I get dressed fast."
+  - es: "Mi hija se {viste} para la escuela."
+    en: "My daughter is getting dressed for school."
+  - es: "Mariana se {arregla} en el baño."
+    en: "Mariana is getting ready in the bathroom."
+  - es: "Me {arreglo} y salgo."
+    en: "I get ready and head out."
+  - es: "{Salgo} de casa a las siete."
+    en: "I leave home at seven."
+    note: "Salir de casa, with no la before casa."
+    order: true
+  - es: "¿A qué hora {sales|salir}?"
+    en: "What time do you leave?"
+  - es: "Ya me {voy}."
+    en: "I'm off."
+    note: "Ir is to go; irse is to leave."
+  - es: "¿Ya te {vas}?"
+    en: "Are you leaving already?"
+  - es: "Me {acuesto} a las once."
+    en: "I go to bed at eleven."
+  - es: "Los niños se {acuestan} temprano."
+    en: "The kids go to bed early."
+  - es: "[Mañana|mañana] me levanto muy {temprano}."
+    en: "Tomorrow I'm getting up really early."
+  - es: "Mi papá siempre llega muy {temprano}."
+    en: "My dad always gets there really early."
+  - es: "Siempre llego muy {tarde|tarde#late}."
+    en: "I'm always really late."
+    order: true
+  - es: "Ya es muy {tarde|tarde#late}."
+    en: "It's already very late."
+dialogue:
+  title: Siempre llego tarde
+  title_en: I'm always late
+  lines:
+    - speaker: Mariana
+      es: "¡Ana! Ya son las seis y media. ¿No te levantas?"
+      en: "Ana! It's already six thirty. Aren't you getting up?"
+    - speaker: Ana
+      es: "Ahorita me levanto. ¿Estás en el baño?"
+      en: "I'm getting up in a minute. Are you in the bathroom?"
+    - speaker: Mariana
+      es: "Sí. Me baño, me lavo los dientes y me arreglo."
+      en: "Yes. I'm taking a shower, brushing my teeth and getting ready."
+    - speaker: Ana
+      es: "¿A qué hora [sales|salir]?"
+      en: "What time are you leaving?"
+    - speaker: Mariana
+      es: "Salgo a las siete. ¿Y tú?"
+      en: "I'm leaving at seven. And you?"
+    - speaker: Ana
+      es: "A las siete y media, pero siempre llego [tarde|tarde#late] al [trabajo|trabajo]."
+      en: "At seven thirty, but I'm always late for work."
+    - speaker: Mariana
+      es: "¡Porque nunca te levantas temprano! Ya me voy. ¡Adiós!"
+      en: "Because you never get up early! I'm off. Bye!"
+    - speaker: Ana
+      es: "¡Adiós! Ahorita me visto."
+      en: "Bye! I'm getting dressed right now."

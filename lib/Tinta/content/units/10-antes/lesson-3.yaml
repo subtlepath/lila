@@ -1,0 +1,130 @@
+number: 3
+title: Cuando tembló
+title_en: When the earthquake hit
+level: A2
+reviewer_notes:
+  - "Facts to check in the culture note: the alert gives up to about a minute of warning for quakes on the Pacific coast and little or none for nearby ones; a big simulacro is often held on 19 September."
+  - "The drill motto is written 'No corro, no grito, no empujo' (the plan had 'No grito, no corro, no empujo'). Which order do schools use?"
+  - "Ana is on the tenth floor and leaves by the stairs only after the shaking stops, as civil-protection guidance says. Is the dialogue right?"
+  - "'Hoy hay simulacro' without an article. Natural?"
+new: [temblor, temblar, alerta, simulacro, sonar, mientras, escalera, caerse, romperse, gritar, empujar, asustado]
+conjugate: ["estar:impf", "caerse:pret", "sonar:pret.3s", "temblar:pret.3s"]
+notes:
+  - kind: grammar
+    title: Preterite and imperfect together
+    text: |
+      A story about the past needs both tenses. The imperfect sets the scene; the preterite tells what happened.
+
+      - scene: _Estaba en la oficina. Llovía._ (I was at the office. It was raining.)
+      - event: _Sonó la alerta. Tembló._ (The alarm went off. The earthquake hit.)
+
+      _Mientras_ (while) goes with the imperfect, for the background; _cuando_ (when) often goes with the preterite, for the event that cuts in:
+
+      - _Mientras trabajaba, sonó la alerta._
+      - _Estaba en el metro cuando tembló._
+  - kind: culture
+    title: Earthquakes in Mexico City
+    text: |
+      Mexico City lies in an earthquake zone, and people there know what to do.
+
+      - The _alerta sísmica_ is a siren played on loudspeakers across the city. For strong quakes that start far away, on the Pacific coast, it can sound up to about a minute before the shaking arrives. For quakes that start closer, it gives little or no warning.
+      - Offices and schools hold _simulacros_ (drills). A big one is often held on 19 September, the date of the strong earthquakes of 1985 and 2017.
+      - The drill rule every child learns: _No corro, no grito, no empujo._ (I don't run, I don't shout, I don't push.) If there is time, people on low floors go outside; higher up, they move to a safe spot away from windows. When the shaking stops, everyone leaves by the stairs, never the elevator, and meets outside.
+  - kind: usage
+    title: Temblor
+    text: |
+      Mexicans call any earthquake _un temblor_, and say _tembló_ (it shook) for "there was an earthquake". _Terremoto_ is kept for a big, destructive one.
+
+      - _¿Sentiste el temblor?_ — Did you feel the earthquake?
+      - _¡Está temblando!_ — There's an earthquake!
+      - _Anoche tembló._ — There was an earthquake last night.
+
+      Used this way, _temblar_ has no subject, like _llover_.
+sentences:
+  - es: "Anoche hubo un {temblor}."
+    en: "There was an earthquake last night."
+  - es: "El {temblor} empezó a las doce."
+    en: "The earthquake started at twelve."
+  - es: "¡Está {temblando}!"
+    en: "There's an earthquake!"
+    note: "Mexicans say temblar, to shake, for an earthquake."
+  - es: "Ayer {tembló} en la Ciudad de México."
+    en: "There was an earthquake in Mexico City yesterday."
+  - es: "Cuando suena la {alerta}, salimos del edificio."
+    en: "When the alarm goes off, we leave the building."
+  - es: "La {alerta} sonó antes del temblor."
+    en: "The alarm went off before the earthquake."
+  - es: "Hoy hay {simulacro} en la oficina."
+    en: "There's an earthquake drill at the office today."
+    order: true
+  - es: "En el {simulacro}, todos salimos en orden."
+    en: "In the drill, we all went out in an orderly way."
+  - es: "La alerta {sonó} a las once."
+    en: "The alarm went off at eleven."
+  - es: "Tu celular está {sonando}."
+    en: "Your phone is ringing."
+  - es: "{Mientras} yo leía, Memo jugaba."
+    en: "While I was reading, Memo was playing."
+  - es: "{Mientras} esperábamos, empezó a llover."
+    en: "While we were waiting, it started to rain."
+  - es: "Salimos por la {escalera}."
+    en: "We went out by the stairs."
+  - es: "Las {escaleras} del metro estaban llenas."
+    en: "The metro stairs were packed."
+  - es: "Se {cayó} un vaso."
+    en: "A glass fell."
+  - es: "Me {caí} de la bicicleta."
+    en: "I fell off my bike."
+    order: true
+  - es: "Se {rompió} mi celular."
+    en: "My phone broke."
+  - es: "Los vasos se {rompieron}."
+    en: "The glasses broke."
+  - es: "No corro, no {grito}, no empujo."
+    en: "I don't run, I don't shout, I don't push."
+    note: "The rule every Mexican child learns for drills."
+  - es: "Nadie {gritó}."
+    en: "Nobody screamed."
+  - es: "En el metro, la gente {empuja} mucho."
+    en: "On the metro, people push a lot."
+  - es: "Un señor me {empujó}."
+    en: "A man pushed me."
+  - es: "Estaba muy {asustada}."
+    en: "I was really scared."
+  - es: "Los niños estaban {asustados}."
+    en: "The kids were scared."
+  - es: "¿Dónde {estabas} tú cuando tembló?"
+    en: "Where were you when the earthquake hit?"
+    order: true
+  - es: "{Estaba} en la oficina, en el piso diez."
+    en: "I was at the office, on the tenth floor."
+    allow: [piso]
+dialogue:
+  title: ¿Dónde estabas?
+  title_en: Where were you?
+  lines:
+    - speaker: Mariana
+      es: "¡Ana! ¿Estás bien? ¿Dónde estabas cuando tembló?"
+      en: "Ana! Are you OK? Where were you when the earthquake hit?"
+    - speaker: Ana
+      es: "Estaba en la oficina, en el piso diez. Estaba trabajando cuando sonó la alerta."
+      en: "I was at the office, on the tenth floor. I was working when the alarm went off."
+      allow: [piso]
+    - speaker: Mariana
+      es: "¿Y qué hicieron?"
+      en: "And what did you do?"
+    - speaker: Ana
+      es: "Cuando terminó el temblor, salimos por la escalera, [como|como] en el simulacro: no corro, no grito, no empujo."
+      en: "When the shaking stopped, we went out by the stairs, like in the drill: don't run, don't shout, don't push."
+    - speaker: Mariana
+      es: "¿Pasó algo en la oficina?"
+      en: "Did anything happen at the office?"
+    - speaker: Ana
+      es: "Mientras temblaba, se cayó un vaso y se rompió. Estaba muy asustada, pero todos estamos bien. ¿Y tú?"
+      en: "While it was shaking, a glass fell and broke. I was really scared, but we're all fine. What about you?"
+    - speaker: Mariana
+      es: "Yo iba en el metro. ¡No supe nada hasta que salí!"
+      en: "I was on the metro. I didn't know a thing until I got out!"
+    - speaker: Ana
+      es: "¡Qué suerte!"
+      en: "Lucky you!"

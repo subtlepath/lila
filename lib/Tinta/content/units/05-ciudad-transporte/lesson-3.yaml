@@ -1,0 +1,132 @@
+number: 3
+title: Siga derecho
+title_en: Keep going straight
+level: A1
+new: [perdido, ayudar, preguntar, saber, buscar, seguir, derecho, cruzar, semáforo, banqueta, caminar, vuelta]
+conjugate: ["seguir:imp", "cruzar:imp", "caminar:imp", "saber:pres"]
+notes:
+  - kind: grammar
+    title: Directions with usted
+    text: |
+      Directions to a stranger use the *usted command*. To make it, take the yo form of the present, drop the _-o_, and switch the vowel: _-ar_ verbs take _-e_, _-er_ and _-ir_ verbs take _-a_.
+
+      - _camino_ — _camine_ (walk)
+      - _tomo_ — _tome_ (take)
+      - _sigo_ — _siga_ (keep going)
+      - _cruzo_ — _cruce_ (cross: _z_ becomes _c_ before _e_)
+      - _busco_ — _busque_ (look for: _c_ becomes _qu_)
+
+      _Dar_ gives _dé_, with an accent: _dé vuelta a la derecha_ (turn right). For a group, add _-n_: _sigan_, _caminen_, _crucen_.
+
+      Between friends you will hear the tú form (_sigue_, _cruza_). With a stranger, use usted.
+  - kind: usage
+    title: Asking for help
+    text: |
+      Four phrases get you anywhere:
+
+      - _Disculpe, ¿me ayuda?_ — Excuse me, can you help me?
+      - _Estoy perdido_ (_perdida_ for a woman). — I'm lost.
+      - _Busco..._ — I'm looking for... (no word for "for": _Busco el metro_)
+      - _¿Sabe dónde está...?_ — Do you know where... is?
+
+      _Preguntar_ is to ask a question. Asking for something is a different verb, _pedir_, which comes later.
+
+      Do not mix up _derecho_ (straight ahead) and _derecha_ (right): _Siga derecho_ is "keep going straight", _a la derecha_ is "on the right".
+  - kind: culture
+    title: On foot
+    text: |
+      Walk on the _banqueta_ (sidewalk), and cross at the _semáforo_ (traffic light) or at a crossing with a traffic officer. Even on a green light, look both ways: drivers turning the corner do not always stop.
+
+      Mexicans give directions by landmarks and with their hands, and they often add _aquí a la vuelta_ (just around the corner) for anything close.
+sentences:
+  - es: "Estoy {perdido}."
+    en: "I'm lost."
+  - es: "Disculpe, estoy {perdida}. ¿Me ayuda?"
+    en: "Excuse me, I'm lost. Can you help me?"
+    note: "A woman says perdida."
+  - es: "Señora, ¿me {ayuda}, por favor?"
+    en: "Ma'am, could you help me, please?"
+  - es: "¿Te {ayudo}?"
+    en: "Can I give you a hand?"
+    reviewer_notes: "Translated 'Can I give you a hand?'. Natural offer between equals?"
+  - es: "¿Le puedo {preguntar} dónde queda el banco?"
+    en: "Can I ask you where the bank is?"
+    order: true
+  - es: "Tom le {pregunta} a la señora dónde está Bellas Artes."
+    en: "Tom asks the lady where Bellas Artes is."
+  - es: "No {sé|saber} dónde está."
+    en: "I don't know where it is."
+    note: "Sé (I know) has an accent; se without one is the pronoun."
+  - es: "Disculpe, ¿{sabe} dónde está el Zócalo?"
+    en: "Excuse me, do you know where the Zócalo is?"
+  - es: "Memo, ¿tú {sabes} dónde vive Ana?"
+    en: "Memo, do you know where Ana lives?"
+  - es: "{Busco} Bellas Artes."
+    en: "I'm looking for Bellas Artes."
+    note: "No word for 'for': busco el metro."
+  - es: "{Buscamos} un cajero."
+    en: "We're looking for an ATM."
+  - es: "{Siga} derecho y cruce la avenida."
+    en: "Keep going straight and cross the avenue."
+  - es: "Jóvenes, {sigan} derecho dos cuadras."
+    en: "Go straight for two blocks, guys."
+    reviewer_notes: "Is 'Jóvenes' natural for addressing a group of young people?"
+    note: "Sigan: the command for ustedes, a group."
+  - es: "Camine {derecho} por la avenida."
+    en: "Walk straight down the avenue."
+  - es: "Siga todo {derecho}."
+    en: "Keep going straight ahead."
+    reviewer_notes: "'Siga todo derecho' as the everyday form: agree?"
+    order: true
+  - es: "Señor, no {cruce} aquí, por favor."
+    en: "Sir, please don't cross here."
+  - es: "Tom {cruza} la calle."
+    en: "Tom crosses the street."
+  - es: "Cruce en el {semáforo}."
+    en: "Cross at the light."
+  - es: "En el {semáforo}, dé vuelta a la izquierda."
+    en: "At the light, turn left."
+  - es: "Camine por la {banqueta}."
+    en: "Walk on the sidewalk."
+    order: true
+  - es: "Hay mucha gente en la {banqueta}."
+    en: "There are lots of people on the sidewalk."
+  - es: "{Camine} dos cuadras y dé vuelta a la derecha."
+    en: "Walk two blocks and turn right."
+  - es: "Me gusta {caminar} por el centro."
+    en: "I like walking around downtown."
+  - es: "Dé {vuelta} a la derecha en la esquina."
+    en: "Turn right at the corner."
+  - es: "Está aquí a la {vuelta}."
+    en: "It's just around the corner."
+    reviewer_notes: "'aquí a la vuelta' = just around the corner: natural?"
+dialogue:
+  title: Estoy perdido
+  title_en: I'm lost
+  reviewer_notes: "The directions from near the Zócalo to Bellas Artes are loose geography (straight down an avenue, two blocks, left at the light). Plausible enough?"
+  lines:
+    - speaker: Tom
+      es: "Disculpe, señora, ¿me ayuda? Estoy perdido. Busco Bellas Artes."
+      en: "Excuse me, ma'am, can you help me? I'm lost. I'm looking for Bellas Artes."
+    - speaker: Señora
+      es: "Sí, joven. ¿Sabe dónde está el Zócalo?"
+      en: "Sure, young man. Do you know where the Zócalo is?"
+    - speaker: Tom
+      es: "Sí, allá."
+      en: "Yes, over there."
+    - speaker: Señora
+      es: "Pues siga derecho por la avenida y camine dos cuadras."
+      en: "Well, keep going straight down the avenue and walk two blocks."
+    - speaker: Tom
+      es: "¿Y luego?"
+      en: "And then?"
+    - speaker: Señora
+      es: "En el semáforo, dé vuelta a la izquierda, cruce la calle y camine por la banqueta."
+      en: "At the light, turn left, cross the street and walk along the sidewalk."
+    - speaker: Tom
+      es: "Muchas gracias, señora. ¡Muy amable!"
+      en: "Thank you so much, ma'am. That's very kind of you!"
+    - speaker: Señora
+      es: "De nada. Pregunte otra vez en el semáforo."
+      en: "You're welcome. Ask again at the light."
+      reviewer_notes: "Is 'Pregunte otra vez' natural advice from a stranger?"

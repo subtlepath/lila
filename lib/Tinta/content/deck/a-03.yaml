@@ -1,0 +1,271 @@
+title: "Frecuentes A, parte tres"
+sentences:
+  # 101 morir
+  - es: "Me {muero} de hambre."
+    en: "I'm starving."
+    order: true
+    note: "Me muero de...: I'm dying of... (hunger, cold, laughter)."
+  - es: "Mi abuelo {murió} el año pasado."
+    en: "My grandfather died last year."
+  # 102 bebé
+  - es: "El {bebé} no deja de llorar."
+    en: "The baby won't stop crying."
+    order: true
+  - es: "La {bebé} tiene seis meses."
+    en: "The baby girl is six months old."
+    note: "El bebé for a boy, la bebé for a girl."
+  # 103 tuyo
+  - es: "¿Este libro es {tuyo}?"
+    en: "Is this book yours?"
+    order: true
+  - es: "Un amigo {tuyo} te está buscando."
+    en: "A friend of yours is looking for you."
+  # 104 posible
+  - es: "¿Es {posible} pagar con tarjeta?"
+    en: "Is it possible to pay by card?"
+    order: true
+  - es: "[Ven|venir] lo antes {posible}."
+    en: "Come as soon as possible."
+    note: "Lo antes posible: as soon as possible."
+  # 105 plan
+  - es: "¿Qué {planes} tienes para el fin de semana?"
+    en: "What plans do you have for the weekend?"
+  - es: "Tengo un {plan}: vamos a la playa."
+    en: "I have a plan: let's go to the beach."
+  # 106 preocupar
+  - es: "Me {preocupa} el examen de [mañana|mañana]."
+    en: "I'm worried about tomorrow's exam."
+    note: "Preocupar works like gustar: me preocupa (it worries me). Compare me preocupo (I worry)."
+  - es: "Nos {preocupa} la salud de mi papá."
+    en: "We're worried about my dad's health."
+  # 107 faltar
+  - es: "¿Cuánto {falta} para llegar?"
+    en: "How much longer until we get there?"
+    order: true
+  - es: "Te {faltan} dos pesos."
+    en: "You're two pesos short."
+    note: "Faltar works like gustar: the missing thing is the subject, so faltan for two pesos."
+  # 108 culpa
+  - es: "Es mi {culpa}."
+    en: "It's my fault."
+    order: true
+  - es: "No [fue|ser] tu {culpa}."
+    en: "It wasn't your fault."
+    order: true
+  # 109 confiar
+  - es: "{Confío} en ti."
+    en: "I trust you."
+    order: true
+    note: "Confiar en alguien: to trust someone (with en)."
+  - es: "No {confíes} en él, te va a mentir."
+    en: "Don't trust him, he's going to lie to you."
+  # 110 correcto
+  - es: "Su respuesta es {correcta}."
+    en: "Your answer is correct."
+  - es: "¿Es la dirección {correcta}?"
+    en: "Is this the right address?"
+  # 111 largo
+  - es: "El viaje [fue|ser] muy {largo}."
+    en: "The trip was very long."
+    note: "Largo means long, not large: big is grande."
+  - es: "Tienes el pelo muy {largo}."
+    en: "Your hair is really long."
+  # 112 mentir
+  - es: "No me {mientas}, te conozco."
+    en: "Don't lie to me, I know you."
+  - es: "Le {mentí} a mi mamá."
+    en: "I lied to my mom."
+    order: true
+  # 113 negocio
+  - es: "Mis papás tienen un {negocio} de tacos."
+    en: "My parents have a taco business."
+  - es: "El {negocio} abre a las nueve."
+    en: "The shop opens at nine."
+  # 114 hermoso
+  - es: "¡Qué playa tan {hermosa}!"
+    en: "What a beautiful beach!"
+  - es: "Oaxaca es un lugar {hermoso}."
+    en: "Oaxaca is a beautiful place."
+    order: true
+  # 115 cuidar
+  - es: "Mi abuela me {cuidaba|cuidar:impf.3s} cuando era niño."
+    en: "My grandma used to look after me when I was little."
+  - es: "Mi hermana {cuida} a los niños los sábados."
+    en: "My sister looks after the kids on Saturdays."
+    note: "Cuidar takes a before a person or a pet: cuidar a los niños."
+  # 116 imaginar
+  - es: "{Imagina|imaginar:imp.2s} que vives en la playa."
+    en: "Imagine that you live at the beach."
+  - es: "Me {imagino} que estás cansado."
+    en: "I imagine you're tired."
+    note: "Me imagino: I imagine, I bet."
+  # 117 perfecto
+  - es: "Hablas un español {perfecto}."
+    en: "You speak perfect Spanish."
+  - es: "Todo salió {perfecto}."
+    en: "Everything turned out perfectly."
+    order: true
+  # 118 servir
+  - es: "Mi celular ya no {sirve}."
+    en: "My cell phone doesn't work anymore."
+    order: true
+    note: "No sirve: it doesn't work, it's broken."
+  - es: "¿Te {sirvo} más café?"
+    en: "Can I get you more coffee?"
+    order: true
+  # 119 raro
+  - es: "Qué {raro}, Ana nunca llega [tarde|tarde#late]."
+    en: "That's weird, Ana is never late."
+  - es: "Tu vecino es [un poco|un poco] {raro}."
+    en: "Your neighbor is a little strange."
+  # 120 cargar
+  - es: "Necesito {cargar} el celular."
+    en: "I need to charge my phone."
+  - es: "Memo, ¿[por qué|por qué] {cargas} tantas cosas?"
+    en: "Memo, why are you carrying so many things?"
+  # 121 probablemente
+  - es: "{Probablemente} va a llover."
+    en: "It's probably going to rain."
+    order: true
+  # 122 par
+  - es: "Me compré un {par} de zapatos."
+    en: "I bought myself a pair of shoes."
+    order: true
+  - es: "Regreso en un {par} de días."
+    en: "I'll be back in a couple of days."
+    note: "Un par de: a couple of, a few."
+  # 123 diferente
+  - es: "Aquí la comida es muy {diferente}."
+    en: "The food here is very different."
+  # 124 millón
+  - es: "En la Ciudad de México viven más de nueve {millones} de personas."
+    en: "More than nine million people live in Mexico City."
+    note: "Millones takes de before a noun: un millón de pesos."
+    reviewer_notes: "Nine million is the city itself (2020 census, about 9.2 million); the metro area is over twenty million."
+  # 125 sueño
+  - es: "Tengo mucho {sueño}."
+    en: "I'm really sleepy."
+    order: true
+    note: "Tener sueño: to be sleepy. Sueño is also a dream."
+  - es: "Mi {sueño} es vivir en la playa."
+    en: "My dream is to live at the beach."
+  # 126 noticia
+  - es: "Tengo una buena {noticia}."
+    en: "I have some good news."
+  - es: "¿Viste las {noticias}?"
+    en: "Did you see the news?"
+    note: "One piece of news is una noticia; the news on TV is las noticias."
+  # 127 sitio
+  - es: "Mejor [pide|pedir:imp.2s] un taxi de {sitio}."
+    en: "You'd better order a taxi from a taxi stand."
+    note: "Un taxi de sitio comes from a fixed stand or by phone, and is the safer choice."
+    reviewer_notes: "Is 'taxi de sitio' still the usual advice now that ride apps are common?"
+  # 128 médico
+  - es: "Tienes que ir al {médico}."
+    en: "You need to go to the doctor."
+    order: true
+  - es: "Mi tía es {médica}."
+    en: "My aunt is a doctor."
+    reviewer_notes: "Médica for a woman: or would you say 'Mi tía es médico' / 'doctora'?"
+  # 129 desaparecer
+  - es: "Mi cartera {desapareció}."
+    en: "My wallet disappeared."
+  # 130 madre
+  - es: "El diez de mayo es el Día de las {Madres}."
+    en: "May tenth is Mother's Day."
+    note: "Mamá is the everyday word. Madre also appears in rude expressions."
+  # 131 tal vez
+  - es: "{Tal vez} voy [mañana|mañana]."
+    en: "Maybe I'll go tomorrow."
+  # 132 calmarse
+  - es: "Ya me {calmé}."
+    en: "I've calmed down now."
+    note: "¡Cálmate!: calm down! It can sound rude to someone who is upset."
+  # 133 oído
+  - es: "Me duele el {oído}."
+    en: "I have an earache."
+    order: true
+    note: "The oído is inside; the outer ear is la oreja."
+  # 134 caer
+  - es: "Tu amigo me {cae} muy bien."
+    en: "I really like your friend."
+    note: "Me cae bien: I like him or her (as a person)."
+  - es: "¿Cómo te {cayó} mi hermano?"
+    en: "What did you think of my brother?"
+  # 135 descubrir
+  - es: "{Descubrí} una fonda muy buena cerca de mi casa."
+    en: "I discovered a really good fonda near my house."
+  - es: "Mi mamá {descubrió} la verdad."
+    en: "My mom found out the truth."
+  # 136 explicar
+  - es: "Memo, ¿me lo {explicas} otra vez?"
+    en: "Memo, can you explain it to me again?"
+  - es: "El maestro {explica} muy bien."
+    en: "The teacher explains things really well."
+  # 137 lindo
+  - es: "¡Qué {lindo} perro!"
+    en: "What a cute dog!"
+    order: true
+  - es: "Tienes una casa muy {linda}."
+    en: "You have a really nice house."
+    note: "Lindo is very common in Mexico for people, places and things."
+  # 138 alegrarse
+  - es: "Me {alegro} mucho."
+    en: "I'm so glad."
+    order: true
+  - es: "Nos {alegramos} por ti."
+    en: "We're happy for you."
+  # 139 especial
+  - es: "Hoy es un día muy {especial}."
+    en: "Today is a very special day."
+  # 140 país
+  - es: "¿De qué {país} eres?"
+    en: "What country are you from?"
+    order: true
+  - es: "México es un {país} muy grande."
+    en: "Mexico is a very big country."
+  # 141 además
+  - es: "No tengo tiempo. {Además}, estoy cansado."
+    en: "I don't have time. Besides, I'm tired."
+  # 142 tonto
+  - es: "No seas {tonto}, Beto."
+    en: "Don't be silly, Beto."
+    note: "Informal: only with friends."
+  # 143 libre
+  - es: "¿Está {libre} esta silla?"
+    en: "Is this seat free?"
+    note: "Libre: free, not busy. Free of charge is gratis."
+  - es: "¿Tienes tiempo {libre} hoy?"
+    en: "Do you have any free time today?"
+  # 144 carta
+  - es: "¿Me trae la {carta}, por favor?"
+    en: "Could you bring me the menu, please?"
+    note: "In a restaurant, la carta is the menu."
+  - es: "Le escribí una {carta} a mi abuela."
+    en: "I wrote a letter to my grandmother."
+  # 145 elegir
+  - es: "Tú {eliges} la película."
+    en: "You pick the movie."
+    order: true
+  # 146 paz
+  - es: "Déjame en {paz}."
+    en: "Leave me alone."
+  # 147 interesar
+  - es: "Me {interesa} mucho la historia."
+    en: "I'm really interested in history."
+  - es: "No me {interesan} las noticias."
+    en: "I'm not interested in the news."
+    order: true
+    note: "Interesar works like gustar: me interesan las noticias, with a plural verb."
+  # 148 así que
+  - es: "Está lloviendo, {así que} no vamos a salir."
+    en: "It's raining, so we're not going out."
+  # 149 callarse
+  - es: "Todos se {callaron} cuando llegó el maestro."
+    en: "Everyone went quiet when the teacher arrived."
+  - es: "Mejor me {callo}."
+    en: "I'd better keep quiet."
+    note: "¡Cállate! is rude. Ask ¿Me deja hablar? or say silencio, por favor."
+  # 150 firmar
+  - es: "Señora, {firme|firmar:imp.3s} aquí, por favor."
+    en: "Ma'am, sign here, please."

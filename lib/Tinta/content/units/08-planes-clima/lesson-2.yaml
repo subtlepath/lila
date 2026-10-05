@@ -1,0 +1,121 @@
+number: 2
+title: "¿Cómo está el clima?"
+title_en: What's the weather like?
+level: A1
+new: [clima, tiempo, calor, frío, fresco, sol, lluvia, llover, nublado, paraguas, ponerse, creer]
+conjugate: ["llover:pres.3s", "ponerse:pres"]
+reviewer_notes:
+  - "Usage note: is 'said about a person, it sounds sexual' the right way to warn against estoy caliente? The strike-through shows it as 'not Mexican'."
+  - "Culture note: rainy season June to October with afternoon storms and hail; nothing much November to May; Mexico City at 2,240 m (7,350 ft) with cool mornings all year; April and May the hottest months; Cancún and Veracruz hot and humid most of the year. Accurate?"
+notes:
+  - kind: grammar
+    title: Talking about the weather
+    text: |
+      Spanish describes most weather with _hace_ (literally "it makes"), not "it is":
+
+      - _Hace calor._ — It's hot.
+      - _Hace frío._ — It's cold.
+      - _Hace fresco._ — It's cool.
+      - _Hace sol._ — It's sunny. You also hear _Hay sol._
+
+      Clouds take _estar_: _Está nublado._ (It's cloudy.) Rain has its own verb: _Llueve._ means both "it rains" and "it's raining", and _Va a llover._ is "it's going to rain".
+
+      For how a *person* feels, use _tener_: _Tengo calor._ (I'm hot.) _Tengo frío._ (I'm cold.)
+  - kind: usage
+    title: Clima and tiempo
+    text: |
+      To ask about the weather, Mexicans usually say _¿Cómo está el clima?_ or _¿Qué clima hace?_ _Clima_ is masculine: _el clima_.
+
+      _Tiempo_ means both "time" and "weather": _No tengo tiempo_ (I don't have time), _¿Qué tiempo hace?_ (What's the weather like?). The rest of the sentence tells you which.
+
+      Never say ~estoy caliente~ for "I'm hot". _Caliente_ is for things you touch, like coffee or water; said about a person, it sounds sexual. Say _tengo calor_.
+  - kind: culture
+    title: The rainy season
+    text: |
+      Central Mexico has two seasons. The _temporada de lluvias_ (rainy season) runs from about June to October: mornings are often sunny, and in the afternoon the sky clouds over and it pours, sometimes with hail. From November to May it hardly rains at all.
+
+      Mexico City sits at 2,240 m (7,350 ft), so mornings and nights are cool all year, even when afternoons are hot. April and May are the hottest months. On the coasts, in Cancún or Veracruz, it is hot and humid most of the year.
+
+      In the rainy season, carry an umbrella or a light jacket, and leave early: traffic is worse when it rains.
+sentences:
+  - es: "¿Cómo está el {clima} hoy?"
+    en: "What's the weather like today?"
+    order: true
+  - es: "Me gusta el {clima} de Oaxaca."
+    en: "I like the climate in Oaxaca."
+  - es: "¿Qué {tiempo} hace en Monterrey?"
+    en: "What's the weather like in Monterrey?"
+  - es: "Hoy no tengo {tiempo} para comer."
+    en: "I don't have time to eat today."
+    note: "Tiempo is both time and weather."
+  - es: "En mayo hace mucho {calor}."
+    en: "It's really hot in May."
+  - es: "Tengo mucho {calor}. ¿Me das agua?"
+    en: "I'm really hot. Can I have some water?"
+    note: "For people, say tengo calor, never estoy caliente."
+  - es: "Hace mucho {frío} en enero."
+    en: "It's very cold in January."
+  - es: "Tengo {frío}. ¿Me pasas mi chamarra?"
+    en: "I'm cold. Can you pass me my jacket?"
+  - es: "No hace frío, solo hace {fresco}."
+    en: "It isn't cold, just cool."
+  - es: "La fruta está muy {fresca}."
+    en: "The fruit is very fresh."
+  - es: "Hace {sol}, pero no hace calor."
+    en: "It's sunny, but it isn't hot."
+  - es: "El {sol} sale a las siete."
+    en: "The sun comes up at seven."
+  - es: "La temporada de {lluvias} empieza en junio."
+    en: "The rainy season starts in June."
+  - es: "Con esta {lluvia} no vamos a salir."
+    en: "We're not going out in this rain."
+  - es: "Va a {llover} en la [tarde|tarde]."
+    en: "It's going to rain this afternoon."
+    order: true
+  - es: "En julio {llueve} todas las tardes."
+    en: "In July it rains every afternoon."
+  - es: "Hoy está {nublado} y hace fresco."
+    en: "It's cloudy and cool today."
+  - es: "Está muy {nublado}. ¿Va a llover?"
+    en: "It's really cloudy. Is it going to rain?"
+  - es: "[Lleva|llevar:imp.2s] el {paraguas}. Va a llover."
+    en: "Take the umbrella. It's going to rain."
+  - es: "¿Dónde está mi {paraguas}?"
+    en: "Where's my umbrella?"
+    order: true
+  - es: "Hace frío. Me {pongo} la chamarra."
+    en: "It's cold. I'm putting on my jacket."
+    note: "Spanish says la chamarra, not mi chamarra, for your own clothes."
+  - es: "Memo se {pone} los tenis."
+    en: "Memo is putting on his sneakers."
+  - es: "{Creo} que va a llover."
+    en: "I think it's going to rain."
+  - es: "Yo {creo} que sí."
+    en: "I think so."
+    order: true
+dialogue:
+  title: Va a llover
+  title_en: It's going to rain
+  lines:
+    - speaker: Laura
+      es: "Ana, llévate el paraguas. Va a llover."
+      en: "Ana, take the umbrella. It's going to rain."
+    - speaker: Ana
+      es: "¿Usted cree, doña Laura? Está nublado, pero hace calor."
+      en: "Do you think so, doña Laura? It's cloudy, but it's warm."
+    - speaker: Laura
+      es: "Sí, hija. En julio llueve todas las tardes."
+      reviewer_notes: "Doña Laura calls Ana hija: natural for an older neighbor?"
+      en: "Yes, dear. In July it rains every afternoon."
+    - speaker: Ana
+      es: "Ah, es la temporada de lluvias. ¿Hace frío afuera?"
+      en: "Oh, it's the rainy season. Is it cold out?"
+    - speaker: Laura
+      es: "No mucho, pero hace fresco. Ponte una chamarra."
+      en: "Not very, but it's cool. Put on a jacket."
+    - speaker: Ana
+      es: "Gracias, doña Laura. ¿Usted va a salir?"
+      en: "Thank you, doña Laura. Are you going out?"
+    - speaker: Laura
+      es: "No, hija. Hoy me quedo en casa."
+      en: "No, dear. Today I'm staying home."

@@ -1,0 +1,134 @@
+title: "Frecuentes A, parte siete"
+sentences:
+  # 301 propio
+  - es: "Quiero tener mi {propio} negocio."
+    en: "I want to have my own business."
+    order: true
+    note: "Propio goes before the noun: mi propio carro, su propia casa."
+  # 302 siquiera
+  - es: "Ni {siquiera} me saludó."
+    en: "He didn't even say hi to me."
+    order: true
+    note: "Ni siquiera: not even."
+  # 303 para nada
+  - es: "¿Te molesta? —{Para nada}."
+    en: "Does it bother you? —Not at all."
+  # 304 secreto
+  - es: "¿Me guardas un {secreto}?"
+    en: "Can you keep a secret?"
+    order: true
+    note: "Guardar un secreto: to keep a secret."
+  # 305 por supuesto
+  - es: "¿Conoces Oaxaca? —¡{Por supuesto}!"
+    en: "Have you been to Oaxaca? —Of course!"
+  # 306 peligro
+  - es: "Su vida está en {peligro}."
+    en: "His life is in danger."
+    order: true
+  # 307 Navidad
+  - es: "¡Feliz {Navidad}!"
+    en: "Merry Christmas!"
+  - es: "En {Navidad} comemos con toda la familia."
+    en: "At Christmas we eat with the whole family."
+    note: "In Mexico the big dinner is on Nochebuena, Christmas Eve."
+  # 308 planear
+  - es: "Estamos {planeando} un viaje a Oaxaca."
+    en: "We're planning a trip to Oaxaca."
+  # 309 levantar
+  - es: "Niños, {levanten|levantar:imp.3p} la mano."
+    en: "Kids, raise your hands."
+    note: "Levantar: to lift, to raise. Getting up is levantarse."
+  - es: "No puedo {levantar} esta caja."
+    en: "I can't lift this box."
+    order: true
+  # 310 espacio
+  - es: "No hay {espacio} en el carro."
+    en: "There's no room in the car."
+    order: true
+  # 311 vestido
+  - es: "¡Qué bonito {vestido}!"
+    en: "What a pretty dress!"
+    order: true
+  # 312 permiso
+  - es: "Pedí {permiso} en el [trabajo|trabajo] para ir al doctor."
+    en: "I asked for time off work to go to the doctor."
+    note: "Pedir permiso: to ask for permission, or for time off work."
+  # 313 alcanzar
+  - es: "No me {alcanza} para el boleto."
+    en: "I don't have enough for the ticket."
+    note: "No me alcanza: I can't afford it, my money doesn't stretch that far."
+  # 314 basura
+  - es: "Hay mucha {basura} en la calle."
+    en: "There's a lot of trash in the street."
+  # 315 color
+  - es: "¿De qué {color} es tu carro?"
+    en: "What color is your car?"
+    order: true
+  # 316 bar
+  - es: "Nos vemos en el {bar} de la esquina."
+    en: "See you at the bar on the corner."
+  # 317 tardar
+  - es: "¿Cuánto {tarda} el camión?"
+    en: "How long does the bus take?"
+    order: true
+    note: "Mexico also says tardarse: ¿Cuánto se tarda?"
+  # 318 convencer
+  - es: "Me {convenciste}: voy contigo."
+    en: "You've convinced me: I'm coming with you."
+  # 319 acompañar
+  - es: "Sofía, ¿me {acompañas} a la tienda?"
+    en: "Sofía, can you come with me to the store?"
+  # 320 nervioso
+  - es: "Estoy muy {nerviosa} por el examen."
+    en: "I'm really nervous about the exam."
+  # 321 discutir
+  - es: "No quiero {discutir} contigo."
+    en: "I don't want to argue with you."
+    order: true
+    note: "Discutir is to argue, not just to discuss."
+  # 322 agradable
+  - es: "Hace un clima muy {agradable}."
+    en: "The weather is really pleasant."
+  # 323 opción
+  - es: "No tenemos otra {opción}."
+    en: "We have no other choice."
+    order: true
+  # 324 opinión
+  - es: "¿Cuál es tu {opinión}?"
+    en: "What's your opinion?"
+    order: true
+  # 325 golpe
+  - es: "Me [di|dar] un {golpe} en la cabeza."
+    en: "I hit my head."
+    note: "Darse un golpe: to bump or hit yourself."
+  # 326 dedo
+  - es: "Me corté el {dedo}."
+    en: "I cut my finger."
+    order: true
+    note: "Dedo is a finger or a toe."
+  # 327 prestar
+  - es: "¿Me {prestas} tu celular?"
+    en: "Can I borrow your phone?"
+    order: true
+    note: "¿Me prestas...?: literally 'will you lend me...?', the usual way to ask to borrow."
+  # 328 guapo
+  - es: "Tu novio es muy {guapo}."
+    en: "Your boyfriend is really handsome."
+  # 329 apagar
+  - es: "Lupe, {apaga|apagar:imp.2s} la luz, por favor."
+    en: "Lupe, turn off the light, please."
+  # 330 según
+  - es: "{Según} Ana, la fiesta es el sábado."
+    en: "According to Ana, the party is on Saturday."
+  # 331 orgulloso
+  - es: "Estoy muy {orgulloso} de ti."
+    en: "I'm very proud of you."
+    order: true
+  # 332 americano
+  - es: "Mi novia es {americana}."
+    en: "My girlfriend is American."
+    note: "In Mexico americano usually means from the US; estadounidense is the careful word."
+    reviewer_notes: "Is 'americana' the natural everyday word here, or would most people say 'gringa' (informal) or 'de Estados Unidos'?"
+  # 333 fallar
+  - es: "Me está {fallando} la computadora."
+    en: "My computer is acting up."

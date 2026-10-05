@@ -1,0 +1,4 @@
+# Unit 8 confusable sets (merged with content/confusables.yaml).
+- name: calor / caliente
+  lemmas: [calor, caliente]
+  note: Calor is heat (hace calor, tengo calor); caliente describes hot things (el café está caliente). Never say estoy caliente.

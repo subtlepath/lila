@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Draws Tinta's 1-bit UI icons with Pillow and writes src/icons/Icons.{h,cpp}.
+
+    python3 tools/gen-icons.py            # regenerate
+    python3 tools/gen-icons.py --check    # fail if the committed files differ
+
+Each icon is drawn at 8x its size in a unit square, reduced with a box filter
+and thresholded at 50 %, which gives even stroke weights at every size. The
+output is the freeink::Icon form (rows MSB-first, bit 1 = transparent, bit 0 =
+ink) that FreeInkUI takes through bitmapFromIcon(). Generated files are
+committed so a firmware build needs no Python.
+
+The SDK's tools/gen_icons.py renders Lucide SVGs, but needs rsvg-convert and
+the Lucide submodule; these few shapes are simple enough to draw directly.
+"""
+
+import argparse
+import math
+import pathlib
+import sys
+
+from PIL import Image, ImageDraw
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+OUT_H = ROOT / "src" / "icons" / "Icons.h"
+OUT_CPP = ROOT / "src" / "icons" / "Icons.cpp"
+SUPER = 8
+
+
+def stroke_width(size):
+    # 2 px at 16-24 px, 3 px at 32 px.
+    return max(2, round(size / 11))
+
+
+def polyline(draw, size, points, width):
+    s = size * SUPER
+    pts = [(x * s, y * s) for x, y in points]
+    w = width * SUPER
+    draw.line(pts, fill=255, width=w, joint="curve")
+    r = w / 2
+    for x, y in pts:
+        draw.ellipse((x - r, y - r, x + r, y + r), fill=255)
+
+
+def check(draw, size):
+    polyline(draw, size, [(0.17, 0.53), (0.41, 0.76), (0.85, 0.27)], stroke_width(size) + 1)
+
+
+def cross(draw, size):
+    w = stroke_width(size) + 1
+    polyline(draw, size, [(0.23, 0.23), (0.77, 0.77)], w)
+    polyline(draw, size, [(0.77, 0.23), (0.23, 0.77)], w)
+
+
+def star_points(size):
+    s = size * SUPER
+    cx, cy = 0.5 * s, 0.54 * s
+    pts = []
+    for i in range(10):
+        r = (0.47 if i % 2 == 0 else 0.19) * s
+        a = -math.pi / 2 + i * math.pi / 5
+        pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    return pts
+
+
+def star(draw, size):
+    draw.polygon(star_points(size), fill=255)
+
+
+def star_outline(draw, size):
+    pts = star_points(size)
+    draw.line(pts + [pts[0], pts[1]], fill=255, width=stroke_width(size) * SUPER, joint="curve")
+
+
+def chevron(points):
+    def fn(draw, size):
+        polyline(draw, size, points, stroke_width(size))
+
+    return fn
+
+
+def sun(draw, size):
+    s = size * SUPER
+    w = stroke_width(size) * SUPER
+    c = 0.5 * s
+    r = 0.17 * s
+    draw.ellipse((c - r, c - r, c + r, c + r), outline=255, width=w)
+    for i in range(8):
+        a = i * math.pi / 4
+        p0 = (0.5 + 0.30 * math.cos(a), 0.5 + 0.30 * math.sin(a))
+        p1 = (0.5 + 0.43 * math.cos(a), 0.5 + 0.43 * math.sin(a))
+        polyline(draw, size, [p0, p1], stroke_width(size))
+
+
+def moon(draw, size):
+    s = size * SUPER
+    big = Image.new("L", (s, s), 0)
+    ImageDraw.Draw(big).ellipse((0.12 * s, 0.12 * s, 0.86 * s, 0.86 * s), fill=255)
+    bite = Image.new("L", (s, s), 0)
+    ImageDraw.Draw(bite).ellipse((0.36 * s, 0.02 * s, 0.98 * s, 0.64 * s), fill=255)
+    crescent = Image.composite(Image.new("L", (s, s), 0), big, bite)
+    draw.bitmap((0, 0), crescent, fill=255)
+
+
+def warning(draw, size):
+    w = stroke_width(size)
+    polyline(draw, size, [(0.5, 0.1), (0.92, 0.86), (0.08, 0.86), (0.5, 0.1)], w)
+    polyline(draw, size, [(0.5, 0.38), (0.5, 0.6)], w)
+    s = size * SUPER
+    r = w * SUPER * 0.65
+    draw.ellipse((0.5 * s - r, 0.73 * s - r, 0.5 * s + r, 0.73 * s + r), fill=255)
+
+
+ICONS = [
+    # (name, painter, sizes)
+    ("Check", check, (24, 32)),
+    ("Cross", cross, (24, 32)),
+    ("Star", star, (24, 32)),
+    ("StarOutline", star_outline, (24, 32)),
+    ("ChevronUp", chevron([(0.2, 0.66), (0.5, 0.36), (0.8, 0.66)]), (16, 24)),
+    ("ChevronDown", chevron([(0.2, 0.36), (0.5, 0.66), (0.8, 0.36)]), (16, 24)),
+    ("ChevronLeft", chevron([(0.64, 0.2), (0.34, 0.5), (0.64, 0.8)]), (16, 24)),
+    ("ChevronRight", chevron([(0.36, 0.2), (0.66, 0.5), (0.36, 0.8)]), (16, 24)),
+    ("Sun", sun, (24, 32)),
+    ("Moon", moon, (24, 32)),
+    ("Warning", warning, (24, 32)),
+]
+
+
+def render(painter, size):
+    big = Image.new("L", (size * SUPER, size * SUPER), 0)
+    painter(ImageDraw.Draw(big), size)
+    small = big.resize((size, size), Image.BOX)
+    return [[small.getpixel((x, y)) >= 128 for x in range(size)] for y in range(size)]
+
+
+def encode(pixels, size):
+    out = []
+    for row in pixels:
+        for byte_x in range(0, size, 8):
+            b = 0xFF
+            for bit in range(8):
+                x = byte_x + bit
+                if x < size and row[x]:
+                    b &= ~(0x80 >> bit)
+            out.append(b & 0xFF)
+    return out
+
+
+def optical_center(pixels, size):
+    total = sum(sum(1 for v in row if v) for row in pixels)
+    if total == 0:
+        return size // 2
+    return round(sum(y * sum(1 for v in row if v) for y, row in enumerate(pixels)) / total)
+
+
+def generate():
+    header = [
+        "#pragma once",
+        "",
+        "// AUTO-GENERATED by tools/gen-icons.py — do not edit by hand.",
+        "// 1-bit UI icons in the freeink::Icon form; draw them through",
+        "// freeink::ui::bitmapFromIcon().",
+        "",
+        "#include <Icon.h>",
+        "",
+        "namespace tinta::icons {",
+        "",
+    ]
+    body = [
+        "// AUTO-GENERATED by tools/gen-icons.py — do not edit by hand.",
+        "",
+        '#include "icons/Icons.h"',
+        "",
+        "#include <cstdint>",
+        "",
+        "namespace tinta::icons {",
+        "",
+        "namespace {",
+        "",
+    ]
+    defs = []
+    for name, painter, sizes in ICONS:
+        for size in sizes:
+            ident = f"k{name}{size}"
+            pixels = render(painter, size)
+            data = encode(pixels, size)
+            header.append(f"extern const freeink::Icon {ident};")
+            body.append(f"const uint8_t {ident}Bits[] = {{")
+            per_row = (size + 7) // 8
+            for y in range(size):
+                row = data[y * per_row:(y + 1) * per_row]
+                art = "".join("#" if v else "." for v in pixels[y])
+                body.append("    " + ", ".join(f"0x{b:02X}" for b in row) + ",  // " + art)
+            body.append("};")
+            body.append("")
+            defs.append(
+                f"const freeink::Icon {ident} = {{{size}, {size}, {optical_center(pixels, size)}, {ident}Bits}};")
+    header += ["", "}  // namespace tinta::icons", ""]
+    body += ["}  // namespace", ""] + defs + ["", "}  // namespace tinta::icons", ""]
+    return "\n".join(header), "\n".join(body)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--check", action="store_true", help="fail if the committed files are out of date")
+    args = parser.parse_args()
+    h, cpp = generate()
+    if args.check:
+        stale = [p for p, text in ((OUT_H, h), (OUT_CPP, cpp)) if not p.exists() or p.read_text() != text]
+        for p in stale:
+            print(f"out of date: {p.relative_to(ROOT)}", file=sys.stderr)
+        return 1 if stale else 0
+    OUT_H.parent.mkdir(parents=True, exist_ok=True)
+    OUT_H.write_text(h)
+    OUT_CPP.write_text(cpp)
+    print(f"wrote {OUT_H.relative_to(ROOT)} and {OUT_CPP.relative_to(ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

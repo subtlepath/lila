@@ -1,0 +1,303 @@
+title: "Frecuentes A, parte uno"
+sentences:
+  # 1 así
+  - es: "¿Lo hago {así}?"
+    en: "Do I do it like this?"
+    order: true
+  - es: "No me hables {así}."
+    en: "Don't talk to me like that."
+    note: "Así is both 'like this' and 'like that'."
+  # 2 mirar
+  - es: "{Mira|mirar:imp.2s}, Ana, ahí viene el camión."
+    en: "Look, Ana, here comes the bus."
+    note: "¡Mira! (to a friend) and ¡Mire! (usted) get someone's attention."
+  - es: "Me gusta {mirar} las estrellas."
+    en: "I like looking at the stars."
+  # 3 verdad
+  - es: "Dime la {verdad}."
+    en: "Tell me the truth."
+    order: true
+  - es: "Es muy bonito, ¿{verdad}?"
+    en: "It's really pretty, isn't it?"
+    note: "¿Verdad? at the end turns a statement into 'isn't it?', 'right?'."
+  # 4 alguno
+  - es: "¿Tienen {alguna} duda?"
+    en: "Do you have any questions?"
+    note: "A teacher's question: una duda is a question you have, not one you ask."
+  - es: "{Algún} día voy a vivir en Oaxaca."
+    en: "Someday I'm going to live in Oaxaca."
+    note: "Alguno becomes algún before a masculine noun."
+  # 5 parecer
+  - es: "¿Te {parece} bien a las ocho?"
+    en: "Is eight o'clock OK with you?"
+  - es: "Tu hermano {parece} muy simpático."
+    en: "Your brother seems really nice."
+  # 6 sentir
+  - es: "Lo {siento} mucho."
+    en: "I'm very sorry."
+    order: true
+    note: "Lo siento is for real sorrow or bad news; for small things say perdón."
+  - es: "[Oye|oír:imp.2s], ¿{sentiste} el temblor de anoche?"
+    en: "Hey, did you feel the earthquake last night?"
+  # 7 mismo
+  - es: "Tenemos el {mismo} nombre: somos tocayos."
+    en: "We have the same name: we're namesakes."
+  - es: "Ella {misma} preparó toda la comida."
+    en: "She made all the food herself."
+    note: "After a person, mismo means -self: yo mismo, ella misma."
+  # 8 sobre
+  - es: "[Platicamos|platicar:pret.1p] {sobre} el viaje."
+    en: "We talked about the trip."
+  - es: "El maestro nos dio información {sobre} el examen."
+    en: "The teacher gave us information about the exam."
+  # 9 oír
+  - es: "¿[Bueno|bueno#hello]? Ana, ¿me {oyes}?"
+    en: "Hello? Ana, can you hear me?"
+  - es: "No {oigo} nada. ¿Puede hablar más fuerte?"
+    en: "I can't hear anything. Could you speak louder?"
+    note: "Oír is irregular: oigo, oyes, oye."
+  # 10 ni
+  - es: "No tengo {ni} un peso."
+    en: "I don't have a single peso."
+    note: "Ni after a negative means 'not even'."
+  - es: "{Ni} Ana ni Luis vinieron a la fiesta."
+    en: "Neither Ana nor Luis came to the party."
+  # 11 suponer
+  - es: "¿Va a llover? —{Supongo} que sí."
+    en: "Is it going to rain? —I guess so."
+  - es: "{Supuse} que estabas ocupado."
+    en: "I assumed you were busy."
+  # 12 tratar
+  - es: "Siempre {trato} de llegar temprano."
+    en: "I always try to get there early."
+    note: "Tratar de + infinitive: to try to."
+  - es: "En esa fonda nos {tratan} muy bien."
+    en: "They treat us really well at that fonda."
+  # 13 momento
+  - es: "Un {momento}, por favor."
+    en: "One moment, please."
+    order: true
+  - es: "En este {momento} no puedo hablar."
+    en: "I can't talk right now."
+  # 14 mundo
+  - es: "Todo el {mundo} habla de eso."
+    en: "Everybody's talking about it."
+    note: "Todo el mundo: everybody, not the whole world."
+  - es: "Quiero viajar por todo el {mundo}."
+    en: "I want to travel all over the world."
+  # 15 lugar
+  - es: "Este {lugar} es muy bonito."
+    en: "This place is really pretty."
+    order: true
+  - es: "¿Me guardas mi {lugar}? Ahorita vengo."
+    en: "Can you save my place? I'll be right back."
+  # 16 tipo
+  - es: "¿Qué {tipo} de música te gusta?"
+    en: "What kind of music do you like?"
+  - es: "No es mi {tipo}."
+    en: "He's not my type."
+  # 17 mío
+  - es: "Ese celular es {mío}."
+    en: "That cell phone is mine."
+    order: true
+  - es: "Un amigo {mío} vive en Monterrey."
+    en: "A friend of mine lives in Monterrey."
+    note: "Un amigo mío: a friend of mine. Mío goes after the noun."
+  # 18 intentar
+  - es: "{Intenta|intentar:imp.2s} otra vez, tú puedes."
+    en: "Try again, you can do it."
+  - es: "Voy a {intentar} hablar con él."
+    en: "I'm going to try to talk to him."
+    note: "Intentar takes the infinitive directly, with no de."
+  # 19 donde
+  - es: "Esa es la casa {donde} vivo."
+    en: "That's the house where I live."
+    note: "No accent: donde only links two ideas. ¿Dónde? asks."
+  - es: "Vamos a la fonda {donde} comimos ayer."
+    en: "Let's go to the fonda where we ate yesterday."
+  # 20 parte
+  - es: "Te busqué por todas {partes}."
+    en: "I looked for you everywhere."
+    note: "Por todas partes: everywhere."
+  - es: "La mejor {parte} de la película es el final."
+    en: "The best part of the movie is the ending."
+  # 21 recordar
+  - es: "No {recuerdo} su nombre."
+    en: "I don't remember his name."
+    order: true
+  - es: "Esta canción me {recuerda} a mi abuela."
+    en: "This song reminds me of my grandma."
+    note: "Recordar also means to remind: me recuerda a... (it reminds me of...)."
+  # 22 poner
+  - es: "¿Dónde {pongo} las llaves?"
+    en: "Where do I put the keys?"
+    order: true
+    note: "Poner is irregular in the yo form: pongo."
+  - es: "Beto, {pon} la mesa, por favor."
+    en: "Beto, set the table, please."
+  # 23 importar
+  - es: "No me {importa}."
+    en: "I don't care."
+    order: true
+    note: "Importar works like gustar: the thing that matters is the subject."
+  - es: "¿Te {importa} si abro la ventana?"
+    en: "Do you mind if I open the window?"
+  # 24 ninguno
+  - es: "No hay {ningún} problema."
+    en: "There's no problem at all."
+    order: true
+    note: "Ninguno becomes ningún before a masculine noun, and goes after no."
+  - es: "¿Cuántas tortillas quedan? —{Ninguna}."
+    en: "How many tortillas are left? —None."
+  # 25 tanto
+  - es: "No [trabajo|trabajar] {tanto} [como|como] tú."
+    en: "I don't work as much as you."
+    note: "Tanto como: as much as."
+  - es: "Comí {tanto} que me duele el estómago."
+    en: "I ate so much that my stomach hurts."
+  # 26 usar
+  - es: "¿Puedo {usar} tu computadora?"
+    en: "Can I use your computer?"
+    order: true
+  - es: "Ana siempre {usa} tenis."
+    en: "Ana always wears sneakers."
+    note: "Usar is also to wear (clothes, glasses) as a habit."
+  # 27 conseguir
+  - es: "¿Y tú dónde {conseguiste} los boletos?"
+    en: "And where did you get the tickets?"
+  - es: "Aquí {conseguimos} todo más barato."
+    en: "We get everything cheaper here."
+  # 28 seguro
+  - es: "¿Estás {segura|seguro}?"
+    en: "Are you sure?"
+    note: "Said to a woman. To a man: ¿Estás seguro?"
+  - es: "Esta colonia es muy {segura|seguro}."
+    en: "This neighborhood is very safe."
+  # 29 último
+  - es: "Es el {último} camión de la noche."
+    en: "It's the last bus of the night."
+  - es: "Es la {última} vez que te lo digo."
+    en: "This is the last time I'm telling you."
+  # 30 pequeño
+  - es: "Vivimos en un departamento {pequeño}."
+    en: "We live in a small apartment."
+    note: "Everyday Mexican speech often says chico or chiquito instead."
+  - es: "Cuando era {pequeña}, vivía en Puebla."
+    en: "When I was little, I lived in Puebla."
+  # 31 cierto
+  - es: "Lo que dice Ana es {cierto}."
+    en: "What Ana says is true."
+  - es: "Es {cierto}, tienes razón."
+    en: "That's true, you're right."
+  # 32 razón
+  - es: "Tienes {razón}."
+    en: "You're right."
+    note: "To be right is tener razón, not ser."
+  - es: "Ana se [fue|irse] sin ninguna {razón}."
+    en: "Ana left for no reason."
+  # 33 serio
+  - es: "Tu papá es muy {serio}."
+    en: "Your dad is very serious."
+    order: true
+  - es: "Es un problema {serio}."
+    en: "It's a serious problem."
+    order: true
+  # 34 idea
+  - es: "No tengo {idea}."
+    en: "I have no idea."
+    order: true
+  - es: "¡Qué buena {idea}!"
+    en: "What a good idea!"
+  # 35 aún
+  - es: "{Aún} no llega el camión."
+    en: "The bus still hasn't come."
+    note: "Aún with an accent means todavía (still, yet)."
+  - es: "Son las diez y {aún} estás en la cama."
+    en: "It's ten o'clock and you're still in bed."
+  # 36 cada
+  - es: "{Cada} domingo comemos con mis abuelos."
+    en: "Every Sunday we eat with my grandparents."
+    note: "Cada never changes: cada día, cada semana."
+  - es: "El metro pasa {cada} cinco minutos."
+    en: "The metro comes every five minutes."
+  # 37 quien
+  - es: "El señor con {quien} hablé es mi vecino."
+    en: "The man I talked to is my neighbor."
+    note: "No accent: quien only links two ideas. ¿Quién? asks."
+  - es: "Mi hermana es {quien} [cocina|cocinar] en la casa."
+    en: "My sister is the one who cooks at home."
+  # 38 demasiado
+  - es: "Es {demasiado} caro."
+    en: "It's too expensive."
+    order: true
+    note: "Before an adjective, demasiado never changes: demasiado cara."
+  - es: "Hay {demasiada} gente aquí."
+    en: "There are too many people here."
+  # 39 único
+  - es: "Soy hijo {único}."
+    en: "I'm an only child."
+  - es: "Eres la {única} persona que me entiende."
+    en: "You're the only person who understands me."
+  # 40 claro
+  - es: "¿Vienes a la fiesta? —¡{Claro|claro} que sí!"
+    en: "Are you coming to the party? —Of course!"
+  - es: "¿Estás enojada? —¡{Claro|claro} que no!"
+    en: "Are you mad? —Of course not!"
+  # 41 sacar
+  - es: "Diego, {saca|sacar:imp.2s} la basura, por favor."
+    en: "Diego, take out the trash, please."
+  - es: "{Saqué} diez en el examen."
+    en: "I got a ten on the exam."
+    order: true
+    note: "Mexican schools grade from zero to ten."
+  # 42 junto
+  - es: "Vamos {juntos}."
+    en: "Let's go together."
+  - es: "Mi departamento está {junto} al parque."
+    en: "My apartment is next to the park."
+    note: "Junto a: next to. Juntos: together."
+  # 43 amor
+  - es: "Es una canción de {amor}."
+    en: "It's a love song."
+    order: true
+  - es: "Mi primer {amor} se llamaba Lupe."
+    en: "My first love was named Lupe."
+  # 44 forma
+  - es: "No me gusta la {forma} en que me habla."
+    en: "I don't like the way he talks to me."
+  - es: "El pan tiene {forma} de corazón."
+    en: "The bread is shaped like a heart."
+  # 45 loco
+  - es: "¿Estás {loco}? ¡Hace mucho frío!"
+    en: "Are you crazy? It's really cold!"
+  - es: "Mi hermana está {loca} por el futbol."
+    en: "My sister is crazy about soccer."
+  # 46 acabar
+  - es: "{Acabo} de llegar."
+    en: "I just got here."
+    order: true
+    note: "Acabar de + infinitive: to have just done something."
+  - es: "¿Ya {acabaste} tu tarea?"
+    en: "Did you finish your homework yet?"
+  # 47 caso
+  - es: "Nunca me haces {caso}."
+    en: "You never listen to me."
+    order: true
+    note: "Hacer caso: to pay attention to someone, to do as they say."
+  - es: "En ese {caso}, mejor vamos [mañana|mañana]."
+    en: "In that case, we'd better go tomorrow."
+  # 48 significar
+  - es: "¿Qué {significa} esta palabra?"
+    en: "What does this word mean?"
+    order: true
+  # 49 historia
+  - es: "Me encanta la {historia} de México."
+    en: "I love Mexican history."
+  - es: "Es una {historia} muy triste."
+    en: "It's a very sad story."
+  # 50 tocar
+  - es: "No {toques} la estufa, te vas a quemar."
+    en: "Don't touch the stove, you'll burn yourself."
+  - es: "¿A quién le {toca} pagar?"
+    en: "Whose turn is it to pay?"
+    note: "Me toca, te toca: it's my turn, it's your turn."

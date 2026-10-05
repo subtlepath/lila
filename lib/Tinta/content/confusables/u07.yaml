@@ -1,0 +1,7 @@
+# Unit 7 confusable sets (fragment of content/confusables.yaml; same format).
+- name: este / ese
+  lemmas: [este, ese]
+  note: Este is this, near the speaker; ese is that, near the listener or a little farther away.
+- name: más / menos
+  lemmas: [más, menos]
+  note: Más is more; menos is less. Both compare with que, as in más caro que, menos caro que.

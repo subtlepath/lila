@@ -1,0 +1,4 @@
+# Unit 9 confusable sets (merged with content/confusables.yaml).
+- name: conocer / saber
+  lemmas: [conocer, saber]
+  note: Conocer is to know a person or a place, or to meet someone (conocí a Ana); saber is to know a fact or how to do something (sé manejar).

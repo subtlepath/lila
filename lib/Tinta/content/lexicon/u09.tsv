@@ -1,0 +1,46 @@
+# Unit 9: Ayer / Yesterday. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u09.l01 ¿Qué hiciste ayer? (regular preterite)
+ayer		adv		yesterday	A2			time				
+anoche		adv		last night	A2			time				
+anteayer		adv		the day before yesterday	A2			time			Antier is very common in Mexico.	
+pasado		adj		last; past	A2			time			La semana pasada: last week.	
+terminar		verb		to finish; to end	A2			time				
+olvidar		verb		to forget	A2			things			Se me olvidó: I forgot.	
+perder		verb		to lose; to miss (a bus)	A2			things				
+encontrar		verb		to find	A2			things				
+conocer		verb		to meet; to be familiar with	A2			people			Conocí a Ana en Oaxaca: I met Ana in Oaxaca. ¿Conoces Puebla?: Have you been to Puebla?	
+gastar		verb		to spend (money)	A2			money				
+ganar		verb		to win; to earn	A2			money				
+partido		noun	m	game; match (sports)	A2			things			Also a political party.	
+# --- u09.l02 Fui a Oaxaca (irregular preterite)
+vacaciones		noun	fpl	vacation; holidays	A2			time			Always plural: las vacaciones.	
+viaje		noun	m	trip	A2			transport			¡Buen viaje!: Have a good trip!	
+avión		noun	m	airplane; plane	A2			transport				
+aeropuerto		noun	m	airport	A2			transport				
+maleta		noun	f	suitcase	A2			transport				
+pasaporte		noun	m	passport	A2			transport				
+mar		noun	m	sea; ocean	A2			places				
+alberca		noun	f	swimming pool	A2		x	places		piscina		
+pirámide		noun	f	pyramid	A2			places				
+foto		noun	f	photo	A2			things			Feminine: la foto, short for la fotografía.	
+divertido		adj		fun; funny	A2			feelings				
+increíble		adj		incredible; amazing	A2			feelings				
+# --- u09.l03 ¿Qué pasó? (telling what happened)
+de repente		expr		suddenly; all of a sudden	A2			time				
+susto		noun	m	scare; fright	A2			feelings			¡Qué susto!: What a scare!	
+suerte		noun	f	luck	A2			feelings			¡Qué mala suerte!: What bad luck!	
+cartera		noun	f	wallet	A2			things				
+robar		verb		to steal; to rob	A2			city			Me robaron el celular: my phone was stolen.	
+quitar		verb		to take away; to remove	A2			things				
+policía		noun	mf	police; police officer	A2			city			La policía: the police.	
+chocar		verb		to crash; to bump (into)	A2			transport				
+multa		noun	f	fine (penalty); traffic ticket	A2			transport				
+avisar		verb		to let (someone) know; to warn	A2			people				
+preocupado		adj		worried	A2			feelings				
+tranquilo		adj		calm; quiet	A2			feelings			¡Tranquilo!: Calm down!	
+# --- names
+Teotihuacán		propn		Teotihuacán (ancient city with pyramids)	A1							
+Monte Albán		propn		Monte Albán (Zapotec ruins near Oaxaca)	A1							

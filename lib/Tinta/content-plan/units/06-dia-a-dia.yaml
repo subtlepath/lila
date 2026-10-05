@@ -1,0 +1,164 @@
+# Course plan for Unit 6. Format: content-plan/README.md.
+unit: 6
+dir: units/06-dia-a-dia
+title: "El día a día"
+title_en: "Day to day"
+level: A1
+goals:
+  - "Describe your daily routine with regular verbs in the present."
+  - "Use the common stem-changing verbs: empiezo, vuelvo, duermo, pido, digo."
+  - "Tell the time, name the days of the week and say when things happen."
+  - "Talk about getting up, getting ready and going to bed with reflexive verbs."
+grammar_scope: >-
+  The whole present tense: regular -ar/-er/-ir, stem-changing (e>ie, o>ue, e>i, u>ue),
+  irregular yo forms (hago, salgo, digo), reflexive verbs; telling the time; days.
+  Not yet: ir a + infinitive (Unit 8, but 'Quiero bañarme' is fine), object pronouns
+  lo/la (Unit 7), past tenses.
+lexicon: content/lexicon/u06.tsv
+supporting: [siempre, nunca, vez, medio, mediodía, minuto, cuando, antes, después, luego,
+  entonces, desayuno, cena, huevo, pan, repetir]
+names: []
+lessons:
+  - id: u06.l01
+    number: 1
+    title: "Todos los días"
+    title_en: "Every day"
+    level: A1
+    grammar:
+      focus: "Regular present tense of -ar, -er and -ir verbs; hacer (hago)."
+      can_do: "Say what you do on a normal day: meals, work, chores, reading and chatting."
+    new: [desayunar, comida, cenar, cocinar, limpiar, hacer, leer, escribir, escuchar, música, platicar, regresar]
+    rows_in_core: [comida]
+    conjugate: ["cenar:pres", "leer:pres", "escribir:pres", "hacer:pres"]
+    dialogue:
+      title: "¿Qué haces todos los días?"
+      title_en: "What do you do every day?"
+      where: "The language exchange café in Coyoacán again."
+      who: "Tom and Mariana."
+      address: "tú, as in u02.l01."
+      happens: "They compare routines. Mariana: desayuno café y pan dulce, trabajo, la comida es a las tres con mi familia, regreso a casa y ceno algo. Tom cooks, cleans the apartment, reads, writes in Spanish and listens to music; he says he chats with neighbors to practise: platico con los vecinos."
+    notes:
+      - kind: grammar
+        title: "Regular verbs in the present"
+        covers: "Endings: hablo, hablas, habla, hablamos, hablan; como, comes, come, comemos, comen; vivo, vives, vive, vivimos, viven. Hacer is regular except hago."
+      - kind: culture
+        title: "Mexican meal times"
+        covers: "Desayuno 7 to 9 (big on weekends: chilaquiles, huevos); la comida, the main meal, 2 to 4 p.m.; la cena, light, 8 to 10 p.m., often pan dulce or tacos. Translate la comida as lunch or the midday meal."
+      - kind: usage
+        title: "Platicar"
+        covers: "Platicar (con alguien) is the everyday Mexican word for chatting; hablar is to speak. Una plática is a chat or a talk."
+    confusables: []
+    cautions:
+      - "'Mi mamá cocina' collides with the noun cocina (kitchen): write [cocina|cocinar]."
+      - "desayuno and cena are supporting noun rows that collide with desayunar (pres.1s) and cenar (pres.3s): every use warns. Write [desayuno|desayuno] for breakfast and [Desayuno|desayunar] for I have breakfast."
+      - "'Yo como...' needs [como|comer]."
+      - "comida is food and the midday meal: the English must say which."
+      - "escuchar takes no 'to': 'Escucho música'."
+      - "siempre, nunca, a veces (vez), antes, después, luego are supporting rows: use them."
+
+  - id: u06.l02
+    number: 2
+    title: "Empiezo a las nueve"
+    title_en: "I start at nine"
+    level: A1
+    grammar:
+      focus: "Stem-changing verbs: e to ie (empezar, cerrar, entender, pensar, preferir), o to ue (volver, dormir), e to i (pedir, decir), u to ue (jugar); nosotros keeps the stem."
+      can_do: "Talk about starting and finishing times, sleep, sports and ordering, and say you don't understand."
+    new: [empezar, cerrar, abrir, entender, pensar, preferir, volver, dormir, jugar, futbol, pedir, decir]
+    rows_in_core: []
+    conjugate: ["empezar:pres", "volver:pres", "pedir:pres", "jugar:pres", "decir:pres"]
+    dialogue:
+      title: "En la clase de español"
+      title_en: "In Spanish class"
+      where: "Maestra Elena's class at the language school."
+      who: "Maestra Elena, Tom and Ana."
+      address: "Students say usted and maestra to the teacher; Elena says tú to each adult student and ustedes to the group, as many Mexican language schools do."
+      happens: "Class starts at nine. Tom does not understand a word and asks ¿Cómo se dice...? and ¿Puede repetir? (repetir is supporting). Elena asks what they prefer, tacos or tortas; Tom says he plays futbol and sleeps little; Ana always orders coffee before class. The school closes at eight."
+    notes:
+      - kind: grammar
+        title: "Stem-changing verbs"
+        covers: "The stem vowel changes when it is stressed: e to ie (empiezo, cierro, entiendo, pienso, prefiero, quiero), o to ue (vuelvo, duermo, puedo, cuesta), e to i (pido, digo, sigo), u to ue (juego). Nosotros keeps the plain stem: empezamos, volvemos, pedimos, jugamos."
+      - kind: usage
+        title: "Pedir or preguntar?"
+        covers: "Pedir is to ask for or order something (pedir la cuenta, pedir tacos); preguntar is to ask a question. Decir is to say or tell: ¿Cómo se dice ... en español?"
+      - kind: culture
+        title: "Futbol"
+        covers: "Mexico writes futbol and stresses the last syllable. Mexicans usually say jugar futbol, without al. The national team is el Tri; club rivalries such as América and Chivas fill Sunday afternoons."
+    confusables: ["pedir / preguntar"]
+    cautions:
+      - "decir: digo, dices...; its imperative di is also dar's preterite (Unit 9): avoid 'di'."
+      - "jugar futbol (no al) is the Mexican default; 'jugar al futbol' is also heard: never put both in one item."
+      - "abrir is regular in the present; it is here as cerrar's partner."
+      - "Times: use 'a las + number' only; the time system is u06.l03."
+      - "volver and regresar overlap in meaning (never offered against each other); regresar is more common in Mexico."
+
+  - id: u06.l03
+    number: 3
+    title: "¿Qué hora es?"
+    title_en: "What time is it?"
+    level: A1
+    grammar:
+      focus: "Telling the time (es la una, son las dos, y cuarto, y media, cuarto para); a qué hora; days of the week with el and los."
+      can_do: "Tell and ask the time, give opening hours and say on which day things happen."
+    new: [hora, mañana#morning, tarde, noche, semana, lunes, martes, miércoles, jueves, viernes, sábado, domingo]
+    rows_in_core: []
+    conjugate: []
+    dialogue:
+      title: "¿A qué hora abren?"
+      title_en: "What time do you open?"
+      where: "The counter of a neighborhood pharmacy."
+      who: "Ana and the pharmacist (señor)."
+      address: "usted both ways: service."
+      happens: "Ana asks the time: son las ocho y media de la noche. She asks the opening hours: de lunes a sábado de nueve de la mañana a diez de la noche; el domingo cierran a las tres de la tarde. Ana: ¡Ya es tarde! Vuelvo mañana en la mañana (mark each mañana with its row)."
+    notes:
+      - kind: grammar
+        title: "Telling the time"
+        covers: "¿Qué hora es? Es la una. Son las dos, las dos y cuarto, las dos y media. For before the hour Mexico says cuarto para las tres or diez para las tres. De la mañana, de la tarde, de la noche; a las ocho = at eight; mediodía = noon."
+      - kind: usage
+        title: "Days of the week"
+        covers: "Days are masculine and lower case: el lunes (on Monday), los lunes (on Mondays), de lunes a viernes. Sábado and domingo take an -s plural; the others do not change."
+      - kind: culture
+        title: "Mexican time"
+        covers: "The 24-hour clock is for timetables, never for speech. Social events start late; a meeting at work starts on time. Ahorita can mean now or later."
+    confusables: []
+    cautions:
+      - "mañana now has two rows: the core adverb (tomorrow, default link) and mañana#morning. Every 'mañana' warns: mark [mañana|mañana#morning] in 'de la mañana', 'en la mañana', and [mañana|mañana] for tomorrow."
+      - "tarde has two rows: tarde (noun, afternoon, default) and tarde#late (u06.l04). Mark [tarde|tarde] when the warning appears."
+      - "Spell times out ('a las ocho y media'); no digits, no 24-hour clock in sentences."
+      - "'cuarto para las dos' uses the cuarto row from u04.l02 (gloss includes 'quarter (of an hour)'); medio (y media), mediodía, minuto are supporting."
+      - "buenas tardes / buenas noches are multi-word lemmas and do not count as examples of tarde/noche."
+      - "Es la una (singular) but son las dos."
+
+  - id: u06.l04
+    number: 4
+    title: "Me levanto temprano"
+    title_en: "I get up early"
+    level: A1
+    grammar:
+      focus: "Reflexive verbs (me levanto, te bañas, se viste...); ir versus irse; salir (salgo)."
+      can_do: "Describe your morning and evening routine and say when you leave and come home."
+    new: [despertarse, levantarse, bañarse, lavarse, diente, vestirse, arreglarse, salir, irse, acostarse, temprano, tarde#late]
+    rows_in_core: []
+    conjugate: ["levantarse:pres", "acostarse:pres", "vestirse:pres", "salir:pres.1s"]
+    dialogue:
+      title: "Siempre llego tarde"
+      title_en: "I'm always late"
+      where: "Morning in the apartment Ana shares with Mariana."
+      who: "Ana and Mariana (roommates)."
+      address: "tú: roommates."
+      happens: "The alarm: Ana wakes up but does not get up. Mariana is already in the bathroom: se baña, se lava los dientes, se arregla. Ana asks ¿A qué hora sales? Mariana leaves at seven; Ana always arrives late. Mariana: ¡Ya me voy!"
+    notes:
+      - kind: grammar
+        title: "Reflexive verbs"
+        covers: "me levanto, te levantas, se levanta, nos levantamos, se levantan. The pronoun goes before the verb, or on the end of an infinitive: Quiero bañarme. Some verbs change meaning: ir (go), irse (leave): Me voy."
+      - kind: usage
+        title: "Bañarse and arreglarse"
+        covers: "In Mexico me baño usually means I take a shower. Lavarse los dientes = brush your teeth; arreglarse = get ready or dressed up. Body parts take el/la/los, not mi: me lavo la cara."
+    confusables: []
+    cautions:
+      - "'Me baño' links to bañarse because of the 'me' before it; 'el baño' stays the noun (u04). Check the link lines."
+      - "'Me visto' links to vestirse because of the 'me' before it, and '¿Viste...?' to ver: check the link lines."
+      - "Late is the second tarde row: write [tarde|tarde#late]."
+      - "Body parts take the article: 'me lavo los dientes', not 'mis dientes'."
+      - "ir/irse: 'me voy' links to irse, 'voy a la oficina' to ir; check the link lines."
+      - "salir de: 'Salgo de casa a las siete' (no 'la' before casa)."

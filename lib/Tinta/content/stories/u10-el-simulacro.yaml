@@ -1,0 +1,43 @@
+title: El simulacro
+title_en: The earthquake drill
+level: A2
+reviewer_notes:
+  - "A city-wide simulacro on 19 September is used as the story's event. Fine?"
+kind: reading
+lesson: u10.l03
+lines:
+  - es: "El diecinueve de septiembre hubo un simulacro en toda la ciudad."
+    en: "On the nineteenth of September there was an earthquake drill all over the city."
+  - es: "Tom estaba en clase con la maestra Elena."
+    en: "Tom was in class with Elena, his teacher."
+  - es: "Mientras los estudiantes leían, sonó la alerta."
+    en: "While the students were reading, the alarm went off."
+  - es: "La maestra dijo: “Tranquilos. No corro, no grito, no empujo.”"
+    en: "The teacher said: “Stay calm. Don't run, don't shout, don't push.”"
+    paragraph: true
+  - es: "Todos salieron por la escalera, despacio y en orden."
+    en: "Everyone went out by the stairs, slowly and in order."
+  - es: "Una estudiante de Canadá estaba muy asustada."
+    en: "A student from Canada was really scared."
+  - es: "En su ciudad nunca temblaba."
+    en: "There were never any earthquakes in her city."
+  - es: "Afuera, en la calle, esperaron unos minutos."
+    en: "Outside, in the street, they waited a few minutes."
+    paragraph: true
+  - es: "Después, la maestra les platicó de los temblores de otros años."
+    en: "Afterwards, the teacher told them about the earthquakes of other years."
+  - es: "La estudiante ya no estaba asustada."
+    en: "The student wasn't scared any more."
+  - es: "Tom pensó: “Ahora [sé|saber] qué hacer.”"
+    en: "Tom thought: “Now I know what to do.”"
+questions:
+  - q: "¿Dónde estaba Tom cuando sonó la alerta?"
+    options: ["En clase", "En el metro", "En su casa"]
+    answer: 0
+  - q: "¿Cómo salieron todos?"
+    options: ["Por la escalera, en orden", "Corriendo y gritando", "Por la ventana"]
+    answer: 0
+  - q: "Why was one student scared?"
+    lang: en
+    options: ["There were no earthquakes in her city", "She lost her bag", "The teacher shouted"]
+    answer: 0

@@ -1,0 +1,6 @@
+# Test fixture lexicon (test/host/pack_test.cpp, tools/packc/tests).
+lemma	pos	gloss	level
+Ana	propn	Ana (name)	A1
+Luis	propn	Luis (name)	A1
+México	propn	Mexico	A1
+Roma	propn	Rome	A1

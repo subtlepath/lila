@@ -1,0 +1,44 @@
+title: Memo en la cocina
+title_en: Memo in the kitchen
+level: A2
+reviewer_notes:
+  - "Minor burn: Memo keeps his hand in cold water for a few minutes, then sees a doctor at the pharmacy. Sound everyday advice?"
+kind: reading
+lesson: u11.l03
+lines:
+  - es: "Sofía y Memo estaban en la cocina."
+    en: "Sofía and Memo were in the kitchen."
+  - es: "Memo cocinaba unas quesadillas para la comida."
+    en: "Memo was making some quesadillas for lunch."
+  - es: "Mientras platicaba con Sofía, se quemó la mano con la estufa."
+    en: "While he was chatting with Sofía, he burned his hand on the stove."
+  - es: "“¡Ay!”, gritó Memo."
+    en: "“Ouch!” Memo yelled."
+  - es: "“¡Cuidado! ¿Te quemaste?”, preguntó Sofía."
+    en: "“Careful! Did you burn yourself?” Sofía asked."
+    paragraph: true
+  - es: "Memo tenía la mano [un poco|un poco] roja."
+    en: "Memo's hand was a little red."
+  - es: "Dejó la mano en agua fría unos minutos."
+    en: "He kept his hand in cold water for a few minutes."
+  - es: "Después, [fueron|ir] al consultorio de la farmacia."
+    en: "Afterwards, they went to the doctor's office at the pharmacy."
+    paragraph: true
+  - es: "La doctora le dijo: “No es nada. Tenga cuidado con la estufa.”"
+    en: "The doctor told him: “It's nothing. Be careful with the stove.”"
+  - es: "En la casa, Sofía terminó las quesadillas."
+    en: "At home, Sofía finished the quesadillas."
+    paragraph: true
+  - es: "Memo dijo: “¡Hoy [cocinas|cocinar] tú!”"
+    en: "Memo said: “Today you're cooking!”"
+questions:
+  - q: "¿Qué cocinaba Memo?"
+    options: ["Quesadillas", "Tamales", "Tacos de pollo"]
+    answer: 0
+  - q: "¿Cómo se quemó Memo?"
+    options: ["Con la estufa", "Con un vaso", "Con el agua"]
+    answer: 0
+  - q: "What did the doctor say?"
+    lang: en
+    options: ["It's nothing; be careful with the stove", "Go to the hospital", "Don't cook any more"]
+    answer: 0

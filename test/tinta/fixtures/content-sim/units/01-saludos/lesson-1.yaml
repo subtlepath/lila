@@ -1,0 +1,114 @@
+number: 1
+title: ¡Hola! ¿Qué tal?
+title_en: Hello! How's it going?
+level: A1
+new: [hola, buenos días, buenas tardes, buenas noches, qué tal, bien, gracias, mucho gusto, igualmente, adiós, hasta luego, qué onda]
+notes:
+  - kind: usage
+    title: Greetings through the day
+    text: |
+      Mexicans greet by the clock:
+
+      - _buenos días_ from waking up until about noon
+      - _buenas tardes_ from noon until dark
+      - _buenas noches_ after dark, both to say hello and to say goodbye
+
+      _Hola_ works at any hour and often comes first: _Hola, buenas tardes._ Among friends you will also hear a short _¡Buenas!_ at any time of day.
+
+      Say a greeting when you walk into a shop, a waiting room, an elevator or a taxi. Skipping it can come across as cold.
+  - kind: culture
+    title: Meeting people
+    text: |
+      When you meet someone, say _mucho gusto_ (nice to meet you). The answer is _igualmente_ (likewise) or _mucho gusto_ again.
+
+      Men usually shake hands. Women, and a man and a woman who know each other, usually touch right cheeks with a light kiss.
+
+      Before any business, at a counter, an office or a market stall, ask how the other person is: _Buenos días, ¿cómo está?_ It is the polite way in.
+  - kind: usage
+    title: Formal, neutral and informal
+    text: |
+      Tinta tags every word with a register. Most words are neutral. _¿Qué onda?_ (what's up?) is *informal*: use it with friends and people your age, not with your boss or a police officer. _¿Qué tal?_ is neutral and fits almost anywhere.
+
+      - with anyone: _Hola, ¿qué tal?_
+      - with a stranger or an older person: _Buenos días, ¿cómo está?_
+      - with a friend: _¿Qué onda? ¿Cómo estás?_
+sentences:
+  - es: "{Hola}, Ana. ¿Qué tal?"
+    en: "Hi, Ana. How's it going?"
+  - es: "{Hola}, buenas tardes."
+    en: "Hello, good afternoon."
+  - es: "{Buenos días}, señora."
+    en: "Good morning, ma'am."
+  - es: "{Buenos días}, señorita. ¿Qué tal?"
+    en: "Good morning, miss. How are you?"
+  - es: "{Buenas tardes}, señor."
+    en: "Good afternoon, sir."
+  - es: "{Buenas tardes} a todos."
+    en: "Good afternoon, everyone."
+    order: true
+  - es: "{Buenas noches}, mamá."
+    en: "Good night, Mom."
+  - es: "{Buenas noches}, señora. ¿Qué tal?"
+    en: "Good evening, ma'am. How are you?"
+  - es: "¿{Qué tal}? —Muy bien, gracias."
+    en: "How's it going? —Very well, thanks."
+  - es: "¿{Qué tal} tu mamá?"
+    en: "How's your mom?"
+    order: true
+  - es: "¿{Qué onda}, Luis?"
+    en: "What's up, Luis?"
+    note: "Informal: only with friends."
+  - es: "¡Hola, Luis! ¿{Qué onda}?"
+    en: "Hi, Luis! What's up?"
+    note: "Informal: only with friends."
+  - es: "{Bien}, gracias. ¿Y tu papá?"
+    en: "Fine, thanks. And your dad?"
+  - es: "Todo {bien}."
+    en: "All good."
+  - es: "¿Qué tal? —{Más o menos}."
+    en: "How's it going? —So-so."
+  - es: "Muchas {gracias}, señora."
+    en: "Thank you very much, ma'am."
+    order: true
+  - es: "{Gracias} por el café."
+    en: "Thanks for the coffee."
+  - es: "{Mucho gusto}, Ana."
+    en: "Nice to meet you, Ana."
+  - es: "Hola, Luis. {Mucho gusto}."
+    en: "Hi, Luis. Nice to meet you."
+  - es: "Mucho gusto. —{Igualmente}."
+    en: "Nice to meet you. —Likewise."
+  - es: "Buenas noches. —{Igualmente}."
+    en: "Good night. —Same to you."
+  - es: "{Adiós}, señora. Gracias."
+    en: "Goodbye, ma'am. Thank you."
+  - es: "{Adiós}, Luis. ¡Hasta mañana!"
+    en: "Bye, Luis. See you tomorrow!"
+  - es: "{Hasta luego}, Ana."
+    en: "See you later, Ana."
+  - es: "Gracias, señora. {Hasta luego}."
+    en: "Thank you, ma'am. See you later."
+  - es: "{Hasta mañana}, mamá."
+    en: "See you tomorrow, Mom."
+dialogue:
+  title: En el edificio
+  title_en: In the building
+  lines:
+    - speaker: Laura
+      es: "Buenos días."
+      en: "Good morning."
+    - speaker: Diego
+      es: "Buenos días, señora. Diego Ortega, mucho gusto."
+      en: "Good morning, ma'am. I'm Diego Ortega, nice to meet you."
+    - speaker: Laura
+      es: "¡Ah! Igualmente, Diego. ¡Bienvenido!"
+      en: "Oh! Likewise, Diego. Welcome!"
+    - speaker: Diego
+      es: "Gracias. ¿[Qué tal|qué tal] todo por aquí?"
+      en: "Thank you. How's everything around here?"
+    - speaker: Laura
+      es: "Muy bien, gracias. ¡Hasta luego!"
+      en: "Very good, thanks. See you later!"
+    - speaker: Diego
+      es: "¡Hasta luego, señora!"
+      en: "See you, ma'am!"

@@ -1,0 +1,130 @@
+number: 3
+title: "¿Me trae la cuenta?"
+title_en: Could I have the check?
+level: A1
+reviewer_notes:
+  - "Culture note: comida corrida as soup, rice, a main dish and a drink at one price; ¡Joven! to call a young waiter; una orden is usually three to five tacos; Mexico City restricts single-use plastic, so many places give paper straws or none. Accurate?"
+  - "Forms of address: Señorita to a waitress, señora to a customer, Disculpe as the usted cue. Natural?"
+new: [mesero, orden, vaso, popote, servilleta, sal, cuenta, dar, traer, pasar, llevar, poder]
+conjugate: ["poder:pres", "traer:pres.3s", "dar:pres.3s"]
+notes:
+  - kind: grammar
+    title: Asking politely
+    text: |
+      In a restaurant or a shop, Mexicans ask with a question in the _usted_ form:
+
+      - _¿Me da...?_ — Can I have...? (literally "do you give me")
+      - _¿Me trae...?_ — Could you bring me...?
+      - _¿Me pasa...?_ — Could you pass me...?
+      - _¿Me puede_ + verb_?_ — Could you...? _¿Me puede traer un vaso?_
+
+      Add _por favor_. _Quiero..._ is not rude, but _¿me da...?_ sounds friendlier.
+
+      _Poder_ changes _o_ to _ue_: _puedo, puedes, puede, podemos, pueden_. _Traer_ has an irregular yo form: _traigo_.
+  - kind: usage
+    title: Traer or llevar?
+    text: |
+      _Traer_ is to bring, toward where the speaker is. _Llevar_ is to take or carry, away from here.
+
+      - _¿Me trae la cuenta?_ — Could you bring me the check?
+      - _Sofía lleva las tortas a la oficina._ — Sofía takes the tortas to the office.
+      - _para llevar_ — to go
+      - _para comer aquí_ — for here
+
+      If the thing comes to you, it is _traer_; if it goes away with someone, it is _llevar_.
+  - kind: culture
+    title: Eating at a fonda
+    text: |
+      Many fondas serve _comida corrida_ at lunchtime: a set meal of soup, rice, a main dish and a drink at one fair price.
+
+      Call the waiter with _Disculpe_ or _Perdón_. You will also hear _¡Joven!_ for a young waiter (Unit 4).
+
+      _Una orden de tacos_ is a plate of tacos, usually three to five. _Popote_ (drinking straw) comes from Nahuatl; Mexico City restricts single-use plastic, so many places now give paper straws or none.
+sentences:
+  - es: "El {mesero} se llama Toño."
+    en: "The waiter's name is Toño."
+  - es: "Disculpe, ¿usted es el {mesero}?"
+    en: "Excuse me, are you the waiter?"
+  - es: "Una {orden} de tacos de pollo, por favor."
+    en: "An order of chicken tacos, please."
+    order: true
+  - es: "Dos {órdenes} de quesadillas, por favor."
+    en: "Two orders of quesadillas, please."
+    note: "Orden is feminine: una orden. Plural órdenes, with an accent."
+  - es: "Un {vaso} de agua, por favor."
+    en: "A glass of water, please."
+  - es: "Un {vaso} grande de agua de jamaica."
+    en: "A large glass of hibiscus water."
+  - es: "Sin {popote}, por favor."
+    en: "No straw, please."
+  - es: "¿Me da un {popote}?"
+    en: "Can I have a straw?"
+  - es: "¿Me da más {servilletas}, por favor?"
+    en: "Can I have more napkins, please?"
+  - es: "¿Me pasas una {servilleta}?"
+    en: "Can you pass me a napkin?"
+  - es: "¿Me pasa la {sal}, por favor?"
+    en: "Could you pass the salt, please?"
+  - es: "Con {sal|sal} y limón, por favor."
+    en: "With salt and lime, please."
+  - es: "¿Me trae la {cuenta}, por favor?"
+    en: "Could you bring me the check, please?"
+  - es: "Disculpe, ¿y la {cuenta}?"
+    en: "Excuse me, what about the check?"
+  - es: "Señorita, ¿me {da} un refresco, por favor?"
+    en: "Miss, can I have a soda, please?"
+    reviewer_notes: "Señorita to address a waitress: fine?"
+    note: "¿Me da...? is the everyday way to order."
+  - es: "¿Qué le {damos}, señora?"
+    en: "What can we get you, ma'am?"
+  - es: "Disculpe, señora, ¿me {trae} un vaso de agua?"
+    en: "Excuse me, ma'am, could you bring me a glass of water?"
+    note: "Disculpe and señora call for usted, so the verb is trae."
+  - es: "Toño nos {trae} la cuenta."
+    en: "Toño is bringing us the check."
+    reviewer_notes: "Traer toward us: would anyone say Toño nos lleva la cuenta here?"
+  - es: "Dos tacos para {llevar}, por favor."
+    en: "Two tacos to go, please."
+  - es: "¿Para comer aquí o para {llevar}?"
+    en: "For here or to go?"
+    order: true
+  - es: "Sofía {lleva} las tortas a la oficina."
+    en: "Sofía is taking the tortas to the office."
+  - es: "¿Me {pasa} la salsa, señora?"
+    en: "Could you pass me the salsa, ma'am?"
+  - es: "¿Me {pasas} tu celular?"
+    en: "Can you pass me your phone?"
+  - es: "Disculpe, señor, ¿me {puede} traer un popote?"
+    en: "Excuse me, sir, could you bring me a straw?"
+  - es: "No {puedo} comer más."
+    en: "I can't eat any more."
+    order: true
+dialogue:
+  title: En la fonda
+  title_en: At the fonda
+  lines:
+    - speaker: Toño
+      es: "Buenas tardes, señorita. ¿Qué le traigo?"
+      en: "Good afternoon, miss. What can I bring you?"
+    - speaker: Ana
+      es: "Una orden de tacos de pollo, por favor. ¿Y me trae un vaso de agua, sin popote?"
+      en: "An order of chicken tacos, please. And could you bring me a glass of water, no straw?"
+    - speaker: Toño
+      es: "Sí, cómo no."
+      en: "Yes, of course."
+      reviewer_notes: "Sí, cómo no from a waiter: natural?"
+    - speaker: Ana
+      es: "¿Me pasa la sal, por favor? Y más servilletas."
+      en: "Could you pass me the salt, please? And some more napkins."
+    - speaker: Toño
+      es: "Aquí están. ¿Todo bien?"
+      en: "Here you are. Is everything all right?"
+    - speaker: Ana
+      es: "Muy rico, pero no puedo comer más. Dos tacos para llevar, por favor."
+      en: "Delicious, but I can't eat any more. Two tacos to go, please."
+    - speaker: Toño
+      es: "Sí, ahorita. ¿Algo más?"
+      en: "Sure, right away. Anything else?"
+    - speaker: Ana
+      es: "No, gracias. ¿Me trae la cuenta, por favor?"
+      en: "No, thank you. Could you bring me the check, please?"

@@ -1,0 +1,4 @@
+# The hqx port used for the display strikes (tools/hqx_tables.py). Installed
+# into build/hqx-venv with --no-deps --require-hashes: only its algorithm
+# modules are used, so its Pillow dependency is not needed.
+hqx==1.0 --hash=sha256:e0d84f405f6160cb844edaebabc23a9cea95970450a1686c26c75586c111631b

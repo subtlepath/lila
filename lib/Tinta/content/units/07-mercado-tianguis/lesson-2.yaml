@@ -1,0 +1,130 @@
+number: 2
+title: ¿Me la puedo probar?
+title_en: Can I try it on?
+level: A2
+reviewer_notes:
+  - "The culture note says Mexican shoe sizes are in centimeters, with a US men's 9 about a 27. Correct?"
+  - "Culture note: are ¿Le ayudo en algo? and ¿Qué busca? what clerks say, and Nada más estoy viendo what a customer answers?"
+  - "Usage note: does Mexico usually say un pantalón in the singular? Is chaqueta for a jacket really to be avoided?"
+new: [ropa, camisa, playera, pantalón, chamarra, tenis, azul, negro, blanco, gris, probarse, lo]
+conjugate: ["probarse:pres"]
+notes:
+  - kind: grammar
+    title: Lo, la, los, las
+    text: |
+      To avoid repeating a thing, replace it with _lo, la, los_ or _las_. The pronoun agrees with the thing it stands for:
+
+      - _¿El pantalón? *Lo* compro._ — The pants? I'll buy them.
+      - _¿La chamarra? *La* compro._ — The jacket? I'll buy it.
+      - _¿Los tenis? Me *los* llevo._ — The sneakers? I'll take them.
+      - _¿Las playeras? *Las* quiero en azul._ — The T-shirts? I want them in blue.
+
+      The pronoun goes right before the conjugated verb, or on the end of an infinitive, never in between:
+
+      - _¿Me la puedo probar?_ or _¿Puedo probármela?_ — Can I try it on?
+
+      With _me_, _te_ or _se_, the object pronoun comes second: _me lo llevo_, _se lo dejo_.
+  - kind: usage
+    title: Mexican clothes words
+    text: |
+      - _playera_ — T-shirt
+      - _chamarra_ — jacket. Never ~chaqueta~: in Mexico it is vulgar slang.
+      - _tenis_ — sneakers, always plural: _unos tenis_, _los tenis_
+      - _pantalón_ — pants, usually singular: _un pantalón negro_
+
+      To say how something fits, use _quedar_: _¿Cómo me queda?_ The answers: _Me queda bien_ (it fits), _me queda grande_ (it's too big), _me queda chico_ (it's too small).
+  - kind: culture
+    title: Me lo llevo
+    text: |
+      _Me lo llevo_ (I'll take it) is how you close a sale, in a shop or at a stall. Match the thing: _me la llevo_, _me los llevo_.
+
+      Shop clerks greet you with _¿Le ayudo en algo?_ or _¿Qué busca?_ If you are just looking, say _Nada más estoy viendo, gracias._ Market vendors call out _¿Qué le damos?_ and _¡Pásele, pásele!_
+
+      Shoe sizes in Mexico are in centimeters: a US men's 9 is about a _veintisiete_.
+sentences:
+  - es: "La {ropa} está en el clóset."
+    en: "The clothes are in the closet."
+    note: "Ropa is singular in Spanish: la ropa está."
+  - es: "Compro {ropa} en el tianguis."
+    en: "I buy clothes at the street market."
+    order: true
+  - es: "Busco una {camisa} para el [trabajo|trabajo]."
+    en: "I'm looking for a shirt for work."
+  - es: "Esta {camisa} me queda grande."
+    en: "This shirt is too big on me."
+    order: true
+  - es: "Me gusta tu {playera}."
+    en: "I like your T-shirt."
+  - es: "¿Qué talla es esta {playera}?"
+    en: "What size is this T-shirt?"
+  - es: "El {pantalón} me queda chico."
+    en: "The pants are too small on me."
+  - es: "Necesito un {pantalón} nuevo."
+    en: "I need new pants."
+    note: "Mexico usually says un pantalón, in the singular."
+  - es: "Me encanta tu {chamarra}."
+    en: "I love your jacket."
+  - es: "¿Cuánto cuesta la {chamarra} azul?"
+    en: "How much is the blue jacket?"
+  - es: "Mis {tenis} son nuevos."
+    en: "My sneakers are new."
+  - es: "¿Los {tenis}? Me los llevo."
+    en: "The sneakers? I'll take them."
+  - es: "Prefiero la {azul}."
+    en: "I prefer the blue one."
+  - es: "Tengo una playera {azul}."
+    en: "I have a blue T-shirt."
+  - es: "La chamarra {negra} me queda bien."
+    en: "The black jacket fits me well."
+  - es: "¿Tiene esta playera en {negro}?"
+    en: "Do you have this T-shirt in black?"
+  - es: "Busco unos tenis {blancos}."
+    en: "I'm looking for some white sneakers."
+  - es: "Quiero una camisa {blanca}."
+    en: "I'd like a white shirt."
+  - es: "Busco un pantalón {gris}."
+    en: "I'm looking for gray pants."
+  - es: "Me gustan las playeras {grises}."
+    en: "I like the gray T-shirts."
+  - es: "¿Me la puedo {probar}?"
+    en: "Can I try it on?"
+    note: "Also said ¿Puedo probármela? The pronouns go before puedo or on the end of the infinitive."
+    order: true
+  - es: "Me {pruebo} los tenis."
+    en: "I'm trying on the sneakers."
+  - es: "¿Te {pruebas} la chamarra?"
+    en: "Are you going to try on the jacket?"
+  - es: "¿El pantalón gris? Me {lo} llevo."
+    en: "The gray pants? I'll take them."
+    note: "Lo stands for el pantalón: masculine singular."
+  - es: "¿El mango? {Lo} quiero con chile."
+    en: "The mango? I want it with chili."
+dialogue:
+  title: En la tienda de ropa
+  title_en: At the clothes store
+  lines:
+    - speaker: Señorita
+      es: "Buenas tardes. ¿Le ayudo en algo?"
+      en: "Good afternoon. Can I help you with anything?"
+    - speaker: Tom
+      es: "Sí, gracias. Busco una chamarra."
+      en: "Yes, thanks. I'm looking for a jacket."
+    - speaker: Señorita
+      es: "¿De qué talla? Tenemos esta azul y esta negra."
+      en: "What size? We have this blue one and this black one."
+    - speaker: Tom
+      es: "Mediana. Me gusta la azul. ¿Me la puedo probar?"
+      en: "Medium. I like the blue one. Can I try it on?"
+    - speaker: Señorita
+      es: "Sí, pásele. ¿Cómo le queda?"
+      en: "Sure, go ahead. How does it fit?"
+    - speaker: Tom
+      es: "Me queda grande. La negra sí me queda bien. Me la llevo."
+      en: "It's too big. The black one fits, though. I'll take it."
+    - speaker: Señorita
+      es: "Muy bien. ¿Algo más? Tenemos tenis muy bonitos."
+      en: "Great. Anything else? We have some really nice sneakers."
+    - speaker: Tom
+      es: "¿Estos blancos? Del veintisiete, por favor. ¡Me los llevo!"
+      en: "These white ones? A size twenty-seven, please. I'll take them!"
+      reviewer_notes: "Del veintisiete for a shoe size: natural? The clerk asks talla for the jacket; for shoes, is it número?"

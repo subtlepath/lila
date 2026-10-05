@@ -1,0 +1,43 @@
+title: Ana va al centro
+title_en: Ana goes downtown
+level: A1
+kind: reading
+lesson: u05.l02
+lines:
+  - es: "Hoy Ana va al centro de la ciudad."
+    en: "Today Ana is going downtown."
+  - es: "Primero va al banco, porque necesita pesos."
+    en: "First she goes to the bank, because she needs pesos."
+  - es: "El banco está en la esquina, enfrente de la iglesia."
+    en: "The bank is on the corner, across from the church."
+  - es: "Luego Ana va a la farmacia."
+    en: "Then Ana goes to the pharmacy."
+    paragraph: true
+  - es: "La farmacia queda entre el banco y una tienda de zapatos."
+    en: "The pharmacy is between the bank and a shoe store."
+  - es: "Ahí Ana compra algo para doña Laura, su vecina."
+    en: "There Ana buys something for doña Laura, her neighbor."
+  - es: "El mercado no está lejos: queda a tres cuadras, al lado de un parque."
+    en: "The market isn't far: it's three blocks away, next to a park."
+    paragraph: true
+  - es: "Ana compra tortillas, queso y aguacates."
+    en: "Ana buys tortillas, cheese and avocados."
+  - es: "En el parque hay mucha gente, y Ana come una quesadilla."
+    en: "There are lots of people in the park, and Ana eats a quesadilla."
+  - es: "¡Le encanta el centro!"
+    en: "She loves downtown!"
+    paragraph: true
+questions:
+  - q: "¿Dónde está el banco?"
+    options: ["Enfrente de la iglesia", "Al lado del mercado", "Lejos del centro"]
+    answer: 0
+  - q: "¿Dónde queda la farmacia?"
+    options: ["Entre el banco y una tienda", "Atrás del parque", "En la colonia Roma"]
+    answer: 0
+  - q: "¿Qué compra Ana en el mercado?"
+    options: ["Tortillas, queso y aguacates", "Zapatos", "Algo para doña Laura"]
+    answer: 0
+  - q: "What does Ana do in the park?"
+    lang: en
+    options: ["She eats a quesadilla", "She buys shoes", "She talks to doña Laura"]
+    answer: 0

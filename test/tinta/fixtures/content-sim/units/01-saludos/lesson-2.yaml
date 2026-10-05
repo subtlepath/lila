@@ -1,0 +1,136 @@
+number: 2
+title: ¿De dónde eres?
+title_en: Where are you from?
+level: A1
+new: [yo, tú, usted, él, ella, nosotros, nosotras, ustedes, ellos, ellas, ser, llamarse]
+conjugate: ["ser:pres"]
+notes:
+  - kind: grammar
+    title: Subject pronouns
+    text: |
+      The subject pronouns of Mexican Spanish:
+
+      - _yo_ — I
+      - _tú_ — you (a friend, a child, family)
+      - _usted_ — you (a stranger, an older person, a customer)
+      - _él_, _ella_ — he, she
+      - _nosotros_ — we (_nosotras_ if the group is all women)
+      - _ustedes_ — you, plural, for everyone
+      - _ellos_ — they (_ellas_ if the group is all women)
+
+      Mexico does not use ~vosotros~ or ~vosotras~. _Ustedes_ is the plural "you" even among friends and family, so verb tables in Tinta have five rows, not six.
+
+      Spanish often leaves the pronoun out, because the verb already says who: _Soy de Chicago._ Use it for contrast or emphasis: _Yo soy de Chicago y ella es de Puebla._
+  - kind: grammar
+    title: "Ser: to be"
+    text: |
+      _Ser_ is irregular. Learn the present tense by heart:
+
+      - _yo soy_ — I am
+      - _tú eres_ — you are
+      - _él, ella, usted es_ — he is, she is, you are
+      - _nosotros somos_ — we are
+      - _ellos, ellas, ustedes son_ — they are, you all are
+
+      Use _ser_ to say who someone is and where they are from: _Soy Ana. Soy de Chicago. Él es mexicano._
+
+      _Usted_ takes the same verb form as _él_ and _ella_, and _ustedes_ the same as _ellos_. Ask a friend _¿De dónde eres?_ and a stranger _¿De dónde es usted?_
+  - kind: usage
+    title: Tú or usted?
+    text: |
+      In Mexico _usted_ is the safe choice with strangers, older people, shop and restaurant staff, officials, and anyone you would call "sir" or "ma'am". _Tú_ is for friends, family, children and people your own age in casual settings.
+
+      If in doubt, start with _usted_. Someone who wants less formality will tell you: _háblame de tú_ (call me tú). In some families, especially outside the big cities, children say _usted_ even to their parents.
+
+      To address a stranger politely, Mexicans say _señor_, _señora_ or _joven_ (young man, young woman): _Joven, la cuenta, por favor._
+sentences:
+  - es: "{Yo} soy de Guadalajara."
+    en: "I'm from Guadalajara."
+  - es: "{Yo} me llamo Tom, ¿y tú?"
+    en: "My name is Tom. And you?"
+  - es: "{Tú} eres Ana, ¿no?"
+    en: "You're Ana, right?"
+  - es: "¿{Tú} eres de aquí?"
+    en: "Are you from here?"
+    note: "Tú: to a friend, a child, or someone your age."
+  - es: "¿{Usted} es de aquí?"
+    en: "Are you from here?"
+    note: "Usted: to a stranger or an older person. It takes the same verb form as él and ella."
+  - es: "Señora, ¿{usted} se llama Laura?"
+    en: "Ma'am, is your name Laura?"
+  - es: "{Él} es Luis. Es de Monterrey."
+    en: "This is Luis. He's from Monterrey."
+  - es: "¿Y {él}? ¿Cómo se llama?"
+    en: "And him? What's his name?"
+  - es: "{Ella} es mi mamá."
+    en: "She's my mom."
+  - es: "{Ella} es Sofía. Es mexicana."
+    en: "This is Sofía. She's Mexican."
+  - es: "{Nosotros} somos de Estados Unidos."
+    en: "We're from the United States."
+    order: true
+  - es: "{Nosotros} somos mexicanos."
+    en: "We're Mexican."
+  - es: "{Nosotras} somos mexicanas."
+    en: "We're Mexican."
+    note: "Nosotras: the group is all women."
+  - es: "{Nosotras} somos solteras."
+    en: "We're single."
+    note: "Nosotras: the group is all women."
+  - es: "¿{Ustedes} son de aquí?"
+    en: "Are you all from here?"
+    note: "Ustedes is the plural you for everyone, friends included."
+  - es: "¿Cómo se llaman {ustedes}?"
+    en: "What are your names?"
+  - es: "{Ellos} son mis papás."
+    en: "They're my parents."
+    note: "In Mexico, mis papás is the everyday way to say my parents."
+  - es: "{Ellos} se llaman Luis y Toño."
+    en: "Their names are Luis and Toño."
+  - es: "{Ellas} son de Oaxaca."
+    en: "They're from Oaxaca."
+  - es: "{Ellas} se llaman Ana y Sofía."
+    en: "Their names are Ana and Sofía."
+  - es: "Yo {soy} Ana."
+    en: "I'm Ana."
+    order: true
+  - es: "¿De dónde {eres}?"
+    en: "Where are you from?"
+    order: true
+  - es: "¿De dónde {es} usted?"
+    en: "Where are you from?"
+  - es: "{Somos} de Puebla."
+    en: "We're from Puebla."
+    note: "Spanish usually drops the pronoun: somos already means we are."
+  - es: "Me {llamo} Ana."
+    en: "My name is Ana."
+  - es: "¿Cómo te {llamas}?"
+    en: "What's your name?"
+    order: true
+  - es: "¿Cómo se {llama} usted?"
+    en: "What's your name?"
+dialogue:
+  title: En la escuela
+  title_en: At school
+  lines:
+    - speaker: Maestra
+      es: "[Buenos días|buenos días] a todos. Yo soy Elena."
+      en: "Good morning, everyone. I'm Elena."
+    - speaker: Tom
+      es: "Buenos días. Me llamo Tom."
+      en: "Good morning. My name is Tom."
+    - speaker: Maestra
+      es: "Mucho gusto, Tom. ¿De dónde eres?"
+      en: "Nice to meet you, Tom. Where are you from?"
+    - speaker: Tom
+      es: "Soy de Estados Unidos, de Chicago."
+      en: "I'm from the United States, from Chicago."
+    - speaker: Maestra
+      es: "¿Y ellas? ¿De dónde son?"
+      en: "And them? Where are they from?"
+    - speaker: Tom
+      es: "Ellas son de Canadá."
+      en: "They're from Canada."
+    - speaker: Maestra
+      es: "¡Bienvenidos a México!"
+      en: "Welcome to Mexico!"

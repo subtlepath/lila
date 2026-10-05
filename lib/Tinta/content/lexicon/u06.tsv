@@ -1,0 +1,72 @@
+# Unit 6: El día a día / Day to day. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u06.l01 Todos los días (regular present). Also new here, row in core.tsv: comida
+desayunar		verb		to have breakfast	A1			food				
+cenar		verb		to have dinner; to have supper	A1			food			La cena is a light evening meal.	
+cocinar		verb		to cook	A1			food			La cocina is the kitchen.	
+limpiar		verb		to clean	A1			home				
+hacer		verb		to do; to make	A1			grammar			Hago: I do. ¿Qué haces?: What are you doing?	
+leer		verb		to read	A1			things				
+escribir		verb		to write	A1			things				
+escuchar		verb		to listen (to)	A1			things			No to: escucho música.	
+música		noun	f	music	A1			things				
+platicar		verb		to chat; to talk	A1		x	people		charlar; conversar	The everyday Mexican word for a chat.	
+regresar		verb		to come back; to go back	A1			time			More common in Mexico than volver.	
+# --- u06.l02 Empiezo a las nueve (stem-changing verbs)
+empezar		verb		to start; to begin	A1			time				
+cerrar		verb		to close	A1			city				
+abrir		verb		to open	A1			city				
+entender		verb		to understand	A1			language				
+pensar		verb		to think	A1			grammar			Pienso que sí: I think so.	
+preferir		verb		to prefer	A1			grammar				
+volver		verb		to come back; to return	A1			time				
+dormir		verb		to sleep	A1			home				
+jugar		verb		to play (a game or sport)	A1			things			Jugar futbol: to play soccer.	
+futbol		noun	m	soccer	A1		x	things	pl=-	fútbol	Mexico writes futbol and stresses the last syllable.	
+pedir		verb		to ask for; to order (food)	A1			food			To ask a question is preguntar.	
+decir		verb		to say; to tell	A1			language			¿Cómo se dice...?: How do you say...?	
+# --- u06.l03 ¿Qué hora es? (time, days). tarde (noun) must stay above tarde#late: the first is the default link
+hora		noun	f	hour; time (of day)	A1			time			¿Qué hora es?: What time is it?	
+mañana	mañana#morning	noun	f	morning	A1			time			En la mañana: in the morning. Mañana alone: tomorrow.	
+tarde		noun	f	afternoon; early evening	A1			time			Llegar tarde: to be late.	
+noche		noun	f	night; evening	A1			time				
+semana		noun	f	week	A1			time				
+lunes		noun	m	Monday	A1			time			Days take no capital: el lunes, los lunes.	
+martes		noun	m	Tuesday	A1			time				
+miércoles		noun	m	Wednesday	A1			time				
+jueves		noun	m	Thursday	A1			time				
+viernes		noun	m	Friday	A1			time				
+sábado		noun	m	Saturday	A1			time				
+domingo		noun	m	Sunday	A1			time				
+# --- u06.l04 Me levanto temprano (reflexive verbs, routine)
+despertarse		verb		to wake up	A1			time				
+levantarse		verb		to get up	A1			time				
+bañarse		verb		to shower; to bathe	A1			home			Me baño usually means I take a shower.	
+lavarse		verb		to wash (oneself)	A1			home			Lavarse los dientes: to brush your teeth.	
+diente		noun	m	tooth	A1			body				
+vestirse		verb		to get dressed	A1			clothes				
+arreglarse		verb		to get ready; to dress up	A1			time				
+salir		verb		to go out; to leave	A1			time			Salgo de casa: I leave home.	
+irse		verb		to leave; to go away	A1			time			Me voy: I'm off. Ya nos vamos: we're leaving now.	
+acostarse		verb		to go to bed; to lie down	A1			time				
+temprano		adv		early	A1			time				
+tarde	tarde#late	adv		late	A1			time			Más tarde: later.	
+# --- supporting (no lesson introduces these; usable from Unit 6 on)
+siempre		adv		always	A1			time				
+nunca		adv		never	A1			time				
+vez		noun	f	time (occasion); turn	A1			time			Una vez: once. A veces: sometimes. Otra vez: again.	
+medio		adj		half	A1			time			Y media: half past.	
+mediodía		noun	m	noon; midday	A1			time				
+minuto		noun	m	minute	A1			time				
+cuando		conj		when	A1			time			No accent. ¿Cuándo? asks when.	
+antes		adv		before; earlier	A1			time			Antes de: before.	
+después		adv		after; afterwards; later	A1			time			Después de: after.	
+luego		adv		then; later	A1			time				
+entonces		adv		then; so	A1			time				
+desayuno		noun	m	breakfast	A1			food			(Yo) desayuno also means I have breakfast.	
+cena		noun	f	dinner; supper (light, evening)	A1			food			(Ella) cena also means she has dinner.	
+huevo		noun	m	egg	A1			food				
+pan		noun	m	bread	A1			food			Pan dulce: Mexican sweet bread.	
+repetir		verb		to repeat	A1			language			¿Puede repetir, por favor?	

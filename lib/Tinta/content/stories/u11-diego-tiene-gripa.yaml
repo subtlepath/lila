@@ -1,0 +1,46 @@
+title: Diego tiene gripa
+title_en: Diego has the flu
+level: A2
+kind: reading
+lesson: u11.l02
+lines:
+  - es: "El lunes, Diego no [fue|ir] a la oficina."
+    en: "On Monday, Diego didn't go to the office."
+  - es: "Se sentía muy [mal|mal]: tenía fiebre, tos y dolor de cabeza."
+    en: "He felt really bad: he had a fever, a cough and a headache."
+  - es: "Mariana le marcó: “¿Cómo te sientes?”"
+    en: "Mariana called him: “How are you feeling?”"
+  - es: "“[Mal|mal]. Me duele todo el cuerpo”, contestó Diego."
+    en: "“Bad. My whole body hurts,” Diego answered."
+  - es: "Mariana le dijo: “Debes ir al doctor.”"
+    en: "Mariana told him: “You should go to the doctor.”"
+    paragraph: true
+  - es: "Cerca de su casa hay una farmacia con consultorio."
+    en: "Near his house there's a pharmacy with a doctor's office."
+  - es: "El doctor lo vio y le dijo: “Es gripa. Tiene que descansar tres días.”"
+    en: "The doctor saw him and told him: “It's the flu. You have to rest for three days.”"
+  - es: "También le dio una receta para unas pastillas."
+    en: "He also gave him a prescription for some pills."
+  - es: "Diego compró la medicina y regresó a su casa."
+    en: "Diego bought the medicine and went back home."
+    paragraph: true
+  - es: "Durmió todo el día."
+    en: "He slept all day."
+  - es: "El jueves, Mariana le llevó jugo de naranja."
+    en: "On Thursday, Mariana brought him orange juice."
+  - es: "Diego ya se sentía mejor."
+    en: "Diego was already feeling better."
+questions:
+  - q: "¿Qué tenía Diego?"
+    options: ["Gripa", "Un accidente", "Dolor de muela"]
+    answer: 0
+  - q: "¿Dónde estaba el consultorio?"
+    options: ["En una farmacia cerca de su casa", "En la oficina de Mariana", "En el hospital"]
+    answer: 0
+  - q: "What did the doctor tell Diego to do?"
+    lang: en
+    options: ["Rest for three days", "Go to the hospital", "Go back to work"]
+    answer: 0
+  - q: "¿Qué le llevó Mariana?"
+    options: ["Jugo de naranja", "Pastillas", "Una receta"]
+    answer: 0

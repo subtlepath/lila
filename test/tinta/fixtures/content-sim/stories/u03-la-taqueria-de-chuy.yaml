@@ -1,0 +1,40 @@
+title: La taquería de Chuy
+title_en: "Chuy's taco stand"
+level: A1
+kind: reading
+lesson: u03.l02
+reviewer_notes:
+  - "Is chica, pero muy buena a natural way to describe a taco stand?"
+lines:
+  - es: "La taquería de Chuy es chica, pero muy buena."
+    en: "Chuy's taco stand is small, but very good."
+  - es: "Las tortillas son de maíz y los tacos [al pastor|al pastor] son muy ricos."
+    en: "The tortillas are made of corn, and the tacos al pastor are delicious."
+  - es: "La salsa verde pica mucho, y la roja pica [un poco|un poco]."
+    en: "The green salsa is very hot, and the red one is a little spicy."
+  - es: "Tom y Sofía comen en la taquería de Chuy."
+    en: "Tom and Sofía are eating at Chuy's taco stand."
+    paragraph: true
+  - es: "A Sofía le encantan los tacos con todo: con cebolla, cilantro y salsa verde."
+    en: "Sofía loves tacos with everything: with onion, cilantro and green salsa."
+  - es: "A Tom no le gusta el picante. Come quesadillas con queso y aguacate."
+    en: "Tom doesn't like spicy food. He eats quesadillas with cheese and avocado."
+  - es: "Los dos toman agua de horchata. Es dulce y muy rica."
+    en: "They both drink horchata. It's sweet and delicious."
+    paragraph: true
+  - es: "Chuy está contento: ¡sus amigos comen mucho!"
+    en: "Chuy is happy: his friends eat a lot!"
+questions:
+  - q: "¿Cómo es la salsa verde?"
+    options: ["Pica mucho", "Pica un poco", "Es dulce"]
+    answer: 0
+  - q: "¿Qué come Tom?"
+    options: ["Tacos al pastor", "Quesadillas con queso y aguacate", "Tortas de pollo"]
+    answer: 1
+  - q: "¿Qué le encanta a Sofía?"
+    options: ["Los tacos con todo", "El agua de jamaica", "Las tortas"]
+    answer: 0
+  - q: "Why is Chuy happy?"
+    lang: en
+    options: ["His friends eat a lot", "He has a new taco stand", "It's a holiday"]
+    answer: 0

@@ -1,0 +1,69 @@
+# Test fixture lexicon (test/host/pack_test.cpp, tools/packc/tests).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note
+hola		interj		hi; hello	A1			greetings			
+adiós		interj		goodbye	A1			greetings			
+buenos días		expr		good morning	A1			greetings			
+buenas tardes		expr		good afternoon	A1			greetings			
+gracias		interj		thank you; thanks	A1			greetings			
+de nada		expr		you're welcome	A1			greetings			
+por favor		expr		please	A1			greetings			
+con permiso		expr		excuse me (to pass)	A1		x	greetings			Said when passing someone or leaving the table.
+¿mande?		expr		pardon?; yes? (answering a call)	A1		x	greetings			Polite Mexican way to ask someone to repeat.
+qué onda		expr		what's up?	A1	informal	x	greetings			Among friends only.
+órale		interj		OK!; wow!; come on!	A1	informal	x	greetings			
+yo		pron		I	A1			people			
+tú		pron		you (informal)	A1			people			Friends, family, children.
+usted		pron		you (formal)	A1			people			Strangers, elders, service.
+me		pron		me; myself	A1			people			
+te		pron		you; yourself (object)	A1			people			
+algo		pron		something; anything	A1			things			
+qué		pron		what; how (in exclamations)	A1			questions			
+cómo		adv		how	A1			questions			
+cuánto		adv		how much	A1			questions			
+dónde		adv		where	A1			questions			
+el		det	m	the (masculine)	A1			grammar			
+la		det	f	the (feminine)	A1			grammar			
+los		det	mpl	the (masculine plural)	A1			grammar			
+un		det	m	a; an (masculine)	A1			grammar			
+una		det	f	a; an (feminine)	A1			grammar			
+mi		det		my	A1			people	pl=mis		
+su		det		his; her; your (formal); their	A1			people	pl=sus		
+de		prep		of; from	A1			grammar			
+en		prep		in; on; at	A1			grammar			
+con		prep		with	A1			grammar			
+por		prep		for (cause); through; by	A1			grammar			
+para		prep		for (purpose); to; in order to	A1			grammar			
+y		conj		and	A1			grammar			
+no		adv		no; not	A1			grammar			
+muy		adv		very	A1			grammar			
+bien		adv		well; fine	A1			grammar			
+aquí		adv		here	A1			places			
+más		adv		more	A1			grammar			
+dos		num		two	A1			numbers			
+ser		verb		to be (identity, origin)	A1			grammar			
+estar		verb		to be (location, state)	A1			grammar			
+llamarse		verb		to be called	A1			people			
+hablar		verb		to speak; to talk	A1			people			
+comer		verb		to eat	A1			food			
+vivir		verb		to live	A1			home			
+ayudar		verb		to help	A1			people			
+casa		noun	f	house; home	A1			home			
+mesa		noun	f	table	A1			home			
+taco		noun	m	taco	A1			food			
+agua		noun	f	water	A1			food			
+cuenta		noun	f	check; bill	A1			food			
+peso		noun	m	peso (Mexican currency)	A1			money			
+computadora		noun	f	computer	A1		x	things		ordenador	
+camión		noun	m	bus	A1		x	city		autobús	In Mexico City also a truck.
+lentes		noun	mpl	glasses	A1		x	things		gafas	
+chamba		noun	f	job; work	A2	informal	x	work			Standard: el trabajo.
+amigo		noun	mf	friend	A1			people			
+señora		noun	f	lady; ma'am; Mrs.	A1			people			
+inglés		noun	m	English (language)	A1			people			
+papa		noun	f	potato	A1		x	food		patata	
+papa	papa#pope	noun	m	pope	A2			people			
+chido		adj		cool; great	A1	informal	x	feelings			
+grande		adj		big; large	A1			things			
+bueno		adj		good	A1			feelings	apoc=buen		
+frío		adj		cold	A1			food			
+ellos		pron		they	A1			people			

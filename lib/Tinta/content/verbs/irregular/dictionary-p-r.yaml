@@ -1,0 +1,19 @@
+# Dictionary-only verbs p-r (content/lexicon/dictionary-p-r.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (proponer,
+# predecir, prevenir, prohibir, probar...) are not repeated.
+
+perseguir: {like: seguir}   # persigo, persiguió
+posponer: {like: poner}     # pospongo, pospuse
+pudrir: {participle: podrido}   # pudrirse: se pudrió; podrido
+quebrar: {stem: e>ie}       # quiebro, quiebra
+recostar: {stem: o>ue}      # recostarse: me recuesto
+referir: {stem: e>ie}       # referirse: me refiero, se refirió
+rendir: {stem: e>i}         # rendirse: me rindo, se rindió
+renovar: {stem: o>ue}       # renuevo
+reprobar: {like: probar}    # repruebo
+requerir: {stem: e>ie}      # requiere, requirió
+resfriar: {accent: true}    # resfriarse: me resfrío
+reventar: {stem: e>ie}      # revienta (not on verb_patterns.tsv)
+revolver: {like: volver}    # revuelvo, revuelto
+rogar: {stem: o>ue}         # ruego, rogué

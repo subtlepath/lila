@@ -1,0 +1,126 @@
+number: 2
+title: Empiezo a las nueve
+title_en: I start at nine
+level: A1
+reviewer_notes:
+  - "Futbol note: el Tri named for the three colors of the flag; América against Chivas as the big rivalry; games in almost every park on weekends. Correct?"
+new: [empezar, cerrar, abrir, entender, pensar, preferir, volver, dormir, jugar, futbol, pedir, decir]
+conjugate: ["empezar:pres", "volver:pres", "pedir:pres", "jugar:pres", "decir:pres"]
+notes:
+  - kind: grammar
+    title: Stem-changing verbs
+    text: |
+      Many common verbs change the vowel of their stem when the stress falls on it. That happens in every form except _nosotros_:
+
+      - e to ie: _empezar_: _empiezo, empiezas, empieza, *empezamos*, empiezan_. Also _cierro, entiendo, pienso, prefiero, quiero_.
+      - o to ue: _volver_: _vuelvo, vuelves, vuelve, *volvemos*, vuelven_. Also _duermo, puedo, cuesta_.
+      - e to i: _pedir_: _pido, pides, pide, *pedimos*, piden_. Also _repito, sigo_.
+      - u to ue: _jugar_: _juego, juegas, juega, *jugamos*, juegan_. It is the only one.
+
+      _Decir_ changes e to i and has its own _yo_ form: _digo, dices, dice, decimos, dicen_.
+
+      The infinitive does not tell you which verbs change, so learn each one with its _yo_ form: _cerrar, cierro_.
+  - kind: usage
+    title: Pedir or preguntar?
+    text: |
+      English "ask" is two verbs in Spanish:
+
+      - _pedir_ — to ask for or order something: _Pido la cuenta._ _Ana pide un café._
+      - _preguntar_ — to ask a question: _Le pregunto a la maestra._
+
+      _Decir_ is to say or tell. Two questions every learner needs:
+
+      - _¿Cómo se dice ... en español?_ — How do you say ... in Spanish?
+      - _¿Puede repetir, por favor?_ — Could you say that again, please?
+  - kind: culture
+    title: Futbol
+    text: |
+      Mexico writes _futbol_, with no accent, and stresses the last syllable: `foot-BOHL`. Most Mexicans say _jugar futbol_, without _al_.
+
+      Soccer is the national passion. The national team is _el Tri_, for the three colors of the flag. Club rivalries such as América against Chivas, from Guadalajara, fill Sunday afternoons, and on weekends almost every park has a game.
+sentences:
+  - es: "El [trabajo|trabajo] {empieza} a las nueve."
+    en: "Work starts at nine."
+  - es: "{Empiezo} a trabajar a las ocho."
+    en: "I start work at eight."
+    order: true
+  - es: "La tienda {cierra} a las diez."
+    en: "The store closes at ten."
+  - es: "¿{Cierro} la puerta?"
+    en: "Should I close the door?"
+  - es: "El banco {abre} a las nueve."
+    en: "The bank opens at nine."
+    order: true
+  - es: "Disculpe, ¿me {abre} la puerta?"
+    en: "Excuse me, could you open the door for me?"
+  - es: "Perdón, no {entiendo}."
+    en: "Sorry, I don't understand."
+  - es: "¿{Entiendes} todo?"
+    en: "Do you understand everything?"
+  - es: "{Pienso} que sí."
+    en: "I think so."
+  - es: "¿Tú qué {piensas}?"
+    en: "What do you think?"
+  - es: "{Prefiero} los tacos de pollo."
+    en: "I prefer chicken tacos."
+  - es: "¿Qué {prefieres}, café o jugo?"
+    en: "Which do you prefer, coffee or juice?"
+  - es: "Ahorita {vuelvo}."
+    en: "I'll be right back."
+    reviewer_notes: "Unit 1 teaches Ahorita vengo. Is Ahorita vuelvo equally everyday?"
+  - es: "Mi papá {vuelve} del [trabajo|trabajo] a las siete."
+    en: "My dad gets home from work at seven."
+    note: "Volver and regresar both mean to come back; regresar is more common in Mexico."
+  - es: "{Duermo} muy poco."
+    en: "I hardly sleep."
+  - es: "Los niños {duermen} en la recámara."
+    en: "The kids sleep in the bedroom."
+  - es: "¿{Juegas} futbol con tus amigos?"
+    en: "Do you play soccer with your friends?"
+  - es: "{Jugamos} futbol en el parque."
+    en: "We play soccer in the park."
+    order: true
+  - es: "Me gusta el {futbol}."
+    en: "I like soccer."
+  - es: "Mi hermano juega {futbol} con sus amigos."
+    en: "My brother plays soccer with his friends."
+    note: "In Mexico, jugar futbol, usually without al."
+  - es: "{Pido} la cuenta."
+    en: "I'll ask for the check."
+  - es: "Ana siempre {pide} un café."
+    en: "Ana always orders a coffee."
+  - es: "¿Cómo se {dice} en español?"
+    en: "How do you say it in Spanish?"
+  - es: "Mi mamá {dice} que sí."
+    en: "My mom says yes."
+  - es: "¿Puede {repetir}, por favor?"
+    en: "Could you repeat that, please?"
+dialogue:
+  title: En la clase de español
+  title_en: In Spanish class
+  lines:
+    - speaker: Maestra
+      es: "[Buenos días|buenos días] a todos. ¿Qué prefieren ustedes, tacos o tortas? ¿Tom?"
+      en: "Good morning, everyone. Which do you all prefer, tacos or tortas? Tom?"
+    - speaker: Tom
+      es: "Perdón, maestra, no entiendo. ¿Puede repetir, por favor?"
+      en: "Sorry, I don't understand. Could you say that again, please?"
+    - speaker: Maestra
+      es: "¿Qué prefieres comer: tacos o tortas?"
+      en: "What do you prefer to eat: tacos or tortas?"
+    - speaker: Tom
+      es: "¡Tacos! Juego futbol todos los días y [como|comer] mucho. Pero duermo muy poco."
+      en: "Tacos! I play soccer every day, so I eat a lot. But I hardly sleep."
+    - speaker: Ana
+      es: "Maestra, ¿cómo se dice: “jugar futbol” o “jugar al futbol”?"
+      en: "How do you say it, teacher: “jugar futbol” or “jugar al futbol”?"
+    - speaker: Maestra
+      es: "Las dos, Ana, pero en México decimos “jugar futbol”. ¿Y tú también juegas?"
+      en: "Both, Ana, but in Mexico we say “jugar futbol.” Do you play too?"
+      reviewer_notes: "Is Las dos (both forms) natural here? Is it fair to call jugar futbol, without al, the Mexican default?"
+    - speaker: Ana
+      es: "No. Yo también duermo poco, y siempre pido un café antes de empezar."
+      en: "No. I don't sleep much either, so I always order a coffee before we start."
+    - speaker: Maestra
+      es: "Pues, ¡a empezar! Hoy la escuela cierra a las ocho."
+      en: "Well, let's get started! Today the school closes at eight."

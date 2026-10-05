@@ -1,0 +1,129 @@
+# Course plan for Unit 9. Format: content-plan/README.md.
+unit: 9
+dir: units/09-ayer
+title: "Ayer"
+title_en: "Yesterday"
+level: A2
+goals:
+  - "Say what you did yesterday and last week with the preterite of regular verbs."
+  - "Say where you went and what you did on a trip with the common irregular preterites."
+  - "Tell a short story in order and react to good and bad news."
+grammar_scope: >-
+  Preterite of regular verbs (with spelling changes llegué, pagué, busqué, empecé, leyó
+  and -ir stem changes pidió, durmió) and of ser/ir, hacer, tener, estar, poder, venir,
+  decir, dar, ver, querer, traer; ya + preterite. Not yet: imperfect (Unit 10). Never
+  the present perfect for finished actions.
+lexicon: content/lexicon/u09.tsv
+supporting: []
+names: [Teotihuacán, Monte Albán]
+lessons:
+  - id: u09.l01
+    number: 1
+    title: "¿Qué hiciste ayer?"
+    title_en: "What did you do yesterday?"
+    level: A2
+    grammar:
+      focus: "Regular preterite (-é, -aste, -ó, -amos, -aron; -í, -iste, -ió, -imos, -ieron) and spelling changes; ya + preterite."
+      can_do: "Say what you did yesterday, last night and last weekend, and ask others."
+    new: [ayer, anoche, anteayer, pasado, terminar, olvidar, perder, encontrar, conocer, gastar, ganar, partido]
+    rows_in_core: []
+    conjugate: ["hablar:pret", "comer:pret", "escribir:pret", "llegar:pret.1s", "pagar:pret.1s", "buscar:pret.1s"]
+    dialogue:
+      title: "El lunes en la oficina"
+      title_en: "Monday at the office"
+      where: "Mariana's office, Monday morning."
+      who: "Mariana and Diego."
+      address: "tú: coworkers."
+      happens: "Diego: ¿Viste el partido? His team won. Mariana stayed home: limpié, cociné y terminé un libro. Last night she lost her keys and found them in the cocina. Diego spent a lot at a party. Mariana: ¿Ya comiste? —No, todavía no."
+    notes:
+      - kind: grammar
+        title: "The preterite: regular verbs"
+        covers: "-ar: hablé, hablaste, habló, hablamos, hablaron. -er/-ir: comí, comiste, comió, comimos, comieron. Spelling: llegué, pagué, busqué, empecé, crucé; leer gives leyó. -ir stem changes show in the third person: pidió, durmió."
+      - kind: usage
+        title: "Preterite, not he comido"
+        covers: "Mexico uses the preterite for anything finished, even today: Hoy comí tacos. ¿Ya comiste? = Have you eaten yet? The present perfect (he comido) is rare in everyday Mexican speech."
+      - kind: culture
+        title: "Monday futbol talk"
+        covers: "¿Viste el partido? opens many Monday conversations. Ganamos or perdimos: fans say we for their team."
+    confusables: ["conocer / saber"]
+    cautions:
+      - "No present perfect for finished actions: 'Hoy comí', '¿Ya terminaste?'."
+      - "'ganas' (you win) collides with the noun ganas (u12): write [ganas|ganar]."
+      - "Accents tell tenses apart: hablo (I speak), habló (he spoke); clozes offer both, so the time word must decide."
+      - "conocer in the preterite means met for the first time: 'Conocí a Sofía en una fiesta'. Personal a before people."
+      - "pasado follows the noun: la semana pasada, el año pasado."
+      - "'vi'/'vio' (ver) are unambiguous; 'fue'/'fui' (ser/ir) wait for lesson 2."
+
+  - id: u09.l02
+    number: 2
+    title: "Fui a Oaxaca"
+    title_en: "I went to Oaxaca"
+    level: A2
+    grammar:
+      focus: "Irregular preterites: ser/ir (fui), hacer (hice, hizo), tener (tuve), estar (estuve), poder, venir, decir, traer, querer; dar (di) and ver (vi)."
+      can_do: "Tell someone where you went on a trip, how you got there, what you did and what it was like."
+    new: [vacaciones, viaje, avión, aeropuerto, maleta, pasaporte, mar, alberca, pirámide, foto, divertido, increíble]
+    rows_in_core: []
+    conjugate: ["ir:pret", "hacer:pret", "tener:pret", "estar:pret", "ver:pret"]
+    dialogue:
+      title: "¿Qué tal el viaje?"
+      title_en: "How was the trip?"
+      where: "A café, the week after Tom's vacation."
+      who: "Tom and Sofía."
+      address: "tú: friends."
+      happens: "Sofía: ¿Qué tal el viaje? Tom went to Oaxaca by plane; the airline lost his suitcase at the airport. He saw Monte Albán, went to the sea, and the hotel had an alberca. He took a lot of fotos. ¡Fue increíble! Sofía: ¿Y tu maleta? —Llegó dos días después."
+    notes:
+      - kind: grammar
+        title: "Irregular preterites"
+        covers: "ser and ir share fui, fuiste, fue, fuimos, fueron. Strong stems take -e, -iste, -o, -imos, -ieron with no accents: hice/hizo, tuve, estuve, pude, vine, quise; dije and traje take -eron (dijeron). Dar: di, dio; ver: vi, vio."
+      - kind: usage
+        title: "Fue: was or went?"
+        covers: "Fui a Oaxaca (ir) and Fue increíble (ser): context decides. ¿Cómo te fue? = How did it go?"
+      - kind: culture
+        title: "Travelling in Mexico"
+        covers: "Puentes (long weekends), Semana Santa and the December holidays fill buses and beaches. Teotihuacán and Monte Albán are day trips from Mexico City and Oaxaca. Hotels advertise their alberca."
+    confusables: []
+    cautions:
+      - "fui, fue, fuimos, fueron are ser and ir: the compiler reports them ambiguous; mark every one [fue|ser] or [fui|ir]."
+      - "'di' is dar (pret.1s) and decir (tú imperative): mark it."
+      - "foto is feminine (la foto): a good gender item."
+      - "alberca, not piscina."
+      - "vacaciones is plural-only: 'las vacaciones', 'de vacaciones'."
+      - "chapulín and mole are u12.l03 (Nahuatl loans): keep them out; 'La comida es muy rica' covers Oaxacan food."
+
+  - id: u09.l03
+    number: 3
+    title: "¿Qué pasó?"
+    title_en: "What happened?"
+    level: A2
+    grammar:
+      focus: "Narrating in order with the preterite: primero, luego, después, entonces, de repente; impersonal 'they' (me robaron)."
+      can_do: "Tell a short story about something that went wrong, and react to someone else's."
+    new: [de repente, susto, suerte, cartera, robar, quitar, policía, chocar, multa, avisar, preocupado, tranquilo]
+    rows_in_core: []
+    conjugate: ["decir:pret", "poder:pret", "venir:pret"]
+    dialogue:
+      title: "¡Qué susto!"
+      title_en: "What a scare!"
+      where: "Ana's apartment, evening."
+      who: "Ana tells Sofía what happened."
+      address: "tú: friends."
+      happens: "Ana: En el metro me robaron la cartera. Primero no vi nada; de repente, busqué mi cartera y no la encontré (preterite only: no 'no estaba'). She told a policía; he said to call the bank. Sofía: ¡Qué susto! ¡Qué mala suerte! Tranquila. ¿Ya avisaste al banco?"
+    notes:
+      - kind: grammar
+        title: "Telling a story in order"
+        covers: "Primero, luego, después, entonces, al final, de repente + preterite. Me robaron la cartera: Spanish uses 'they' with no subject where English uses the passive (my wallet was stolen)."
+      - kind: usage
+        title: "Reacting"
+        covers: "¡Qué susto! ¡Qué mala suerte! ¡No me digas! ¿Estás bien? Tranquilo, tranquila (calm down). ¿Qué pasó? = What happened?"
+      - kind: culture
+        title: "Staying safe"
+        covers: "Keep phone and wallet in front pockets in a crowded metro. Call 911 for emergencies. A traffic officer may give you a multa; after a crash, wait for the insurance adjuster before moving the cars."
+    confusables: []
+    cautions:
+      - "'¿Qué pasó?' links to pasar, whose core gloss lacks 'to happen' (README asks the lead to add it)."
+      - "de repente is a multi-word lemma: 'De repente, ...' (comma-bounded) links whole; inside a clause mark [de repente|de repente]."
+      - "No imperfect yet (Unit 10): narrate events only; the dialogue must not slip into 'no estaba', 'tenía'."
+      - "policía is mf: el or la policía (the officer); la policía (the police force)."
+      - "Keep crime light (a pickpocket, a fender-bender); no violence."
+      - "'Me robaron el celular' (indirect object me); translate with the English passive."

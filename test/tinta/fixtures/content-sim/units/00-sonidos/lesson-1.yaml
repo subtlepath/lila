@@ -1,0 +1,118 @@
+number: 1
+title: Las vocales
+title_en: The vowels
+level: A1
+new: [casa, mesa, taco, papa, papá, mamá, café, agua, limón, plátano, libro]
+notes:
+  - kind: pronunciation
+    title: Five pure vowels
+    text: |
+      Spanish has five vowels, and each one always keeps its sound, stressed or not. Keep them short and clean, with no glide like the "ay" in "say" or the "ow" in "go".
+
+      - _a_ as in "father": _casa_ `KAH-sah`
+      - _e_ as in "bet": _mesa_ `MEH-sah`
+      - _i_ as in "machine": _sí_ `SEE`
+      - _o_ as in "for", with no "w" at the end: _taco_ `TAH-koh`
+      - _u_ as in "rule": _jugo_ `HOO-goh`
+
+      Unstressed vowels never fade to "uh". In _papa_ `PAH-pah` both vowels are the same full _a_.
+  - kind: grammar
+    title: Stress and written accents
+    text: |
+      Every word has one stressed syllable, and the spelling tells you which one.
+
+      - A word ending in a vowel, _n_ or _s_ stresses the next-to-last syllable: _casa_ `KAH-sah`, _tacos_ `TAH-kohs`.
+      - A word ending in any other consonant stresses the last syllable: _hotel_ `oh-TEHL`, _comer_ `koh-MEHR`.
+      - A written accent overrides both rules: _café_ `kah-FEH`, _limón_ `lee-MOHN`, _plátano_ `PLAH-tah-noh`.
+
+      Sometimes the accent is the only difference between two words: _papa_ (potato) and _papá_ (dad), _tu_ (your) and _tú_ (you), _si_ (if) and _sí_ (yes).
+
+      In Tinta respellings the stressed syllable is in capitals.
+  - kind: culture
+    title: Words for the fonda
+    text: |
+      A _fonda_ is a small family restaurant with home cooking at a fair price. Three words you will use there:
+
+      - _papa_ is a potato (Spain says ~patata~). _Tacos de papa_ are a classic.
+      - _limón_ is the small green lime that Mexicans squeeze on tacos, soup and fruit. Yellow lemons are much less common.
+      - _agua_ is feminine, but it takes _el_ and _un_ because it starts with a stressed _a_: _el agua_, _un agua de limón_ (lime water, one of the _aguas frescas_).
+sentences:
+  - es: "La {casa} de Ana es amarilla."
+    en: "Ana's house is yellow."
+  - es: "Mi {casa} es su casa."
+    en: "My home is your home."
+    note: "A warm Mexican welcome for a guest."
+  - es: "La {mesa} es verde."
+    en: "The table is green."
+    order: true
+  - es: "Una {mesa}, por favor."
+    en: "A table, please."
+  - es: "Un {taco} [al pastor|al pastor], por favor."
+    en: "A taco al pastor, please."
+  - es: "Mamá, ¿más {tacos}?"
+    en: "Mom, more tacos?"
+  - es: "Tacos de {papa}, por favor."
+    en: "Potato tacos, please."
+  - es: "{Papas} con limón, por favor."
+    en: "Potato chips with lime, please."
+  - es: "Mi {papá} es de México."
+    en: "My dad is from Mexico."
+  - es: "¿Un café, {papá}?"
+    en: "A coffee, Dad?"
+    note: "Papá (dad) has a written accent; papa (potato) does not."
+  - es: "Mi {mamá} es de Puebla."
+    en: "My mom is from Puebla."
+  - es: "{Mamá}, ¿y mi libro?"
+    en: "Mom, where's my book?"
+  - es: "Un {café}, por favor."
+    en: "A coffee, please."
+  - es: "Un {café} con leche."
+    en: "A coffee with milk."
+    order: true
+  - es: "Un {agua} de limón, por favor."
+    en: "A limeade, please."
+    note: "Agua is feminine, but it takes un and el: un agua, el agua."
+  - es: "¿{Agua}? —Sí, por favor."
+    en: "Water? —Yes, please."
+  - es: "¿Con {limón}? —Sí."
+    en: "With lime? —Yes."
+  - es: "El {limón} es verde."
+    en: "The lime is green."
+  - es: "El {plátano} es para mamá."
+    en: "The banana is for Mom."
+  - es: "Un café y un {plátano}, por favor."
+    en: "A coffee and a banana, please."
+  - es: "El {libro} es de mi papá."
+    en: "The book is my dad's."
+    order: true
+  - es: "Un {libro} en inglés."
+    en: "A book in English."
+  - es: "{Sí}, es mi casa."
+    en: "Yes, it's my house."
+  - es: "No, no es mi café."
+    en: "No, it isn't my coffee."
+dialogue:
+  title: En la fonda
+  title_en: At the diner
+  lines:
+    - speaker: Mesera
+      es: "¿Un café?"
+      en: "Coffee?"
+    - speaker: Pablo
+      es: "Sí, un café, por favor."
+      en: "Yes, a coffee, please."
+    - speaker: Mesera
+      es: "¿Con leche?"
+      en: "With milk?"
+    - speaker: Pablo
+      es: "No, sin leche. Y un agua de limón."
+      en: "No, without milk. And a limeade."
+    - speaker: Mesera
+      es: "¿Algo más?"
+      en: "Anything else?"
+    - speaker: Pablo
+      es: "Sí, unos tacos de papa, por favor."
+      en: "Yes, some potato tacos, please."
+    - speaker: Mesera
+      es: "Un café, un agua de limón y tacos de papa."
+      en: "A coffee, a limeade and potato tacos."

@@ -1,0 +1,15 @@
+# Unit 6: El día a día / Day to day. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u06.l01 Todos los días (regular present). Also new here, row in core.tsv: comida
+hacer		verb		to do; to make	A1			grammar			Hago: I do. ¿Qué haces?: What are you doing?	
+# --- u06.l02 Empiezo a las nueve (stem-changing verbs)
+entender		verb		to understand	A1			language				
+decir		verb		to say; to tell	A1			language			¿Cómo se dice...?: How do you say...?	
+# --- u06.l03 ¿Qué hora es? (time, days). tarde (noun) must stay above tarde#late: the first is the default link
+# --- u06.l04 Me levanto temprano (reflexive verbs, routine)
+# --- supporting (no lesson introduces these; usable from Unit 6 on)
+después		adv		after; afterwards; later	A1			time			Después de: after.	
+pan		noun	m	bread	A1			food			Pan dulce: Mexican sweet bread.	
+repetir		verb		to repeat	A1			language			¿Puede repetir, por favor?	

@@ -1,0 +1,123 @@
+number: 2
+title: Un ratito
+title_en: Just a moment
+level: A2
+reviewer_notes:
+  - "Forms of address: doña Lupe uses usted with Tom throughout (the brief allowed an older shopkeeper to slip into tú with a regular). Should she?"
+  - "'¿Me regala...?' is presented as very common in central Mexico. Regional or general?"
+  - "tantito is tagged Mexico-specific; chamba informal. Tom says 'chamba' to doña Lupe in the dialogue: OK with an older shopkeeper?"
+new: [poquito, ratito, tantito, cerquita, chiquito, cafecito, a sus órdenes, ni modo, regalar, echar, ganas, chamba]
+conjugate: []
+notes:
+  - kind: grammar
+    title: Diminutives
+    text: |
+      Mexicans add _-ito_ or _-ita_ to soften what they say, much more often than to say that something is small:
+
+      - _poco_, _poquito_ (a little bit): the _c_ becomes _qu_
+      - _rato_, _ratito_ (a little while)
+      - _chico_, _chiquito_ (tiny)
+      - _cerca_, _cerquita_ (very close)
+
+      After _-e_, _-n_ or _-r_, and after a stressed final vowel, the ending is _-cito_: _café_, _cafecito_; _camión_, _camioncito_.
+
+      A _cafecito_ is not a small coffee but a friendly one: _¿Nos tomamos un cafecito?_ And as you saw in Unit 1, _ahorita_ is not exactly _ahora_.
+  - kind: usage
+    title: Courtesy formulas
+    text: |
+      - _¿Me regala...?_ — Could I have...? _Regalar_ is to give as a present, but in a request there is no gift, and you still pay: _¿Me regala una bolsa?_ It is very common in central Mexico.
+      - _A sus órdenes_ — at your service. Shop staff greet you with it, and people add it when they introduce themselves: _Me llamo Lupe, a sus órdenes._ You will also hear _para servirle_ and _con mucho gusto_.
+      - _¿Gusta?_ — would you like some? Said when you are eating and someone arrives. The answer is _Gracias, provecho._
+      - _Ni modo_ — oh well, nothing to be done.
+  - kind: culture
+    title: "¡Échale ganas!"
+    text: |
+      _Echarle ganas_ means to put your heart into something. You hear _¡Échale ganas!_ (give it your all!) from parents before an exam, from friends before a new job, from fans at a game. With usted it is _¡Échele ganas!_
+
+      _Tantito_ (a tiny bit) is very Mexican: _Espérame tantito._ (Wait a sec.) _Tantito más._ (A tiny bit more.)
+
+      _Chamba_ (job, work) is *informal*: _Tengo chamba nueva._ With your boss, say _trabajo_.
+sentences:
+  - es: "Hable un {poquito} más despacio, por favor."
+    en: "Could you speak a little more slowly, please?"
+  - es: "Hablo un {poquito} de español."
+    en: "I speak a little bit of Spanish."
+  - es: "Regreso en un {ratito}."
+    en: "I'll be back in a little while."
+  - es: "Vamos a descansar un {ratito}."
+    en: "Let's rest for a little while."
+  - es: "Espéreme {tantito}, por favor."
+    en: "Wait just a second, please."
+  - es: "Muévase {tantito} a la derecha."
+    en: "Move a tiny bit to the right."
+  - es: "La farmacia está {cerquita}."
+    en: "The pharmacy is really close."
+  - es: "Vivo {cerquita} de aquí."
+    en: "I live really close to here."
+    order: true
+  - es: "Tengo un perro {chiquito}."
+    en: "I have a tiny dog."
+  - es: "Mi casa es {chiquita}, pero bonita."
+    en: "My house is tiny but pretty."
+  - es: "¿Nos tomamos un {cafecito}?"
+    en: "Shall we have a coffee?"
+    order: true
+  - es: "Un {cafecito} con pan dulce, por favor."
+    en: "A coffee and a pastry, please."
+    note: "Pan dulce: Mexican sweet bread, eaten with coffee."
+  - es: "Buenas tardes, {a sus órdenes}."
+    en: "Good afternoon, how can I help you?"
+  - es: "Me llamo Lupe, {a sus órdenes}."
+    en: "My name is Lupe, at your service."
+  - es: "No hay pan. —{Ni modo}."
+    en: "There's no bread. —Oh well."
+  - es: "Llegamos [tarde|tarde#late], pero {ni modo}."
+    en: "We got there late, but oh well."
+  - es: "Señora, ¿me {regala} una bolsa?"
+    en: "Ma'am, could I have a bag?"
+    note: "In a request, regalar means could I have. There's no gift: you still pay."
+  - es: "Le {regalé} un libro a mi mamá."
+    en: "I gave my mom a book."
+  - es: "Le {echo} [sal|sal] a los tacos."
+    en: "I put salt on my tacos."
+  - es: "Memo, no le {eches|echar:impneg.2s} mucho chile."
+    en: "Memo, don't put too much chili in it."
+  - es: "Tengo {ganas|ganas} de un cafecito."
+    en: "I feel like a coffee."
+    order: true
+  - es: "No tengo {ganas|ganas} de trabajar."
+    en: "I don't feel like working."
+  - es: "Tengo {chamba} nueva."
+    en: "I've got a new job."
+    note: "Informal: only with friends."
+  - es: "Hoy tengo mucha {chamba}."
+    en: "I have a lot of work today."
+    note: "Informal: only with friends."
+dialogue:
+  title: En la tiendita
+  title_en: At the corner store
+  lines:
+    - speaker: Lupe
+      es: "Buenos días, joven. A sus órdenes."
+      en: "Good morning, young man. What can I get you?"
+    - speaker: Tom
+      es: "Buenos días, doña Lupe. ¿Me regala una bolsa y un cafecito, por favor?"
+      en: "Good morning, doña Lupe. Could I have a bag and a coffee, please?"
+    - speaker: Lupe
+      es: "Espéreme tantito. ¿Va a la escuela?"
+      en: "Just a second. Are you going to school?"
+    - speaker: Tom
+      es: "No, ya tengo chamba. Es aquí cerquita, en la avenida."
+      en: "No, I've got a job now. It's right near here, on the avenue."
+    - speaker: Lupe
+      es: "¡Qué [bueno|bueno]! Aquí está su cafecito. Son quince pesos."
+      en: "That's great! Here's your coffee. That's fifteen pesos."
+    - speaker: Tom
+      es: "¡Híjole! Solo traigo un billete de quinientos."
+      en: "Oh no! I only have a five-hundred-peso bill on me."
+    - speaker: Lupe
+      es: "No tengo [cambio|cambio]. Ni modo, [mañana|mañana] me paga. ¡Y échele [ganas|ganas] a la chamba!"
+      en: "I don't have change. Oh well, you can pay me tomorrow. And give that job your all!"
+    - speaker: Tom
+      es: "¡Muchas gracias, doña Lupe! Hasta mañana."
+      en: "Thanks so much, doña Lupe! See you tomorrow."

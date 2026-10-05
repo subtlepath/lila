@@ -1,0 +1,942 @@
+# Dictionary-only headwords a-c: searchable, respelled and conjugated, but no items
+# and no example sentences (docs/content-style.md section 6). TAB-separated.
+# Keys must not repeat a course word (core, frequency, phrasebook, uNN lexicons).
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+# --- A
+a domicilio		expr		delivered to your home; home delivery	B1				Servicio a domicilio: home delivery.
+a fuerza		expr		by force; necessarily	B1		x		¿A fuerza?: Do I have to?
+a gusto		expr		comfortable; at ease	B1				Estoy muy a gusto aquí: I feel at home here.
+a huevo		expr		hell yes; by force	B2	vulgar	x		Vulgar. Neutral: ¡claro que sí!; a la fuerza.
+a la mexicana		expr		Mexican-style (with tomato, onion and chile)	B1		x		Huevos a la mexicana.
+a la orden		expr		at your service; can I help you?	A2		x		Said by shopkeepers and market vendors, and in reply to gracias.
+a la vez		expr		at the same time	B1
+a menudo		expr		often	B1				Mexico more often says seguido or muy seguido.
+a meses sin intereses		expr		in interest-free monthly installments	B2		x		Common at checkouts: pay by card over several months.
+a partir de		expr		from... on; starting	B1				A partir del lunes: from Monday on.
+a pie		expr		on foot	A2
+a propósito		expr		by the way; on purpose	B1
+a punto de		expr		about to	B1				Estoy a punto de salir: I'm about to leave.
+a tiempo		expr		on time; in time	A2
+a todo dar		expr		great; first-rate	B2	informal	x
+a través de		expr		through; across	B1
+a veces		expr		sometimes	A2
+a ver		expr		let's see	A2				¿A ver?: Show me.
+abandonar		verb		to abandon; to leave	B1
+abeja		noun	f	bee	B1
+abono		noun	m	installment; fertilizer	B2		x		Pagar en abonos: to pay in installments.
+abordar		verb		to board (a plane, a bus)	B1
+aborto		noun	m	abortion; miscarriage	B2
+abrazar		verb		to hug	A2
+abrelatas		noun	m	can opener	B1
+abrigarse		verb		to wrap up warm	B1
+abrochar		verb		to fasten; to button; to buckle	B1				Abróchense los cinturones: fasten your seat belts.
+absoluto		adj		absolute	B1				En absoluto: not at all.
+absurdo		adj		absurd	B1
+aburrimiento		noun	m	boredom	B1
+abusado		adj		sharp; alert; (¡abusado!) look out!	B2	informal	x		Colloquial Mexican sense; elsewhere abusado means abused.
+abusar		verb		to abuse; to take advantage	B1				Abusar de alguien: to take advantage of someone.
+abuso		noun	m	abuse	B1
+academia		noun	f	academy; private school	B1
+acampar		verb		to camp	B1
+acariciar		verb		to stroke; to pet; to caress	B1
+acaso		adv		perhaps	B2				Por si acaso: just in case.
+acceso		noun	m	access	B1
+accesorio		noun	m	accessory	B1
+acción		noun	f	action; share (stock)	B1
+aceituna		noun	f	olive	B1
+acelerar		verb		to speed up; to accelerate	B1
+acelga		noun	f	chard	B2
+acera		noun	f	sidewalk (Spain)	B1				In Mexico: la banqueta.
+acerca de		prep		about; concerning	B1
+acercar		verb		to bring closer; to pass (something)	B1				¿Me acercas la sal?: Can you pass me the salt? Acercarse: to come closer.
+acero		noun	m	steel	B2			pl=-
+acertar		verb		to get right; to guess right	B2
+achichincle		noun	mf	lackey; sidekick	B2	informal	x
+achicopalado		adj		down; discouraged	B2	informal	x
+achiote		noun	m	annatto (red seasoning)	B2		x		Used in cochinita pibil.
+acidez		noun	f	heartburn; acidity	B2				Mexico also says agruras.
+ácido		adj		sour; acidic	B1
+acné		noun	m	acne	B1			pl=-
+acogedor		adj		cozy; welcoming	B1
+acomodar		verb		to arrange; to put in place; to fit	B1				Acomodarse: to get comfortable.
+aconsejar		verb		to advise	B1
+acordar		verb		to agree (on)	B1				Acordarse de: to remember.
+acordeón		noun	m	accordion; cheat sheet (Mexico)	B2		x
+acoso		noun	m	harassment	B2
+acotamiento		noun	m	shoulder (of a road)	B2		x
+acta		noun	f	certificate; minutes	B1				Acta de nacimiento: birth certificate. El acta.
+actitud		noun	f	attitude	B1
+actividad		noun	f	activity	A2
+activo		adj		active	B1
+acto		noun	m	act; ceremony	B1
+actuación		noun	f	performance; acting	B1
+actual		adj		current; present-day	B1				False friend: actual is real or verdadero.
+actualizar		verb		to update	B1
+actualmente		adv		currently; nowadays	B1				False friend: actually is en realidad.
+actuar		verb		to act; to behave	B1
+acuario		noun	m	aquarium; Aquarius	B1
+acuerdo		noun	m	agreement	A2				De acuerdo: OK, agreed. Estoy de acuerdo: I agree.
+acusar		verb		to accuse	B1
+adaptar		verb		to adapt	B1
+adecuado		adj		suitable; appropriate	B1
+adelantar		verb		to move forward; to pass (a car); to be fast (a clock)	B1
+adelanto		noun	m	advance (payment); progress	B1
+adelgazar		verb		to lose weight	B1				Mexico also says bajar de peso.
+aderezo		noun	m	salad dressing	B1		x
+adivinanza		noun	f	riddle	B1
+adivinar		verb		to guess	A2
+adjetivo		noun	m	adjective	A2
+adjuntar		verb		to attach (a file)	B1
+administración		noun	f	administration; management	B1
+admirar		verb		to admire	B1
+admitir		verb		to admit	B1
+adobo		noun	m	adobo (chile marinade)	B2		x
+adónde		adv		where (to)?	A2				Mexico usually writes it as two words: ¿a dónde vas?
+adoptar		verb		to adopt	B1
+adorar		verb		to adore; to love	B1
+adornar		verb		to decorate	B1
+adorno		noun	m	decoration; ornament	B1
+adquirir		verb		to acquire; to buy	B2
+aduana		noun	f	customs	B1
+adulto		noun	mf	adult	A2				Also an adjective: la vida adulta.
+adverbio		noun	m	adverb	B1
+advertencia		noun	f	warning	B1
+advertir		verb		to warn	B1
+aerolínea		noun	f	airline	A2
+aeromoza		noun	f	flight attendant	B1		x
+afectar		verb		to affect	B1
+afeitarse		verb		to shave	B1				Mexico usually says rasurarse.
+aficionado		noun	mf	fan; amateur	B1
+aflojar		verb		to loosen	B1
+afónico		adj		hoarse; without a voice	B2
+afortunado		adj		lucky; fortunate	B1
+agacharse		verb		to bend down; to duck	B1
+agave		noun	m	agave	B1		x		Tequila and mezcal are made from agave.
+agencia		noun	f	agency	B1				Agencia de viajes: travel agency.
+agenda		noun	f	planner; diary; schedule	B1				Usually a planner or diary; a meeting agenda is el orden del día.
+agente		noun	mf	agent; officer	B1
+agitar		verb		to shake; to stir up	B1				Agítese antes de usar: shake before use.
+agobiado		adj		overwhelmed; stressed	B2
+agotado		adj		exhausted; sold out	B1
+agotador		adj		exhausting	B1
+agradecido		adj		grateful; thankful	B1
+agresivo		adj		aggressive	B1
+agricultor		noun	mf	farmer	B1
+agridulce		adj		sweet and sour	B2
+agrio		adj		sour	B1
+agruras		noun	fpl	heartburn	B1		x
+agua fresca		noun	f	fruit drink (water, fruit and sugar)	A2		x	pl=aguas frescas	Agua de jamaica, de horchata, de limón. El agua fresca, las aguas frescas.
+agua mineral		noun	f	sparkling water	A2		x	pl=aguas minerales	In Mexico agua mineral is fizzy; still water is agua natural.
+aguacero		noun	m	downpour	B1
+aguachile		noun	m	aguachile (raw shrimp in lime and chile)	B2		x
+aguado		adj		watery; weak (coffee, soup)	B1
+aguado	aguado#lame	adj		dull; lame; boring	B2	informal	x		¡Qué aguado!: How lame!
+aguafiestas		noun	mf	party pooper; killjoy	B2
+águila		noun	f	eagle	B1				El águila. ¿Águila o sol?: heads or tails?
+agüitado		adj		down; bummed out	B2	informal	x
+aguja		noun	f	needle	B1
+agujero		noun	m	hole	B1
+agujeta		noun	f	shoelace	B1		x
+ahí nos vemos		expr		see you; see you around	A2		x		A casual goodbye.
+ahijado		noun	mf	godchild; godson	B1
+ahogarse		verb		to drown; to choke	B1
+ahorro		noun	m	saving; savings	B1				Mis ahorros: my savings.
+ahumado		adj		smoked	B2
+ajá		interj		uh-huh; yeah	A2
+ajedrez		noun	m	chess	B1			pl=-
+ajeno		adj		someone else's; other people's	B2
+ajonjolí		noun	m	sesame	B1		x
+ajustar		verb		to adjust; to tighten	B1
+al chile		expr		honestly; frankly	B2	vulgar	x		Crude slang. Neutral: la verdad, sinceramente.
+al final		expr		in the end; at the end	B1
+al lado de		expr		next to; beside	A2
+al menos		expr		at least	B1
+al principio		expr		at first; at the beginning	B1
+al revés		expr		upside down; inside out; the other way round	B1
+ala		noun	f	wing	B1				El ala, las alas.
+alacena		noun	f	pantry; kitchen cupboard	B1
+alacrán		noun	m	scorpion	B1		x
+alambre		noun	m	wire; alambre (grilled meat with peppers and cheese)	B1		x
+albaricoque		noun	m	apricot (Spain)	B1				In Mexico: el chabacano.
+albergue		noun	m	shelter; hostel	B1
+albóndiga		noun	f	meatball	B1
+álbum		noun	m	album	B1
+albur		noun	m	pun with a sexual double meaning	B2		x		A Mexican game of wordplay; innocent-sounding words can carry a second meaning.
+alcachofa		noun	f	artichoke	B2
+alcalde		noun	mf	mayor	B1			f=alcaldesa	In Mexico the head of a municipio is the presidente municipal.
+alcancía		noun	f	piggy bank	B1		x
+alcohol		noun	m	alcohol	A2
+alcohólico		adj		alcoholic	B1
+alebrije		noun	m	alebrije (painted fantasy creature)	B2		x
+alemán		adj		German	A2
+alfabeto		noun	m	alphabet	A2
+alfiler		noun	m	pin	B1
+alfombra		noun	f	carpet; rug	B1
+algodón		noun	m	cotton	B1
+aliento		noun	m	breath	B1				Mal aliento: bad breath.
+alimentar		verb		to feed	B1
+alimento		noun	m	food	B1
+alistarse		verb		to get ready	B1				Me estoy alistando: I'm getting ready.
+alivio		noun	m	relief	B1				¡Qué alivio!: What a relief!
+allí		adv		there	A2				Mexico more often says ahí or allá.
+alma		noun	f	soul	B1				El alma, las almas.
+almacén		noun	m	warehouse; department store	B1
+almendra		noun	f	almond	B1
+almorzar		verb		to have brunch; to have lunch	A2				In Mexico el almuerzo is often a late breakfast; the main meal is la comida.
+alojamiento		noun	m	lodging; accommodation	B1
+alojarse		verb		to stay (at a hotel)	B1
+alquilar		verb		to rent	B1				Mexico usually says rentar.
+alquiler		noun	m	rent	B1				Mexico usually says la renta.
+altar		noun	m	altar; Day of the Dead altar	B1		x		Also called la ofrenda.
+alternativa		noun	f	alternative; option	B1
+alto	alto#stop	noun	m	stop sign; stop!	A2		x		Mexican stop signs say ALTO. ¡Alto!: Stop!
+alubia		noun	f	bean (Spain)	B1				In Mexico: el frijol.
+aluminio		noun	m	aluminum	B1			pl=-	Papel aluminio: aluminum foil.
+ama de casa		noun	f	housewife; homemaker	A2				El ama de casa, las amas de casa.
+amanecer		verb		to dawn; to wake up (in a state)	B1				Also a noun: el amanecer, dawn. ¿Cómo amaneciste?: How did you sleep?
+amante		noun	mf	lover	B1
+amargado		adj		bitter; resentful	B2
+amarrar		verb		to tie (up)	B1		x		Mexico prefers amarrar to atar.
+ambicioso		adj		ambitious	B1
+ambiente		noun	m	atmosphere; environment	B1				Medio ambiente: the environment.
+ambulante		adj		traveling; street (vendor)	B1				Vendedor ambulante: street vendor.
+amenaza		noun	f	threat	B1
+amenazar		verb		to threaten	B1
+amígdalas		noun	fpl	tonsils	B2
+amistoso		adj		friendly	B1
+amplio		adj		wide; spacious; broad	B1
+ampolla		noun	f	blister	B2
+añadir		verb		to add	B1				Mexico usually says agregar.
+análisis		noun	m	analysis; (medical) test	B1				Análisis de sangre: blood test.
+analizar		verb		to analyze	B1
+anaranjado		adj		orange (color)	A2				Also naranja.
+ancho		adj		wide; loose (clothes)	B1
+anciano		noun	mf	elderly person	B1				Also an adjective: elderly.
+andar		verb		to walk; to go around; to be (ando cansado)	A2				¿Cómo andas?: How are you doing? Andar con alguien: to date someone.
+añejo		adj		aged (tequila, cheese)	B2
+anestesia		noun	f	anesthesia	B2
+anfitrión		noun	mf	host	B1
+ángel		noun	m	angel	B1
+angosto		adj		narrow	B1		x		The everyday Mexican word; estrecho is standard.
+ángulo		noun	m	angle	B1
+animado		adj		lively; in good spirits	B1				Dibujos animados: cartoons (Mexico: caricaturas).
+animar		verb		to cheer up; to encourage	B1				Animarse: to feel like doing, to dare: ¿Te animas?
+ánimo		noun	m	spirits; mood	B1				¡Ánimo!: Cheer up! Come on!
+aniversario		noun	m	anniversary	B1
+anochecer		verb		to get dark	B1				Also a noun: el anochecer, nightfall.
+anotar		verb		to write down; to score	B1
+ansiedad		noun	f	anxiety	B1
+ansioso		adj		anxious; eager	B1
+ante		prep		before; in the face of	B2
+antena		noun	f	antenna; aerial	B1
+anteojos		noun	mpl	glasses	B1		x		Also lentes.
+anterior		adj		previous; earlier	B1
+antibiótico		noun	m	antibiotic	B1
+anticipo		noun	m	advance payment; deposit	B1
+anticonceptivo		noun	m	contraceptive	B2
+antojo		noun	m	craving; whim	B1		x
+anual		adj		annual; yearly	B1
+anunciar		verb		to announce; to advertise	B1
+apachurrar		verb		to squash; to crush	B2		x
+apagado		adj		off; switched off	A2
+apagador		noun	m	light switch	B1		x
+apagón		noun	m	blackout; power outage	B1
+apantallar		verb		to impress; to show off	B2	informal	x
+apapacho		noun	m	cuddle; hug; comfort	B1		x
+aparador		noun	m	shop window; sideboard	B1		x
+aparato		noun	m	device; appliance	B1
+aparcamiento		noun	m	parking lot; parking space (Spain)	B1				In Mexico: el estacionamiento.
+aparcar		verb		to park (Spain)	B1				In Mexico: estacionar.
+aparecer		verb		to appear; to turn up	B1
+apartar		verb		to set aside; to save (a seat)	B1		x		¿Me apartas un lugar?: Can you save me a seat?
+apasionado		adj		passionate	B1
+apendicitis		noun	f	appendicitis	B2
+apestar		verb		to stink	B1
+apestoso		adj		stinky; smelly	B1
+apetecer		verb		to feel like; to fancy (Spain)	B1				¿Te apetece?: Do you feel like it? In Mexico: ¿Se te antoja?, ¿Tienes ganas?
+apetito		noun	m	appetite	B1
+apio		noun	m	celery	B1
+aplastar		verb		to crush; to squash	B1
+aplaudir		verb		to clap; to applaud	B1
+aplauso		noun	m	applause	B1
+aplicación		noun	f	app; application	A2
+aplicar		verb		to apply; to give (a test)	B1
+apodo		noun	m	nickname	B1
+apostar		verb		to bet	B1
+apoyar		verb		to support; to lean	B1
+apoyo		noun	m	support	B1
+apreciar		verb		to appreciate; to value	B1
+apretado		adj		tight	B1
+apretar		verb		to squeeze; to press; to be too tight	B1				Me aprietan los zapatos: my shoes are too tight.
+aprobar		verb		to pass (a test); to approve	B1
+apropiado		adj		appropriate	B1
+aprovechado		adj		opportunist; freeloader	B2
+apuesta		noun	f	bet	B1
+apuntar		verb		to write down; to point; to aim	B1				Apuntarse: to sign up.
+apunte		noun	m	note (in class)	B1				Los apuntes: class notes.
+apuro		noun	m	tight spot; trouble; hurry	B2				Estar en apuros: to be in trouble.
+aquello		pron		that (thing)	A2				Neuter, for an idea or an unnamed thing: ¿Qué es aquello?
+araña		noun	f	spider	B1
+árbitro		noun	mf	referee	B1
+arbusto		noun	m	bush; shrub	B1
+arco		noun	m	arch; bow	B1
+arcoíris		noun	m	rainbow	B1
+arder		verb		to burn; to sting	B1				Me arden los ojos: my eyes sting.
+ardilla		noun	f	squirrel	B1
+ardor		noun	m	burning (sensation)	B2				Ardor de estómago: heartburn.
+área		noun	f	area	B1				El área, las áreas.
+arena		noun	f	sand	A2
+argentino		adj		Argentinian	A2
+argolla		noun	f	ring; wedding ring	B1		x
+argumento		noun	m	argument (reasoning); plot	B2				False friend: a quarrel is una discusión or un pleito.
+arma		noun	f	weapon	B1				El arma, las armas.
+armar		verb		to assemble; to put together	B1				Armar un escándalo: to make a scene.
+aroma		noun	m	aroma; smell	B1
+arquitecto		noun	mf	architect	B1
+arquitectura		noun	f	architecture	B1
+arrachera		noun	f	skirt steak	B1		x
+arrancar		verb		to pull out; to start (an engine)	B1
+arrastrar		verb		to drag	B1
+arreglo		noun	m	arrangement; repair; deal	B1				Arreglo floral: flower arrangement.
+arrepentirse		verb		to regret; to be sorry	B1
+arrestar		verb		to arrest	B1
+arriesgar		verb		to risk	B1
+arrimado		noun	mf	freeloader (living in someone's home)	B2	informal	x
+arroba		noun	f	at sign (@)	A2
+arrodillarse		verb		to kneel (down)	B1
+arrogante		adj		arrogant	B1
+arroyo		noun	m	stream; creek	B1
+arruga		noun	f	wrinkle	B1
+arruinar		verb		to ruin	B1
+artesanía		noun	f	handicrafts; craft	B1				Mercado de artesanías: craft market.
+artesano		noun	mf	craftsman; artisan	B1
+artículo		noun	m	article; item	B1
+artificial		adj		artificial	B1
+asalto		noun	m	robbery; mugging	B1
+asar		verb		to grill; to roast	B1				Carne asada: grilled beef.
+ascensor		noun	m	elevator (Spain)	A2				In Mexico: el elevador.
+asco		noun	m	disgust	B1				¡Qué asco!: Gross! Me da asco: it disgusts me.
+asegurar		verb		to ensure; to insure; to secure	B1				Asegurarse: to make sure.
+aseo		noun	m	cleaning; tidying	B1				Hacer el aseo: to do the cleaning.
+asesinato		noun	m	murder	B1
+asesino		noun	mf	murderer; killer	B1
+asesor		noun	mf	adviser; consultant	B1
+asistente		noun	mf	assistant	B1
+asistir		verb		to attend	B1				False friend: asistir a clase is to attend class. To assist is ayudar.
+asma		noun	f	asthma	B1			pl=-	El asma.
+asolearse		verb		to sunbathe; to be in the sun	B1		x
+asomarse		verb		to look out; to lean out	B1
+asombroso		adj		amazing; astonishing	B1
+aspecto		noun	m	appearance; aspect	B1
+aspiradora		noun	f	vacuum cleaner	B1
+aspirina		noun	f	aspirin	A2
+astuto		adj		clever; cunning	B1
+atacar		verb		to attack	B1
+atajo		noun	m	shortcut	B1
+ataque		noun	m	attack	B1				Ataque al corazón: heart attack.
+atar		verb		to tie	B1				Mexico usually says amarrar.
+atardecer		noun	m	dusk; sunset	B1
+atentamente		adv		sincerely (closing a letter)	B1	formal
+atento		adj		attentive; thoughtful	B1				Muy atento: very kind of you.
+aterrizar		verb		to land	B1
+atleta		noun	mf	athlete	B1
+atorarse		verb		to get stuck; to choke	B1		x		Se atoró la puerta: the door got stuck.
+atracción		noun	f	attraction; ride	B1
+atractivo		adj		attractive	B1
+atraer		verb		to attract	B1
+atrapar		verb		to catch; to trap	B1
+atrasado		adj		late; behind; slow (a clock)	B1
+atravesar		verb		to cross; to go through	B1
+atreverse		verb		to dare	B1
+atrevido		adj		daring; bold; cheeky	B1
+atropellar		verb		to run over (a person)	B1
+atún		noun	m	tuna	A2
+aumentar		verb		to increase; to rise	B1
+aumento		noun	m	raise; increase	B1
+aun		adv		even	B2				Aun así: even so. Without an accent it means even; aún means still, yet.
+ausente		adj		absent	B1
+auténtico		adj		authentic; real	B1
+auto		noun	m	car	A2				Carro is the everyday Mexican word.
+autocar		noun	m	coach; long-distance bus (Spain)	B1				In Mexico: el autobús.
+automático		adj		automatic	B1
+automóvil		noun	m	car; automobile	B1	formal
+autopista		noun	f	highway; toll road	B1				La autopista usually charges a toll; the free road is la libre.
+autor		noun	mf	author	B1
+autoservicio		noun	m	self-service; supermarket	B1		x		Tienda de autoservicio: supermarket.
+avance		noun	m	progress; preview	B1
+avanzar		verb		to advance; to move forward	B1
+ave		noun	f	bird; poultry	B1				El ave, las aves. Pájaro is the everyday word for a small bird.
+avena		noun	f	oats; oatmeal	A2			pl=-
+aventón		noun	m	ride; lift	B1		x		Dar un aventón: to give someone a ride.
+aventura		noun	f	adventure; affair	B1
+avergonzado		adj		ashamed; embarrassed	B1				In Mexico apenado is the everyday word for embarrassed.
+averiguar		verb		to find out	B1
+aviso		noun	m	notice; warning	B1				Aviso de privacidad: privacy notice.
+avispa		noun	f	wasp	B1
+axila		noun	f	armpit	B1
+ayuda		noun	f	help	A1
+ayudante		noun	mf	assistant; helper	B1
+azafata		noun	f	flight attendant (Spain)	B1				In Mexico: la aeromoza or el/la sobrecargo.
+azteca		adj		Aztec	B1		x
+azulejo		noun	m	tile (glazed)	B1
+# --- B
+babosada		noun	f	nonsense; silly thing	B2	informal	x		Decir babosadas: to talk nonsense.
+baboso		adj		silly; dumb	B2	informal	x		Also slobbery. A mild insult: ¡No seas baboso!
+bacalao		noun	m	cod; salt cod	B2				Bacalao a la vizcaína is a Christmas dish in Mexico.
+bachillerato		noun	m	high school (diploma)	B1				Mexico usually says la prepa (preparatoria).
+bahía		noun	f	bay	B1
+bailarín		noun	mf	dancer	B1
+baile		noun	m	dance; dancing	A2
+bajar		verb		to go down; to lower; to download	A2				Bajar de peso: to lose weight. Bajarse: to get off (a bus).
+bajo		adj		low; short (person)	A2				For a short person Mexico usually says chaparro.
+bajo	bajo#under	prep		under; below	B1				Bajo cero: below zero.
+bala		noun	f	bullet	B1
+balacera		noun	f	shootout; shooting	B2		x
+balcón		noun	m	balcony	B1
+ballena		noun	f	whale	B1
+balneario		noun	m	water park; bathing resort	B1		x		Many are built around hot springs.
+balón		noun	m	ball (soccer, basketball)	A2
+bañador		noun	m	swimsuit (Spain)	B1				In Mexico: el traje de baño.
+banca		noun	f	bench; banking	B1		x		Sentarse en la banca: to sit on the bench.
+bandeja		noun	f	tray	B1				Bandeja de entrada: inbox. For a tray Mexico usually says charola.
+bañera		noun	f	bathtub (Spain)	B1				In Mexico: la tina.
+barba		noun	f	beard	A2
+barbilla		noun	f	chin	B1
+barda		noun	f	wall (around a property)	B1		x
+barra		noun	f	bar; counter	B1				Barra de chocolate: chocolate bar.
+barranca		noun	f	ravine; gorge	B1		x
+barriga		noun	f	belly	B1				Mexico also says panza.
+barro		noun	m	clay; mud; pimple	B1		x		Barro negro: black pottery from Oaxaca. In Mexico a barro is also a pimple.
+base		noun	f	base; basis	B1				A base de: made from.
+básico		adj		basic	B1
+básquetbol		noun	m	basketball	A2			pl=-	Also básquet. Baloncesto is rare in Mexico.
+bastar		verb		to be enough	B1				¡Basta!: That's enough!
+basurero		noun	m	garbage dump; trash can; garbage collector	B1
+bata		noun	f	robe; bathrobe; lab coat	B1
+bate		noun	m	(baseball) bat	B1
+batería		noun	f	battery; drums	A2				Se me acabó la batería: my battery died.
+batidora		noun	f	mixer	B1
+batir		verb		to beat; to whisk	B1
+bautizo		noun	m	baptism; christening (party)	B1
+beca		noun	f	scholarship; grant	B1
+belleza		noun	f	beauty	B1
+bello		adj		beautiful	B1				Hermoso and bonito are more everyday.
+bendición		noun	f	blessing	B1
+beneficio		noun	m	benefit	B1
+berenjena		noun	f	eggplant	B1
+berrinche		noun	m	tantrum	B1		x		Hacer berrinche: to throw a tantrum.
+besar		verb		to kiss	A2
+betabel		noun	m	beet	B1		x
+biberón		noun	m	baby bottle	B1				Mexico also says mamila.
+bicho		noun	m	bug; creature	B1
+bici		noun	f	bike	A2	informal			Short for bicicleta.
+bigote		noun	m	mustache	A2
+bilingüe		adj		bilingual	B1
+billar		noun	m	pool; billiards	B1			pl=-
+billón		noun	m	trillion	B2				False friend: a billion is mil millones.
+biología		noun	f	biology	B1			pl=-
+bisabuelo		noun	mf	great-grandfather	B1
+bisnieto		noun	mf	great-grandson	B2
+blando		adj		soft; tender	B1
+blanquillo		noun	m	egg	B1		x		Used to avoid huevo, which has a vulgar sense in Mexico.
+bloque		noun	m	block	B1
+bloqueador		noun	m	sunscreen	B1		x
+bloquear		verb		to block	B1
+blusa		noun	f	blouse	A2
+bobo		adj		silly; dumb	B1
+bocadillo		noun	m	sandwich on a baguette (Spain)	A2				In Mexico: la torta, or un sándwich.
+bocina		noun	f	speaker; (car) horn	B1		x
+bodega		noun	f	warehouse; storeroom	B1		x		Not a corner shop in Mexico: that is una tienda (de abarrotes).
+bola		noun	f	ball; scoop	B1				Una bola de helado: a scoop of ice cream. Informal: una bola de: a bunch of.
+bolero		noun	m	shoeshiner; bolero (song)	B1		x		Bolear: to shine shoes.
+boliche		noun	m	bowling; bowling alley	B1		x
+bolígrafo		noun	m	ballpoint pen	B1				The everyday Mexican word is pluma.
+boliviano		adj		Bolivian	A2
+bolso		noun	m	handbag (Spain)	A2				In Mexico: la bolsa.
+bomba		noun	f	bomb; pump	B1
+bombilla		noun	f	light bulb (Spain)	B1				In Mexico: el foco.
+bombón		noun	m	marshmallow; chocolate	B1		x
+borde		noun	m	edge; border	B1
+borrador		noun	m	eraser; draft	B1
+borrego		noun	m	sheep; lamb	B1		x		Oveja is standard.
+bostezar		verb		to yawn	B1
+botanear		verb		to snack	B2		x
+botiquín		noun	m	first-aid kit; medicine cabinet	B1
+boxeo		noun	m	boxing	B1			pl=-	Mexico usually says el box.
+brasier		noun	m	bra	B1		x
+brasileño		adj		Brazilian	A2
+bravo		adj		fierce; angry; spicy	B1		x		Un perro bravo: a fierce dog. ¡Bravo!: well done!
+breve		adj		brief; short	B1
+brillante		adj		bright; shiny; brilliant	B1
+brillar		verb		to shine	B1
+brindar		verb		to toast; to offer	B1				¡Brindemos!: Let's toast!
+brindis		noun	m	toast (with drinks)	B1
+brisa		noun	f	breeze	B1
+brócoli		noun	m	broccoli	A2
+bromear		verb		to joke	B1
+brujo		noun	mf	sorcerer; witch (bruja)	B1
+bucear		verb		to dive (snorkel or scuba)	B1
+buey		noun	m	ox	B2				Güey, the slang word for dude, comes from buey.
+búho		noun	m	owl	B1				Mexico also says tecolote.
+buitre		noun	m	vulture	B2				Mexico usually says zopilote.
+bulto		noun	m	bundle; package; bag	B1
+buñuelo		noun	m	buñuelo (crisp fried pastry)	B1		x		A Christmas treat, often with piloncillo syrup.
+burbuja		noun	f	bubble	B1
+burlarse		verb		to make fun (of)	B1				Burlarse de alguien: to make fun of someone.
+buró		noun	m	nightstand; bedside table	B1		x
+burrito		noun	m	burrito	A2		x		Northern Mexican; in the center tacos are more common.
+burro		noun	m	donkey; ironing board	B1		x		Burro de planchar: ironing board.
+buscador		noun	m	search engine	B1
+búsqueda		noun	f	search	B1
+butaca		noun	f	seat (theater, cinema); armchair	B1
+buzón		noun	m	mailbox	B1
+# --- C
+cabaña		noun	f	cabin	B1
+cabello		noun	m	hair	B1				Pelo is the everyday word.
+caber		verb		to fit	B1				No cabe: it doesn't fit. Quepo: I fit.
+cabra		noun	f	goat	B1
+cabrón		noun	mf	bastard; jerk; (among friends) dude	B2	vulgar	x		Está cabrón: it's really hard. Very offensive to a stranger.
+cacahuete		noun	m	peanut (Spain)	B1				In Mexico: el cacahuate.
+cacao		noun	m	cocoa; cacao	B1			pl=-
+cachar		verb		to catch; to catch on	B2	informal	x		Te caché: I caught you.
+cachetada		noun	f	slap (in the face)	B1
+cachete		noun	m	cheek	B1		x
+cachorro		noun	m	puppy; cub	B1
+cachucha		noun	f	cap (baseball)	B1		x
+cactus		noun	m	cactus	B1
+cada vez		expr		each time; (cada vez más) more and more	B1
+cadena		noun	f	chain; (TV) network	B1
+cadera		noun	f	hip	B1
+caducidad		noun	f	expiration	B1				Fecha de caducidad: expiration date.
+café de olla		noun	m	spiced coffee with cinnamon and piloncillo	B1		x
+cafetera		noun	f	coffee maker	A2
+cagado		adj		hilarious; scared stiff	B2	vulgar	x		Está bien cagado: it's hilarious.
+cagar		verb		to shit	B2	vulgar			Cagarla: to screw up. Neutral: hacer del baño; equivocarse.
+caguama		noun	f	large bottle of beer (about a liter)	B2	informal	x		Also a sea turtle.
+caída		noun	f	fall	B1
+cajeta		noun	f	goat's milk caramel	B1		x
+calabacita		noun	f	zucchini	A2		x
+calaca		noun	f	skeleton (Day of the Dead figure)	B1	informal	x
+calamar		noun	m	squid	B1
+calambre		noun	m	cramp; electric shock	B1
+calaverita		noun	f	Day of the Dead verse; sugar skull	B2		x		Also a request for money or candy on Day of the Dead, like trick or treat.
+calcomanía		noun	f	sticker; decal	B1		x
+calculadora		noun	f	calculator	A2
+calcular		verb		to calculate; to estimate	B1
+calefacción		noun	f	heating	B1			pl=-
+calendario		noun	m	calendar	A2
+calentador		noun	m	heater; water heater	B1
+calentar		verb		to heat; to warm up	A2
+calentura		noun	f	fever	B1		x		Tener calentura: to have a fever. Also (informal) sexual desire.
+calidad		noun	f	quality	B1
+cálido		adj		warm	B1
+callado		adj		quiet; silent	A2
+callejón		noun	m	alley	B1				Callejón sin salida: dead end.
+calma		noun	f	calm	B1				¡Calma!: Calm down!
+calmante		noun	m	painkiller; sedative	B1
+caluroso		adj		hot (weather, day)	A2
+calvo		adj		bald	B1				Mexico also says pelón.
+calzada		noun	f	avenue; causeway	B1		x		Calzada de Tlalpan: a major avenue in Mexico City.
+calzado		noun	m	footwear	B1
+calzón		noun	m	underpants; panties	B1		x		Often plural: los calzones.
+calzoncillos		noun	mpl	(men's) underpants; boxers	B1
+camarero		noun	mf	waiter (Spain)	A2				In Mexico: el mesero, la mesera.
+camello		noun	m	camel	B1
+camellón		noun	m	median strip	B2		x
+caminata		noun	f	walk; hike	B1
+camino		noun	m	road; path; way	A2				En el camino: on the way.
+camionero		noun	mf	truck driver	B1
+camiseta		noun	f	undershirt; T-shirt	B1				In Mexico a T-shirt is usually una playera.
+camisón		noun	m	nightgown	B1
+camote		noun	m	sweet potato	B1		x
+campamento		noun	m	camp	B1
+campana		noun	f	bell	B1
+campaña		noun	f	campaign	B1
+campechano		adj		mixed (taco); easygoing	B2		x		Un taco campechano: with two kinds of meat.
+campeón		noun	mf	champion	B1
+campeonato		noun	m	championship	B1
+campesino		noun	mf	farmer; peasant	B1
+caña		noun	f	cane; sugarcane	B1				Caña de azúcar: sugarcane.
+canadiense		adj		Canadian	A2
+canal		noun	m	channel; canal	B1
+canasta		noun	f	basket	B1
+cancelar		verb		to cancel	A2
+cáncer		noun	m	cancer	B1
+cancha		noun	f	court; field (sports)	B1
+candado		noun	m	padlock	B1
+candidato		noun	mf	candidate	B1
+canela		noun	f	cinnamon	A2			pl=-
+cangrejo		noun	m	crab	B1
+canica		noun	f	marble (toy)	B1
+canijo		adj		tough; tricky	B2	informal	x		¡Está canijo!: It's tough!
+cañón		noun	m	canyon; cannon	B1
+cansancio		noun	m	tiredness	B1			pl=-
+cantinflear		verb		to talk a lot and say nothing	B2	informal	x		From the comedian Cantinflas.
+capa		noun	f	layer; cape	B1
+capacidad		noun	f	capacity; ability	B1
+capacitación		noun	f	training	B2
+capaz		adj		capable; able	B1		x		In Mexico capaz que also means maybe: capaz que llueve.
+capilla		noun	f	chapel	B1
+capirotada		noun	f	bread pudding (eaten in Lent)	B2		x
+capital		noun	f	capital (city)	A2				El capital: capital (money).
+capitán		noun	mf	captain	B1
+capítulo		noun	m	chapter; episode	B1
+capucha		noun	f	hood	B1
+capuchino		noun	m	cappuccino	A2
+cara		noun	f	face	A2				Also the feminine of caro (expensive).
+caracol		noun	m	snail; seashell	B1
+carácter		noun	m	character; temper	B1				Tener mal carácter: to be bad-tempered.
+característica		noun	f	feature; characteristic	B1
+carajo		interj		damn!	B2	vulgar
+caramba		interj		wow!; good grief!	B1
+caramelo		noun	m	candy; caramel	A2				Mexico usually says dulce for a candy.
+caray		interj		gosh!; darn!	B1
+carbón		noun	m	charcoal; coal	B1
+cárcel		noun	f	prison; jail	B1
+carga		noun	f	load; cargo; charge	B1
+cargo		noun	m	position; charge; responsibility	B2				Estar a cargo de: to be in charge of.
+cariñoso		adj		affectionate; loving	A2
+carnaval		noun	m	carnival	B1
+carné		noun	m	ID card; license (Spain)	B1				In Mexico: la credencial; a driver's license is la licencia (de manejo).
+carpeta		noun	f	folder	B1				False friend: a carpet is una alfombra.
+carpintero		noun	mf	carpenter	B1
+carril		noun	m	lane	B1
+carrito		noun	m	shopping cart; toy car	A2
+cartel		noun	m	poster; cartel	B1
+cartero		noun	mf	mail carrier	A2
+cartón		noun	m	cardboard; carton	B1				Un cartón de cervezas: a case of beer.
+casa de campaña		noun	f	tent	B1		x
+casero		adj		homemade	A2				Also a noun: el casero, la casera, the landlord or landlady.
+casillero		noun	m	locker	B1
+caspa		noun	f	dandruff	B1			pl=-
+castaño		adj		brown (hair, eyes); chestnut	B1
+castigar		verb		to punish	B1
+castigo		noun	m	punishment	B1				Estar castigado: to be grounded.
+castillo		noun	m	castle	B1
+casual		adj		chance; accidental; casual (clothes)	B2				Un encuentro casual: a chance meeting. Ropa casual: casual clothes.
+casualidad		noun	f	coincidence; chance	B1				Por casualidad: by chance. ¡Qué casualidad!: What a coincidence!
+catarina		noun	f	ladybug	B1		x
+catarro		noun	m	cold (illness)	B1				Mexico also says gripa.
+categoría		noun	f	category; class	B1
+católico		adj		Catholic	B1
+catrina		noun	f	Catrina (skeleton lady figure)	B1		x		The elegant skeleton of Day of the Dead.
+causa		noun	f	cause	B1				A causa de: because of.
+causar		verb		to cause	B1
+cavar		verb		to dig	B1
+cazar		verb		to hunt	B1
+cazuela		noun	f	clay pot; casserole	B1
+cebollín		noun	m	chives; green onion	B1		x
+cebra		noun	f	zebra	B1				Paso de cebra: crosswalk.
+cecina		noun	f	thin salted beef	B2		x
+ceja		noun	f	eyebrow	B1
+celeste		adj		sky blue; light blue	B1
+celos		noun	mpl	jealousy	B1				Tener celos: to be jealous.
+celoso		adj		jealous	B1
+cementerio		noun	m	cemetery	B1				Mexico usually says panteón.
+cemento		noun	m	cement	B1
+cenicero		noun	m	ashtray	B1
+ceniza		noun	f	ash	B1				Miércoles de Ceniza: Ash Wednesday.
+cenote		noun	m	cenote (natural sinkhole pool)	B1		x		Found in the Yucatán Peninsula.
+centímetro		noun	m	centimeter	A2
+central		adj		central; main	B1
+centro comercial		noun	m	shopping mall	A2			pl=centros comerciales
+cepillarse		verb		to brush (teeth, hair)	A2
+cera		noun	f	wax	B1
+cerámica		noun	f	ceramics; pottery	B1
+cerca	cerca#fence	noun	f	fence	B1				Also an adverb: cerca, near.
+cercano		adj		nearby; close	B1
+cerdo		noun	m	pig; pork	A2				Mexico usually says puerco for pork; also cochino or marrano for the animal.
+cerebro		noun	m	brain	B1
+ceremonia		noun	f	ceremony	B1
+cereza		noun	f	cherry	A2
+cerilla		noun	f	match (for lighting) (Spain)	B1				In Mexico: el cerillo.
+cerradura		noun	f	lock	B1				Mexico usually says chapa.
+certificado		noun	m	certificate	B1
+cesárea		noun	f	C-section	B2
+césped		noun	m	lawn; grass	B1				Mexico usually says pasto.
+ceviche		noun	m	ceviche (raw fish in lime)	B1
+chabacano		noun	m	apricot	B1		x		Elsewhere chabacano means tacky, and an apricot is an albaricoque.
+chaleco		noun	m	vest	B1
+chalupa		noun	f	chalupa (small fried tortilla with toppings)	B1		x
+chambear		verb		to work	B2	informal	x		From chamba. Standard: trabajar.
+chamoy		noun	m	chamoy (sweet, sour and spicy sauce)	B1		x	pl=-
+champiñón		noun	m	mushroom (button)	B1				Hongo is the general word.
+champú		noun	m	shampoo	A2			pl=champús	Often written shampoo in Mexico.
+champurrado		noun	m	chocolate atole	B1		x
+chamuco		noun	m	the devil	B2	informal	x
+chándal		noun	m	tracksuit (Spain)	B1				In Mexico: los pants.
+changarro		noun	m	small shop; stall	B2	informal	x
+chango		noun	m	monkey	B1		x		Mono is standard.
+chapopote		noun	m	tar; asphalt	B2		x
+chaqueta		noun	f	jacket (in Spain)	B1				Jacket in Spain; in Mexico say chamarra (chaqueta is vulgar slang here).
+charco		noun	m	puddle	B1
+charla		noun	f	talk; chat	B1
+charlar		verb		to chat	B1				Mexico usually says platicar.
+charola		noun	f	tray	B1		x
+charro		noun	m	charro (Mexican horseman)	B1		x		Traje de charro: the outfit mariachis wear.
+chatarra		noun	f	scrap metal; junk	B1				Comida chatarra: junk food.
+chaval		noun	mf	kid; lad (Spain)	B1	informal		f=chavala	In Mexico: el chavo, el chamaco.
+chayote		noun	m	chayote (green squash)	B1		x
+chef		noun	mf	chef	A2			pl=chefs
+cheque		noun	m	check (bank)	B1
+cheve		noun	f	beer	B2	informal	x		Also chela. Standard: cerveza.
+chía		noun	f	chia (seeds)	B1		x		Agua de chía: a lime drink with chia seeds.
+chicano		adj		Mexican-American	B1		x
+chícharo		noun	m	pea	A2		x		Guisante elsewhere.
+chicharrón		noun	m	pork rind; crackling	B1
+chiflado		adj		spoiled (child); crazy	B2	informal
+chiflar		verb		to whistle	B1		x
+chileno		adj		Chilean	A2
+chillar		verb		to cry; to scream	B1	informal	x		Standard: llorar.
+chillón		adj		crybaby; loud, garish (color)	B1	informal
+chimenea		noun	f	fireplace; chimney	B1
+chimuelo		adj		toothless; missing teeth	B2	informal	x
+chin		interj		darn!; shoot!	B1	informal	x		A mild, polite substitute for a swear word.
+chinampa		noun	f	chinampa (floating garden)	B2		x		Still farmed in Xochimilco.
+chinche		noun	f	bedbug; thumbtack	B1		x
+chingadera		noun	f	crap; damn thing	B2	vulgar	x
+chingar		verb		to screw (up); to bother; to steal	B2	vulgar	x		Very common and very vulgar. ¡No chingues!: no way! (vulgar).
+chingo		noun	m	a ton (un chingo de)	B2	vulgar	x		Neutral: muchísimo, un montón.
+chingón		adj		awesome; great at something	B2	vulgar	x		Neutral: muy bueno, increíble.
+chipotle		noun	m	chipotle (smoked jalapeño)	A2		x
+chiquear		verb		to pamper; to spoil	B2		x
+chisme		noun	m	gossip; (informal) thingamajig	B1				¿Me cuentas el chisme?: Tell me the gossip.
+chismoso		adj		gossipy; (as a noun) gossip	B1
+chispa		noun	f	spark	B1
+chivo		noun	m	goat	B1
+chocante		adj		annoying; unpleasant (person)	B2	informal	x
+chongo		noun	m	bun (hairstyle)	B1		x
+choque		noun	m	crash; collision	B1
+chorro		noun	m	stream; jet	B1				Informal: un chorro de: loads of.
+chulada		noun	f	lovely thing	B2	informal	x		¡Qué chulada!: How lovely!
+chuleta		noun	f	chop (pork chop)	B1
+chulo		adj		cute; pretty; lovely	B1		x		In Spain chulo means cocky; in Mexico it is a compliment.
+chupar		verb		to suck	B1				Informal (Mexico): to drink alcohol.
+chupón		noun	m	pacifier; hickey	B1		x
+cicatriz		noun	f	scar	B1
+ciclón		noun	m	cyclone	B2
+ciego		adj		blind	B1
+ciencia		noun	f	science	A2
+científico		noun	mf	scientist	B1				Also an adjective: scientific.
+cierre		noun	m	zipper; closing	B1		x		Súbete el cierre: zip up.
+cinta		noun	f	tape; ribbon	B1				Cinta adhesiva: adhesive tape.
+cintura		noun	f	waist	B1
+circo		noun	m	circus	B1
+círculo		noun	m	circle	B1
+ciruela		noun	f	plum	B1				Ciruela pasa: prune.
+cirugía		noun	f	surgery	B1
+cirujano		noun	mf	surgeon	B1
+cisterna		noun	f	water tank (underground)	B2		x		Many houses store water in a cisterna and a tinaco on the roof.
+ciudadano		noun	mf	citizen	B1
+civil		adj		civil; civilian	B1				Casarse por el civil: to have a civil wedding.
+clásico		adj		classic; classical	B1
+clavado		noun	m	dive (into water)	B1		x
+clavar		verb		to nail; to stick (in)	B1
+clavo		noun	m	nail; clove	B1
+claxon		noun	m	(car) horn	B1		x		Tocar el claxon: to honk.
+clic		noun	m	click	A2			pl=clics	Dar clic: to click.
+club		noun	m	club	A2
+cobarde		adj		cowardly; coward	B1
+cocer		verb		to cook; to boil	B1				Cocer los frijoles: to cook the beans.
+cochinita pibil		noun	f	slow-roasted pork in achiote	B1		x	pl=-	A dish from Yucatán.
+cochino		adj		dirty; filthy	B1		x		Also a noun: el cochino, pig.
+cocido		adj		cooked; boiled	B1
+cocodrilo		noun	m	crocodile	B1
+coctel		noun	m	cocktail; seafood cocktail	B1		x		Coctel de camarón: shrimp cocktail.
+código		noun	m	code	B1				Código postal: zip code.
+coger		verb		to have sex (Mexico); to take, to catch (Spain)	B2	vulgar	x		Vulgar in Mexico; say tomar or agarrar.
+cohete		noun	m	rocket; firework	B1
+coincidencia		noun	f	coincidence	B1
+cojín		noun	m	cushion	B1
+col		noun	f	cabbage	B1				Also repollo.
+coladera		noun	f	drain; sewer grate; strainer	B1		x
+colador		noun	m	strainer; colander	B1
+colcha		noun	f	bedspread	B1
+colchón		noun	m	mattress	B1
+colección		noun	f	collection	B1
+coleccionar		verb		to collect	B1
+colectivo		noun	m	shared minibus	B1		x		Called combi, pesero or micro in other cities.
+colega		noun	mf	colleague	B1
+colegiatura		noun	f	tuition (fee)	B1		x
+colibrí		noun	m	hummingbird	B1
+cólico		noun	m	cramps; colic	B1				Cólicos: menstrual cramps.
+coliflor		noun	f	cauliflower	B1
+colina		noun	f	hill	B1
+collar		noun	m	necklace; (dog) collar	B1
+colmo		noun	m	the last straw; the limit	B2				¡Es el colmo!: That's the last straw!
+colocar		verb		to place; to put	B1
+colombiano		adj		Colombian	A2
+colorado		adj		red (face)	B1		x		Ponerse colorado: to blush.
+columna		noun	f	column; spine	B1
+columpio		noun	m	swing (in a playground)	B1
+combinación		noun	f	combination	B1
+combinar		verb		to combine; to match	B1
+comedia		noun	f	comedy	B1
+comediante		noun	mf	comedian	B1
+comentar		verb		to mention; to comment	B1
+comentario		noun	m	comment; remark	B1
+comercial		noun	m	commercial; TV ad	B1		x		Also an adjective: commercial.
+comerciante		noun	mf	merchant; shopkeeper	B1
+comercio		noun	m	trade; business; store	B1
+cometer		verb		to commit (a crime, a mistake)	B1
+comezón		noun	f	itch	B1		x		Me da comezón: it makes me itch.
+cómico		adj		funny; comic	B1
+comino		noun	m	cumin	B2				Me vale un comino: I couldn't care less.
+cómoda		noun	f	chest of drawers; dresser	B1
+comparar		verb		to compare	B1
+competencia		noun	f	competition; contest	B1
+competir		verb		to compete	B1
+complejo		adj		complex; complicated	B1				Also a noun: el complejo, complex.
+completar		verb		to complete	A2
+componer		verb		to fix; to repair; to compose	B1		x		In Mexico componer is the everyday word for fixing a broken thing.
+comportamiento		noun	m	behavior	B1
+comportarse		verb		to behave	B1
+compra		noun	f	purchase	A2				Ir de compras: to go shopping.
+comprender		verb		to understand	A2
+comprobante		noun	m	receipt; proof	B1		x		Comprobante de domicilio: proof of address.
+comprobar		verb		to check; to prove	B1
+comprometerse		verb		to commit oneself; to get engaged	B1
+compromiso		noun	m	commitment; engagement; prior plans	B1				False friend: a compromise is un acuerdo or un término medio.
+computación		noun	f	computing; computer science	B1		x	pl=-
+común		adj		common; ordinary	B1
+comunicación		noun	f	communication	B1
+comunidad		noun	f	community	B1
+concentrarse		verb		to concentrate	B1
+conciencia		noun	f	conscience; awareness	B1
+concreto		adj		specific; concrete	B1				El concreto: concrete (for building).
+concuño		noun	mf	husband of your spouse's sister	B2		x		Concuña: wife of your spouse's brother.
+concurso		noun	m	contest; competition	B1
+condición		noun	f	condition	B1
+condón		noun	m	condom	B1
+conducir		verb		to drive; to lead	B1				Mexico says manejar for driving a car.
+conductor		noun	mf	driver; (TV) host	B1
+conectar		verb		to connect	B1
+conejo		noun	m	rabbit	A2
+conexión		noun	f	connection	B1
+conferencia		noun	f	lecture; conference	B1
+confesar		verb		to confess	B1
+confirmar		verb		to confirm	B1
+confundido		adj		confused	B1
+confundir		verb		to confuse; to mix up	B1
+congelado		adj		frozen	B1
+congelador		noun	m	freezer	B1
+congelar		verb		to freeze	B1
+conjugación		noun	f	conjugation	B1
+conjunto		noun	m	set; group; outfit	B1
+conocido		noun	mf	acquaintance	B1				Also an adjective: well-known.
+conocimiento		noun	m	knowledge	B1
+consciente		adj		aware; conscious	B1
+consecuencia		noun	f	consequence	B1
+consentido		adj		spoiled; favorite (child)	B1		x		El consentido de la abuela: grandma's favorite.
+consentir		verb		to spoil (a child); to allow	B1		x
+conservar		verb		to keep; to preserve	B1
+considerar		verb		to consider	B1
+consomé		noun	m	clear broth; consommé	B1		x		Consomé de pollo; consomé de barbacoa.
+consonante		noun	f	consonant	B1
+constancia		noun	f	certificate; proof (official letter)	B2		x		Constancia de estudios: proof of enrollment.
+constipado		adj		stuffy (nose); with a cold	B2				False friend: constipated is estreñido.
+construcción		noun	f	construction; building site	B1
+consuegro		noun	mf	your child's father-in-law	B2
+consulado		noun	m	consulate	B1
+consultar		verb		to consult; to look up	B1
+consumir		verb		to consume	B1
+contagiar		verb		to infect; to pass on (an illness)	B1
+contaminación		noun	f	pollution	B1			pl=-
+contener		verb		to contain; to hold back	B2
+contrario		adj		opposite; contrary	B1				Al contrario: on the contrary.
+contratar		verb		to hire	B1
+controlar		verb		to control	B1
+convenir		verb		to suit; to be a good idea	B2				Te conviene: it's in your interest.
+conversar		verb		to talk; to chat	B1				Mexico usually says platicar.
+convertir		verb		to turn into; to convert	B1				Convertirse en: to become.
+convivio		noun	m	get-together; party	B1		x		Convivio de fin de año: end-of-year party.
+convivir		verb		to live together; to spend time together	B1
+cooperar		verb		to cooperate; to chip in	B1		x		¿Cooperamos para el pastel?: Shall we chip in for the cake?
+copa		noun	f	wine glass; cup (trophy)	A2
+copal		noun	m	copal (resin incense)	B2		x
+copiar		verb		to copy	A2
+coqueto		adj		flirtatious	B1
+corbata		noun	f	tie	A2
+corcholata		noun	f	bottle cap	B1		x
+cordero		noun	m	lamb	B1
+coreano		adj		Korean	A2
+coro		noun	m	choir; chorus	B1
+corona		noun	f	crown; wreath	B1
+correa		noun	f	leash; strap	B1
+corregir		verb		to correct	A2
+corrido		noun	m	corrido (narrative ballad)	B1		x
+corriente		noun	f	current; electricity	B1				Also an adjective: ordinary.
+corriente	corriente#tacky	adj		tacky; cheap; vulgar	B2	informal	x		¡Qué corriente!: How tacky!
+corrupto		adj		corrupt	B1
+cortada		noun	f	cut (on the skin)	B1		x
+cortar		verb		to cut; to break up (with someone)	A2				Cortar con alguien: to break up with someone.
+corte		noun	m	cut; haircut	A2				La corte: the court.
+cortés		adj		polite; courteous	B1			f=cortés
+cosecha		noun	f	harvest	B1
+coser		verb		to sew	B1
+cosquillas		noun	fpl	tickling	B1				Hacer cosquillas: to tickle. Tengo cosquillas: I'm ticklish.
+costa		noun	f	coast	A2
+costilla		noun	f	rib	B1
+costo		noun	m	cost	B1
+costoso		adj		expensive; costly	B1
+costumbre		noun	f	custom; habit	B1				De costumbre: as usual.
+cotorrear		verb		to chat; to joke around	B2	informal	x
+cotorro		adj		fun; amusing	B2	informal	x
+coyote		noun	m	coyote; people smuggler; fixer	B1		x		A coyote also gets paperwork done for a fee.
+crayola		noun	f	crayon	A2		x
+crear		verb		to create	B1
+creativo		adj		creative	B1
+creído		adj		conceited; stuck-up	B1
+cremallera		noun	f	zipper (Spain)	B1				In Mexico: el cierre.
+crepa		noun	f	crepe	B1		x
+criar		verb		to raise; to bring up	B1
+crimen		noun	m	crime; murder	B1
+criminal		noun	mf	criminal	B1
+crisis		noun	f	crisis	B1
+cristal		noun	m	glass; crystal	B1				For window glass Mexico usually says vidrio.
+cristiano		adj		Christian	B1
+crítica		noun	f	criticism; review	B1
+criticar		verb		to criticize	B1
+cruce		noun	m	crossing; intersection	B1
+crucigrama		noun	m	crossword	B1
+cruda		noun	f	hangover	B1	informal	x		Standard: la resaca.
+crudo		adj		raw; uncooked	A2
+cruel		adj		cruel	B1
+cruz		noun	f	cross	B1				Cruz Roja: Red Cross.
+cuadrado		adj		square	B1
+cuadro		noun	m	painting; picture; square	B1				De cuadros: checked, plaid.
+cual		pron		which (el cual, lo cual)	B1			pl=cuales	Lo cual: which (referring to a whole idea).
+cuanto		adv		as much as	B1				En cuanto: as soon as. Cuanto antes: as soon as possible.
+cuarentena		noun	f	quarantine	B1
+cuarto	cuarto#fourth	adj		fourth	A2				Also a noun: room; quarter.
+cubano		adj		Cuban	A2
+cubierto		noun	m	place setting; piece of cutlery	B1				Los cubiertos: cutlery.
+cubo		noun	m	cube; bucket (Spain)	B1				Cubo de hielo: ice cube. For a bucket Mexico says cubeta.
+cubrebocas		noun	m	face mask	A2		x
+cubrir		verb		to cover	B1
+cucharada		noun	f	spoonful; tablespoon	B1
+cucharón		noun	m	ladle	B1
+cuernito		noun	m	croissant	B1		x
+cuero		noun	m	leather	B1				Informal (Mexico): a very attractive person.
+cuervo		noun	m	crow; raven	B1
+cuestión		noun	f	matter; issue	B1				Es cuestión de tiempo: it's a matter of time.
+cuete		noun	m	firecracker; drunkenness	B2	informal	x		Andar cuete: to be drunk.
+cueva		noun	f	cave	B1
+cuico		noun	mf	cop	B2	informal	x
+cuidadoso		adj		careful	B1
+culebra		noun	f	snake	B1				Mexico also says víbora.
+culero		adj		mean; nasty; (as a noun) jerk	B2	vulgar	x
+culpable		adj		guilty	B1
+culpar		verb		to blame	B1
+cultivar		verb		to grow; to farm	B1
+cumbia		noun	f	cumbia (music and dance)	B1
+cuna		noun	f	crib; cradle	B1
+cuota		noun	f	toll; fee	B1		x		Carretera de cuota: toll road; la libre: the free road.
+cura		noun	m	priest	B1				A priest is usually addressed as padre.
+cura	cura#cure	noun	f	cure	B1				Also la curación.
+curandero		noun	mf	folk healer	B2		x
+curioso		adj		curious; odd	B1
+currar		verb		to work (Spain)	B2	informal			In Mexico: trabajar; informal chambear.
+currículum		noun	m	résumé; CV	B1			pl=currículums
+cursi		adj		corny; cheesy	B1
+curva		noun	f	curve; bend	B1

@@ -1,0 +1,167 @@
+# Course plan for Unit 2. Format: content-plan/README.md. Lesson writers copy
+# `new` and `conjugate` verbatim into units/02-quien-eres/lesson-N.yaml.
+unit: 2
+dir: units/02-quien-eres
+title: "¿Quién eres?"
+title_en: "Who are you?"
+level: A1
+goals:
+  - "Say what you do and where you work or study, with the right article for each noun."
+  - "Count to thirty, make nouns plural, and give your phone number."
+  - "Say where you are and how you feel with estar, and choose between ser and estar."
+grammar_scope: >-
+  Present tense of ser (Unit 1), hablar, trabajar, estudiar, mandar, and estar from
+  lesson 3; definite and indefinite articles; plurals; numbers 0-30. Not yet: tener,
+  hay, ir, gustar, querer, any past tense.
+lexicon: content/lexicon/u02.tsv
+supporting: [que, o, porque, por qué, cuál, cuándo, cuántos, del, al, las, unas, ya, ahora,
+  ahí, allá, pues, nada, nombre, dedicarse, dieciséis, diecisiete, dieciocho, diecinueve,
+  veintiuno, veintidós, veintitrés, veinticuatro, veinticinco, veintiséis, veintisiete,
+  veintiocho, veintinueve, jefe]
+names: [Mariana, Coyoacán, WhatsApp]
+lessons:
+  - id: u02.l01
+    number: 1
+    title: "¿A qué te dedicas?"
+    title_en: "What do you do?"
+    level: A1
+    grammar:
+      focus: "Noun gender and the articles el, la, un, una; jobs after ser take no article."
+      can_do: "Say what you and other people do and where you work or study, with el, la, un or una before each noun."
+    new: [estudiante, maestro, ingeniero, compañero, amigo, escuela, oficina, trabajo, día, trabajar, estudiar, hablar]
+    rows_in_core: [maestro, amigo, día, hablar]
+    conjugate: ["trabajar:pres", "estudiar:pres", "hablar:pres"]
+    dialogue:
+      title: "En el intercambio"
+      title_en: "At the language exchange"
+      where: "A café in Coyoacán that hosts an evening Spanish-English exchange."
+      who: "Tom (American, studies Spanish at a school downtown) and Mariana (Mexican engineer, works in an office)."
+      address: "tú: two people in their twenties at a casual event; Mexicans of that age switch to tú at once."
+      happens: "They greet and give names (Unit 1). Mariana asks ¿A qué te dedicas? Tom is a student at a Spanish school; Mariana is an engineer and works in an office with a compañero from Monterrey. She asks whether he speaks English at work; he says he speaks a little Spanish. They say hasta luego."
+    notes:
+      - kind: grammar
+        title: "Masculine and feminine nouns"
+        covers: "Every noun is masculine or feminine. -o is usually masculine and -a feminine; learn the rest with the article (el café, la llave, la calle, el hotel). El día is masculine; el agua is feminine but takes el."
+      - kind: grammar
+        title: "Jobs: no article"
+        covers: "Soy maestra, not una maestra. Feminine forms maestra, ingeniera, compañera, amiga; estudiante for both (el or la estudiante)."
+      - kind: culture
+        title: "Titles at work"
+        covers: "Mexicans address professionals by title: licenciado/licenciada (anyone with a degree, written Lic.), ingeniero (Ing.), maestro, doctor. ¿A qué te dedicas? / ¿A qué se dedica? is the polite way to ask what someone does."
+    confusables: []
+    cautions:
+      - "trabajo is a noun headword: '(Yo) trabajo en una oficina' must be written [Trabajo|trabajar], or the verb links to the noun (the compiler warns)."
+      - "No article after ser with a job: 'Soy ingeniera'. Do not add an adjective to the job (bueno is u03.l02)."
+      - "día is masculine though it ends in -a: give it sentences with el día / un día. buenos días is a separate multi-word lemma and does not count as an example of día."
+      - "estar comes in lesson 3: no estar in sentences yet. Unit 1 formulas (¿Cómo estás?) are fine in the dialogue."
+      - "español and inglés are core rows that no lesson introduces: use them freely (Hablo español)."
+      - "Numbers are lesson 2: no counting here."
+      - "Informal chamba (job) is u12; do not use it."
+
+  - id: u02.l02
+    number: 2
+    title: "Uno, dos, tres"
+    title_en: "One, two, three"
+    level: A1
+    grammar:
+      focus: "Plural nouns (-s, -es, z to ces, accents that come and go) and los, las, unos, unas; numbers 0-10."
+      can_do: "Count to ten, ask how many with ¿cuántos? and ¿cuántas?, and order or talk about several things."
+    new: [cero, uno, dos, tres, cuatro, cinco, seis, siete, ocho, nueve, diez, persona]
+    rows_in_core: [dos, tres]
+    conjugate: []
+    dialogue:
+      title: "Una mesa para seis"
+      title_en: "A table for six"
+      where: "A busy fonda at lunchtime."
+      who: "Toño (the waiter from the Ana story) and Sofía, arriving with friends."
+      address: "usted both ways: waiter and customer."
+      happens: "Toño asks ¿Cuántas personas? Sofía counts her friends: cinco, no, seis. They get a table. She orders by numbers: dos cafés, tres aguas de limón y un jugo de naranja (naranja is core, not introduced: fine). Toño repeats the order with por favor and un momentito."
+    notes:
+      - kind: grammar
+        title: "Making nouns plural"
+        covers: "Vowel + s (casa, casas; café, cafés); consonant + es (hotel, hoteles); z becomes c (luz, luces); some accents drop or appear (limón, limones; joven, jóvenes). The articles: los, las, unos, unas."
+      - kind: grammar
+        title: "Numbers 0-10"
+        covers: "cero to diez with respellings. Uno becomes un or una before a noun (un taco, una persona). ¿Cuántos tacos? ¿Cuántas personas? agree with the noun."
+    confusables: []
+    cautions:
+      - "Spell every number out; digits are a compiler error."
+      - "uno is the number said alone ('¿Cuántos? —Uno.'). Before a noun the word is the article un/una (core det rows): do not target uno there."
+      - "persona is always feminine: 'una persona', even for a man."
+      - "No hay (u04.l03) and no tener (u04.l01): count with ser ('Somos cinco', 'Son tres tacos') or with the noun alone ('Dos cafés, por favor')."
+      - "agua: 'dos aguas' is fine; avoid 'una agua' (it is un agua)."
+      - "A cloze on a plural noun offers plural nouns of the same gender: give context (dos tacos, tres cervezas) so only one fits."
+
+  - id: u02.l03
+    number: 3
+    title: "¿Cómo estás?"
+    title_en: "How are you?"
+    level: A1
+    grammar:
+      focus: "Estar for location and for how someone is; ser versus estar."
+      can_do: "Say where people and things are and how someone feels today, and choose between ser and estar."
+    new: [estar, hoy, cansado, contento, feliz, triste, enojado, enfermo, ocupado, aburrido, listo, mal]
+    rows_in_core: [estar, feliz]
+    conjugate: ["estar:pres"]
+    dialogue:
+      title: "¿Dónde estás?"
+      title_en: "Where are you?"
+      where: "A phone call in the afternoon."
+      who: "Sofía calls Tom."
+      address: "tú: friends."
+      happens: "Tom answers ¿Bueno? Sofía asks ¿Dónde estás? He is at home, tired and a little sick. She is at the office and very busy; her boss is angry today. They agree that mañana is better. She says she is sad, then jokes that she is bored at work."
+    notes:
+      - kind: grammar
+        title: "Estar: where and how"
+        covers: "estoy, estás, está, estamos, están. Location: Estoy en la oficina. How you are now: Estoy cansada."
+      - kind: grammar
+        title: "Ser or estar?"
+        covers: "Ser: who or what someone is, origin, job (Soy maestra, Es de Puebla). Estar: where and how right now (Estoy en Puebla, Estoy cansada). Aburrido changes meaning: estoy aburrido (bored), es aburrido (boring)."
+      - kind: usage
+        title: "How are you, Mexican style"
+        covers: "Answers to ¿Cómo estás?: bien, muy bien, más o menos, cansado, mal. Mexico says enojado (enfadado sounds Spanish). Estoy feliz and soy feliz are both common."
+    confusables: ["ser / estar"]
+    cautions:
+      - "Adjectives agree (cansada, cansados) before the formal lesson on agreement (u04.l04): add a sentence note the first time a feminine or plural form appears."
+      - "listo only with estar (ready); the ser sense (clever) is not taught."
+      - "mal is an adverb row; malo (supporting, u03.tsv) has the apocope mal, so 'mal' always links to the adverb. Do not write 'un mal día'."
+      - "Never estar with jobs or origin; never ser with location of people or things. Events (la fiesta es en...) take ser: leave that out at this level."
+      - "hoy is introduced here: no 'hoy' in lessons 1-2."
+      - "The ser / estar confusable set makes a cloze on está also offer es: the sentence must rule ser out."
+
+  - id: u02.l04
+    number: 4
+    title: "¿Cuál es tu número?"
+    title_en: "What's your number?"
+    level: A1
+    grammar:
+      focus: "Numbers 11-30 (once to quince, the dieci- and veinti- patterns, treinta y uno); ¿Cuál es...?"
+      can_do: "Count to thirty, give and ask for a phone number, and talk about phones, computers and messages."
+    new: [once, doce, trece, catorce, quince, veinte, treinta, número, celular, computadora, mensaje, mandar]
+    rows_in_core: []
+    conjugate: ["mandar:pres"]
+    dialogue:
+      title: "En la oficina"
+      title_en: "At the office"
+      where: "Mariana's office in Mexico City, on a new coworker's first day."
+      who: "Mariana and Diego (the new coworker)."
+      address: "tú: young coworkers in an office use tú with each other (the boss, not on stage, gets usted)."
+      happens: "Diego asks ¿Cuál es tu número de celular? Mariana dictates it digit by digit; he repeats one wrong (¿trece? —No, tres). She says Te mando un mensaje por WhatsApp. He asks which computer is his; she says la computadora número doce. They say hasta mañana."
+    notes:
+      - kind: grammar
+        title: "Numbers 11-30"
+        covers: "once to quince; dieciséis to diecinueve written as one word; veinte, then veintiuno to veintinueve as one word (veintidós, veintitrés, veintiséis carry accents); treinta, then treinta y uno as three words. Veintiún before a masculine noun: veintiún pesos."
+      - kind: usage
+        title: "Phone numbers"
+        covers: "Mexican numbers have ten digits. People read them digit by digit or in pairs (cincuenta y cinco comes in Unit 3). Ask ¿Cuál es tu número?, not ¿Qué es...?"
+      - kind: culture
+        title: "Mexico runs on WhatsApp"
+        covers: "Shops, doctors and landlords answer on WhatsApp. Mandar is the everyday verb: Te mando un mensaje. Celular (often el cel) and computadora are the Mexican words."
+    confusables: []
+    cautions:
+      - "dieciséis..diecinueve and veintiuno..veintinueve are supporting rows (no vocabulary items): use them in sentences and the dialogue; every row needs an example sentence before integration."
+      - "A phone number is a list of spelled-out numbers; keep such sentences under the 132-character budget."
+      - "mandar makes '¿Mande?' (Unit 1) warn: mande is also the usted form of mandar. Write ¿[Mande|mande]? whenever you use it."
+      - "WhatsApp is a name row: link it, never target it."
+      - "celular/computadora: móvil and ordenador fail the Peninsular lint; they exist only as accepted typed answers."
+      - "¿Cuál? not ¿Qué? before ser when asking for one item (number, name, address)."

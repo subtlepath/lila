@@ -1,0 +1,44 @@
+title: La cuenta, por favor
+title_en: The check, please
+level: A1
+kind: reading
+lesson: u03.l04
+reviewer_notes:
+  - "Price: ciento sesenta pesos for two orders of tacos and two aguas at a fonda. Realistic?"
+  - "Toño says ¡Gracias, señoras! to Ana (young) and doña Laura (older). Natural, or would he say something else?"
+  - "A fonda that takes no cards, and doña Laura offering to pay: plausible?"
+lines:
+  - es: "Ana y doña Laura comen en la fonda."
+    en: "Ana and doña Laura are having lunch at the fonda."
+  - es: "Toño, el mesero, trae dos órdenes de tacos y dos aguas de jamaica."
+    en: "Toño, the waiter, brings two orders of tacos and two hibiscus waters."
+  - es: "A doña Laura no le gusta el picante, pero a Ana le encanta la salsa roja."
+    en: "Doña Laura doesn't like spicy food, but Ana loves the red salsa."
+  - es: "Doña Laura no puede comer más: “Toño, ¿me trae dos tacos para llevar?”"
+    en: "Doña Laura can't eat any more: “Toño, could you bring me two tacos to go?”"
+    paragraph: true
+  - es: "La cuenta es de ciento sesenta pesos."
+    en: "The check comes to a hundred and sixty pesos."
+  - es: "Ana quiere pagar con tarjeta, pero la fonda no acepta tarjeta."
+    en: "Ana wants to pay by card, but the fonda doesn't take cards."
+  - es: "Doña Laura: “Ay, Ana, si no aceptan tarjeta, yo pago.”"
+    en: "Doña Laura: “Oh, Ana, if they don't take cards, I'll pay.”"
+    paragraph: true
+  - es: "Doña Laura paga la cuenta, y Ana paga la propina: veinte pesos."
+    en: "Doña Laura pays the check, and Ana pays the tip: twenty pesos."
+  - es: "Toño está contento: “¡Gracias, señoras! ¡Hasta mañana!”"
+    en: "Toño is happy: “Thank you, ladies! See you tomorrow!”"
+questions:
+  - q: "¿Cuánto es la cuenta?"
+    options: ["Ciento sesenta pesos", "Ciento setenta pesos", "Sesenta pesos"]
+    answer: 0
+  - q: "¿Por qué no paga Ana la cuenta?"
+    options: ["La fonda no acepta tarjeta", "Ana no quiere pagar", "Toño no está"]
+    answer: 0
+  - q: "¿Quién paga la propina?"
+    options: ["Ana", "Doña Laura", "Toño"]
+    answer: 0
+  - q: "What does doña Laura take home?"
+    lang: en
+    options: ["Two tacos", "A glass of water", "The salsa"]
+    answer: 0

@@ -1,0 +1,53 @@
+# Strikes generated into src/fonts/ by tools/gen-fonts.sh (PLAN.md section 5.2).
+#
+#   NAME                BDF (lila's x11/)         OPTIONS
+#   NAME                outline/FONT              --px PX --raster RASTER
+#
+# BDF names resolve in x11/font-crosspoint-100dpi/ (the 16 and 21 pt strikes),
+# then x11/font-adobe-100dpi-1.0.4/, at the repository root: the reader's own
+# Times and Helvetica, so a glyph fixed there reaches Tinta at the next
+# tools/gen-fonts.sh.
+#
+# NAME becomes tinta::fonts::k<NAME>. Pixel sizes: 08 pt = 11 px, 10 = 14,
+# 12 = 17, 14 = 20, 16 = 22, 18 = 25, 21 = 29, 24 = 34.
+
+# Spanish text, emphasis and aside at text sizes S / M / L.
+TimesRoman22            timR16.bdf
+TimesRoman25            timR18.bdf
+TimesRoman29            timR21.bdf
+TimesBold22             timB16.bdf
+TimesBold25             timB18.bdf
+TimesBold29             timB21.bdf
+TimesItalic22           timI16.bdf
+TimesItalic25           timI18.bdf
+TimesItalic29           timI21.bdf
+
+# Spanish display (the fitHeadword ladder): TeX Gyre Termes Bold (GUST
+# licence; assets/fonts/outline/) rasterised by tools/otf2freeink.py with
+# FreeType 2.13.2, monochrome with the font's own hints, at 87 / 75 / 68 / 58 /
+# 50 px; then Adobe Times Bold 34 px as drawn. Outline paths are relative to
+# assets/fonts/. Above 87 px the full charset passes FontGlyph's 16-bit bitmap
+# offsets (102 px needs about 82 KB).
+TimesBold34             timB24.bdf
+TermesBold50            outline/texgyretermes-bold.otf  --px 50 --raster hinted
+TermesBold58            outline/texgyretermes-bold.otf  --px 58 --raster hinted
+TermesBold68            outline/texgyretermes-bold.otf  --px 68 --raster hinted
+TermesBold75            outline/texgyretermes-bold.otf  --px 75 --raster hinted
+TermesBold87            outline/texgyretermes-bold.otf  --px 87 --raster hinted
+
+# English gloss, translation and respelling; chrome; keyboard keys.
+Helvetica17             helvR12.bdf
+Helvetica20             helvR14.bdf
+Helvetica22             helvR16.bdf
+Helvetica25             helvR18.bdf
+Helvetica29             helvR21.bdf
+Helvetica34             helvR24.bdf
+HelveticaOblique17      helvO12.bdf
+HelveticaOblique20      helvO14.bdf
+HelveticaOblique22      helvO16.bdf
+
+# Labels, chrome body bold and title, keyboard control labels.
+HelveticaBold14         helvB10.bdf
+HelveticaBold17         helvB12.bdf
+HelveticaBold20         helvB14.bdf
+HelveticaBold25         helvB18.bdf

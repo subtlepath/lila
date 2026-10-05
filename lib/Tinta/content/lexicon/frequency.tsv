@@ -1,0 +1,1014 @@
+# Frequency deck: high-frequency words that no lesson introduces (docs/content-style.md section 6).
+# TAB-separated. freq = rank in the deck (1 = most frequent); rows are in freq order.
+# Batches for deck writers are in content-plan/deck/batches.yaml; how the list was made is in
+# content-plan/deck/README.md. Every row needs a sentence in content/deck/*.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn	freq	link
+# --- Batch A: freq 1-333
+así		adv		like this; like that; so	A1			grammar			Así es: that's right. Así que: so.		1	
+mirar		verb		to look (at); to watch	A1			things				ver	2	
+verdad		noun	f	truth; right? (¿verdad?)	A2			courtesy			¿Verdad? at the end of a sentence asks for agreement.	neta	3	
+alguno		det		some; any	A2			grammar	apoc=algún; f=alguna; mpl=algunos; fpl=algunas				4	
+parecer		verb		to seem; to suit (¿te parece?)	A2			grammar			¿Te parece bien?: is that OK with you?		5	
+sentir		verb		to feel; to be sorry (lo siento)	A2			feelings			Lo siento: I'm sorry. Feeling well or ill is sentirse: me siento mal.		6	
+mismo		adj		same; -self (yo mismo)	A2			grammar			Lo mismo: the same thing. Ahora mismo: right now.		7	
+sobre		prep		on; about; over	A2			grammar			Un libro sobre México: a book about Mexico.		8	
+oír		verb		to hear	A1			things			¡Oye!: Hey! (to get a friend's attention). ¡Oiga! to a stranger.		9	
+ni		conj		nor; not even	A2			grammar			Ni... ni...: neither... nor... No tengo ni un peso: I don't have a single peso.		10	
+suponer		verb		to suppose; to guess	A2			grammar			Supongo que sí: I guess so.		11	
+tratar		verb		to treat; to try (tratar de)	A2			things			Tratar de + infinitive: to try to. Trato de llegar temprano.	intentar	12	
+momento		noun	m	moment	A1			time			Un momento: just a moment. Mexico softens it: un momentito.		13	
+mundo		noun	m	world	A1			places			Todo el mundo: everybody.		14	
+lugar		noun	m	place	A1			places			En lugar de: instead of.		15	
+tipo		noun	m	type; kind; guy (informal)	A2			things			¿Qué tipo de música?: What kind of music?		16	
+mío		pron		mine; of mine	A2			people	f=mía; mpl=míos; fpl=mías		Es mío: it's mine. Un amigo mío: a friend of mine.		17	
+intentar		verb		to try; to attempt	A2			things					18	
+donde		adv		where (not a question)	A2			grammar			No accent unless it asks: la casa donde vivo; but ¿dónde vives?		19	
+parte		noun	f	part; place (somewhere)	A2			things			En todas partes: everywhere. ¿De parte de quién?: Who's calling?		20	
+recordar		verb		to remember; to remind	A2			things			Recordar algo, or acordarse de algo: both mean to remember.	acordarse	21	
+poner		verb		to put; to serve (food)	A2			things			Also to set (the table) and to put on (music): pon música. Ponerse: to put on (clothes).		22	
+importar		verb		to matter; to mind	A2			feelings			Works like gustar: No me importa: I don't care.		23	
+ninguno		det		no; none; not any	A2			grammar	f=ninguna; apoc=ningún		Ningún before a masculine noun: no hay ningún problema.		24	
+tanto		det		so much; so many; as much	A2			grammar	f=tanta; mpl=tantos; fpl=tantas		Tanto como: as much as.		25	
+usar		verb		to use; to wear	A1			things					26	
+conseguir		verb		to get; to obtain; to manage to	A2			things					27	
+seguro		adj		safe; sure	A2			describing			¿Estás seguro?: Are you sure? Seguro que sí: sure.		28	
+último		adj		last; latest	A2			time					29	
+pequeño		adj		small; little; young	A2			describing			Chico and chiquito are more common in everyday Mexican speech.	chico; chiquito	30	
+cierto		adj		true; certain	A2			grammar			Es cierto: it's true. Before a noun: cierta gente: some people.		31	
+razón		noun	f	reason	A2			things			Tener razón: to be right.		32	
+serio		adj		serious	A2			describing			¿En serio?: Really? Seriously?		33	
+idea		noun	f	idea	A1			things			No tengo idea: I have no idea.		34	
+aún		adv		still; yet	B1			time			Written aún, it means todavía. Without accent, aun means even.	todavía	35	
+cada		det		each; every	A2			grammar					36	
+quien		pron		who (not a question); whoever	A2			grammar	pl=quienes		No accent unless it asks: el señor con quien hablé; but ¿quién es?		37	
+demasiado		det		too much; too many; too	A2			grammar	f=demasiada; mpl=demasiados; fpl=demasiadas		Before an adjective it does not change: demasiado caro.		38	
+único		adj		only; unique	A2			describing			Hijo único: only child. Lo único: the only thing.		39	
+claro		interj		of course!; sure!	A1			courtesy			¡Claro que sí!: Of course!	por supuesto; cómo no; de acuerdo; con gusto	40	
+sacar		verb		to take out; to get; to make (copies)	A2			things					41	
+junto		adj		together (juntos); next to (junto a)	A2			grammar			Vamos juntos: let's go together.		42	
+amor		noun	m	love; darling (amor)	A1			feelings			Mi amor: my love, also said to children and partners.		43	
+forma		noun	f	shape; way; form	A2			things				manera	44	
+loco		adj		crazy; mad	A2			describing			¡Estás loco!: You're crazy!		45	
+acabar		verb		to finish; to have just (acabar de)	A2			time			Acabo de llegar: I have just arrived.	terminar	46	
+caso		noun	m	case	A2			things			En caso de: in case of. Hacer caso: to pay attention, to obey.		47	
+significar		verb		to mean	A2			language			¿Qué significa...?: What does ... mean?		48	
+historia		noun	f	history; story	A2			things					49	
+tocar		verb		to touch; to play (an instrument)	A2			things			Te toca: it's your turn. Tocar la guitarra: to play the guitar.		50	
+cualquier		det		any (before a noun)	A2			grammar			Cualquier día: any day.		51	
+manera		noun	f	way; manner	A2			things			De esta manera: this way.		52	
+meter		verb		to put in; to put inside	A2			things			Meter is put into something; poner is put on or somewhere.		53	
+acabarse		verb		to run out; to be over	A2			things			Se me acabó la pila: my battery ran out.		54	
+contar		verb		to count; to tell (a story)	A2			things			Te cuento: let me tell you. Contar con alguien: to count on someone.		54	
+enviar		verb		to send	A2			things			Mandar is more common in everyday Mexican speech.	mandar	55	
+contra		prep		against	A2			grammar					56	
+durante		prep		during; for (a time)	A2			time					57	
+palabra		noun	f	word	A1			language					58	
+importante		adj		important	A1			describing					59	
+dentro		adv		inside; in (dentro de)	A2			places			Dentro de la caja: inside the box. Dentro de una hora: in an hour.	adentro	60	
+casi		adv		almost; nearly	A2			grammar			Casi nunca: hardly ever.		61	
+hacia		prep		toward; towards	B1			places					62	
+quizás		adv		maybe; perhaps	A2			grammar			Also quizá. Everyday Mexico often says a lo mejor.		63	
+corazón		noun	m	heart	A2			body					64	
+pronto		adv		soon	A2			time			¡Hasta pronto!: See you soon!		65	
+funcionar		verb		to work (machines); to function	A2			things			No funciona: it doesn't work. For people working, use trabajar.		66	
+punto		noun	m	point; dot; period (punctuation)	A2			time			A las tres en punto: at three o'clock sharp.		67	
+preparar		verb		to prepare; to make (food)	A1			food					68	
+justo		adj		fair; just; exactly	A2			describing			No es justo: it's not fair. Justo a tiempo: just in time.		69	
+mostrar		verb		to show	A2			things				enseñar	70	
+realidad		noun	f	reality	B1			things			En realidad: actually.		71	
+miedo		noun	m	fear	A2			feelings			Tener miedo: to be afraid. Me da miedo: it scares me.		72	
+desear		verb		to wish; to want (formal)	A2			courtesy			¿Qué desea?: What would you like? (in shops).		73	
+dios		noun	m	God; god	A2			people			Mexican speech is full of Dios: Gracias a Dios; Si Dios quiere; Ay, Dios.		74	
+equipo		noun	m	team; equipment	A2			things					75	
+suficiente		adj		enough; sufficient	A2			describing					76	
+coche		noun	m	car	A2			transport			Carro is the everyday word in most of Mexico; coche is common in Mexico City.	carro	77	
+recibir		verb		to receive; to get	A2			things					78	
+beber		verb		to drink	A2			food			Tomar is the everyday word in Mexico; beber sounds more formal.	tomar	79	
+bastante		det		quite; quite a lot (of); enough	A2			grammar	pl=bastantes		Bastante bien: pretty good.		80	
+adelante		adv		ahead; forward; come in!	A2			places			¡Adelante!: Come in! Más adelante: further on, later.		81	
+igual		adj		same; equal; just like	A2			describing			Me da igual: I don't mind. Igual que: the same as.		82	
+nada más		expr		only; just	A2		x	grammar			Colloquial: nomás.	nomás	83	
+prometer		verb		to promise	A2			people					84	
+tirar		verb		to throw (away); to knock over	A2			home			Tirar la basura: to throw out the trash. In Mexico tirar never means to pull: that is jalar.		85	
+probar		verb		to taste; to try	A2			food			Probarse: to try on (clothes).		86	
+preocuparse		verb		to worry (about)	A2			feelings			No te preocupes: don't worry.		87	
+permitir		verb		to allow; to permit	A2			grammar			¿Me permite?: may I? is a courtesy formula.		88	
+fuerte		adj		strong; loud; heavy (rain)	A2			describing			Habla más fuerte: speak louder.		89	
+durar		verb		to last	A2			time			¿Cuánto dura la película?: How long is the movie?		90	
+incluso		adv		even; including	B1			grammar					91	
+aunque		conj		although; even though	A2			grammar					92	
+perdonar		verb		to forgive; to excuse	A2			people			Perdone: excuse me (formal).		93	
+decidir		verb		to decide	A2			things					94	
+oportunidad		noun	f	opportunity; chance	A2			things					95	
+teléfono		noun	m	telephone; phone	A1			things					96	
+final		noun	m	end; ending	A2			time			Al final: in the end. The final match is feminine: la final.		97	
+presentar		verb		to introduce (someone); to present	A2			people			Te presento a Ana: this is Ana; let me introduce Ana.		98	
+molestar		verb		to bother; to annoy	A2			feelings			Works like gustar: Me molesta el ruido.		99	
+muchacho		noun	mf	boy; young man (muchacha: girl)	A2			people			Muchacho and muchacha are everyday words for young people.	chavo	100	
+solo	solo#alone	adj		alone; on your own; lonely	A2			describing			Ella vive sola: she lives alone. Solo meaning only, just is the course adverb.		100	marked
+morir		verb		to die	A2			health			Me muero de hambre: I'm starving.		101	
+bebé		noun	mf	baby	A1			family			El bebé, la bebé.		102	
+tuyo		pron		yours (informal); of yours	A2			people	f=tuya; mpl=tuyos; fpl=tuyas				103	
+posible		adj		possible	A2			describing					104	
+plan		noun	m	plan	A2			time					105	
+preocupar		verb		to worry (someone)	A2			feelings			Works like gustar: Me preocupa mi abuela.		106	
+faltar		verb		to be missing; to lack	A2			things			Works like gustar: Me falta un peso. Falta poco: it's not long now.		107	
+culpa		noun	f	fault; blame; guilt	A2			feelings			Es mi culpa: it's my fault.		108	
+confiar		verb		to trust	A2			people			Confiar en alguien: to trust someone.		109	
+correcto		adj		correct; right	A2			describing					110	
+largo		adj		long	A2			describing			Not large: big is grande.		111	
+mentir		verb		to lie (tell lies)	A2			people					112	
+negocio		noun	m	business; shop	A2			work					113	
+hermoso		adj		beautiful; lovely	A2			describing				lindo; bonito	114	
+cuidar		verb		to take care of; to look after	A2			health			¡Cuídate!: Take care! (a common goodbye).		115	
+imaginar		verb		to imagine	A2			things			Me imagino: I imagine; I bet.		116	
+perfecto		adj		perfect	A2			describing					117	
+servir		verb		to serve; to work (machines)	A2			things			No sirve: it doesn't work, it's broken.		118	
+raro		adj		strange; weird; rare	A2			describing					119	
+cargar		verb		to carry; to charge (a battery)	A2			things					120	
+probablemente		adv		probably	A2			grammar				quizás; tal vez	121	
+par		noun	m	pair; a couple (un par de)	A2			numbers			Un par de días: a couple of days.		122	
+diferente		adj		different	A2			describing					123	
+millón		noun	m	million	A2			numbers			Un millón de pesos: one million pesos (with de).		124	
+sueño		noun	m	dream; sleepiness	A2			feelings			Tengo sueño: I'm sleepy.		125	
+noticia		noun	f	news (item); piece of news	A2			things			Las noticias: the news.		126	
+sitio		noun	m	place; taxi stand	A2		x	transport			Taxi de sitio: a taxi from a stand or called by phone.		127	
+médico		noun	mf	doctor; physician	A2			health			Both médico and doctor are used; address a doctor as doctor or doctora.	doctor	128	
+desaparecer		verb		to disappear	B1			things					129	
+madre		noun	f	mother	A2			family			Everyday: mamá. Madre also appears in many rude expressions, so use it with care.	mamá	130	
+tal vez		expr		maybe; perhaps	A2			grammar				quizás; a lo mejor	131	
+calmarse		verb		to calm down	A2			feelings			¡Cálmate!: Calm down!		132	
+oído		noun	m	ear (inner); hearing	A2			body			The outer ear is la oreja. Me duele el oído: I have an earache.		133	
+caer		verb		to fall; to go down well or badly (bien/mal)	A2			things			Me cae bien: I like him. Caerse: to fall down.		134	
+descubrir		verb		to discover; to find out	B1			things					135	
+explicar		verb		to explain	A2			school					136	
+lindo		adj		pretty; cute; nice	A2			describing			Very common in Mexico: ¡Qué lindo!	bonito	137	
+alegrarse		verb		to be glad	A2			feelings			Me alegro: I'm glad.		138	
+especial		adj		special	A2			describing					139	
+país		noun	m	country	A1			places					140	
+además		adv		besides; also; in addition	A2			grammar					141	
+tonto		adj		silly; stupid; dumb	A2	informal		describing			Rude when said to someone: no seas tonto.		142	
+libre		adj		free (not busy); vacant	A2			describing			¿Está libre?: Is it free (taken)? Free of charge is gratis.		143	
+carta		noun	f	menu; letter	A2			food			Also el menú.	menú	144	
+elegir		verb		to choose; to elect	A2			things			Escoger is just as common for everyday choices.	escoger	145	
+paz		noun	f	peace	A2			feelings	pl=-				146	
+interesar		verb		to interest; to be interested	A2			feelings			Works like gustar: Me interesa el arte.		147	
+así que		expr		so; so then	A2			grammar					148	
+callarse		verb		to be quiet; to shut up	A2			courtesy			¡Cállate! is rude; ask ¿Me deja hablar? or say silencio, por favor.		149	
+firmar		verb		to sign	A2			work					150	
+error		noun	m	mistake; error	A2			things					151	
+llamada		noun	f	(phone) call	A2			things					152	
+llorar		verb		to cry	A2			feelings					153	
+relación		noun	f	relationship; relation	A2			people					154	
+puesto		noun	m	stall; stand; job	A2			city					155	
+verdadero		adj		true; real	B1			describing					156	
+grupo		noun	m	group; band	A2			people					157	
+pobre		adj		poor	A2			describing			¡Pobre!: Poor thing!		158	
+detrás		adv		behind (detrás de)	B1			places			Mexico usually says atrás de.	atrás	159	
+a lo mejor		expr		maybe; probably	A2			grammar			Very common in Mexico: A lo mejor llueve.		160	
+agradecer		verb		to thank; to be grateful for	A2			courtesy			Te lo agradezco: I appreciate it.		161	
+subir		verb		to go up; to climb; to raise	A2			transport			To get on a bus or into a car is subirse.		162	
+suyo		pron		his; hers; yours (formal); theirs	A2			grammar	f=suya; mpl=suyos; fpl=suyas				163	
+voz		noun	f	voice	A2			people			En voz alta: out loud.		164	
+responder		verb		to answer; to reply	A2			language				contestar	165	
+siguiente		adj		next; following	A2			time			¡El siguiente!: Next, please!		166	
+entregar		verb		to hand in; to deliver	A2			work					167	
+información		noun	f	information	A2			things	pl=-		Uncountable: la información, never informaciones for one fact.		168	
+favor		noun	m	favor	A2			courtesy			Hacer el favor de: to be so kind as to.		169	
+valer		verb		to be worth; to cost	A2			money			Vale la pena: it's worth it. As OK, vale is Spain; Mexico says sale or está bien.		170	
+realmente		adv		really; actually	B1			grammar					171	
+casarse		verb		to get married	A2			family			Casarse con alguien: to marry someone.		172	
+tierra		noun	f	earth; land; soil	A2			places					173	
+odiar		verb		to hate	A2			feelings					174	
+a poco		expr		really?; no way!	A2		x	feelings			¿A poco no?: Isn't it? Shows surprise or disbelief.	en serio; de veras	175	
+acá		adv		here; over here	A1		x	places			Ven acá: come here. Mexico uses acá as much as aquí.	aquí	176	
+rato		noun	m	while; short time	A2		x	time			Al rato: later, in a bit. Un rato: a while.	ratito	177	
+apurarse		verb		to hurry (up)	A2		x	time		darse prisa	¡Apúrate!: Hurry up!		178	
+enojarse		verb		to get angry; to get mad	A2		x	feelings		enfadarse	Mexico says enojarse, not enfadarse.		179	
+checar		verb		to check	A2		x	things		chequear; comprobar	Mexican spelling of English check: checo, checamos.	revisar	180	
+recién		adv		just; recently	A2		x	time			Recién llegué: I just arrived. Recién casados: newlyweds.		181	
+prender		verb		to turn on; to light	A2		x	home		encender	Prender la luz: to turn on the light.		182	
+al rato		expr		later; in a while	A2		x	time					183	
+frijol		noun	m	bean	A1		x	food		judía; alubia	Usually plural: frijoles. Mexico's staple bean dish.		184	
+nomás		adv		just; only	A2		x	grammar			Nomás tantito: just a little bit. Very common in Mexican speech.	solo	185	
+encargarse		verb		to take care of; to be in charge of	B1			work			Yo me encargo: I'll take care of it.		186	
+cita		noun	f	appointment; date	A2			time					187	
+guardar		verb		to keep; to put away; to save	A2			things					188	
+respuesta		noun	f	answer; reply	A2			school					189	
+demás		pron		the rest; the others	B1			people			Los demás: the others, everyone else.		190	
+campo		noun	m	countryside; field	A2			places					191	
+frente		noun	f	forehead	A2			body			Frente a: facing, opposite. In the sense of front it is masculine: el frente. Mexico says enfrente de for across from.		192	
+continuar		verb		to continue; to go on	A2			time				seguir	193	
+línea		noun	f	line (metro, phone)	A2			transport					194	
+caja		noun	f	box; checkout (in a store)	A1			things			Pague en caja: pay at the register.		195	
+pena		noun	f	embarrassment; shame; sorrow	A2		x	feelings			Me da pena: I'm embarrassed, I feel awkward.	vergüenza	196	
+profesor		noun	mf	teacher; professor	A2			school			Maestro is the everyday word for a schoolteacher.	maestro	197	
+atención		noun	f	attention	A2			things			Poner atención: to pay attention.		198	
+cliente		noun	mf	customer; client	A2			work			La cliente or la clienta.		199	
+canción		noun	f	song	A1			things					200	
+devolver		verb		to give back; to return (something)	A2			money			Volver is to come back yourself; devolver is to give something back.		201	
+boca		noun	f	mouth	A1			body					202	
+encima		adv		on top; above (encima de)	A2			places			Encima de la mesa: on the table. Por encima: over.		203	
+servicio		noun	m	service; (servicios) utilities	A2			home					204	
+papel		noun	m	paper; role	A1			things			Papel de baño: toilet paper (Mexico).		205	
+futuro		noun	m	future	A2			time					206	
+despedirse		verb		to say goodbye	A2			greetings			Despedirse de alguien: to say goodbye to someone.		207	
+ocupar		verb		to need (Mexico); to occupy; to use	A2		x	things			In Mexico ocupar often means to need: ¿Qué ocupas?	necesitar	208	
+ofrecer		verb		to offer	A2			things					209	
+cámara		noun	f	camera	A2			things					210	
+sino		conj		but (rather)	B1			grammar			After a negative: No es rojo sino azul.		211	
+arreglar		verb		to fix; to repair; to tidy up	A2			things			Arreglar el carro: to fix the car. Arreglarse is to get ready.		212	
+aire		noun	m	air; wind (Mexico)	A2			weather			Hace aire: it's windy (Mexico). Aire acondicionado: air conditioning.		213	
+decisión		noun	f	decision	A2			things			Tomar una decisión: to make a decision.		214	
+jamás		adv		never; ever	A2			time				nunca	215	
+estrella		noun	f	star	A2			weather					216	
+recoger		verb		to pick up; to collect; to clean up	A2			things			Recoger a los niños: to pick up the kids.		217	
+asustar		verb		to scare; to frighten	A2			feelings					218	
+pelo		noun	m	hair	A1			body					219	
+reírse		verb		to laugh	A2			feelings			Reírse de: to laugh at.		220	
+edad		noun	f	age	A2			people			¿Qué edad tiene?: How old is he?		221	
+alejarse		verb		to move away; to get away	B1			places					222	
+romper		verb		to break; to tear	A2			things			Something breaking by itself is romperse: se rompió.		223	
+barco		noun	m	ship; boat	A2			transport					224	
+normal		adj		normal; regular	A2			describing					225	
+montón		noun	m	pile; a lot (un montón)	A2			numbers			Un montón de gente: a lot of people.		226	
+mejorar		verb		to improve; to get better	A2			things					227	
+carrera		noun	f	(university) degree; race; career	A2			school			¿Qué carrera estudias?: What are you studying (at university)?		228	
+reunión		noun	f	meeting; gathering	A2			work			Offices in Mexico often say junta for a meeting.		229	
+evitar		verb		to avoid	B1			things					230	
+amar		verb		to love (deeply)	A2			feelings			Te amo is strong (partners); te quiero is for family and friends too.	querer	231	
+muerto		adj		dead	A2			health			Estoy muerto: I'm exhausted.		232	
+mantener		verb		to keep; to support (a family)	B1			things					233	
+acercarse		verb		to come closer; to approach	A2			places			Acércate: come closer.		234	
+comenzar		verb		to begin; to start	A2			time				empezar	235	
+cómo no		expr		of course; sure	A2		x	courtesy			¿Me ayuda? —¡Cómo no!: Of course!		236	
+cielo		noun	m	sky; heaven	A2			weather			Mi cielo: my darling.		237	
+pelear		verb		to fight; to argue	A2			people					238	
+en serio		expr		seriously; really	A2			feelings					239	
+boda		noun	f	wedding	A2			family					240	
+necesario		adj		necessary	A2			describing					241	
+recuperar		verb		to recover; to get back	B1			things					242	
+nacer		verb		to be born	A2			family			Nací en Puebla: I was born in Puebla.		243	
+dirección		noun	f	address; direction	A2			city					244	
+público		adj		public	A2			city					245	
+alrededor		adv		around (alrededor de)	B1			places			Alrededor de las ocho: around eight o'clock.		246	
+mitad		noun	f	half	A2			numbers			La mitad del pastel: half the cake.		247	
+disfrutar		verb		to enjoy	A2			feelings					248	
+señal		noun	f	signal; sign	A2			things			No hay señal: there is no signal.		249	
+programa		noun	m	program; show (TV)	A2			things			Masculine: el programa.		250	
+broma		noun	f	joke; prank	A2			feelings			En broma: as a joke. Mexico also says chiste for a told joke.		251	
+horrible		adj		horrible; awful	A2			describing				terrible	252	
+peligroso		adj		dangerous	A2			describing					253	
+principio		noun	m	beginning; principle	B1			time			Al principio: at first.		254	
+cumplir		verb		to keep (a promise); to turn (an age)	A2			time			Cumplir años: to have a birthday. Cumplo treinta: I turn thirty.		255	
+reunirse		verb		to meet; to get together	A2			people					256	
+completo		adj		complete; full	A2			describing					257	
+animal		noun	m	animal	A1			places					258	
+duda		noun	f	doubt; question	A2			things			¿Tienes alguna duda?: Do you have any questions?		259	
+interesante		adj		interesting	A2			describing					260	
+imposible		adj		impossible	A2			describing					261	
+equivocarse		verb		to make a mistake; to be wrong	A2			things			Me equivoqué: I made a mistake.		262	
+reconocer		verb		to recognize; to admit	B1			people					263	
+de acuerdo		expr		agreed; OK	A2			courtesy			Estoy de acuerdo: I agree.		264	
+terrible		adj		terrible	A2			describing					265	
+placer		noun	m	pleasure	A2			courtesy			Un placer: a pleasure (to meet you).		266	
+director		noun	mf	director; principal (of a school)	A2			school					267	
+sufrir		verb		to suffer	B1			feelings					268	
+hambre		noun	f	hunger	A1			feelings	pl=-		Tengo hambre: I'm hungry. Feminine, but el hambre.		269	
+paciente		noun	mf	patient	A2			health					270	
+revisar		verb		to check; to review; to inspect	A2			things					271	
+construir		verb		to build	A2			city					272	
+antiguo		adj		old; ancient; former	A2			describing			For buildings and things; for people, viejo or grande.	viejo	273	
+o sea		expr		I mean; in other words	A2			grammar			A very common filler in Mexican speech.		274	
+contacto		noun	m	contact; outlet (electric)	A2		x	home		enchufe	Mexico calls a wall socket el contacto.		275	
+consejo		noun	m	(piece of) advice	A2			things			Un consejo: a piece of advice. Consejos: advice.		276	
+tren		noun	m	train	A1			transport					277	
+cualquiera		pron		anyone; any (one)	B1			grammar			Cualquiera puede: anyone can.		278	
+suelo		noun	m	floor; ground	A2			home			Also el piso.		279	
+resolver		verb		to solve; to resolve	B1			things					280	
+equivocado		adj		wrong; mistaken	A2			describing			Estás equivocado: you're wrong. Número equivocado: wrong number.		281	
+gobierno		noun	m	government	B1			city					282	
+nota		noun	f	note; grade (school)	A2			school				calificación	283	
+prisa		noun	f	hurry; rush	A2			time	pl=-		Tengo prisa: I'm in a hurry.		284	
+oler		verb		to smell	A2			food			Huele rico: it smells good.		285	
+tema		noun	m	topic; subject; theme	A2			things			Masculine: el tema.		286	
+mentira		noun	f	lie	A2			people			¡Mentira!: Not true! Decir mentiras: to lie.		287	
+sorpresa		noun	f	surprise	A2			feelings					288	
+regla		noun	f	rule; ruler	A2			school					289	
+inteligente		adj		intelligent; smart	A2			describing					290	
+silencio		noun	m	silence	A2			things					291	
+ventana		noun	f	window	A1			home					292	
+compartir		verb		to share	A2			people					293	
+respirar		verb		to breathe	A2			health					294	
+fondo		noun	m	back; bottom; far end	A2			places			Al fondo: at the back.		295	
+matar		verb		to kill	B1			things			Me mata el calor: the heat is killing me.		296	
+hecho		noun	m	fact; event	B1			things			De hecho: in fact.		297	
+salvar		verb		to save; to rescue	B1			health					298	
+cariño		noun	m	affection; dear (cariño)	A2			feelings			Con cariño: with love (signing a card).		299	
+ocurrir		verb		to happen; to occur	B1			things			Everyday Mexico says pasar: ¿Qué pasó?		300	
+propio		adj		own	B1			grammar			Su propio carro: his own car.		301	
+siquiera		adv		at least; (ni siquiera: not even)	B1			grammar			Ni siquiera me saludó: he didn't even say hello.		302	
+para nada		expr		not at all	A2			feelings			¿Te molesta? —Para nada: Does it bother you? —Not at all.		303	
+secreto		noun	m	secret	A2			things					304	
+por supuesto		expr		of course	A2			courtesy					305	
+peligro		noun	m	danger	A2			things					306	
+Navidad		noun	f	Christmas	A2			time	pl=-		¡Feliz Navidad! Nochebuena: Christmas Eve.		307	
+planear		verb		to plan	A2			time					308	
+levantar		verb		to lift; to raise; to file (a report)	A2			things			Levantarse: to get up.		309	
+espacio		noun	m	space; room (space)	A2			things					310	
+vestido		noun	m	dress	A2			clothes					311	
+permiso		noun	m	permission; leave (from work)	A2			courtesy			Con permiso: excuse me (to get past).		312	
+alcanzar		verb		to reach; to catch up with; to be enough	A2			money			No me alcanza: I don't have enough (money).		313	
+basura		noun	f	garbage; trash	A1			home					314	
+color		noun	m	color	A1			describing					315	
+bar		noun	m	bar	A2			places					316	
+tardar		verb		to take (time); to be late	A2			time			¿Cuánto tarda el camión?: How long does the bus take? Mexico also says tardarse.		317	
+convencer		verb		to convince	B1			people					318	
+acompañar		verb		to go with; to accompany	A2			people					319	
+nervioso		adj		nervous	A2			feelings					320	
+discutir		verb		to argue; to discuss	A2			people				pelear	321	
+agradable		adj		pleasant; nice	A2			describing					322	
+opción		noun	f	option; choice	A2			things					323	
+opinión		noun	f	opinion	A2			things					324	
+golpe		noun	m	blow; hit; bump	A2			things					325	
+dedo		noun	m	finger; toe	A1			body					326	
+prestar		verb		to lend	A2			money			¿Me presta...?: can I borrow...?		327	
+guapo		adj		good-looking; handsome; pretty	A2			describing					328	
+apagar		verb		to turn off; to put out	A2			home					329	
+según		prep		according to; depending on	B1			grammar			Según Ana: according to Ana. ¿Vienes? —Según: Are you coming? —It depends.		330	
+orgulloso		adj		proud	A2			feelings					331	
+americano		adj		American	A2			people			In Mexico americano is a person from the US, but Mexicans are americanos too (from the Americas). Neutral: estadounidense.		332	
+fallar		verb		to fail; to miss; to break down	B1			things					333	
+# --- Batch B: freq 334-666
+luna		noun	f	moon	A2			weather					334	
+falso		adj		false; fake	A2			describing					335	
+mudarse		verb		to move (house)	A2			home			Me mudé a la Roma: I moved to the Roma.		336	
+flor		noun	f	flower	A1			places					337	
+entrada		noun	f	entrance; ticket (for a show)	A2			places					338	
+varios		det	mpl	several; various	A2			grammar	fpl=varias				339	
+esperanza		noun	f	hope	B1			feelings					340	
+soportar		verb		to stand; to bear	B1			feelings			No lo soporto: I can't stand him.	aguantar	341	
+diferencia		noun	f	difference	A2			things					342	
+resultado		noun	m	result	A2			things					343	
+entero		adj		whole; entire	A2			describing					344	
+enseguida		adv		right away; immediately	A2			time			Ahorita is the everyday Mexican word, but it can mean later too.		345	
+curar		verb		to cure; to heal	B1			health					346	
+privado		adj		private	A2			city					347	
+chino		adj		Chinese; curly (hair)	A2		x	people			In Mexico pelo chino is curly hair.		348	
+máquina		noun	f	machine	A2			things					349	
+relajarse		verb		to relax	A2			feelings					350	
+aguantar		verb		to put up with; to hold on	A2			feelings			¡Aguanta!: Hang on! No aguanto el calor: I can't stand the heat.		351	
+abierto		adj		open	A1			describing					352	
+colgar		verb		to hang (up)	A2			things			Colgar el teléfono: to hang up the phone.		353	
+excelente		adj		excellent	A2			describing					354	
+finalmente		adv		finally; in the end	A2			time					355	
+banda		noun	f	band (music); gang	A2		x	things			Banda is also a style of Mexican brass music. The slang sense (your friends) is banda#friends.		356	
+banda	banda#friends	noun	f	friends; the gang (your group)	A2	informal	x	slang			Informal: ¿Qué onda, banda?: What's up, guys?		356	
+arte		noun	m	art	A2			things			El arte, but las artes.		357	
+apenas		adv		barely; hardly; only just	B1			time			Apenas llegué: I've only just arrived.		358	
+destino		noun	m	destination; fate	B1			transport					359	
+de nuevo		expr		again	A2			time			Also otra vez.		360	
+oscuro		adj		dark	A2			describing			Azul oscuro: dark blue.		361	
+éxito		noun	m	success; hit	A2			things			Not exit: the exit is la salida.		362	
+gato		noun	mf	cat	A1			places					363	
+pareja		noun	f	couple; partner	A2			family					364	
+experiencia		noun	f	experience	A2			work					365	
+respeto		noun	m	respect	A2			people					366	
+precio		noun	m	price	A1			money					367	
+favorito		adj		favorite	A2			describing					368	
+lastimar		verb		to hurt; to injure	A2			health			Me lastimé la mano: I hurt my hand.		369	
+ejemplo		noun	m	example	A2			school					370	
+té		noun	m	tea	A1			food			Mexicans drink a lot of té de manzanilla (chamomile) and té de canela (cinnamon).		371	
+norte		noun	m	north	A2			places	pl=-				372	
+pared		noun	f	wall	A2			home					373	
+fumar		verb		to smoke	A2			health					374	
+salida		noun	f	exit; departure; checkout	A2			places			Salida de emergencia: emergency exit.		375	
+francés		adj		French	A2			people					376	
+río		noun	m	river	A2			places					377	
+isla		noun	f	island	A2			places					378	
+sucio		adj		dirty	A2			describing					379	
+pasear		verb		to go for a walk; to walk (a dog)	A2			places			Pasear al perro: to walk the dog.		380	
+debajo		adv		underneath; below (debajo de)	B1			places			Mexico often says abajo de.		381	
+borracho		adj		drunk	A2			describing					382	
+familiar		noun	mf	relative; family member	A2			family			Also an adjective: family (comida familiar).		383	
+estado		noun	m	state	A2			places			Mexico has thirty-two states (estados), counting Mexico City.		384	
+muerte		noun	f	death	B1			health					385	
+pararse		verb		to stand up; to stop	A2		x	things			In Mexico pararse means to stand up: ¡Párate!	levantarse	386	
+asunto		noun	m	matter; issue; business	B1			things					387	
+seguridad		noun	f	safety; security	B1			things	pl=-				388	
+resto		noun	m	rest; remainder	B1			things			El resto del día: the rest of the day.		389	
+proteger		verb		to protect	B1			things					390	
+fuego		noun	m	fire	A2			things			A house fire is un incendio. ¿Tienes fuego?: Do you have a light?		391	
+lograr		verb		to achieve; to manage to	B1			things					392	
+ambos		det	mpl	both	B1			grammar	fpl=ambas				393	
+existir		verb		to exist	B1			things					394	
+control		noun	m	remote control; control	A2		x	things			El control: the TV remote in Mexico.		395	
+situación		noun	f	situation	B1			things					396	
+compañía		noun	f	company	A2			work				empresa	397	
+engañar		verb		to deceive; to cheat on	B1			people					398	
+cuchillo		noun	m	knife	A1			food					399	
+plato		noun	m	plate; dish	A1			food					400	
+escoger		verb		to choose; to pick	A2			things					401	
+pastel		noun	m	cake	A1			food		tarta	A birthday cake is un pastel in Mexico.		402	
+bote		noun	m	can; bin; boat	A2		x	home			Bote de basura: trash can.		403	
+pesado		adj		heavy; annoying (person)	A2		x	describing			¡Qué pesado!: What a pain (of a person)!		404	
+helado		noun	m	ice cream	A1			food			Also called nieve when it is water-based.		405	
+diario		adv		every day; daily	A2		x	time			Mexico: Voy diario: I go every day. Also a newspaper (el diario).		406	
+portarse		verb		to behave	A2			family			Pórtate bien: behave yourself.		407	
+salón		noun	m	classroom; hall; salon	A2		x	school		aula	Salón de clases: classroom. Salón de belleza: beauty salon.		408	
+ahorrar		verb		to save (money, time)	A2			money					409	
+camioneta		noun	f	pickup truck; SUV; van	A2		x	transport		furgoneta			410	
+taza		noun	f	cup; mug; toilet bowl	A1			food					411	
+pescado		noun	m	fish (food)	A1			food			A live fish is un pez; on the plate it is pescado.		412	
+invierno		noun	m	winter	A1			weather					413	
+sopa		noun	f	soup	A1			food				caldo	414	
+azúcar		noun	m	sugar	A1			food	pl=-		El azúcar; azúcar morena is brown sugar.		415	
+seguido		adv		often	A2		x	time			Mexico: ¿Vienes seguido?: Do you come here often?		416	
+moto		noun	f	motorcycle	A1			transport			Feminine: la moto, short for motocicleta.		417	
+primavera		noun	f	spring (season)	A1			weather					418	
+súper		noun	m	supermarket (el súper)	A2		x	city	pl=-		Short for supermercado: Voy al súper.	supermercado	419	
+recomendar		verb		to recommend	A2			things					420	
+museo		noun	m	museum	A1			places					421	
+recibo		noun	m	bill; receipt	A2		x	money			Recibo de la luz: electric bill.		422	
+aceite		noun	m	oil	A1			food					423	
+pluma		noun	f	pen; feather	A2		x	school		bolígrafo; boli	In Mexico a pen is una pluma.		424	
+sed		noun	f	thirst	A1			feelings	pl=-		Tengo sed: I'm thirsty.		425	
+arroz		noun	m	rice	A1			food	pl=-		Arroz rojo and arroz blanco come with many Mexican meals.		426	
+estacionar		verb		to park	A2		x	transport		aparcar	Mexico says estacionar; aparcar is Spain.		427	
+idioma		noun	m	language	A1			language			Masculine: el idioma.	lengua	428	
+ensalada		noun	f	salad	A1			food					429	
+estacionamiento		noun	m	parking lot; parking	A2		x	transport		aparcamiento; parking			430	
+con gusto		expr		gladly; my pleasure	A2		x	courtesy			A common Mexican reply to gracias.		431	
+lápiz		noun	m	pencil	A1			school			Plural: lápices.		432	
+mochila		noun	f	backpack	A1			school					433	
+otoño		noun	m	autumn; fall	A1			weather					434	
+menú		noun	m	menu	A1			food	pl=menús				435	
+dentista		noun	mf	dentist	A1			health			El dentista, la dentista.		436	
+jabón		noun	m	soap	A1			home					437	
+de veras		expr		really; truly	A2		x	feelings			¿De veras?: Really?		438	
+supermercado		noun	m	supermarket	A1			city					439	
+por ejemplo		expr		for example	A2			grammar					440	
+cuchara		noun	f	spoon	A1			food			Cucharita: teaspoon.		441	
+cuaderno		noun	m	notebook	A1			school					442	
+madrugada		noun	f	early morning (after midnight)	A2			time			A las tres de la madrugada: at three in the morning.		443	
+tenedor		noun	m	fork	A1			food					444	
+voltear		verb		to turn (around); to look back	A2		x	things		darse la vuelta	Voltea a la derecha: turn right. No voltees: don't look back.		445	
+tope		noun	m	speed bump	A2		x	transport		badén	Mexican roads and streets have many topes.		446	
+foco		noun	m	light bulb; spotlight	A2		x	home		bombilla; bombillo			447	
+jalar		verb		to pull	A2		x	things			Door signs say Jale (pull) and Empuje (push).		448	
+chistoso		adj		funny	A2		x	describing			Mexico's everyday word for funny.	divertido	449	
+llanta		noun	f	tire	A2		x	transport		neumático; goma	Se me ponchó una llanta: I got a flat tire.		450	
+descomponerse		verb		to break down (machines)	A2		x	things		averiarse	Se descompuso el refri: the fridge broke down.		451	
+antojarse		verb		to feel like (eating something)	A2		x	food			Works like gustar: Se me antojan unos tacos.		452	
+brincar		verb		to jump	A2		x	things		saltar	Mexico's everyday word for jump.		453	
+quincena		noun	f	payday; two-week period	A2		x	money			Many Mexicans are paid on the 15th and the last day of each month.		454	
+refri		noun	m	fridge	A2		x	home		nevera	Short for refrigerador.	refrigerador	455	
+vuelo		noun	m	flight	A2			transport					456	
+empresa		noun	f	company; business	A2			work					457	
+bosque		noun	m	forest; woods	A2			places					458	
+beso		noun	m	kiss	A2			people			Un beso: a kiss on the cheek is a normal greeting in Mexico.		459	
+encantado		adj		delighted; pleased to meet you	A2			courtesy			Encantado or encantada: pleased to meet you.		460	
+enorme		adj		huge; enormous	A2			describing				grande	461	
+vacío		adj		empty	A2			describing					462	
+detalle		noun	m	detail; small gift	A2			things			Un detalle: a small gift or kind gesture.		463	
+pintar		verb		to paint	A2			home					464	
+fijarse		verb		to notice; to pay attention	A2			things			Fíjate que...: you know what... Fíjate bien: look carefully.		465	
+sur		noun	m	south	A2			places	pl=-				466	
+piel		noun	f	skin; leather	A2			body					467	
+asiento		noun	m	seat	A2			transport					468	
+cerrado		adj		closed	A1			describing					469	
+conversación		noun	f	conversation	A2			people					470	
+trago		noun	m	drink (alcoholic); sip	A2			food			¿Vamos por un trago?: Shall we go for a drink?	bebida	471	
+renunciar		verb		to quit; to resign	B1			work			Renunciar a la chamba: to quit the job.		472	
+piedra		noun	f	stone; rock	A2			places					473	
+enamorado		adj		in love	A2			feelings			Estar enamorado de: to be in love with.		474	
+famoso		adj		famous	A2			describing					475	
+montaña		noun	f	mountain	A2			places					476	
+ojalá		interj		I hope so; hopefully	A2			feelings			¡Ojalá!: I hope so! It comes from Arabic.		477	
+verano		noun	m	summer	A1			weather					478	
+anillo		noun	m	ring	A2			things					479	
+responsable		adj		responsible	A2			describing					480	
+cuello		noun	m	neck; collar	A2			body					481	
+periódico		noun	m	newspaper	A2			things					482	
+corto		adj		short (length)	A2			describing			For people's height, Mexico says bajo or chaparro.		483	
+enfermedad		noun	f	illness; disease	A2			health					484	
+despierto		adj		awake	A2			describing					485	
+actor		noun	mf	actor	A2			people	f=actriz				486	
+restaurante		noun	m	restaurant	A1			places					487	
+directo		adj		direct; nonstop	A2			transport					488	
+embarazado		adj		pregnant	A2			health			Embarazada: pregnant (not embarrassed).		489	
+botella		noun	f	bottle	A1			food					490	
+presión		noun	f	pressure; blood pressure	B1			health			Tengo la presión alta: I have high blood pressure.		491	
+turno		noun	m	turn; shift (at work)	A2			time			Turno de noche: night shift.		492	
+dueño		noun	mf	owner	A2			work					493	
+enamorarse		verb		to fall in love	A2			feelings			Enamorarse de alguien: to fall in love with someone.		494	
+ruido		noun	m	noise	A2			home					495	
+quieto		adj		still; quiet (not moving)	A2			describing			¡Quieto!: Keep still!		496	
+nariz		noun	f	nose	A1			body			Plural: narices.		497	
+archivo		noun	m	file; archive	A2			work					498	
+celebrar		verb		to celebrate	A2			time				festejar	499	
+proyecto		noun	m	project	A2			work					500	
+pedazo		noun	m	piece; bit	A2			food			Un pedazo de pastel: a piece of cake.		501	
+reloj		noun	m	watch; clock	A1			things					502	
+pegar		verb		to hit; to stick; to glue	A2			things					503	
+pegarse		verb		to hit oneself; to bump (into)	B1			health			Me pegué en la cabeza: I hit my head.		503	
+invitado		noun	mf	guest	A2			people					504	
+quejarse		verb		to complain	A2			feelings			Quejarse de: to complain about.		505	
+fuera		adv		outside; away (fuera de)	B1			places			Fuera de servicio: out of order. Everyday Mexico says afuera.	afuera	506	
+presidente		noun	mf	president	A2			people	f=presidenta				507	
+abogado		noun	mf	lawyer	A2			work					508	
+caballo		noun	m	horse	A2			places					509	
+por fin		expr		at last; finally	A2			time				finalmente	510	
+roto		adj		broken; torn	A2			describing					511	
+con razón		expr		no wonder	A2		x	feelings			¡Con razón!: No wonder!		512	
+grave		adj		serious (illness, problem)	B1			health					513	
+incluir		verb		to include	A2			things					514	
+lucha		noun	f	fight; struggle; wrestling	A2		x	things			Lucha libre: Mexican professional wrestling.		515	
+confianza		noun	f	trust; confidence	B1			feelings	pl=-		Hay confianza: we're on friendly terms (so tú is fine).		516	
+cantidad		noun	f	amount; quantity	B1			numbers					517	
+puro		adj		pure; only; nothing but	A2		x	describing			Mexico: Puras mentiras: nothing but lies.		518	
+viento		noun	m	wind	A2			weather					519	
+reservar		verb		to book; to reserve	A2			places					520	
+por cierto		expr		by the way	B1			grammar					521	
+acostumbrarse		verb		to get used to	B1			things			Ya me acostumbré: I'm used to it now.		522	
+colegio		noun	m	(private) school	A2			school			In Mexico un colegio is usually a private school.		523	
+desastre		noun	m	disaster; mess	A2			things					524	
+correo		noun	m	post office; mail; email	A2			places					525	
+contrato		noun	m	contract; lease	B1			work					526	
+pecho		noun	m	chest; breast	A2			body					527	
+fuente		noun	f	fountain; source	B1			city					528	
+autobús		noun	m	bus; coach (long-distance)	A2			transport			In town a bus is a camión.		529	
+cuento		noun	m	story; tale	A2			things			Un cuento: a short story. Also a made-up story: ¡Puro cuento!		530	
+débil		adj		weak	A2			describing					531	
+hielo		noun	m	ice	A1			food					532	
+rosa		adj		pink	A2			describing			Often invariable in Mexico: camisas rosa. Also rosado.		533	
+hueso		noun	m	bone	A2			body					534	
+dato		noun	m	piece of information; (datos) mobile data	A2			things					535	
+puente		noun	m	bridge; long weekend	A2			city			Un puente: a long weekend when a holiday falls on a Monday or Friday.		536	
+televisión		noun	f	television	A2			things				tele	537	
+serie		noun	f	series; TV series	A2			things					538	
+natural		adj		natural; room-temperature (drinks)	A2		x	describing			Agua natural: water not chilled from the fridge.		539	
+dormido		adj		asleep	A2			describing					540	
+grado		noun	m	degree; grade (year at school)	A2			weather			Treinta grados: thirty degrees.		541	
+siglo		noun	m	century	B1			time					542	
+sonreír		verb		to smile	A2			feelings					543	
+video		noun	m	video	A2		x	things			Mexico says video, stressed on the i; Spain writes vídeo.		544	
+complicado		adj		complicated	A2			describing				difícil	545	
+oferta		noun	f	offer; sale (special price)	A2			money			En oferta: on sale.		546	
+pez		noun	m	fish (alive)	A2			places			Plural: peces. As food it is pescado.		547	
+naturaleza		noun	f	nature	B1			places	pl=-				548	
+cómodo		adj		comfortable	A2			describing					549	
+artista		noun	mf	artist; performer	A2			people					550	
+planta		noun	f	plant; floor (of a building)	A2			places			Planta baja: ground floor.		551	
+organizar		verb		to organize	A2			things					552	
+cobrar		verb		to charge (money)	A2		x	money			¿Me cobra?: can I pay?		553	
+sombrero		noun	m	hat	A2			clothes					554	
+jardín		noun	m	garden; yard; town square	A2			home			In many Mexican towns el jardín is the main square.	plaza	555	
+premio		noun	m	prize; award	A2			things					556	
+vergüenza		noun	f	shame; embarrassment	A2			feelings	pl=-		Me da vergüenza: I'm embarrassed. Mexico often says pena.		557	
+cansarse		verb		to get tired	A2			feelings					558	
+carretera		noun	f	highway; road	A2			transport			Between cities. Autopista: toll highway.		559	
+claro	claro#light	adj		light (color); clear	A2			describing			Azul claro: light blue.		560	
+seguro	seguro#insurance	noun	m	insurance	A2			money					561	
+dólar		noun	m	dollar	A2			money					562	
+sin embargo		expr		however; nevertheless	B1			grammar					563	
+empleado		noun	mf	employee	A2			work					564	
+página		noun	f	page	A2			school			Página web: website.		565	
+pájaro		noun	m	bird	A2			places					566	
+barrer		verb		to sweep	A2			home					567	
+oeste		noun	m	west	A2			places	pl=-				568	
+venta		noun	f	sale (selling)	A2			money			Se vende or En venta: for sale.		569	
+jugador		noun	mf	player	A2			people					570	
+atender		verb		to serve (customers); to attend to	B1			work			¿Ya lo atienden?: Is someone helping you?		571	
+motor		noun	m	engine; motor	A2			transport					572	
+kilómetro		noun	m	kilometer	A2			numbers			Mexico uses kilometers: a cien kilómetros por hora.		573	
+pintura		noun	f	paint; painting	A2			things					574	
+copia		noun	f	copy	A2			things					575	
+bebida		noun	f	drink; beverage	A2			food					576	
+humor		noun	m	mood; humor	B1			feelings	pl=-		De buen humor: in a good mood.		577	
+teatro		noun	m	theater	A2			places					578	
+entrevista		noun	f	interview	A2			work					579	
+almuerzo		noun	m	brunch; mid-morning meal	A2		x	food			In Mexico el almuerzo is a late breakfast; the main meal is la comida.		580	
+gratis		adj		free (of charge)	A2			money			Invariable: entradas gratis.		581	
+bolsillo		noun	m	pocket	A2			clothes			Mexico also says la bolsa for a pocket.		582	
+extranjero		noun	mf	foreigner	A2			people			En el extranjero: abroad.		583	
+polvo		noun	m	dust; powder	A2			home					584	
+promesa		noun	f	promise	A2			people					585	
+lengua		noun	f	tongue; language	A2			body					586	
+felicidad		noun	f	happiness	B1			feelings	pl=-				587	
+tormenta		noun	f	storm	A2			weather					588	
+lástima		noun	f	pity; shame	A2			feelings			¡Qué lástima!: What a shame!		589	
+sombra		noun	f	shade; shadow	A2			weather			A la sombra: in the shade.		590	
+crédito		noun	m	credit	A2			money			Tarjeta de crédito: credit card.		591	
+sencillo		adj		simple; plain; single (ticket)	A2			describing				fácil	592	
+mezclar		verb		to mix	A2			food					593	
+interrumpir		verb		to interrupt	B1			courtesy					594	
+fecha		noun	f	date (calendar)	A2			time			¿Qué fecha es hoy?: What's the date today?		595	
+secretario		noun	mf	secretary	A2			work					596	
+parecido		adj		similar; alike	A2			describing				igual	597	
+comunicar		verb		to put through (on the phone)	B1			things			¿Me comunica con...?: Could you put me through to...?		598	
+mapa		noun	m	map	A1			things					599	
+practicar		verb		to practice	A2			school					600	
+lavar		verb		to wash	A1			home			Lavar los trastes: to wash the dishes. Washing yourself is lavarse.		601	
+revista		noun	f	magazine	A2			things					602	
+cuerda		noun	f	rope; string	A2			things			Mexico also says mecate for a rope.		603	
+aprovechar		verb		to make the most of	B1			time					604	
+tamaño		noun	m	size	A2			describing			For clothes and shoes Mexico says talla and número.		605	
+paquete		noun	m	package; parcel	A2			things					606	
+techo		noun	m	roof; ceiling	A2			home					607	
+internet		noun	m	internet	A2			things	pl=-		Usually el internet in Mexico.		608	
+harto		adj		fed up; sick of	A2			feelings			Estoy harto: I'm fed up.		609	
+delicioso		adj		delicious	A2			food				rico; sabroso	610	
+rodilla		noun	f	knee	A2			body					611	
+curso		noun	m	course; school year	A2			school					612	
+lago		noun	m	lake	A2			places					613	
+olor		noun	m	smell; odor	A2			food					614	
+enfermarse		verb		to get sick	A2			health			Me enfermé: I got sick.		615	
+lío		noun	m	mess; trouble	A2			things			Meterse en un lío: to get into trouble.		616	
+oso		noun	m	bear	A2			places			¡Qué oso!: How embarrassing! (informal Mexico).		617	
+nieve		noun	f	snow; sorbet (Mexico)	A2		x	weather			In Mexico nieve is also a water-based ice cream: nieve de limón.		618	
+empleo		noun	m	job; employment	B1			work				trabajo	619	
+solución		noun	f	solution	A2			things					620	
+mundial		noun	m	World Cup (el Mundial)	A2			things			Mexico hosted the Mundial in 1970, 1986 and 2026.		621	
+deuda		noun	f	debt	B1			money					622	
+lento		adj		slow	A2			describing					623	
+útil		adj		useful	A2			describing					624	
+incendio		noun	m	fire (accidental)	A2			city			An emergency fire is un incendio; fuego is fire in general.		625	
+letra		noun	f	letter (of the alphabet); lyrics	A2			language					626	
+uniforme		noun	m	uniform	A2			school			Most Mexican schoolchildren wear a uniform.		627	
+altura		noun	f	height; altitude	A2			describing			Mexico City is at 2,240 meters of altitude.		628	
+amistad		noun	f	friendship	A2			people					629	
+centavo		noun	m	cent	A2			money			A peso has one hundred centavos.		630	
+clave		noun	f	password; code	A2			things				contraseña	631	
+hombro		noun	m	shoulder	A2			body					632	
+risa		noun	f	laugh; laughter	A2			feelings			¡Qué risa!: How funny!		633	
+labio		noun	m	lip	A2			body					634	
+sobrino		noun	mf	nephew (sobrina: niece)	A2			family					635	
+alegría		noun	f	joy; happiness	A2			feelings					636	
+ladrón		noun	mf	thief; robber	A2			city					637	
+pasado mañana		expr		the day after tomorrow	A2			time					638	
+abrigo		noun	m	(winter) coat	A2			clothes			For a jacket Mexico says chamarra.		639	
+espejo		noun	m	mirror	A2			home					640	
+ruta		noun	f	route; bus route	A2		x	transport			In many cities una ruta is a city bus or minibus line.		641	
+galleta		noun	f	cookie; cracker	A1			food					642	
+nieto		noun	mf	grandson (nieta: granddaughter)	A2			family			Nietos: grandchildren.		643	
+oreja		noun	f	ear	A2			body			The outer ear; inner ear and hearing is el oído.		644	
+aliviarse		verb		to get better (from an illness)	A2		x	health			¡Que te alivies!: Get well soon!		645	
+biblioteca		noun	f	library	A2			places			Not a bookstore: that is una librería.		646	
+patio		noun	m	yard; courtyard	A2			home					647	
+invitación		noun	f	invitation	A2			people					648	
+gasolina		noun	f	gasoline; gas	A2			transport	pl=-		Mexican gas stations are full service: Lleno, por favor.		649	
+crema		noun	f	cream; sour cream	A2		x	food			Mexican crema is a thin sour cream for tacos and enchiladas.		650	
+típico		adj		typical; traditional	A2		x	describing			Comida típica: traditional local food.		651	
+onda		noun	f	vibe; thing (informal); wave	A2	informal	x	slang			¿Qué onda?: What's up? Buena onda: cool, nice.		652	
+reporte		noun	m	report	A2		x	work		informe	Mexico says reporte where Spain says informe.		653	
+gimnasio		noun	m	gym	A2			places					654	
+toalla		noun	f	towel	A2			home					655	
+horario		noun	m	schedule; timetable; hours	A2			time					656	
+rollo		noun	m	roll; story; long talk (informal)	A2	informal	x	slang			¿Cuál es tu rollo?: What's your deal? Un rollo: a long, boring talk.		657	
+sueldo		noun	m	salary; wages	A2			work					658	
+padrino		noun	mf	godfather; sponsor (at a wedding)	A2		x	family	f=madrina		Mexican weddings, baptisms and XV años have padrinos who pay for part of the party.		659	
+llegada		noun	f	arrival	A2			transport					660	
+grosero		adj		rude	A2		x	describing			In Mexico a grosería is a swear word or a rude act.		661	
+coraje		noun	m	anger; courage	A2		x	feelings			Mexico: Me da coraje: it makes me angry.		662	
+postre		noun	m	dessert	A1			food					663	
+equipaje		noun	m	luggage; baggage	A2			transport	pl=-		Uncountable: el equipaje.		664	
+mascota		noun	f	pet	A2			home					665	
+salchicha		noun	f	sausage; hot dog sausage	A2			food					666	
+# --- Batch C: freq 667-999
+materia		noun	f	(school) subject; matter	A2			school		asignatura			667	
+cuñado		noun	mf	brother-in-law (cuñada: sister-in-law)	A2			family					668	
+recepción		noun	f	reception (desk)	A2			places					669	
+mantequilla		noun	f	butter	A2			food	pl=-				670	
+taller		noun	m	workshop; car repair shop	A2			transport			Llevar el carro al taller: take the car to the mechanic.		671	
+mueble		noun	m	piece of furniture	A2			home			Los muebles: furniture.		672	
+maduro		adj		ripe; mature	A2			food					673	
+matemáticas		noun	fpl	math; mathematics	A2			school					674	
+hoyo		noun	m	hole	A2		x	places		agujero			675	
+agregar		verb		to add	A2			food		añadir			676	
+horno		noun	m	oven	A2			food					677	
+cafetería		noun	f	coffee shop; cafeteria	A2			places					678	
+ubicación		noun	f	location	A2			places					679	
+acento		noun	m	accent; accent mark	A2			language					680	
+almohada		noun	f	pillow	A2			home					681	
+cigarro		noun	m	cigarette	A2		x	health		cigarrillo			682	
+pasaje		noun	m	fare	A2			transport					683	
+calcetín		noun	m	sock	A2			clothes					684	
+comedor		noun	m	dining room; cafeteria	A2			home					685	
+falda		noun	f	skirt	A2			clothes					686	
+turista		noun	mf	tourist	A2			transport					687	
+sábana		noun	f	(bed) sheet	A2			home					688	
+timbre		noun	m	doorbell; stamp (Mexico)	A2		x	home			Tocar el timbre: to ring the bell.		689	
+inyección		noun	f	injection; shot	A2			health			Mexican pharmacies often give inyecciones.		690	
+consulta		noun	f	(doctor's) consultation	A2			health					691	
+suegro		noun	mf	father-in-law (suegra: mother-in-law)	A2			family					692	
+urgencias		noun	fpl	emergency room	A2			health			Always plural: Lo llevaron a urgencias.	emergencia	693	
+contraseña		noun	f	password	A2			things					694	
+estadio		noun	m	stadium	A2			places					695	
+gorra		noun	f	cap (baseball cap)	A2			clothes					696	
+pijama		noun	f	pajamas	A2		x	clothes			In Mexico la pijama, one word for the set.		697	
+asado		adj		grilled; roasted	A2		x	food			Carne asada: grilled beef, a weekend tradition in the north.		698	
+chofer		noun	mf	driver; chauffeur	A2		x	transport		chófer; conductor	Stressed on the last syllable in Mexico.		699	
+jamón		noun	m	ham	A2			food					700	
+morado		adj		purple	A2		x	describing					701	
+cereal		noun	m	cereal	A2			food					702	
+terminal		noun	f	terminal (bus); card machine	A2			things					703	
+uva		noun	f	grape	A2			food					704	
+tostada		noun	f	tostada (crisp fried tortilla)	A2		x	food			Topped with beans, chicken or seafood.		705	
+zanahoria		noun	f	carrot	A2			food					706	
+vacuna		noun	f	vaccine; shot	A2			health					707	
+olla		noun	f	pot (for cooking)	A2			home					708	
+flojo		adj		lazy; loose	A2		x	describing			Mexico: ¡No seas flojo!: Don't be lazy!		709	
+fresa		noun	f	strawberry	A2			food		frutilla	As an adjective (informal), fresa means posh or snobbish.		710	
+sabroso		adj		tasty; delicious	A2		x	food				rico	711	
+planchar		verb		to iron	A2			home					712	
+suéter		noun	m	sweater	A2			clothes		jersey			713	
+sillón		noun	m	armchair; couch	A2		x	home		sofá			714	
+tequila		noun	m	tequila	A2			food			From the town of Tequila, Jalisco.		715	
+calificación		noun	f	grade (school)	A2		x	school		nota			716	
+ajo		noun	m	garlic	A2			food					717	
+posada		noun	f	Christmas party (December 16 to 24)	A2		x	time			Las posadas reenact Mary and Joseph's search for an inn, with piñatas and ponche.	fiesta	718	
+alergia		noun	f	allergy	A2			health					719	
+tránsito		noun	m	traffic; traffic police	B1		x	transport	pl=-		Un (agente de) tránsito: a traffic officer.	tráfico	720	
+camarón		noun	m	shrimp	A2			food		gamba			721	
+elevador		noun	m	elevator	A2		x	city		ascensor			722	
+micro		noun	m	minibus	A2		x	transport			Short for microbús. Mexico City also says pesero.	pesero	723	
+microondas		noun	m	microwave	A2			food					724	
+ventanilla		noun	f	window seat; ticket window	A2			transport					725	
+compadre		noun	mf	godfather of your child; close friend	A2		x	family	f=comadre		Your child's padrino becomes your compadre (and comadre). Also said to a close friend.	padrino	726	
+piña		noun	f	pineapple	A2			food					727	
+lavadora		noun	f	washing machine	A2			home					728	
+panza		noun	f	belly; tummy	A2	informal	x	body			Me duele la panza: my tummy hurts. Neutral: estómago.		729	
+cargador		noun	m	charger	A2			things					730	
+puerco		noun	m	pork; pig	A2		x	food		cerdo	Carne de puerco: pork.		731	
+reservación		noun	f	reservation; booking	A2		x	places		reserva			732	
+festejar		verb		to celebrate; to party	A2			time					733	
+apenado		adj		embarrassed; sorry	A2		x	feelings			Mexico: Estoy muy apenado: I'm very embarrassed or sorry.		734	
+paleta		noun	f	popsicle; lollipop	A2		x	food		polo; piruleta	Paleta de hielo: popsicle.		735	
+credencial		noun	f	ID card	A2		x	things			La credencial del INE is the Mexican voter ID card.		736	
+caldo		noun	m	broth; soup	A2			food			Caldo de pollo: chicken soup.		737	
+antro		noun	m	nightclub; club	A2	informal	x	places			Ir de antro: to go clubbing.		738	
+trescientos		num		three hundred	A2			numbers	f=trescientas				739	
+jarabe		noun	m	(cough) syrup	A2			health					740	
+lechuga		noun	f	lettuce	A2			food					741	
+bache		noun	m	pothole	A2		x	city					742	
+gringo		noun	mf	American (person from the US)	A2	informal	x	people			Informal, sometimes friendly, sometimes rude. Neutral: estadounidense.	estadounidense	743	
+bronca		noun	f	trouble; problem (slang)	A2	informal	x	slang			No hay bronca: no problem. Standard: problema.		744	
+sandía		noun	f	watermelon	A2			food					745	
+licenciado		noun	mf	college graduate; lawyer (title)	A2		x	work			Licenciado (Lic.) is a title for any college graduate, often a lawyer.		746	
+res		noun	f	beef; cattle	A2		x	food		ternera	Carne de res: beef.		747	
+telenovela		noun	f	soap opera	A2		x	things					748	
+regañar		verb		to scold; to tell off	A2			family					749	
+buena onda		expr		nice; cool (person or thing)	A2	informal	x	slang			Standard: amable, simpático.		750	
+cuatrocientos		num		four hundred	A2			numbers	f=cuatrocientas				751	
+cobija		noun	f	blanket	A2		x	home		manta; frazada			752	
+licuadora		noun	f	blender	A2		x	food		batidora			753	
+audífonos		noun	mpl	headphones; earphones	A2		x	things		auriculares; cascos			754	
+seiscientos		num		six hundred	A2			numbers	f=seiscientas				755	
+traste		noun	m	dish (usually plural: trastes)	A2		x	home		plato	Lavar los trastes: to do the dishes.		756	
+wifi		noun	m	wifi	A1			things	pl=-				757	
+novecientos		num		nine hundred	A2			numbers	f=novecientas		Nueve becomes nove-.		758	
+ochocientos		num		eight hundred	A2			numbers	f=ochocientas				759	
+setecientos		num		seven hundred	A2			numbers	f=setecientas		Not setecientos with ie: siete becomes sete-.		760	
+papelería		noun	f	stationery store	A2		x	city			Papelerías also make photocopies and print documents.		761	
+chamaco		noun	mf	kid; boy (chamaca: girl)	A2	informal	x	people				niño	762	
+enchilada		noun	f	enchilada	A2		x	food			Enchiladas verdes or rojas, with green or red sauce.		763	
+abarrotes		noun	mpl	groceries; corner store	A2		x	city			Tienda de abarrotes: a corner grocery store.		764	
+aguinaldo		noun	m	Christmas bonus	B1		x	money			Mexican law requires employers to pay it every December.		765	
+aventar		verb		to throw; to toss	A2		x	things		lanzar; tirar	Aviéntame la pelota: throw me the ball.	tirar	766	
+bolillo		noun	m	bread roll	A2		x	food			The crusty roll for tortas.		767	
+botana		noun	f	snack; appetizer	A2		x	food		aperitivo; tapa		antojito	768	
+chancla		noun	f	flip-flop; sandal	A2		x	clothes		chancleta	Usually plural: chanclas.		769	
+chela		noun	f	beer (slang)	A2	informal	x	slang			Standard: cerveza.	cerveza	770	
+chilaquiles		noun	mpl	chilaquiles (tortilla chips in salsa)	A2		x	food			A classic breakfast, verdes or rojos.		771	
+combi		noun	f	minivan (shared, on a fixed route)	A2		x	transport			Feminine: la combi.	pesero; micro	772	
+kínder		noun	m	kindergarten; preschool	A2		x	school			From the German Kindergarten.		773	
+mariachi		noun	m	mariachi (musician or band)	A2		x	things			El mariachi: the band, or one of its musicians.		774	
+picoso		adj		spicy (hot)	A2		x	food			Mexico: ¿Pica?: Is it spicy? Picoso and picante both mean hot.	picante	775	
+rasurarse		verb		to shave	A2		x	home		afeitarse			776	
+sismo		noun	m	earthquake	A2		x	weather			The word used in the news and in warnings; everyday speech says temblor.	temblor	777	
+tortillería		noun	f	tortilla shop	A2		x	city			Tortillas are bought by the kilo, hot.		778	
+trapear		verb		to mop	A2		x	home		fregar			779	
+moneda		noun	f	coin; currency	A2			money					780	
+suave		adj		soft; smooth; gentle	A2			describing					781	
+frontera		noun	f	border	A2			places					782	
+seco		adj		dry	A2			describing					783	
+felicidades		interj		congratulations!; happy birthday!	A2			courtesy					784	
+aparte		adv		separately; besides; apart	A2			grammar			¿Se lo envuelvo aparte?: Shall I wrap it separately?		785	
+cola		noun	f	tail; line (queue)	A2			things			Mexico usually says fila for a line.		786	
+sonrisa		noun	f	smile	A2			feelings					787	
+italiano		adj		Italian	A2			people					788	
+pizza		noun	f	pizza	A2			food					789	
+cable		noun	m	cable; wire	A2			things					790	
+dibujar		verb		to draw	A2			school					791	
+sano		adj		healthy	A2			health					792	
+hoja		noun	f	leaf; sheet (of paper)	A2			school					793	
+vaca		noun	f	cow	A2			places					794	
+fila		noun	f	line (queue); row	A2			city			Hacer fila: to stand in line.		795	
+moda		noun	f	fashion	A2			clothes			De moda: in fashion.		796	
+concierto		noun	m	concert	A2			things					797	
+anuncio		noun	m	ad; announcement; sign	A2			things					798	
+botón		noun	m	button	A2			things					799	
+chiste		noun	m	joke	A2			feelings			Contar un chiste: to tell a joke.		800	
+alarma		noun	f	alarm	A2			home			La alarma sísmica: the earthquake alarm.		801	
+asaltar		verb		to mug; to hold up	B1			city			Me asaltaron: I was mugged.		802	
+emocionado		adj		excited	A2			feelings					803	
+borrar		verb		to erase; to delete	A2			school					804	
+participar		verb		to take part; to participate	B1			things					805	
+licencia		noun	f	license; driver's license	A2			transport			Licencia de manejo: driver's license (Mexico).		806	
+madera		noun	f	wood	A2			things					807	
+divorcio		noun	m	divorce	B1			family					808	
+adolescente		noun	mf	teenager	A2			people					809	
+traducción		noun	f	translation	A2			language					810	
+educación		noun	f	education; manners	A2			school	pl=-		Falta de educación: bad manners.		811	
+plata		noun	f	silver	A2			things	pl=-		Taxco, Guerrero, is famous for its silver.		812	
+estadounidense		adj		American (from the US)	A2			people			The neutral word for someone from the United States.		813	
+nube		noun	f	cloud	A2			weather					814	
+placa		noun	f	license plate; badge	A2		x	transport		matrícula			815	
+deporte		noun	m	sport	A2			things					816	
+tráfico		noun	m	traffic	A2			transport	pl=-		Hay mucho tráfico: there's a lot of traffic.		817	
+vomitar		verb		to vomit; to throw up	A2			health					818	
+moderno		adj		modern	A2			describing					819	
+miel		noun	f	honey	A2			food	pl=-				820	
+paciencia		noun	f	patience	A2			feelings	pl=-				821	
+aburrirse		verb		to get bored	A2			feelings					822	
+océano		noun	m	ocean	A2			places					823	
+puerto		noun	m	port; harbor	A2			places					824	
+frase		noun	f	sentence; phrase	A2			language					825	
+virus		noun	m	virus	A2			health					826	
+incómodo		adj		uncomfortable; awkward	A2			describing					827	
+divorciarse		verb		to get divorced	B1			family					828	
+urgente		adj		urgent	A2			describing					829	
+bota		noun	f	boot	A2			clothes					830	
+docena		noun	f	dozen	A2			numbers					831	
+cultura		noun	f	culture	A2			things					832	
+medianoche		noun	f	midnight	A2			time					833	
+clínica		noun	f	clinic	A2			health					834	
+cinturón		noun	m	belt; seat belt	A2			clothes			Ponte el cinturón: put your seat belt on.		835	
+pantalla		noun	f	screen	A2			things					836	
+alumno		noun	mf	student; pupil	A2			school				estudiante	837	
+bandera		noun	f	flag	A2			things					838	
+guía		noun	mf	guide; guidebook	A2			transport					839	
+pasta		noun	f	pasta; paste	A2			food			Pasta de dientes: toothpaste.		840	
+frito		adj		fried	A2			food			Frijoles refritos: refried beans.		841	
+sabor		noun	m	taste; flavor	A2			food			¿De qué sabor?: What flavor?		842	
+pasajero		noun	mf	passenger	A2			transport					843	
+masa		noun	f	dough; corn dough (masa)	A2		x	food			Masa de maíz is the dough for tortillas and tamales.		844	
+revolución		noun	f	revolution	B1			things			The Mexican Revolution began on 20 November 1910.		845	
+herramienta		noun	f	tool	A2			things					846	
+milagro		noun	m	miracle	A2			feelings			¡Qué milagro!: long time no see!		847	
+abrazo		noun	m	hug	A2			people			Un abrazo: a hug; also a common way to sign off a message.		848	
+temperatura		noun	f	temperature	A2			weather					849	
+traducir		verb		to translate	A2			language					850	
+ligero		adj		light (not heavy)	A2			describing					851	
+hamburguesa		noun	f	hamburger	A2			food					852	
+plaza		noun	f	square; shopping mall	A2		x	city			In Mexico una plaza is often a shopping mall.		853	
+apellido		noun	m	last name; surname	A2			people			Mexicans have two: the father's and then the mother's.		854	
+vendedor		noun	mf	seller; salesperson	A2			work					855	
+lata		noun	f	can; tin; nuisance	A2			food			Dar lata: to be a nuisance.		856	
+tradición		noun	f	tradition	A2			things					857	
+cantante		noun	mf	singer	A2			people					858	
+uña		noun	f	nail (finger or toe)	A2			body					859	
+alegre		adj		cheerful; happy	A2			feelings					860	
+guitarra		noun	f	guitar	A2			things					861	
+ratón		noun	m	mouse	A2			places					862	
+gerente		noun	mf	manager	A2			work					863	
+bombero		noun	mf	firefighter	A2			city					864	
+cocinero		noun	mf	cook	A2			food					865	
+casco		noun	m	helmet	A2			transport					866	
+delgado		adj		thin; slim	A2			describing			Polite; flaco is more colloquial.		867	
+mecánico		noun	mf	mechanic	A2			transport					868	
+mosca		noun	f	fly (insect)	A2			places					869	
+cortina		noun	f	curtain	A2			home					870	
+educado		adj		polite; well-mannered	A2			describing			Not educated: that is culto or estudiado.		871	
+cajón		noun	m	drawer	A2			home					872	
+estrés		noun	m	stress	A2			health	pl=-				873	
+pila		noun	f	battery; pile	A2		x	things			Mexico calls a phone battery la pila: Se me acabó la pila.		874	
+feria		noun	f	small change; fair	A2		x	money			¿Tiene feria?: Do you have change? Also a town fair.	cambio	875	
+tobillo		noun	m	ankle	A2			body					876	
+coco		noun	m	coconut	A2			food					877	
+crucero		noun	m	intersection; cruise	A2		x	city			In Mexico a crucero is also a street crossing.		878	
+codo		noun	m	elbow	A2			body			The slang sense (stingy) is codo#stingy.		879	
+codo	codo#stingy	adj		stingy; tight-fisted	A2	informal	x	describing			¡No seas codo!: Don't be stingy! Feminine: coda.		879	
+contador		noun	mf	accountant; meter	A2			work					880	
+chicle		noun	m	chewing gum	A2			food			From Nahuatl tzictli.		881	
+alérgico		adj		allergic	A2			health					882	
+lavandería		noun	f	laundromat; laundry service	A2			places					883	
+recado		noun	m	message (left for someone)	A2			things			¿Le dejo un recado?: Shall I leave a message?		884	
+volcán		noun	m	volcano	A2			places			Popocatépetl, Don Goyo, is an active volcano near Mexico City.		885	
+cucaracha		noun	f	cockroach	A2			home					886	
+barbacoa		noun	f	slow-cooked barbecued meat	A2		x	food			Mexican barbacoa is cooked in a pit; eaten in tacos on weekends.		887	
+zoológico		noun	m	zoo	A2			places					888	
+palomitas		noun	fpl	popcorn	A2			food					889	
+vegetariano		adj		vegetarian	A2			food					890	
+tocino		noun	m	bacon	A2			food		beicon			891	
+mero		adj		very; exact; real	B1		x	grammar			Mexico: el mero día: the very day; ya mero: almost.		892	
+taxista		noun	mf	taxi driver	A2			transport				chofer	893	
+gasolinera		noun	f	gas station	A2			transport					894	
+concha		noun	f	shell; sweet bun (concha)	A2		x	food			Conchas are round sweet breads with a sugar topping like a shell.		895	
+pasto		noun	m	grass; lawn	A2		x	places		césped; hierba			896	
+pimienta		noun	f	pepper (spice)	A2			food	pl=-				897	
+mosquito		noun	m	mosquito	A2			places			Mexico also says mosco or zancudo.		898	
+víbora		noun	f	snake	A2		x	places		serpiente			899	
+harina		noun	f	flour	A2			food	pl=-				900	
+guardería		noun	f	daycare; nursery	A2			school					901	
+lavabo		noun	m	(bathroom) sink	A2		x	home		lavamanos			902	
+bufanda		noun	f	scarf	A2			clothes					903	
+taquilla		noun	f	ticket office; box office	A2			places					904	
+escoba		noun	f	broom	A2			home					905	
+mordida		noun	f	bite (of food)	A2			food			¿Me das una mordida?: Can I have a bite? The slang sense is mordida#bribe.		906	
+mordida	mordida#bribe	noun	f	bribe	B1	informal	x	slang			La mordida: a bribe to a police officer. Never offer one.		906	
+gelatina		noun	f	jelly; gelatin dessert	A2		x	food					907	
+melón		noun	m	melon; cantaloupe	A2			food					908	
+ofrenda		noun	f	offering; Day of the Dead altar	A2		x	time			On 1 and 2 November families set up an ofrenda for their dead.		909	
+bistec		noun	m	thin-cut beef steak	A2		x	food	pl=bistecs				910	
+sartén		noun	m	frying pan	A2		x	food			Mexico usually says el sartén; la sartén elsewhere.		911	
+recreo		noun	m	recess; break (at school)	A2			school					912	
+diarrea		noun	f	diarrhea	A2			health					913	
+calavera		noun	f	skull; Day of the Dead verse	A2		x	time			Calaveritas de azúcar: sugar skulls. Calaveras are also funny verses about the living as if they were dead.		914	
+carnicería		noun	f	butcher shop	A2			city					915	
+panadería		noun	f	bakery	A2			city					916	
+pepino		noun	m	cucumber	A2			food					917	
+regar		verb		to water (plants)	A2			home					918	
+cantina		noun	f	cantina; bar	A2		x	places					919	
+plomero		noun	mf	plumber	A2		x	home		fontanero			920	
+arete		noun	m	earring	A2		x	clothes		pendiente			921	
+impermeable		noun	m	raincoat	A2			clothes					922	
+morro		noun	mf	kid; young guy (morra: girl)	B1	informal	x	slang			Informal, northern and central Mexico.	chavo	923	
+chapa		noun	f	lock (on a door)	A2		x	home		cerradura			924	
+carnal		noun	mf	brother; close friend	B1	informal	x	slang			Informal: like bro.	cuate	925	
+cochera		noun	f	garage (at a house)	A2		x	home		garaje			926	
+andén		noun	m	platform (in a station)	A2			transport					927	
+albañil		noun	mf	construction worker; bricklayer	A2		x	work					928	
+caseta		noun	f	tollbooth; booth	A2		x	transport			On the autopista you pay at the caseta.		929	
+electricista		noun	mf	electrician	A2			home					930	
+gacho		adj		mean; awful; not cool	B1	informal	x	slang			¡Qué gacho!: How awful! How mean!		931	
+beisbol		noun	m	baseball	A2		x	things	pl=-	béisbol	Mexico writes beisbol and stresses the last syllable.		932	
+estética		noun	f	hair salon; beauty salon	A2		x	city		peluquería			933	
+mala onda		expr		not cool; mean (person)	A2	informal	x	slang			¡Qué mala onda!: That's not cool!		934	
+cloro		noun	m	bleach; chlorine	A2		x	home	pl=-	lejía			935	
+piñata		noun	f	piñata	A2		x	time			Broken at birthdays and posadas.		936	
+cerro		noun	m	hill	A2		x	places		colina			937	
+boleta		noun	f	report card; ballot	A2		x	school					938	
+chorizo		noun	m	chorizo (spicy sausage)	A2			food					939	
+gordita		noun	f	gordita (thick stuffed corn cake)	A2		x	food					940	
+sombrilla		noun	f	umbrella; parasol	A2		x	weather				paraguas	941	
+guacamole		noun	m	guacamole	A2		x	food			From Nahuatl ahuacamolli: avocado sauce.		942	
+flan		noun	m	flan; caramel custard	A2			food					943	
+cubeta		noun	f	bucket	A2		x	home		cubo; balde			944	
+tapete		noun	m	rug; mat	A2		x	home		alfombra			945	
+compa		noun	mf	buddy; pal	B1	informal	x	slang			Short for compadre or compañero.	cuate	946	
+churro		noun	m	churro	A2			food			With hot chocolate at a churrería.		947	
+excusado		noun	m	toilet	A2		x	home		inodoro; váter	The toilet bowl itself; the room is el baño.		948	
+granizo		noun	m	hail	B1		x	weather	pl=-		Hailstorms are common in Mexico City in the rainy season.		949	
+curita		noun	f	Band-Aid; adhesive bandage	A2		x	health		tirita			950	
+panteón		noun	m	cemetery	A2		x	places		cementerio			951	
+papaya		noun	f	papaya	A2			food					952	
+mandarina		noun	f	tangerine	A2			food					953	
+ya mero		expr		almost; nearly there	A2		x	time			¿Ya llegamos? —Ya mero: Are we there yet? —Almost.		954	
+ajolote		noun	m	axolotl	B1		x	places			A salamander found only in Xochimilco's canals; it appears on the fifty-peso bill.		955	
+antojito		noun	m	snack; street food	A2		x	food			Antojitos: tacos, quesadillas, sopes, tostadas and other snacks.		956	
+birria		noun	f	birria (spicy meat stew)	A2		x	food			From Jalisco; eaten as a stew or in tacos.		957	
+boiler		noun	m	water heater	A2		x	home	pl=boilers	calentador	Prender el boiler: to turn on the water heater.		958	
+carnitas		noun	fpl	carnitas (slow-cooked pork)	A2		x	food					959	
+cempasúchil		noun	m	marigold (Day of the Dead flower)	B1		x	time			Its orange petals decorate the ofrendas.		960	
+cerillo		noun	m	match (for lighting)	A2		x	home		cerilla; fósforo			961	
+chafa		adj		cheap; shoddy	B1	informal	x	slang					962	
+chilango		noun	mf	person from Mexico City	A2	informal	x	people			Informal; can sound mocking outside the capital. Neutral: capitalino.		963	
+chipote		noun	m	bump (on the head)	A2	informal	x	health				moretón	964	
+chueco		adj		crooked; bent	A2		x	describing			El cuadro está chueco: the picture is crooked. The slang sense (dishonest) is chueco#shady.		965	
+chueco	chueco#shady	adj		shady; dishonest	B1	informal	x	describing			Un negocio chueco: a shady deal.		965	
+comal		noun	m	comal (griddle for tortillas)	A2		x	food			A flat griddle of clay or metal.		966	
+de volada		expr		right away; in a flash	B1	informal	x	slang			Ahorita vengo, de volada: I'll be right back.		967	
+escuincle		noun	mf	kid; brat	B1	informal	x	people	f=escuincla		From Nahuatl itzcuintli: dog.	chamaco	968	
+esquite		noun	m	esquites (corn in a cup)	A2		x	food			Usually plural: esquites, corn kernels with mayo, chili and lime.		969	
+glorieta		noun	f	traffic circle; roundabout	A2		x	city		rotonda			970	
+guayaba		noun	f	guava	A2			food					971	
+guácala		interj		yuck!; gross!	A2	informal	x	feelings					972	
+jícama		noun	f	jícama (crisp root eaten raw)	A2		x	food			Eaten with lime and chili powder.		973	
+lonche		noun	m	packed lunch	A2		x	food			From English lunch; mainly northern Mexico.		974	
+metrobús		noun	m	Metrobús (Mexico City rapid bus)	A2		x	transport					975	
+mezcal		noun	m	mezcal	A2		x	food			A spirit made from agave, especially in Oaxaca.		976	
+michelada		noun	f	michelada (beer with lime and spices)	A2		x	food					977	
+pozole		noun	m	pozole (hominy and meat soup)	A2		x	food			Served on 15 September and at parties.		978	
+pulque		noun	m	pulque (fermented agave drink)	B1		x	food					979	
+sope		noun	m	sope (thick tortilla with toppings)	A2		x	food					980	
+tinaco		noun	m	water tank (on the roof)	A2		x	home			Most Mexican houses store water in a tinaco on the roof.		981	
+toronja		noun	f	grapefruit	A2		x	food		pomelo			982	
+mojarse		verb		to get wet	A2			weather					983	
+tristeza		noun	f	sadness	A2			feelings	pl=-				984	
+peinarse		verb		to comb (your hair)	A2			home					985	
+mojado		adj		wet	A2			describing					986	
+cepillo		noun	m	brush; toothbrush	A2			home			Cepillo de dientes: toothbrush.		987	
+amargo		adj		bitter	A2			food					988	
+vagón		noun	m	car (of a train)	B1			transport					989	
+gol		noun	m	goal (sports)	A2			things					990	
+huracán		noun	m	hurricane	A2			weather					991	
+calabaza		noun	f	pumpkin; squash	A2			food			Calabacita: zucchini.		992	
+trapo		noun	m	rag; cloth	A2			home					993	
+salado		adj		salty	A2			food					994	
+puntual		adj		punctual; on time	A2			describing					995	
+moretón		noun	m	bruise	A2			health					996	
+catedral		noun	f	cathedral	A2			places					997	
+diabetes		noun	f	diabetes	B1			health					998	
+antipático		adj		unpleasant; unfriendly	A2			describing			The opposite of simpático.		999	

@@ -1,0 +1,123 @@
+number: 4
+title: "¿Cuánto es?"
+title_en: How much is it?
+level: A1
+reviewer_notes:
+  - "Prices: taco 15 pesos, torta 40-45, order of tacos 50, two beers 70, a soda at 80 as too expensive, total 180 for 5 tacos, 2 quesadillas and 2 sodas at a street stand. Realistic for 2026?"
+  - "Culture note: tip 10 to 15 percent in restaurants, rarely on the check; a few coins for the taquero are welcome; many small places are cash only; $ is used for pesos. Accurate?"
+  - "¿Cuánto le doy? translated 'What do I owe you?': right?"
+new: [cuarenta, cincuenta, sesenta, setenta, ochenta, noventa, cien, peso, costar, pagar, tarjeta, propina]
+conjugate: ["costar:pres.3s", "costar:pres.3p", "pagar:pres"]
+notes:
+  - kind: grammar
+    title: Numbers 31-100
+    text: |
+      From 31 to 99, say the tens, then _y_ (and), then the units: _treinta y uno_, _cuarenta y cinco_, _noventa y nueve_. The _y_ goes only between the tens and the units.
+
+      - _cuarenta_ — 40
+      - _cincuenta_ — 50
+      - _sesenta_ — 60
+      - _setenta_ — 70
+      - _ochenta_ — 80
+      - _noventa_ — 90
+      - _cien_ — 100
+
+      _Cien_ is exactly 100: _cien pesos_. From 101 the word is _ciento_: _ciento veinte_ (120). Do not mix up _sesenta_ (60, with _s_) and _setenta_ (70, with _t_).
+  - kind: usage
+    title: Prices
+    text: |
+      - _¿Cuánto cuesta?_ — How much is it? (one thing)
+      - _¿Cuánto cuestan?_ — How much are they? (several)
+      - _¿Cuánto es?_ — How much is it all? (the total)
+      - _Son ochenta pesos._ — That's eighty pesos.
+
+      _Costar_ changes _o_ to _ue_ and agrees with the thing: _la torta cuesta_, _los tacos cuestan_.
+
+      Mexico writes prices with the $ sign, the same sign as the dollar: $80 on a menu is eighty pesos.
+  - kind: culture
+    title: Paying and tipping
+    text: |
+      In a restaurant, leave a _propina_ of 10 to 15 percent; it is rarely on the check. At a taco stand you say what you ate and pay at the end, and a few coins for the taquero are welcome.
+
+      Many small places take cash only, so ask first: _¿Aceptan tarjeta?_ (Do you take cards?) To pay, say _¿Cuánto le doy?_ (What do I owe you?) or _¿Puedo pagar con tarjeta?_
+sentences:
+  - es: "Son {cuarenta} pesos."
+    en: "That's forty pesos."
+    order: true
+  - es: "La torta cuesta {cuarenta} y cinco pesos."
+    en: "The torta is forty-five pesos."
+  - es: "Mi número es el {cincuenta} y cinco, doce, treinta y cuatro, ochenta, noventa y uno."
+    en: "My number is 55 12 34 80 91."
+  - es: "Una orden de tacos cuesta {cincuenta} pesos."
+    en: "An order of tacos is fifty pesos."
+  - es: "¿{Sesenta}? —No, setenta."
+    en: "Sixty? —No, seventy."
+  - es: "Las dos tortas son {sesenta} pesos."
+    en: "The two tortas come to sixty pesos."
+  - es: "La cuenta es de {setenta} pesos."
+    en: "The check comes to seventy pesos."
+  - es: "Dos cervezas, {setenta} pesos."
+    en: "Two beers, seventy pesos."
+  - es: "¿{Ochenta} pesos por un refresco?"
+    en: "Eighty pesos for a soda?"
+  - es: "Son {ochenta} y ocho pesos."
+    en: "That's eighty-eight pesos."
+  - es: "Son {noventa} pesos con la propina."
+    en: "It's ninety pesos with the tip."
+  - es: "¿{Noventa} pesos? ¡Es muy caro!"
+    en: "Ninety pesos? That's really expensive!"
+  - es: "Son {cien} pesos."
+    en: "That's a hundred pesos."
+  - es: "Tres tortas por {cien} pesos."
+    en: "Three tortas for a hundred pesos."
+  - es: "Un taco cuesta quince {pesos}."
+    en: "A taco is fifteen pesos."
+  - es: "¿Cuántos {pesos} son?"
+    en: "How many pesos is that?"
+  - es: "¿Cuánto {cuesta} la torta?"
+    en: "How much is the torta?"
+    order: true
+  - es: "¿Cuánto {cuestan} los tacos?"
+    en: "How much are the tacos?"
+  - es: "¿Puedo {pagar} con tarjeta?"
+    en: "Can I pay by card?"
+    order: true
+  - es: "Hoy {pago} yo."
+    en: "It's on me today."
+    reviewer_notes: "Hoy pago yo for 'it's on me': natural?"
+  - es: "¿Aceptan {tarjeta}?"
+    en: "Do you take cards?"
+  - es: "No aceptamos {tarjeta}."
+    en: "We don't take cards."
+  - es: "La {propina} es para el mesero."
+    en: "The tip is for the waiter."
+  - es: "Son ochenta pesos más la {propina}."
+    en: "It's eighty pesos plus the tip."
+dialogue:
+  title: "¿Cuánto le doy?"
+  title_en: What do I owe you?
+  lines:
+    - speaker: Sofía
+      es: "Chuy, ¿cuánto le doy?"
+      en: "Chuy, what do I owe you?"
+    - speaker: Chuy
+      es: "¿Cuántos tacos son?"
+      en: "How many tacos did you have?"
+    - speaker: Sofía
+      es: "Cinco tacos [al pastor|al pastor], dos quesadillas y dos refrescos."
+      en: "Five tacos al pastor, two quesadillas and two sodas."
+    - speaker: Chuy
+      es: "Son ciento ochenta pesos."
+      en: "That's a hundred and eighty pesos."
+    - speaker: Tom
+      es: "¿Puedo pagar con tarjeta?"
+      en: "Can I pay by card?"
+    - speaker: Chuy
+      es: "No, perdón, no aceptamos tarjeta."
+      en: "No, sorry, we don't take cards."
+    - speaker: Sofía
+      es: "Yo pago, Tom. Aquí están los ciento ochenta, Chuy."
+      en: "I'll pay, Tom. Here's the hundred and eighty, Chuy."
+    - speaker: Tom
+      es: "Gracias, Sofía. Y yo pago la propina."
+      en: "Thanks, Sofía. And I'll get the tip."

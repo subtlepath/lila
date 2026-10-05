@@ -1,0 +1,129 @@
+number: 2
+title: ¿Qué tiene?
+title_en: What's wrong?
+level: A2
+reviewer_notes:
+  - "Forms of address: usted both ways between doctora Ruiz and Ana."
+  - "'Gripa' is glossed as both cold and flu; 'estar malo, mala' is given as colloquial for sick. Confirm."
+  - "The doctor says 'Tome estas pastillas tres veces al día' (from the brief); no drug is named. Acceptable?"
+  - "Culture note: consultorios next to pharmacies see patients 'for a low fee'; antibiotics need a receta. Accurate?"
+new: [sentirse, consultorio, fiebre, gripa, tos, dolor, mareado, doctor, medicina, pastilla, receta, deber]
+conjugate: ["sentirse:pres", "deber:pres"]
+notes:
+  - kind: grammar
+    title: Tener que and deber
+    text: |
+      Doctors and friends give advice with two verbs followed by an infinitive:
+
+      - _tener que_ — have to: _Tiene que descansar._ (You have to rest.)
+      - _deber_ — should: _Debe tomar mucha agua._ (You should drink plenty of water.)
+
+      _Tener_ also names what is wrong. _¿Qué tiene?_ is the doctor's "What's wrong?", and you answer with _tengo_:
+
+      - _Tengo fiebre, tos, gripa._
+      - _Tengo dolor de cabeza._ (a headache)
+
+      _Sentirse_ says how you feel, with an adverb or an adjective that agrees: _Me siento mal._ _Me siento mareada._ _¿Cómo se siente?_
+  - kind: usage
+    title: Mexican health words
+    text: |
+      - _gripa_ is the Mexican word for a cold or the flu. In Spain it is ~gripe~.
+      - _Estoy enfermo_, _estoy enferma_ — I'm sick. _Estoy malo_, _estoy mala_ is colloquial.
+      - _mareado_ is dizzy, and also queasy or carsick.
+      - a _receta_ is a doctor's prescription, and also a recipe.
+
+      To wish someone well, say _¡Que te mejores!_ to a friend, or _¡Que se mejore!_ with usted.
+  - kind: culture
+    title: Doctors next to pharmacies
+    text: |
+      Many pharmacies in Mexico have a small _consultorio_ (doctor's office) next door, where a doctor sees you quickly for a low fee. It is often the first stop for a cold or a sore throat.
+
+      Many medicines are sold without a _receta_, but antibiotics need one.
+
+      Workers with social security go to the clinics of the _IMSS_, the Mexican Social Security Institute.
+sentences:
+  - es: "Me {siento} [mal|mal]."
+    en: "I don't feel well."
+    order: true
+  - es: "¿Cómo se {siente} hoy, señora?"
+    en: "How are you feeling today, ma'am?"
+  - es: "Ya me {siento} mejor."
+    en: "I feel better now."
+  - es: "El {consultorio} está al lado de la farmacia."
+    en: "The doctor's office is next to the pharmacy."
+  - es: "El {consultorio} abre a las nueve."
+    en: "The doctor's office opens at nine."
+  - es: "Creo que tengo {fiebre}."
+    en: "I think I have a fever."
+    order: true
+  - es: "El niño tiene mucha {fiebre}."
+    en: "The little boy has a high fever."
+  - es: "Toda mi familia tiene {gripa}."
+    en: "My whole family has a cold."
+  - es: "¡Salud! ¿Tienes {gripa}?"
+    en: "Bless you! Do you have a cold?"
+    note: "Say ¡Salud! when someone sneezes."
+  - es: "Tengo mucha {tos}."
+    en: "I have a bad cough."
+  - es: "La {tos} no me deja dormir."
+    en: "My cough won't let me sleep."
+  - es: "Tengo {dolor} de cabeza."
+    en: "I have a headache."
+  - es: "¿Tiene {dolor} de estómago?"
+    en: "Do you have a stomachache?"
+  - es: "Estoy [un poco|un poco] {mareada}."
+    en: "I'm a little dizzy."
+  - es: "Me siento {mareado}."
+    en: "I feel dizzy."
+  - es: "Necesito un {doctor}."
+    en: "I need a doctor."
+  - es: "La {doctora} Ruiz es muy amable."
+    en: "Dr. Ruiz is very kind."
+  - es: "Esta {medicina} es muy cara."
+    en: "This medicine is very expensive."
+  - es: "Necesito comprar {medicina} para la tos."
+    en: "I need to buy cough medicine."
+  - es: "Estas {pastillas} son para la fiebre."
+    en: "These pills are for the fever."
+  - es: "¿Dónde están mis {pastillas}?"
+    en: "Where are my pills?"
+  - es: "Aquí está su {receta}."
+    en: "Here's your prescription."
+    order: true
+  - es: "Sin {receta} no le puedo vender esa medicina."
+    en: "I can't sell you that medicine without a prescription."
+  - es: "Usted {debe} tomar mucha agua."
+    en: "You should drink plenty of water."
+  - es: "Estás enfermo: no {debes} trabajar hoy."
+    en: "You're sick: you shouldn't work today."
+  - es: "Le {debo} cien pesos."
+    en: "I owe you a hundred pesos."
+    note: "Deber also means to owe."
+dialogue:
+  title: En el consultorio
+  title_en: At the doctor's office
+  lines:
+    - speaker: Doctora
+      es: "Buenas tardes, pase. ¿Qué tiene?"
+      en: "Good afternoon, come in. What's wrong?"
+    - speaker: Ana
+      es: "Me siento [mal|mal], doctora. Tengo fiebre y tos desde ayer."
+      en: "I don't feel well, doctor. I've had a fever and a cough since yesterday."
+    - speaker: Doctora
+      es: "¿Le duele la garganta?"
+      en: "Does your throat hurt?"
+    - speaker: Ana
+      es: "Sí, [un poco|un poco]. Y estoy [un poco|un poco] mareada. ¿Qué tengo?"
+      en: "Yes, a little. And I'm a little dizzy. What's wrong with me?"
+    - speaker: Doctora
+      es: "Es gripa. Tiene que descansar y debe tomar mucha agua."
+      en: "It's the flu. You have to rest, and you should drink plenty of water."
+    - speaker: Ana
+      es: "¿Necesito medicina?"
+      en: "Do I need medicine?"
+    - speaker: Doctora
+      es: "Sí. Aquí está su receta. Tome estas pastillas tres veces al día."
+      en: "Yes. Here's your prescription. Take these pills three times a day."
+    - speaker: Ana
+      es: "Muchas gracias, doctora."
+      en: "Thank you very much, doctor."

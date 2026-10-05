@@ -1,0 +1,6 @@
+# Test fixture lexicon (test/host/pack_test.cpp, tools/packc/tests).
+lemma	pos	gender	gloss	level	freq	topic
+día	noun	m	day	A1	40	time
+año	noun	m	year	A1	55	time
+mano	noun	f	hand	A1	120	body
+tiempo	noun	m	time; weather	A1	60	time

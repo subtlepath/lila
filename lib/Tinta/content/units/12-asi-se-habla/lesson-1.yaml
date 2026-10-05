@@ -1,0 +1,151 @@
+number: 1
+title: Entre cuates
+title_en: Among friends
+level: A2
+reviewer_notes:
+  - "'Me voy a Oaxaca. —¡Qué padre!' and Memo's 'Yo invito' (= my treat). Natural?"
+  - "Register tags: güey, chavo, cuate, neta, chido, padre (cool), lana (money) informal; pinche vulgar. Confirm."
+  - "güey, cuate and chavo are linked as near-synonyms, so they are never offered as each other's wrong answer. Do you agree they overlap that much?"
+  - "Memo switches to usted and neutral Spanish when his grandmother walks in. Realistic?"
+new: [cuate, güey, chavo, neta, chido, padre#cool, qué padre, no manches, híjole, ándale, lana#money, pinche]
+conjugate: []
+notes:
+  - kind: usage
+    title: Who you can say it to
+    text: |
+      This unit is about the Spanish Mexicans speak among friends. Tinta tags each of these words with its register:
+
+      - *informal* words, such as _cuate, chavo, chido, padre, neta, no manches_ and _lana_, are fine with friends and people your age. With your boss, a police officer, a teacher or an older stranger they sound disrespectful.
+      - *vulgar* words, such as _pinche_, are rude in polite company. Understand them when you hear them, but don't use them. Tinta hides vulgar words unless you switch them on in the settings.
+
+      When an older person joins the group, Mexicans switch back to neutral Spanish and _usted_ without missing a beat. Do the same.
+  - kind: usage
+    title: Güey
+    text: |
+      _Güey_ (often written _wey_) is everywhere in the speech of young Mexicans. It once meant "ox", then "fool"; now friends use it like "dude", sometimes every few words: _¿Qué onda, güey?_
+
+      Between friends it is affectionate. Said to a stranger, or in an angry tone, it is an insult. If you are not sure, leave it out.
+
+      _No manches_ (no way!) is the polite cousin of _no mames_, which means the same but is vulgar. You will hear both; say the first.
+  - kind: culture
+    title: Mexican reactions
+    text: |
+      Mexican conversation is full of short reactions:
+
+      - _¡Híjole!_ — oh no! yikes! (bad news, a surprise)
+      - _¡Ándale!_ — come on! hurry up! that's it!
+      - _¡No manches!_ — no way! you're kidding!
+      - _¿Neta?_ — really? seriously? _La neta..._ — honestly...
+      - _¡Qué padre!_ — how cool!
+
+      To say OK, Mexicans say _sale_, _va_ or _órale_. ~Vale~ sounds Spanish.
+sentences:
+  - es: "Luis es mi {cuate}."
+    en: "Luis is my buddy."
+    note: "Informal: only with friends."
+    order: true
+  - es: "Voy al cine con mis {cuates}."
+    en: "I'm going to the movies with my buddies."
+    note: "Informal: only with friends."
+  - es: "¿Qué onda, {güey}?"
+    en: "What's up, dude?"
+    note: "Informal: only with friends."
+  - es: "No, {güey}, la fiesta es [mañana|mañana]."
+    en: "No, dude, the party's tomorrow."
+    note: "Informal: only with friends."
+  - es: "Los {chavos} juegan futbol en el parque."
+    en: "The young guys are playing soccer in the park."
+    note: "Informal: only with friends."
+  - es: "Es un {chavo} muy simpático."
+    en: "He's a really nice guy."
+    note: "Informal: only with friends."
+  - es: "¿{Neta}? ¡No te creo!"
+    en: "Seriously? I don't believe you!"
+    note: "Informal: only with friends."
+  - es: "La {neta}, no me gusta."
+    en: "Honestly, I don't like it."
+    note: "Informal: only with friends."
+    order: true
+  - es: "La fiesta estuvo muy {chida}."
+    en: "The party was really cool."
+    note: "Informal: only with friends."
+  - es: "Tu bicicleta está bien {chida}."
+    en: "Your bike is really cool."
+    note: "Informal: only with friends."
+  - es: "Tu departamento está muy {padre}."
+    en: "Your apartment is really cool."
+    note: "Informal: only with friends."
+  - es: "Los tacos de aquí están bien {padres}."
+    en: "The tacos here are really great."
+    note: "Informal: only with friends."
+  - es: "Me voy a Oaxaca. —¡{Qué padre}!"
+    en: "I'm going to Oaxaca. —How cool!"
+    note: "Informal: only with friends."
+  - es: "Tengo boletos para el partido. —¡{Qué padre}!"
+    en: "I've got tickets for the game. —Awesome!"
+    note: "Informal: only with friends."
+  - es: "Gané mil pesos. —¡{No manches}!"
+    en: "I won a thousand pesos. —No way!"
+    note: "Informal: only with friends."
+  - es: "¡{No manches}! ¿Ganaste?"
+    en: "No way! You won?"
+    note: "Informal: only with friends."
+  - es: "¡{Híjole}! Ya es [tarde|tarde#late]."
+    en: "Oh no! It's already late."
+    note: "Informal: only with friends."
+  - es: "¡{Híjole}! Se me olvidó la cartera."
+    en: "Yikes! I forgot my wallet."
+    note: "Informal: only with friends."
+  - es: "¡{Ándale}, que ya nos vamos!"
+    en: "Come on, we're leaving!"
+    note: "Informal: only with friends."
+  - es: "¿Es aquí? —¡{Ándale}!"
+    en: "Is it here? —That's it!"
+    note: "Informal: only with friends."
+  - es: "Nos vemos a las ocho, ¿{sale|sale#ok}?"
+    en: "See you at eight, OK?"
+    note: "Informal: only with friends."
+  - es: "¡{Aguas|aguas#cuidado}! Viene un carro."
+    en: "Watch out! There's a car coming."
+    note: "Informal: only with friends."
+  - es: "No tengo {lana}."
+    en: "I'm broke."
+    note: "Informal: only with friends."
+    order: true
+  - es: "Mi primo gana mucha {lana}."
+    en: "My cousin makes a lot of money."
+    note: "Informal: only with friends."
+  - es: "¡Qué {pinche} frío!"
+    en: "It's so damn cold!"
+    note: "Vulgar: understand it, don't use it."
+  - es: "Este {pinche} camión nunca llega."
+    en: "This damn bus never comes."
+    note: "Vulgar: understand it, don't use it."
+dialogue:
+  title: ¿Qué onda?
+  title_en: What's up?
+  lines:
+    - speaker: Memo
+      es: "¿Qué onda, güey? ¡Qué [bueno|bueno] que viniste!"
+      en: "What's up, dude? Glad you made it!"
+    - speaker: Chuy
+      es: "¡Qué padre! La fiesta está bien chida."
+      en: "How cool! The party's really great."
+    - speaker: Tom
+      es: "¿Saben qué? Tengo [trabajo|trabajo] nuevo."
+      en: "You know what? I've got a new job."
+    - speaker: Memo
+      es: "¿Neta? ¡No manches! ¡Qué padre!"
+      en: "Seriously? No way! That's awesome!"
+    - speaker: Chuy
+      es: "¡Híjole! Ya no tengo lana para más cervezas."
+      en: "Oh no! I don't have any money left for more beers."
+    - speaker: Memo
+      es: "¡Ándale, vamos por tacos! Yo invito."
+      en: "Come on, let's go get tacos! My treat."
+    - speaker: Abuela
+      es: "Buenas noches, jóvenes. ¿Ya cenaron?"
+      en: "Good evening, young people. Have you had dinner yet?"
+    - speaker: Memo
+      es: "Buenas noches, abuela. ¿Cómo está usted? Ya nos íbamos a cenar unos tacos."
+      en: "Good evening, Grandma. How are you? We were just leaving to have some tacos."

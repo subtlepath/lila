@@ -1,0 +1,130 @@
+# Course plan for Unit 7. Format: content-plan/README.md.
+unit: 7
+dir: units/07-mercado-tianguis
+title: "El mercado y el tianguis"
+title_en: "Market and street market"
+level: A1
+goals:
+  - "Buy fruit and vegetables by the kilo, pointing with este, ese and aquel."
+  - "Shop for clothes and talk about things already mentioned with lo, la, los, las."
+  - "Compare prices and things, bargain politely, and pay in cash."
+grammar_scope: >-
+  Present tense; demonstratives; direct object pronouns lo, la, los, las (before the
+  verb or on an infinitive) with me/le + lo (me lo da, se lo dejo); comparatives más/
+  menos ... que, tan ... como, mejor, peor; numbers to mil. Not yet: ir a + infinitive
+  (Unit 8), past tenses.
+lexicon: content/lexicon/u07.tsv
+supporting: [esto, eso, como, tan, peor, amarillo, ciento, bolsa, talla, marchante, tuna]
+names: []
+lessons:
+  - id: u07.l01
+    number: 1
+    title: "¿A cómo el kilo?"
+    title_en: "How much a kilo?"
+    level: A1
+    grammar:
+      focus: "Demonstratives este, ese, aquel (and their feminine and plural forms); esto and eso for unnamed things."
+      can_do: "Point to what you want at a market stall, ask the price per kilo and buy fruit and vegetables."
+    new: [tianguis, fruta, verdura, naranja, manzana, mango, durazno, nopal, kilo, este, ese, aquel]
+    rows_in_core: [naranja]
+    conjugate: []
+    dialogue:
+      title: "En el tianguis"
+      title_en: "At the street market"
+      where: "The weekly tianguis in Ana's colonia."
+      who: "Ana and doña Lupe, who sells fruit."
+      address: "usted both ways; doña Lupe calls Ana marchanta or güera (both informal-friendly, as vendors do)."
+      happens: "Lupe: ¿Qué le damos, marchanta? Ana: ¿A cómo el mango? —A cuarenta el kilo. Ana: ¿Estos o esos? She buys a kilo of oranges and medio kilo de nopales; she asks what aquella fruta is. Lupe: ¿Algo más? —Es todo."
+    notes:
+      - kind: grammar
+        title: "This and that"
+        covers: "este, esta, estos, estas (near me); ese, esa, esos, esas (near you); aquel, aquella, aquellos, aquellas (over there). Esto and eso stand for things you don't name: ¿Qué es eso? In Mexico ese often covers 'over there' too."
+      - kind: usage
+        title: "Market Spanish"
+        covers: "¿A cómo...? = how much per...? (¿A cómo el kilo?). Medio kilo, un cuarto. Vendors ask ¿Qué le damos? and ¿Algo más?; you answer Es todo. Vendors call regulars marchante or marchanta, and anyone güero, güera or joven."
+      - kind: culture
+        title: "The tianguis"
+        covers: "From Nahuatl tianquiztli. A street market that sets up on a fixed weekday in each colonia, with fruit, food stalls, clothes and second-hand goods. Bring cash and your own bag."
+    confusables: ["este / ese"]
+    cautions:
+      - "esta (this) vs está (is): mind the accent; esta is a generated form of este."
+      - "esta/estos/estas are forms of the este row: a cloze on them offers other determiners of the same gender and number; let the English decide between este and ese."
+      - "esto/eso are supporting pronouns: never before a noun."
+      - "Prices spelled out: 'a cuarenta pesos el kilo'."
+      - "durazno, never melocotón (lint)."
+      - "marchante is a supporting row; güera is the feminine of güero (u04, informal)."
+
+  - id: u07.l02
+    number: 2
+    title: "¿Me la puedo probar?"
+    title_en: "Can I try it on?"
+    level: A2
+    grammar:
+      focus: "Direct object pronouns lo, la, los, las: before the conjugated verb or attached to an infinitive; quedar for fit."
+      can_do: "Shop for clothes, ask to try things on, say how they fit and say which ones you'll take."
+    new: [ropa, camisa, playera, pantalón, chamarra, tenis, azul, negro, blanco, gris, probarse, lo]
+    rows_in_core: []
+    conjugate: ["probarse:pres"]
+    dialogue:
+      title: "En la tienda de ropa"
+      title_en: "At the clothes store"
+      where: "A clothes store in the centro."
+      who: "Tom and a sales clerk (señorita)."
+      address: "usted both ways: clerk and customer."
+      happens: "Clerk: ¿Le ayudo? Tom is looking for a chamarra. She shows a blue one and a black one. Tom: ¿Me la puedo probar? It fits big: Me queda grande. He tries the black one: Me queda bien. He also wants white tenis: Me los llevo. Clerk asks his talla."
+    notes:
+      - kind: grammar
+        title: "Lo, la, los, las"
+        covers: "They replace a thing already mentioned and agree with it: ¿La chamarra? La compro. ¿Los tenis? Me los llevo. They go before the conjugated verb or on the end of an infinitive: ¿Me la puedo probar? / ¿Puedo probármela?"
+      - kind: usage
+        title: "Mexican clothes words"
+        covers: "Playera (T-shirt), chamarra (jacket; never ~chaqueta~, vulgar slang in Mexico), tenis (sneakers), pantalón (pants). ¿Cómo me queda? Me queda grande, chico, bien."
+      - kind: culture
+        title: "Me lo llevo"
+        covers: "Me lo llevo is how you say I'll take it. Clerks greet you with ¿Le ayudo en algo? or ¿Qué busca? Market vendors call ¿Qué le damos?"
+    confusables: []
+    cautions:
+      - "la/los/las right before a conjugated verb link to lo automatically (La compro, Me los llevo); elsewhere they are articles. Check the link lines and mark the rare exception ([la|lo]). Target only lo in clozes."
+      - "Never chaqueta (lint): chamarra."
+      - "tenis is plural-only (mpl): 'unos tenis', 'los tenis'; its cloze options are masculine plurals."
+      - "Verbs with attached pronouns (probármela, llévatelos) cannot be targets."
+      - "azul and gris have no feminine; rojo, verde (u03) and amarillo (u07) are supporting rows you can use."
+      - "quedar for fit is the same row as quedar for location (u05.l02)."
+
+  - id: u07.l03
+    number: 3
+    title: "¿Me lo deja más barato?"
+    title_en: "Can you do it cheaper?"
+    level: A2
+    grammar:
+      focus: "Comparisons: más/menos ... que, tan ... como, mejor/peor, el más barato; numbers to mil; dejar in bargaining."
+      can_do: "Compare things and prices, bargain politely at a market and pay in cash with the right change."
+    new: [dinero, efectivo, billete, cambio, doscientos, quinientos, mil, vender, barato, menos, mejor, dejar]
+    rows_in_core: []
+    conjugate: ["vender:pres", "dejar:pres.3s"]
+    dialogue:
+      title: "¿Me lo deja en cien?"
+      title_en: "Will you take a hundred?"
+      where: "A handicraft stall at the Sunday market."
+      who: "Ana and the stallholder (señor)."
+      address: "usted both ways."
+      happens: "Ana likes a bag: ¿Cuánto cuesta? —Doscientos. She compares: this one is prettier than that one, but more expensive. ¿Me la deja en ciento cincuenta? The señor: Se la dejo en ciento setenta. Va. She pays with a 500 bill; he has no change: ¿No tiene más chico? She pays in cash with smaller bills."
+    notes:
+      - kind: grammar
+        title: "Comparing"
+        covers: "más ... que, menos ... que, tan ... como: Este es más barato que ese. Mejor and peor replace más bueno and más malo. El más barato = the cheapest."
+      - kind: usage
+        title: "Bargaining politely"
+        covers: "Only at markets and tianguis, never in shops or supermarkets. ¿Me lo deja en...? ¿Cuánto es lo menos? Keep it friendly; the vendor may answer Se lo dejo en... Va or Está bien closes the deal."
+      - kind: culture
+        title: "Mexican money"
+        covers: "Billetes of 20, 50, 100, 200, 500 and 1000 pesos, plus monedas. Small shops and taxis often lack change: ¿Tiene cambio? Carry small bills; tianguis and taco stands take efectivo only."
+    confusables: []
+    cautions:
+      - "como (as) is a supporting conjunction: 'tan caro como'. 'Yo como' still needs [como|comer]."
+      - "mejor/peor, never 'más bueno', 'más malo' for quality."
+      - "mil: 'mil pesos', 'dos mil pesos'; doscientos/quinientos agree: doscientas personas."
+      - "cambio warns because '(yo) cambio' is also a form of cambiar (u10.l02): mark [cambio|cambio]."
+      - "billete is a banknote; a ticket is boleto."
+      - "'Va' (deal) is ir pres.3s: fine. 'Sale' (OK) is not a lemma: see the README."
+      - "Object pronouns from l02 appear in bargaining (me lo deja, se la dejo): la before the verb links to lo automatically; check the link lines."

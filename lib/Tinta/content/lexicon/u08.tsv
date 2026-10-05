@@ -1,0 +1,58 @@
+# Unit 8: Planes y clima / Plans and weather. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u08.l01 ¿Qué vas a hacer? (ir a + infinitive). Also new here, rows in core.tsv: fiesta, venir
+fin		noun	m	end	A1			time			El fin de semana: the weekend.	
+cumpleaños		noun	m	birthday	A1			time				
+cine		noun	m	movie theater; the movies	A1			city				
+película		noun	f	movie; film	A1			things				
+quedarse		verb		to stay	A1			home			Me quedo en casa: I'm staying home.	
+ver		verb		to see; to watch	A1			things			Ver la tele: to watch TV.	
+invitar		verb		to invite; to treat	A1			people			Te invito: my treat (I'm paying).	
+visitar		verb		to visit	A1			city				
+viajar		verb		to travel	A1			transport				
+próximo		adj		next	A1			time			La próxima semana; also la semana que entra.	
+# --- u08.l02 ¿Cómo está el clima? (weather). Also new here, row in core.tsv: frío
+clima		noun	m	weather; climate	A1			weather			Masculine: el clima.	
+tiempo		noun	m	time; weather	A1			weather			¿Qué tiempo hace?: What's the weather like?	
+calor		noun	m	heat	A1			weather			Hace calor: it's hot. Tengo calor: I'm hot.	
+fresco		adj		cool; fresh	A1			weather			Hace fresco: it's cool out.	
+sol		noun	m	sun	A1			weather				
+lluvia		noun	f	rain	A1			weather				
+llover		verb		to rain	A1			weather			Llueve: it rains, it's raining.	
+nublado		adj		cloudy	A1			weather				
+paraguas		noun	m	umbrella	A1			weather				
+ponerse		verb		to put on (clothes); to become	A1			clothes			Ponte la chamarra: put your jacket on.	
+creer		verb		to believe; to think	A1			grammar			Creo que sí: I think so.	
+# --- u08.l03 ¿Qué estás haciendo? (present progressive). Also new here, row in core.tsv: contestar
+esperar		verb		to wait (for); to hope	A1			time			No for: espero el camión.	
+marcar		verb		to dial; to call (phone)	A1		x	things			Te marco al rato: I'll call you in a bit.	
+llamar		verb		to call (on the phone)	A1			things			Te llamo: I'll call you. Llamarse is to be named.	
+descansar		verb		to rest	A1			health				
+aprender		verb		to learn	A1			school				
+tarea		noun	f	homework; task	A1			school				
+ejercicio		noun	m	exercise	A1			health			Hacer ejercicio: to work out.	
+tele		noun	f	TV	A1			things			Short for la televisión.	
+bailar		verb		to dance	A1			things				
+cantar		verb		to sing	A1			things				
+correr		verb		to run	A1			things				
+# --- supporting (no lesson introduces these; usable from Unit 8 on)
+mes		noun	m	month	A1			time				
+enero		noun	m	January	A1			time			Months take no capital.	
+febrero		noun	m	February	A1			time				
+marzo		noun	m	March	A1			time				
+abril		noun	m	April	A1			time				
+mayo		noun	m	May	A1			time				
+junio		noun	m	June	A1			time				
+julio		noun	m	July	A1			time				
+agosto		noun	m	August	A1			time				
+septiembre		noun	m	September	A1			time		setiembre		
+octubre		noun	m	October	A1			time				
+noviembre		noun	m	November	A1			time				
+diciembre		noun	m	December	A1			time				
+temporada		noun	f	season (time of year)	A1			weather			Temporada de lluvias: rainy season.	
+todavía		adv		still; yet (todavía no)	A1			time				
+conmigo		pron		with me	A1			people				
+contigo		pron		with you (informal)	A1			people				
+mañanitas		noun	fpl	birthday song (las mañanitas)	A1		x	people			Las mañanitas: the traditional birthday song.	

@@ -1,0 +1,10 @@
+# Respelling overrides for frequency-deck words (content/lexicon/frequency.tsv).
+# Same format as content/pronunciation.yaml: exact word forms, plurals listed separately.
+
+overrides:
+  # Mexico stresses video on the i (Spain writes vídeo).
+  video: BEE-deh-oh
+  videos: BEE-deh-ohs
+  # English loan (water heater), said the English way.
+  boiler: BOY-lehr
+  boilers: BOY-lehrs

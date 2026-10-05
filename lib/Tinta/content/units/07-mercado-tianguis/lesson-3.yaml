@@ -1,0 +1,125 @@
+number: 3
+title: ¿Me lo deja más barato?
+title_en: Can you do it cheaper?
+level: A2
+reviewer_notes:
+  - "Check the money note: bills of 20 to 1000, coins of 1, 2, 5, 10, 20 pesos and 50 centavos. Do peseros and taco stands take cash only?"
+  - "Bargaining note: only at markets, tianguis and craft stalls, never in shops. Is ¿Cuánto es lo menos? the usual way to ask for the best price?"
+new: [dinero, efectivo, billete, cambio, doscientos, quinientos, mil, vender, barato, menos, mejor, dejar]
+conjugate: ["vender:pres", "dejar:pres.3s"]
+notes:
+  - kind: grammar
+    title: Comparing
+    text: |
+      Three patterns compare two things:
+
+      - _más ... que_ — more ... than: _Este es más barato que ese._
+      - _menos ... que_ — less ... than: _Esta cuesta menos que aquella._
+      - _tan ... como_ — as ... as: _Es tan caro como el otro._
+
+      _Bueno_ and _malo_ have their own forms: _mejor_ (better) and _peor_ (worse). Say _Este es mejor_, not _más bueno_, when you mean better quality.
+
+      Add _el_ or _la_ for the most: _el más barato_ (the cheapest), _la mejor_ (the best).
+  - kind: usage
+    title: Bargaining politely
+    text: |
+      Bargain only at markets, tianguis and craft stalls, never in shops or supermarkets, and keep it friendly:
+
+      - _¿Me lo deja en cien?_ — Will you let me have it for a hundred?
+      - _¿Cuánto es lo menos?_ — What's your best price?
+      - _Se lo dejo en ciento veinte._ — I'll let you have it for a hundred and twenty.
+      - _Va._ or _Está bien._ — Deal.
+
+      A small discount is normal. Haggling hard over a few pesos is not: for the vendor, those pesos matter more than for you.
+  - kind: culture
+    title: Mexican money
+    text: |
+      Pesos come in bills (_billetes_) of 20, 50, 100, 200, 500 and 1000, and coins (_monedas_) of 1, 2, 5, 10 and 20 pesos, plus 50 centavos. Prices use the same sign as the dollar: $50 is fifty pesos.
+
+      Small shops, taxis and stalls often have no change, so a 500 bill can be a problem: _¿No tiene más chico?_ Carry small bills and coins. Tianguis, taco stands and _peseros_ take _efectivo_ (cash) only.
+sentences:
+  - es: "No tengo {dinero}."
+    en: "I don't have any money."
+    order: true
+  - es: "¿Cuánto {dinero} necesitas?"
+    en: "How much money do you need?"
+  - es: "Solo aceptan {efectivo}."
+    en: "They only take cash."
+  - es: "¿Paga con tarjeta o en {efectivo}?"
+    en: "Are you paying by card or in cash?"
+  - es: "Tengo un {billete} de quinientos."
+    en: "I have a five-hundred-peso bill."
+  - es: "No tengo {billetes} chicos."
+    en: "I don't have small bills."
+  - es: "¿Tiene {cambio|cambio}?"
+    en: "Do you have change?"
+  - es: "Aquí está su {cambio|cambio}."
+    en: "Here's your change."
+  - es: "Son {doscientos} pesos."
+    en: "It's two hundred pesos."
+  - es: "La bolsa cuesta {doscientos} cincuenta pesos."
+    en: "The bag costs two hundred fifty pesos."
+  - es: "Tengo {quinientos} pesos."
+    en: "I have five hundred pesos."
+  - es: "¿Me lo deja en {quinientos}?"
+    en: "Will you let me have it for five hundred?"
+  - es: "La chamarra cuesta {mil} pesos."
+    en: "The jacket costs a thousand pesos."
+    note: "Mil, never un mil."
+  - es: "Dos {mil} pesos es mucho dinero."
+    en: "Two thousand pesos is a lot of money."
+    reviewer_notes: "Singular es with an amount of money: natural?"
+  - es: "Doña Lupe {vende} fruta en el tianguis."
+    en: "Doña Lupe sells fruit at the street market."
+  - es: "¿Aquí {venden} tenis?"
+    en: "Do you sell sneakers here?"
+  - es: "Este mango es más {barato}."
+    en: "This mango is cheaper."
+  - es: "En el tianguis la ropa es más {barata}."
+    en: "Clothes are cheaper at the street market."
+  - es: "Esta camisa cuesta {menos} que esa."
+    en: "This shirt costs less than that one."
+  - es: "Las naranjas cuestan {menos} que los mangos."
+    en: "Oranges cost less than mangoes."
+  - es: "Esta chamarra es {mejor} que esa."
+    en: "This jacket is better than that one."
+  - es: "Los tacos de Chuy son los {mejores}."
+    en: "Chuy's tacos are the best."
+    order: true
+  - es: "Esta bolsa es tan {cara} [como|como] esa."
+    en: "This bag is as expensive as that one."
+  - es: "¿Me lo {deja} en cien?"
+    en: "Will you let me have it for a hundred?"
+    note: "The polite way to bargain at a market."
+    order: true
+  - es: "Se lo {dejo} en ciento cincuenta."
+    en: "I'll let you have it for a hundred and fifty."
+dialogue:
+  title: ¿Me lo deja en cien?
+  title_en: Will you take a hundred?
+  lines:
+    - speaker: Ana
+      es: "Buenos días. ¿Cuánto cuesta esta bolsa?"
+      en: "Good morning. How much is this bag?"
+    - speaker: Señor
+      es: "Doscientos pesos, señorita."
+      en: "Two hundred pesos, miss."
+    - speaker: Ana
+      es: "Es más bonita que aquella, pero más cara. ¿Me la deja en ciento cincuenta?"
+      en: "It's prettier than that one, but more expensive. Will you let me have it for a hundred and fifty?"
+    - speaker: Señor
+      es: "Ay, no, señorita. Se la dejo en ciento setenta."
+      en: "Oh, no, miss. I'll let you have it for a hundred and seventy."
+    - speaker: Ana
+      es: "Va. Aquí tiene quinientos."
+      en: "Deal. Here's five hundred."
+    - speaker: Señor
+      es: "¿No tiene más chico? No tengo [cambio|cambio]."
+      en: "Don't you have anything smaller? I don't have change."
+    - speaker: Ana
+      es: "Sí, tengo uno de cien, uno de cincuenta y uno de veinte."
+      en: "Yes, I have a hundred, a fifty and a twenty."
+    - speaker: Señor
+      es: "Muy bien. Gracias, señorita. ¡Que le vaya bien!"
+      en: "Great. Thank you, miss. Have a good day!"
+      reviewer_notes: "¡Que le vaya bien! as a vendor's goodbye, and Va for deal: right register?"

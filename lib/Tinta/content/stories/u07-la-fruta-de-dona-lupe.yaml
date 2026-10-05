@@ -1,0 +1,43 @@
+title: La fruta de doña Lupe
+title_en: Doña Lupe's fruit
+level: A1
+kind: reading
+lesson: u07.l01
+lines:
+  - es: "Los martes hay tianguis en la colonia de Ana."
+    en: "On Tuesdays there's a street market in Ana's neighborhood."
+  - es: "Hay fruta, verdura, tacos y mucha gente."
+    en: "There's fruit, vegetables, tacos and lots of people."
+  - es: "Ana siempre le compra la fruta a doña Lupe."
+    en: "Ana always buys her fruit from doña Lupe."
+  - es: "Hoy Ana quiere mangos para hacer agua de mango."
+    en: "Today Ana wants mangoes to make mango agua fresca."
+    paragraph: true
+  - es: "Doña Lupe dice: “¡Pásele, marchanta! ¿Qué le damos?”"
+    en: "Doña Lupe says, “Come on in, dear! What can I get you?”"
+  - es: "Ana pregunta: “¿A cómo el mango?”"
+    en: "Ana asks, “How much are the mangoes?”"
+  - es: "“A cuarenta el kilo. Pero esos verdes no, güera. Estos amarillos están más dulces.”"
+    en: "“Forty a kilo. But not those green ones, honey. These yellow ones are sweeter.”"
+  - es: "Ana compra un kilo de mangos y medio kilo de duraznos."
+    en: "Ana buys a kilo of mangoes and half a kilo of peaches."
+    paragraph: true
+  - es: "Doña Lupe le da una naranja: “Para usted, marchanta.”"
+    en: "Doña Lupe gives her an orange: “This one's for you, dear.”"
+    reviewer_notes: "A free extra for a regular customer (el pilón): true to life?"
+  - es: "¡Por eso Ana siempre le compra a doña Lupe!"
+    en: "That's why Ana always buys from doña Lupe!"
+questions:
+  - q: "¿Qué día hay tianguis en la colonia de Ana?"
+    options: ["Los martes", "Los sábados", "Los domingos"]
+    answer: 0
+  - q: "¿Qué quiere hacer Ana con los mangos?"
+    options: ["Agua de mango", "Tacos de mango", "Jugo de naranja"]
+    answer: 0
+  - q: "Which mangoes does doña Lupe recommend?"
+    lang: en
+    options: ["The yellow ones", "The green ones", "The red ones"]
+    answer: 0
+  - q: "¿Qué le da doña Lupe a Ana?"
+    options: ["Una naranja", "Un mango", "Un nopal", "Un durazno"]
+    answer: 0

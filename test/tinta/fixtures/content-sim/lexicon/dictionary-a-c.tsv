@@ -1,0 +1,9 @@
+# Dictionary-only headwords a-c: searchable, respelled and conjugated, but no items
+# and no example sentences (docs/content-style.md section 6). TAB-separated.
+# Keys must not repeat a course word (core, frequency, phrasebook, uNN lexicons).
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+acera		noun	f	sidewalk (Spain)	B1				In Mexico: la banqueta.
+albaricoque		noun	m	apricot (Spain)	B1				In Mexico: el chabacano.
+aparcar		verb		to park (Spain)	B1				In Mexico: estacionar.
+blanquillo		noun	m	egg	B1		x		Used to avoid huevo, which has a vulgar sense in Mexico.
+cabrón		noun	mf	bastard; jerk; (among friends) dude	B2	vulgar	x		Está cabrón: it's really hard. Very offensive to a stranger.

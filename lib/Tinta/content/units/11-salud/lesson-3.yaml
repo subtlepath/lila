@@ -1,0 +1,130 @@
+number: 3
+title: ¡Auxilio!
+title_en: Help!
+level: A2
+reviewer_notes:
+  - "Culture note: public hospitals (IMSS, ISSSTE) and private hospitals all take emergencies. Accurate?"
+  - "Forms of address: usted throughout between Tom, the injured señora and the nurse. Natural in an emergency?"
+  - "Culture note: 911 works nationwide; the Cruz Roja runs largely on donations with a yearly national collection. Accurate?"
+new: [auxilio, emergencia, accidente, herido, sangre, ambulancia, hospital, enfermero, cuidado, moverse, quemarse, cortarse]
+conjugate: ["llamar:imp", "venir:imp", "moverse:impneg"]
+notes:
+  - kind: grammar
+    title: Commands with usted and ustedes
+    text: |
+      In an emergency people give orders with _usted_, even to strangers. The command comes from the yo form: drop the _-o_ and switch the vowel.
+
+      - _llamo_ gives _llame_ (call), _vengo_ gives _venga_ (come), _tengo_ gives _tenga_ (have)
+      - irregular: _vaya_ (go), _sea_ (be), _esté_ (be), _dé_ (give)
+      - for _ustedes_, add _-n_: _llamen_, _vengan_
+
+      Pronouns attach to a positive command and go before a negative one:
+
+      - _Siéntese._ — Sit down. _Cálmese._ — Calm down.
+      - _No se mueva._ — Don't move. _No se muevan._ — Don't move (to a group).
+
+      With _tú_ the negative is different: _No te muevas._
+  - kind: usage
+    title: Emergency phrases
+    text: |
+      Phrases to know before you need them:
+
+      - _¡Auxilio!_ — Help! (a cry for help in danger)
+      - _¡Cuidado!_ — Careful! Look out!
+      - _Llame al nueve uno uno._ — Call 911.
+      - _Necesito una ambulancia._ — I need an ambulance.
+      - _¿Dónde está el hospital?_ — Where is the hospital?
+      - _Me corté._ — I cut myself. _Me quemé._ — I burned myself.
+      - _Hay un herido._ — Someone is hurt.
+  - kind: culture
+    title: 911 and the Cruz Roja
+    text: |
+      In an emergency anywhere in Mexico, call _911_ (say _nueve uno uno_). It covers police, fire and ambulances.
+
+      Many ambulances belong to the _Cruz Roja Mexicana_ (the Mexican Red Cross), which runs largely on donations; every year it holds a national collection.
+
+      Public hospitals, such as those of the _IMSS_ and the _ISSSTE_, and private hospitals all take emergencies.
+sentences:
+  - es: "¡{Auxilio}! ¡Ayúdenme!"
+    en: "Help! Somebody help me!"
+  - es: "Una señora pedía {auxilio}."
+    en: "A woman was calling for help."
+  - es: "Es una {emergencia}."
+    en: "It's an emergency."
+  - es: "En una {emergencia}, llame al nueve uno uno."
+    en: "In an emergency, call 911."
+  - es: "Hubo un {accidente} en la esquina."
+    en: "There was an accident on the corner."
+    order: true
+  - es: "Mi hermano tuvo un {accidente} en bicicleta."
+    en: "My brother had a bike accident."
+  - es: "Hay una persona {herida}."
+    en: "Someone's hurt."
+  - es: "¿Hay {heridos}?"
+    en: "Is anyone hurt?"
+  - es: "Tiene {sangre} en el brazo."
+    en: "He has blood on his arm."
+  - es: "No me gusta ver {sangre}."
+    en: "I don't like seeing blood."
+  - es: "Necesitamos una {ambulancia}."
+    en: "We need an ambulance."
+  - es: "La {ambulancia} ya viene."
+    en: "The ambulance is on its way."
+  - es: "¿Dónde está el {hospital}?"
+    en: "Where's the hospital?"
+    order: true
+  - es: "La llevaron al {hospital}."
+    en: "They took her to the hospital."
+  - es: "El {enfermero} me ayudó mucho."
+    en: "The nurse helped me a lot."
+  - es: "Mi tía es {enfermera}."
+    en: "My aunt is a nurse."
+  - es: "¡{Cuidado} con el carro!"
+    en: "Watch out for the car!"
+  - es: "Tenga {cuidado} con la estufa."
+    en: "Be careful with the stove."
+  - es: "No se {mueva|moverse:impneg.3s}, señora."
+    en: "Don't move, ma'am."
+    order: true
+  - es: "No se {muevan|moverse:impneg.3p} de aquí."
+    en: "Don't move from here, everybody."
+  - es: "Me {quemé} con la estufa."
+    en: "I burned myself on the stove."
+  - es: "Memo se {quemó} la mano."
+    en: "Memo burned his hand."
+  - es: "Me {corté} con un vaso."
+    en: "I cut myself on a glass."
+  - es: "¿Te {cortaste}? Tienes sangre en la mano."
+    en: "Did you cut yourself? There's blood on your hand."
+  - es: "Señor, {llame|llamar:imp.3s} a la Cruz Roja, por favor."
+    en: "Sir, call the Red Cross, please."
+  - es: "Ustedes dos, {vengan|venir:imp.3p} rápido."
+    en: "You two, come quickly."
+dialogue:
+  title: Un accidente
+  title_en: An accident
+  lines:
+    - speaker: Tom
+      es: "¡Señora! ¿Está bien? No se mueva."
+      en: "Ma'am! Are you all right? Don't move."
+    - speaker: Señora
+      es: "Ay, me caí de la bicicleta. Me duele el brazo."
+      en: "Oh, I fell off my bike. My arm hurts."
+    - speaker: Tom
+      es: "Tiene sangre en el brazo. ¡Auxilio! ¿Alguien me ayuda?"
+      en: "There's blood on your arm. Help! Can somebody help me?"
+    - speaker: Enfermera
+      es: "Soy enfermera. Usted, llame al nueve uno uno y pida una ambulancia."
+      en: "I'm a nurse. You, call 911 and ask for an ambulance."
+    - speaker: Tom
+      es: "¿[Bueno|bueno#hello]? Hubo un accidente en la esquina de Insurgentes y Reforma. Hay una señora herida."
+      en: "Hello? There's been an accident on the corner of Insurgentes and Reforma. A woman is hurt."
+    - speaker: Enfermera
+      es: "Tranquila, señora. La ambulancia ya viene."
+      en: "Stay calm, ma'am. The ambulance is on its way."
+    - speaker: Señora
+      es: "Gracias. Ustedes son muy amables."
+      en: "Thank you. You're both very kind."
+    - speaker: Enfermera
+      es: "Ya llegó la ambulancia. Tenga cuidado, señora: la van a llevar al hospital."
+      en: "The ambulance is here. Careful, ma'am: they're going to take you to the hospital."

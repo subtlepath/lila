@@ -1,0 +1,46 @@
+title: El pesero de don Beto
+title_en: Don Beto's pesero
+level: A1
+kind: reading
+lesson: u05.l04
+reviewer_notes:
+  - "Route (from downtown to the Condesa on Insurgentes) and sending the lady to Insurgentes station for Bellas Artes are loose geography. Plausible?"
+lines:
+  - es: "Don Beto maneja un pesero en la avenida Insurgentes."
+    en: "Don Beto drives a pesero on Insurgentes Avenue."
+  - es: "Tiene sesenta años, y es un hombre chaparro y muy simpático."
+    en: "He's sixty, a short man and very friendly."
+  - es: "Su pesero va del centro a la Condesa."
+    en: "His pesero runs from downtown to the Condesa."
+  - es: "La gente se sube y se baja en todas las esquinas."
+    en: "People get on and off at every corner."
+    paragraph: true
+  - es: "Todos le pagan a don Beto en la puerta."
+    en: "Everyone pays don Beto at the door."
+    reviewer_notes: "Do pesero passengers pay at the door, or as they get on?"
+  - es: "Un joven pasa a la puerta: “¡Bajan, por favor!”"
+    en: "A young man moves to the door: “Getting off, please!”"
+    reviewer_notes: "'pasa a la puerta' for moving to the door: natural?"
+  - es: "Hoy el pesero va muy lleno: adentro hay veinte personas."
+    en: "Today the pesero is packed: there are twenty people inside."
+    paragraph: true
+  - es: "Una señora pregunta: “¿Pasa por Bellas Artes?”"
+    en: "A lady asks, “Do you go past Bellas Artes?”"
+  - es: "—No, señora. Bájese en la estación Insurgentes y agarre el metro."
+    en: "“No, ma'am. Get off at Insurgentes station and take the metro.”"
+  - es: "La señora se baja: “¡Muchas gracias, don Beto!”"
+    en: "The lady gets off: “Thank you so much, don Beto!”"
+questions:
+  - q: "¿Qué maneja don Beto?"
+    options: ["Un pesero", "Un taxi", "El metro"]
+    answer: 0
+  - q: "¿Cuántos años tiene don Beto?"
+    options: ["Sesenta", "Setenta", "Dieciséis"]
+    answer: 0
+  - q: "¿A dónde va la señora?"
+    options: ["A Bellas Artes", "A la Condesa", "Al mercado"]
+    answer: 0
+  - q: "Why does the young man say “¡Bajan!”?"
+    lang: en
+    options: ["He wants to get off", "He wants to get on", "He's looking for a ticket"]
+    answer: 0

@@ -1,0 +1,44 @@
+title: "Frecuentes A, parte uno"
+sentences:
+  # 1 así
+  - es: "¿Lo hago {así}?"
+    en: "Do I do it like this?"
+    order: true
+  - es: "No me hables {así}."
+    en: "Don't talk to me like that."
+    note: "Así is both 'like this' and 'like that'."
+  # 2 mirar
+  - es: "{Mira|mirar:imp.2s}, Ana, ahí viene el camión."
+    en: "Look, Ana, here comes the bus."
+    note: "¡Mira! (to a friend) and ¡Mire! (usted) get someone's attention."
+  - es: "Me gusta {mirar} las estrellas."
+    en: "I like looking at the stars."
+  # 3 verdad
+  - es: "Dime la {verdad}."
+    en: "Tell me the truth."
+    order: true
+  - es: "Es muy bonito, ¿{verdad}?"
+    en: "It's really pretty, isn't it?"
+    note: "¿Verdad? at the end turns a statement into 'isn't it?', 'right?'."
+  # 4 alguno
+  - es: "¿Tienen {alguna} duda?"
+    en: "Do you have any questions?"
+    note: "A teacher's question: una duda is a question you have, not one you ask."
+  - es: "{Algún} día voy a vivir en Oaxaca."
+    en: "Someday I'm going to live in Oaxaca."
+    note: "Alguno becomes algún before a masculine noun."
+  # 5 parecer
+  - es: "¿Te {parece} bien a las ocho?"
+    en: "Is eight o'clock OK with you?"
+  - es: "Tu hermano {parece} muy simpático."
+    en: "Your brother seems really nice."
+  # 6 sentir
+  - es: "Lo {siento} mucho."
+    en: "I'm very sorry."
+    order: true
+    note: "Lo siento is for real sorrow or bad news; for small things say perdón."
+  - es: "[Oye|oír:imp.2s], ¿{sentiste} el temblor de anoche?"
+    en: "Hey, did you feel the earthquake last night?"
+  # pinche (vulgar)
+  - es: "¡Qué {pinche} taco!"
+    en: "What a lousy taco!"

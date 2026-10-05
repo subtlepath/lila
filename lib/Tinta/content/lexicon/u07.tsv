@@ -1,0 +1,54 @@
+# Unit 7: El mercado y el tianguis / Market and street market. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u07.l01 ¿A cómo el kilo? (demonstratives). Also new here, row in core.tsv: naranja
+tianguis		noun	m	open-air street market	A1		x	city			From Nahuatl. Each colonia has its tianguis day.	mercado
+fruta		noun	f	fruit	A1			food				
+verdura		noun	f	vegetable	A1			food				
+manzana		noun	f	apple	A1			food				
+mango		noun	m	mango	A1			food				
+durazno		noun	m	peach	A1		x	food		melocotón		
+nopal		noun	m	nopal (cactus paddle)	A1		x	food			Eaten grilled or as nopalitos.	
+kilo		noun	m	kilo (kilogram)	A1			food			Medio kilo: half a kilo.	
+este		det		this	A1			grammar	f=esta; mpl=estos; fpl=estas		Este... is also the Mexican um...	
+ese		det		that	A1			grammar	f=esa; mpl=esos; fpl=esas			
+aquel		det		that (over there)	A1			grammar	f=aquella; mpl=aquellos; fpl=aquellas			
+# --- u07.l02 ¿Me la puedo probar? (object pronouns, clothes)
+ropa		noun	f	clothes	A1			clothes			Singular in Spanish: la ropa es nueva.	
+camisa		noun	f	shirt	A1			clothes				
+playera		noun	f	T-shirt	A1		x	clothes		camiseta		
+pantalón		noun	m	pants; trousers	A1			clothes			Also los pantalones.	
+chamarra		noun	f	jacket	A1		x	clothes		chaqueta	Never chaqueta: it is vulgar slang in Mexico.	
+tenis		noun	mpl	sneakers	A1		x	clothes		zapatillas	Also the sport: el tenis.	
+azul		adj		blue	A1			describing				
+negro		adj		black	A1			describing				
+blanco		adj		white	A1			describing				
+gris		adj		gray	A1			describing				
+probarse		verb		to try on	A1			clothes			¿Me lo puedo probar?: Can I try it on?	
+lo		pron		it; him; you (formal, object)	A1			grammar	f=la; mpl=los; fpl=las		Feminine la, plural los and las: la compro, los quiero.	
+# --- u07.l03 ¿Me lo deja más barato? (comparatives, money)
+dinero		noun	m	money	A1			money	pl=-			efectivo
+efectivo		noun	m	cash	A1			money	pl=-		En efectivo: in cash.	
+billete		noun	m	banknote	A1			money			A ticket is a boleto.	
+cambio		noun	m	change (coins); exchange	A1			money			¿Tiene cambio?: Do you have change?	
+doscientos		num		two hundred	A1			numbers	f=doscientas			
+quinientos		num		five hundred	A1			numbers	f=quinientas			
+mil		num		thousand; one thousand	A1			numbers	pl=miles		Mil pesos, never un mil.	
+vender		verb		to sell	A1			money				
+barato		adj		cheap; inexpensive	A1			money				
+menos		adv		less; fewer; minus	A1			grammar				
+mejor		adj		better; best	A1			describing			Never más bueno for better.	
+dejar		verb		to leave; to let	A1			money			¿Me lo deja en cien?: Will you let me have it for a hundred?	
+# --- supporting (no lesson introduces these; usable from Unit 7 on)
+esto		pron		this (thing)	A1			grammar			¿Qué es esto?	
+eso		pron		that (thing)	A1			grammar				
+como		conj		like; as	A1			grammar			Tan caro como: as expensive as. (Yo) como also means I eat.	
+tan		adv		so; as	A1			grammar			Tan barato como: as cheap as.	
+peor		adj		worse; worst	A1			describing				
+amarillo		adj		yellow	A1			describing				
+ciento		num		one hundred (in 101 to 199)	A1			numbers	pl=cientos		Ciento cincuenta: 150.	
+bolsa		noun	f	bag; purse	A1			things				
+talla		noun	f	size (clothes)	A1			clothes				
+marchante		noun	mf	regular customer; market vendor	A1		x	people	f=marchanta		What market vendors and their regulars call each other.	
+tuna		noun	f	prickly pear (cactus fruit)	A1		x	food			The fruit of the nopal. Tuna the fish is atún.	

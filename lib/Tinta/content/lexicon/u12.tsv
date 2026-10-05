@@ -1,0 +1,50 @@
+# Unit 12: Así se habla en México / How Mexico talks. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn	link
+# --- u12.l01 Entre cuates (colloquial register)
+cuate		noun	mf	buddy; pal	A2	informal	x	slang	f=cuata		Probably from Nahuatl coatl (twin). Standard: amigo.	amigo
+güey		noun	mf	dude; guy	A2	informal	x	slang			Constant among young friends; rude to anyone else. Also written wey.	cuate; chavo
+chavo		noun	mf	kid; young guy	A2	informal	x	slang			Chava: young woman. Standard: joven, muchacho.	cuate
+neta		noun	f	truth; for real?	A2	informal	x	slang			¿Neta?: Really? La neta: honestly.	
+chido		adj		cool; great	A2	informal	x	slang			Standard: bonito, bueno.	
+padre	padre#cool	adj		cool; awesome	A2	informal	x	slang			As a noun, padre is father.	
+qué padre		expr		how cool!	A2	informal	x	slang				
+no manches		expr		no way!; you're kidding!	A2	informal	x	slang			The polite cousin of a cruder phrase.	
+híjole		interj		oh no!; wow!; yikes!	A2	informal	x	feelings				
+ándale		interj		come on!; that's it!	A2	informal	x	feelings			Also: hurry up! Ándale pues: OK then.	
+lana	lana#money	noun	f	money (slang)	A2	informal	x	money			Standard: dinero. Lana is also wool.	
+pinche		adj		damn; lousy	A2	vulgar	x	slang			Vulgar. Understand it; do not use it.	
+# --- u12.l02 Un ratito (diminutives, courtesy)
+poquito		adv		a little; a little bit	A2			grammar			From poco: un poquito.	
+ratito		noun	m	little while; moment	A2			time			From rato: espéreme un ratito.	
+tantito		adv		a little; a tiny bit	A2		x	grammar			Very Mexican: tantito más.	
+cerquita		adv		very close; just nearby	A2			places			From cerca.	cerca
+chiquito		adj		tiny; little	A2			describing			From chico.	
+cafecito		noun	m	(nice little) coffee	A2			food			From café: friendly, not small.	
+a sus órdenes		expr		at your service	A2		x	courtesy				
+ni modo		expr		oh well; nothing to be done	A2		x	feelings				
+regalar		verb		to give (as a gift)	A2		x	courtesy			¿Me regala una bolsa?: Could I have a bag?	
+echar		verb		to throw; to put in; to pour	A2			things			¡Échale ganas!: Give it your all!	
+ganas		noun	fpl	desire; urge; effort	A2			feelings			Tengo ganas de...: I feel like...	
+chamba		noun	f	job; work	A2	informal	x	work			Standard: trabajo.	
+# --- u12.l03 Palabras del náhuatl (Nahuatl loans). Also new here, row in core.tsv: mole
+elote		noun	m	corn on the cob	A2		x	food		mazorca	Esquites: corn kernels in a cup.	
+tamal		noun	m	tamale	A2		x	food			Plural tamales. Spanish has no tamale.	
+atole		noun	m	atole (hot corn drink)	A2		x	food				
+guajolote		noun	m	turkey	A2		x	food		pavo		
+chapulín		noun	m	grasshopper	A2		x	food			Toasted chapulines are a snack in Oaxaca.	
+cacahuate		noun	m	peanut	A2		x	food		cacahuete; maní		
+molcajete		noun	m	stone mortar (for salsa)	A2		x	food				
+papalote		noun	m	kite	A2		x	things		cometa	From Nahuatl papalotl, butterfly.	
+tocayo		noun	mf	namesake	A2		x	people			¡Tocayo!: to someone who shares your name.	
+apapachar		verb		to cuddle; to comfort	A2		x	feelings			Un apapacho: a warm hug.	
+mitote		noun	m	ruckus; commotion	A2	informal	x	slang				
+# --- supporting (no lesson introduces these; rosca and náhuatl from u12.l03, sale and aguas from u12.l01)
+rosca		noun	f	ring-shaped sweet bread	A2			food			Rosca de reyes: eaten on 6 January.	
+náhuatl		noun	m	Nahuatl (language)	A2			language			The language of the Mexica (Aztecs).	
+sale	sale#ok	interj		OK!; deal!	A2	informal	x	slang			Standard: está bien, de acuerdo.		marked
+aguas	aguas#cuidado	interj		watch out!; heads up!	A2	informal	x	slang			Standard: cuidado.		marked
+# --- names
+Candelaria		propn		Candlemas (2 February)	A2							
+Tomás		propn		Tomás (name); Thomas	A2							

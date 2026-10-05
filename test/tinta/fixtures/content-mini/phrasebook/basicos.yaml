@@ -1,0 +1,13 @@
+title: Lo básico
+title_en: The basics
+order: 1
+phrases:
+  - es: "La cuenta, por favor."
+    en: "The check, please."
+  - es: "¿Mande?"
+    en: "Pardon?"
+    note: "The polite Mexican way to ask someone to repeat."
+  - es: "Con permiso."
+    en: "Excuse me (to pass)."
+  - es: "¿Cuánto es?"
+    en: "How much is it?"

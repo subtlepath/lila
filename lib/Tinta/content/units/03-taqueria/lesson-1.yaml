@@ -1,0 +1,135 @@
+number: 1
+title: "¿Qué quieres?"
+title_en: What do you want?
+level: A1
+reviewer_notes:
+  - "Culture note: al pastor served with pineapple; suadero as soft slow-cooked beef, a Mexico City favorite; con todo = onion and cilantro; people eat standing and pay at the end. Accurate?"
+  - "Usage note: a torta comes on a bolillo or telera; Te quiero is said to family, partners and close friends. Accurate?"
+  - "Dialogue: Chuy uses ustedes/usted with customers; Tom and Sofía use tú. Right?"
+new: [taquería, refresco, torta, quesadilla, tortilla, carne, queso, grande, chico, querer, comer, tomar]
+conjugate: ["querer:pres", "comer:pres"]
+notes:
+  - kind: grammar
+    title: "Querer: e to ie"
+    text: |
+      _Querer_ (to want) changes its stem: the _e_ becomes _ie_ when it is stressed.
+
+      - _yo quiero_ — I want
+      - _tú quieres_ — you want
+      - _él, ella, usted quiere_ — he, she wants; you want
+      - _nosotros queremos_ — we want (no change)
+      - _ellos, ellas, ustedes quieren_ — they want, you all want
+
+      Use it with a noun, _Quiero dos tacos_, or with a verb, _Quiero comer_. Ask a friend _¿Qué quieres?_ and a customer _¿Qué quiere?_
+
+      With a person, _querer_ means to love: _Te quiero_ (I love you), said to family, partners and close friends.
+  - kind: culture
+    title: At the taco stand
+    text: |
+      A _taquería_ can be a restaurant or a stall on the street. The taquero greets you with _¿Qué va a querer?_ (what will you have?).
+
+      - _al pastor_ — pork marinated in chile, roasted on a vertical spit and served with pineapple
+      - _suadero_ — soft, slow-cooked beef, a Mexico City favorite
+      - _bistec_ — grilled beef
+      - _con todo_ — with everything: chopped onion and cilantro
+
+      Tacos come on small corn tortillas. People often eat standing up and pay at the end, telling the taquero what they ate.
+  - kind: usage
+    title: Torta, tortilla, quesadilla
+    text: |
+      Three words that do not mean what an English speaker expects:
+
+      - _torta_ — a sandwich on a crusty roll called a _bolillo_ or _telera_, not a cake
+      - _tortilla_ — the round flatbread of corn or wheat, never an omelet
+      - _quesadilla_ — a folded tortilla with a filling; in Mexico City it may come without cheese, so say _con queso_ if you want it
+
+      For drinks, sizes are _chico_, _mediano_ and _grande_. Mexico uses _tomar_ for drinking: _¿Qué quieres tomar?_
+sentences:
+  - es: "Chuy trabaja en una {taquería}."
+    en: "Chuy works at a taco stand."
+  - es: "¿Dónde está la {taquería}?"
+    en: "Where's the taco place?"
+    order: true
+  - es: "¿Quieres un {refresco}?"
+    en: "Do you want a soda?"
+  - es: "Dos {refrescos} grandes, por favor."
+    en: "Two large sodas, please."
+  - es: "Quiero una {torta} de pollo."
+    en: "I'd like a chicken torta."
+  - es: "Las {tortas} de aquí son muy grandes."
+    en: "The tortas here are huge."
+  - es: "Una {quesadilla} con queso, por favor."
+    en: "A quesadilla with cheese, please."
+    note: "In Mexico City, ask for con queso."
+  - es: "¿Quieres una {quesadilla} de papa?"
+    en: "Do you want a potato quesadilla?"
+  - es: "Las {tortillas} son de maíz."
+    en: "The tortillas are made of corn."
+  - es: "¿Quieres más {tortillas}?"
+    en: "Do you want more tortillas?"
+    order: true
+  - es: "No [como|comer] {carne}."
+    en: "I don't eat meat."
+  - es: "¿Tacos de {carne} o de pollo?"
+    en: "Beef or chicken tacos?"
+    reviewer_notes: "Does carne alone mean beef here?"
+    note: "Carne alone often means beef."
+  - es: "Una torta sin {queso}, por favor."
+    en: "A torta with no cheese, please."
+  - es: "¿Quieres {queso} en la torta?"
+    en: "Do you want cheese on your torta?"
+  - es: "Un refresco {grande}, por favor."
+    en: "A large soda, please."
+  - es: "¿Chico, mediano o {grande}?"
+    en: "Small, medium or large?"
+  - es: "Una horchata {chica}, por favor."
+    en: "A small horchata, please."
+    note: "Chica: it matches horchata, a feminine noun."
+  - es: "Un café {chico} y un refresco grande."
+    en: "A small coffee and a large soda."
+  - es: "Y tú, ¿qué {quieres}?"
+    en: "And you, what do you want?"
+  - es: "{Quiero} tres tacos [al pastor|al pastor]."
+    en: "I'd like three tacos al pastor."
+    order: true
+  - es: "Te {quiero}, mamá."
+    en: "I love you, Mom."
+    note: "Querer a person: to love them."
+  - es: "Yo {como|comer} de todo."
+    en: "I eat everything."
+  - es: "¿Dónde {comemos}?"
+    en: "Where should we eat?"
+  - es: "¿Qué quieres {tomar}?"
+    en: "What would you like to drink?"
+  - es: "Sofía {toma} agua de horchata."
+    en: "Sofía is drinking horchata."
+dialogue:
+  title: La taquería de Chuy
+  title_en: "Chuy's taco stand"
+  lines:
+    - speaker: Chuy
+      es: "¡Buenas noches! ¿Qué quieren?"
+      en: "Good evening! What would you like?"
+      reviewer_notes: "Too blunt for a taquero? ¿Qué va a querer? cannot be used yet (ir is introduced in Unit 5)."
+    - speaker: Sofía
+      es: "Cinco tacos [al pastor|al pastor] con todo, por favor."
+      en: "Five tacos al pastor with everything, please."
+    - speaker: Tom
+      es: "Y yo quiero una quesadilla."
+      en: "And I'd like a quesadilla."
+    - speaker: Sofía
+      es: "Con queso, Tom. Aquí la quesadilla es sin queso."
+      en: "Say with cheese, Tom. Here a quesadilla comes without it."
+      reviewer_notes: "Natural phrasing? (Aquí no traen queso is not possible yet: traer is lesson 3.)"
+    - speaker: Tom
+      es: "¿Sin queso? Una quesadilla con queso, por favor. Y un refresco grande."
+      en: "Without cheese? A quesadilla with cheese, please. And a large soda."
+    - speaker: Sofía
+      es: "Para mí, un agua de horchata."
+      en: "And an horchata for me."
+    - speaker: Tom
+      es: "¿Cinco tacos, Sofía? ¿Comes mucha carne?"
+      en: "Five tacos, Sofía? Do you eat a lot of meat?"
+    - speaker: Sofía
+      es: "¡Sí! Yo [como|comer] de todo."
+      en: "Yes! I eat everything."

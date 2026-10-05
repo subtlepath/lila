@@ -1,0 +1,26 @@
+# Dictionary-only verbs d-g (content/lexicon/dictionary-d-g.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (deshacer,
+# describir, despedir, despertar, detener, distraer, divertir, encender,
+# entretener, envolver, exponer, graduar, guiar...) are not repeated.
+
+defender: {stem: e>ie}      # defiendo, defiende
+demostrar: {stem: o>ue}     # demuestro, demuestra
+derretir: {stem: e>i}       # derrito; se derritió
+desconfiar: {accent: true}  # desconfío, desconfía
+descontar: {stem: o>ue}     # descuento, descuenta
+desvestir: {stem: e>i}      # desvestirse: me desvisto, se desvistió
+digerir: {stem: e>ie}       # digiero; digirió
+disolver: {stem: o>ue, participle: disuelto}
+encerrar: {stem: e>ie}      # encierro, encierra
+enfriar: {accent: true}     # enfrío; se enfría
+enterrar: {stem: e>ie}      # entierro, entierra
+esforzar: {stem: o>ue}      # esforzarse: me esfuerzo; me esforcé
+espiar: {accent: true}      # espío, espía
+evaluar: {accent: true}     # evalúo, evalúa
+extender: {stem: e>ie}      # extiendo, extiende
+extraviar: {accent: true}   # extravío; not on verb_patterns.tsv
+fiar: {accent: true}        # fío, fía; fio (preterite, no accent)
+forzar: {stem: o>ue}        # fuerzo; forcé
+fregar: {stem: e>ie}        # friego; ¡no friegues!; fregué
+freír: {like: reír, participle: frito}   # frío, fríe, frio, friendo; freído is also accepted

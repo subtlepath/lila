@@ -1,0 +1,126 @@
+number: 2
+title: Uno, dos, tres
+title_en: One, two, three
+level: A1
+reviewer_notes:
+  - "Dialogue: Toño (waiter) calls Sofía señorita and both use usted. Right?"
+  - "Plural note: el agua but las aguas; tres aguas de limón for three limeades. Natural?"
+new: [cero, uno, dos, tres, cuatro, cinco, seis, siete, ocho, nueve, diez, persona]
+conjugate: []
+notes:
+  - kind: grammar
+    title: Making nouns plural
+    text: |
+      To make a noun plural:
+
+      - after a vowel, add _-s_: _taco_, _tacos_; _café_, _cafés_
+      - after a consonant, add _-es_: _hotel_, _hoteles_; _doctor_, _doctores_
+      - a final _z_ becomes _c_: _luz_, _luces_ (light, lights)
+      - a written accent can drop or appear: _limón_, _limones_; _joven_, _jóvenes_
+
+      The plural articles are _los_, _unos_ (masculine) and _las_, _unas_ (feminine). _Unos_ and _unas_ mean "some": _unos tacos_, _unas cervezas_.
+
+      _El agua_ takes the feminine article again in the plural: _las aguas_.
+  - kind: grammar
+    title: Numbers 0-10
+    text: |
+      - _cero_ `SEH-roh` — 0
+      - _uno_ `OO-noh` — 1
+      - _dos_ `DOHS` — 2
+      - _tres_ `TREHS` — 3
+      - _cuatro_ `KWAH-troh` — 4
+      - _cinco_ `SEEN-koh` — 5
+      - _seis_ `SAYS` — 6
+      - _siete_ `SYEH-teh` — 7
+      - _ocho_ `OH-choh` — 8
+      - _nueve_ `NWEH-beh` — 9
+      - _diez_ `DYEHS` — 10
+
+      _Uno_ is the number on its own. Before a noun it becomes _un_ or _una_: _un taco_, _una persona_.
+
+      Ask "how many" with _¿cuántos?_ before a masculine noun and _¿cuántas?_ before a feminine one: _¿Cuántos tacos?_ _¿Cuántas personas?_
+sentences:
+  - es: "Tres, dos, uno... ¡{cero}!"
+    en: "Three, two, one... zero!"
+  - es: "¡México cinco, Canadá {cero}!"
+    en: "Mexico five, Canada zero!"
+    reviewer_notes: "Is this how a score is read out?"
+  - es: "¿Cuántos tacos? —{Uno}, por favor."
+    en: "How many tacos? —One, please."
+    note: "Uno on its own; before a noun it is un or una."
+  - es: "Un café para Ana y {uno} para Luis."
+    en: "A coffee for Ana and one for Luis."
+  - es: "{Dos} cafés, por favor."
+    en: "Two coffees, please."
+    note: "Café ends in a vowel, so the plural adds -s."
+    order: true
+  - es: "Los {dos} son de Monterrey."
+    en: "They're both from Monterrey."
+    note: "Los dos: both of them."
+    order: true
+  - es: "{Tres} tacos de papa y dos de pollo."
+    en: "Three potato tacos and two chicken."
+  - es: "Las {tres} son amigas de Sofía."
+    en: "All three of them are Sofía's friends."
+    note: "Las tres: the group is all women."
+  - es: "{Cuatro} aguas de limón, por favor."
+    en: "Four limeades, please."
+    note: "El agua, but las aguas."
+  - es: "Los {cuatro} somos estudiantes."
+    en: "All four of us are students."
+  - es: "Somos {cinco} en la oficina."
+    en: "There are five of us in the office."
+  - es: "{Cinco} cervezas, por favor."
+    en: "Five beers, please."
+  - es: "Una mesa para {seis}, por favor."
+    en: "A table for six, please."
+    order: true
+  - es: "Son {seis} tacos de pollo."
+    en: "That's six chicken tacos."
+  - es: "Los {siete} estudiantes son de Canadá."
+    en: "The seven students are from Canada."
+  - es: "¿Cuántas personas? —{Siete}."
+    en: "How many people? —Seven."
+  - es: "Los {ocho} perros son de doña Laura."
+    en: "All eight dogs are doña Laura's."
+  - es: "{Ocho} cafés para la oficina, por favor."
+    en: "Eight coffees for the office, please."
+  - es: "Somos {nueve}: ocho estudiantes y la maestra."
+    en: "There are nine of us: eight students and the teacher."
+  - es: "Para la mesa {nueve}, dos cafés."
+    en: "Two coffees for table nine."
+    reviewer_notes: "Natural waiter talk (Para la mesa nueve, dos cafés)?"
+  - es: "¡Un {diez}, Tom! Muy bien."
+    en: "Ten out of ten, Tom! Very good."
+    reviewer_notes: "Is ¡Un diez! natural for a perfect grade (0-10 school scale)?"
+    note: "Mexican schools grade from zero to ten."
+  - es: "{Diez} tacos, por favor. ¡Somos cinco!"
+    en: "Ten tacos, please. There are five of us!"
+  - es: "¿Cuántas {personas} son?"
+    en: "How many people are there?"
+    note: "Persona is always feminine: cuántas personas."
+  - es: "Son tres {personas}: Ana, Luis y Tom."
+    en: "That's three people: Ana, Luis and Tom."
+    note: "Una persona, even for a man."
+dialogue:
+  title: Una mesa para seis
+  title_en: A table for six
+  lines:
+    - speaker: Toño
+      es: "Buenas tardes. ¿Cuántas personas?"
+      en: "Good afternoon. How many people?"
+    - speaker: Sofía
+      es: "Somos cinco... no, ¡seis! Una mesa para seis, por favor."
+      en: "There are five of us... no, six! A table for six, please."
+    - speaker: Toño
+      es: "Sí, señorita. Por aquí, por favor."
+      en: "Yes, miss. This way, please."
+    - speaker: Sofía
+      es: "Gracias. Dos cafés, tres aguas de limón y un jugo, por favor."
+      en: "Thank you. Two coffees, three limeades and a juice, please."
+    - speaker: Toño
+      es: "Dos cafés, tres aguas de limón y un jugo. Un momentito, por favor."
+      en: "Two coffees, three limeades and a juice. Just a moment, please."
+    - speaker: Sofía
+      es: "¡Gracias!"
+      en: "Thanks!"

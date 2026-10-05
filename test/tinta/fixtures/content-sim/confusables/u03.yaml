@@ -1,0 +1,7 @@
+# Unit 3 confusable sets (fragment of confusables.yaml).
+- name: traer / llevar
+  lemmas: [traer, llevar]
+  note: Traer is to bring, toward the speaker (¿me trae la cuenta?). Llevar is to take, away from here (para llevar).
+- name: sesenta / setenta
+  lemmas: [sesenta, setenta]
+  note: Sesenta (60) has an s, like seis. Setenta (70) has a t, like siete.

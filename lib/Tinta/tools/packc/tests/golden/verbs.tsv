@@ -1,0 +1,654 @@
+# Hand-checked conjugations (RAE 2010 spelling, Mexican usage: no vosotros).
+# Regression reference for tools/packc/conjugate.py; see test_conjugate.py.
+# infinitive<TAB>tense<TAB>yo<TAB>tú<TAB>él/usted<TAB>nosotros<TAB>ellos/ustedes
+# imp/impneg: '-' where no form exists; impneg without 'no'. ger and part have one form.
+hablar	pres	hablo	hablas	habla	hablamos	hablan
+hablar	pret	hablé	hablaste	habló	hablamos	hablaron
+hablar	impf	hablaba	hablabas	hablaba	hablábamos	hablaban
+hablar	fut	hablaré	hablarás	hablará	hablaremos	hablarán
+hablar	cond	hablaría	hablarías	hablaría	hablaríamos	hablarían
+hablar	subj	hable	hables	hable	hablemos	hablen
+hablar	imp	-	habla	hable	-	hablen
+hablar	impneg	-	hables	hable	-	hablen
+hablar	ger	hablando
+hablar	part	hablado
+comer	pres	como	comes	come	comemos	comen
+comer	pret	comí	comiste	comió	comimos	comieron
+comer	impf	comía	comías	comía	comíamos	comían
+comer	fut	comeré	comerás	comerá	comeremos	comerán
+comer	cond	comería	comerías	comería	comeríamos	comerían
+comer	subj	coma	comas	coma	comamos	coman
+comer	imp	-	come	coma	-	coman
+comer	impneg	-	comas	coma	-	coman
+comer	ger	comiendo
+comer	part	comido
+vivir	pres	vivo	vives	vive	vivimos	viven
+vivir	pret	viví	viviste	vivió	vivimos	vivieron
+vivir	impf	vivía	vivías	vivía	vivíamos	vivían
+vivir	fut	viviré	vivirás	vivirá	viviremos	vivirán
+vivir	cond	viviría	vivirías	viviría	viviríamos	vivirían
+vivir	subj	viva	vivas	viva	vivamos	vivan
+vivir	imp	-	vive	viva	-	vivan
+vivir	impneg	-	vivas	viva	-	vivan
+vivir	ger	viviendo
+vivir	part	vivido
+buscar	pres	busco	buscas	busca	buscamos	buscan
+buscar	pret	busqué	buscaste	buscó	buscamos	buscaron
+buscar	impf	buscaba	buscabas	buscaba	buscábamos	buscaban
+buscar	fut	buscaré	buscarás	buscará	buscaremos	buscarán
+buscar	cond	buscaría	buscarías	buscaría	buscaríamos	buscarían
+buscar	subj	busque	busques	busque	busquemos	busquen
+buscar	imp	-	busca	busque	-	busquen
+buscar	impneg	-	busques	busque	-	busquen
+buscar	ger	buscando
+buscar	part	buscado
+platicar	pres	platico	platicas	platica	platicamos	platican
+platicar	pret	platiqué	platicaste	platicó	platicamos	platicaron
+platicar	impf	platicaba	platicabas	platicaba	platicábamos	platicaban
+platicar	fut	platicaré	platicarás	platicará	platicaremos	platicarán
+platicar	cond	platicaría	platicarías	platicaría	platicaríamos	platicarían
+platicar	subj	platique	platiques	platique	platiquemos	platiquen
+platicar	imp	-	platica	platique	-	platiquen
+platicar	impneg	-	platiques	platique	-	platiquen
+platicar	ger	platicando
+platicar	part	platicado
+pagar	pres	pago	pagas	paga	pagamos	pagan
+pagar	pret	pagué	pagaste	pagó	pagamos	pagaron
+pagar	impf	pagaba	pagabas	pagaba	pagábamos	pagaban
+pagar	fut	pagaré	pagarás	pagará	pagaremos	pagarán
+pagar	cond	pagaría	pagarías	pagaría	pagaríamos	pagarían
+pagar	subj	pague	pagues	pague	paguemos	paguen
+pagar	imp	-	paga	pague	-	paguen
+pagar	impneg	-	pagues	pague	-	paguen
+pagar	ger	pagando
+pagar	part	pagado
+empezar	pres	empiezo	empiezas	empieza	empezamos	empiezan
+empezar	pret	empecé	empezaste	empezó	empezamos	empezaron
+empezar	impf	empezaba	empezabas	empezaba	empezábamos	empezaban
+empezar	fut	empezaré	empezarás	empezará	empezaremos	empezarán
+empezar	cond	empezaría	empezarías	empezaría	empezaríamos	empezarían
+empezar	subj	empiece	empieces	empiece	empecemos	empiecen
+empezar	imp	-	empieza	empiece	-	empiecen
+empezar	impneg	-	empieces	empiece	-	empiecen
+empezar	ger	empezando
+empezar	part	empezado
+averiguar	pres	averiguo	averiguas	averigua	averiguamos	averiguan
+averiguar	pret	averigüé	averiguaste	averiguó	averiguamos	averiguaron
+averiguar	impf	averiguaba	averiguabas	averiguaba	averiguábamos	averiguaban
+averiguar	fut	averiguaré	averiguarás	averiguará	averiguaremos	averiguarán
+averiguar	cond	averiguaría	averiguarías	averiguaría	averiguaríamos	averiguarían
+averiguar	subj	averigüe	averigües	averigüe	averigüemos	averigüen
+averiguar	imp	-	averigua	averigüe	-	averigüen
+averiguar	impneg	-	averigües	averigüe	-	averigüen
+averiguar	ger	averiguando
+averiguar	part	averiguado
+conocer	pres	conozco	conoces	conoce	conocemos	conocen
+conocer	pret	conocí	conociste	conoció	conocimos	conocieron
+conocer	impf	conocía	conocías	conocía	conocíamos	conocían
+conocer	fut	conoceré	conocerás	conocerá	conoceremos	conocerán
+conocer	cond	conocería	conocerías	conocería	conoceríamos	conocerían
+conocer	subj	conozca	conozcas	conozca	conozcamos	conozcan
+conocer	imp	-	conoce	conozca	-	conozcan
+conocer	impneg	-	conozcas	conozca	-	conozcan
+conocer	ger	conociendo
+conocer	part	conocido
+vencer	pres	venzo	vences	vence	vencemos	vencen
+vencer	pret	vencí	venciste	venció	vencimos	vencieron
+vencer	impf	vencía	vencías	vencía	vencíamos	vencían
+vencer	fut	venceré	vencerás	vencerá	venceremos	vencerán
+vencer	cond	vencería	vencerías	vencería	venceríamos	vencerían
+vencer	subj	venza	venzas	venza	venzamos	venzan
+vencer	imp	-	vence	venza	-	venzan
+vencer	impneg	-	venzas	venza	-	venzan
+vencer	ger	venciendo
+vencer	part	vencido
+escoger	pres	escojo	escoges	escoge	escogemos	escogen
+escoger	pret	escogí	escogiste	escogió	escogimos	escogieron
+escoger	impf	escogía	escogías	escogía	escogíamos	escogían
+escoger	fut	escogeré	escogerás	escogerá	escogeremos	escogerán
+escoger	cond	escogería	escogerías	escogería	escogeríamos	escogerían
+escoger	subj	escoja	escojas	escoja	escojamos	escojan
+escoger	imp	-	escoge	escoja	-	escojan
+escoger	impneg	-	escojas	escoja	-	escojan
+escoger	ger	escogiendo
+escoger	part	escogido
+elegir	pres	elijo	eliges	elige	elegimos	eligen
+elegir	pret	elegí	elegiste	eligió	elegimos	eligieron
+elegir	impf	elegía	elegías	elegía	elegíamos	elegían
+elegir	fut	elegiré	elegirás	elegirá	elegiremos	elegirán
+elegir	cond	elegiría	elegirías	elegiría	elegiríamos	elegirían
+elegir	subj	elija	elijas	elija	elijamos	elijan
+elegir	imp	-	elige	elija	-	elijan
+elegir	impneg	-	elijas	elija	-	elijan
+elegir	ger	eligiendo
+elegir	part	elegido
+seguir	pres	sigo	sigues	sigue	seguimos	siguen
+seguir	pret	seguí	seguiste	siguió	seguimos	siguieron
+seguir	impf	seguía	seguías	seguía	seguíamos	seguían
+seguir	fut	seguiré	seguirás	seguirá	seguiremos	seguirán
+seguir	cond	seguiría	seguirías	seguiría	seguiríamos	seguirían
+seguir	subj	siga	sigas	siga	sigamos	sigan
+seguir	imp	-	sigue	siga	-	sigan
+seguir	impneg	-	sigas	siga	-	sigan
+seguir	ger	siguiendo
+seguir	part	seguido
+construir	pres	construyo	construyes	construye	construimos	construyen
+construir	pret	construí	construiste	construyó	construimos	construyeron
+construir	impf	construía	construías	construía	construíamos	construían
+construir	fut	construiré	construirás	construirá	construiremos	construirán
+construir	cond	construiría	construirías	construiría	construiríamos	construirían
+construir	subj	construya	construyas	construya	construyamos	construyan
+construir	imp	-	construye	construya	-	construyan
+construir	impneg	-	construyas	construya	-	construyan
+construir	ger	construyendo
+construir	part	construido
+huir	pres	huyo	huyes	huye	huimos	huyen
+huir	pret	hui	huiste	huyó	huimos	huyeron
+huir	impf	huía	huías	huía	huíamos	huían
+huir	fut	huiré	huirás	huirá	huiremos	huirán
+huir	cond	huiría	huirías	huiría	huiríamos	huirían
+huir	subj	huya	huyas	huya	huyamos	huyan
+huir	imp	-	huye	huya	-	huyan
+huir	impneg	-	huyas	huya	-	huyan
+huir	ger	huyendo
+huir	part	huido
+leer	pres	leo	lees	lee	leemos	leen
+leer	pret	leí	leíste	leyó	leímos	leyeron
+leer	impf	leía	leías	leía	leíamos	leían
+leer	fut	leeré	leerás	leerá	leeremos	leerán
+leer	cond	leería	leerías	leería	leeríamos	leerían
+leer	subj	lea	leas	lea	leamos	lean
+leer	imp	-	lee	lea	-	lean
+leer	impneg	-	leas	lea	-	lean
+leer	ger	leyendo
+leer	part	leído
+pensar	pres	pienso	piensas	piensa	pensamos	piensan
+pensar	pret	pensé	pensaste	pensó	pensamos	pensaron
+pensar	impf	pensaba	pensabas	pensaba	pensábamos	pensaban
+pensar	fut	pensaré	pensarás	pensará	pensaremos	pensarán
+pensar	cond	pensaría	pensarías	pensaría	pensaríamos	pensarían
+pensar	subj	piense	pienses	piense	pensemos	piensen
+pensar	imp	-	piensa	piense	-	piensen
+pensar	impneg	-	pienses	piense	-	piensen
+pensar	ger	pensando
+pensar	part	pensado
+entender	pres	entiendo	entiendes	entiende	entendemos	entienden
+entender	pret	entendí	entendiste	entendió	entendimos	entendieron
+entender	impf	entendía	entendías	entendía	entendíamos	entendían
+entender	fut	entenderé	entenderás	entenderá	entenderemos	entenderán
+entender	cond	entendería	entenderías	entendería	entenderíamos	entenderían
+entender	subj	entienda	entiendas	entienda	entendamos	entiendan
+entender	imp	-	entiende	entienda	-	entiendan
+entender	impneg	-	entiendas	entienda	-	entiendan
+entender	ger	entendiendo
+entender	part	entendido
+sentir	pres	siento	sientes	siente	sentimos	sienten
+sentir	pret	sentí	sentiste	sintió	sentimos	sintieron
+sentir	impf	sentía	sentías	sentía	sentíamos	sentían
+sentir	fut	sentiré	sentirás	sentirá	sentiremos	sentirán
+sentir	cond	sentiría	sentirías	sentiría	sentiríamos	sentirían
+sentir	subj	sienta	sientas	sienta	sintamos	sientan
+sentir	imp	-	siente	sienta	-	sientan
+sentir	impneg	-	sientas	sienta	-	sientan
+sentir	ger	sintiendo
+sentir	part	sentido
+contar	pres	cuento	cuentas	cuenta	contamos	cuentan
+contar	pret	conté	contaste	contó	contamos	contaron
+contar	impf	contaba	contabas	contaba	contábamos	contaban
+contar	fut	contaré	contarás	contará	contaremos	contarán
+contar	cond	contaría	contarías	contaría	contaríamos	contarían
+contar	subj	cuente	cuentes	cuente	contemos	cuenten
+contar	imp	-	cuenta	cuente	-	cuenten
+contar	impneg	-	cuentes	cuente	-	cuenten
+contar	ger	contando
+contar	part	contado
+volver	pres	vuelvo	vuelves	vuelve	volvemos	vuelven
+volver	pret	volví	volviste	volvió	volvimos	volvieron
+volver	impf	volvía	volvías	volvía	volvíamos	volvían
+volver	fut	volveré	volverás	volverá	volveremos	volverán
+volver	cond	volvería	volverías	volvería	volveríamos	volverían
+volver	subj	vuelva	vuelvas	vuelva	volvamos	vuelvan
+volver	imp	-	vuelve	vuelva	-	vuelvan
+volver	impneg	-	vuelvas	vuelva	-	vuelvan
+volver	ger	volviendo
+volver	part	vuelto
+devolver	pres	devuelvo	devuelves	devuelve	devolvemos	devuelven
+devolver	pret	devolví	devolviste	devolvió	devolvimos	devolvieron
+devolver	impf	devolvía	devolvías	devolvía	devolvíamos	devolvían
+devolver	fut	devolveré	devolverás	devolverá	devolveremos	devolverán
+devolver	cond	devolvería	devolverías	devolvería	devolveríamos	devolverían
+devolver	subj	devuelva	devuelvas	devuelva	devolvamos	devuelvan
+devolver	imp	-	devuelve	devuelva	-	devuelvan
+devolver	impneg	-	devuelvas	devuelva	-	devuelvan
+devolver	ger	devolviendo
+devolver	part	devuelto
+resolver	pres	resuelvo	resuelves	resuelve	resolvemos	resuelven
+resolver	pret	resolví	resolviste	resolvió	resolvimos	resolvieron
+resolver	impf	resolvía	resolvías	resolvía	resolvíamos	resolvían
+resolver	fut	resolveré	resolverás	resolverá	resolveremos	resolverán
+resolver	cond	resolvería	resolverías	resolvería	resolveríamos	resolverían
+resolver	subj	resuelva	resuelvas	resuelva	resolvamos	resuelvan
+resolver	imp	-	resuelve	resuelva	-	resuelvan
+resolver	impneg	-	resuelvas	resuelva	-	resuelvan
+resolver	ger	resolviendo
+resolver	part	resuelto
+dormir	pres	duermo	duermes	duerme	dormimos	duermen
+dormir	pret	dormí	dormiste	durmió	dormimos	durmieron
+dormir	impf	dormía	dormías	dormía	dormíamos	dormían
+dormir	fut	dormiré	dormirás	dormirá	dormiremos	dormirán
+dormir	cond	dormiría	dormirías	dormiría	dormiríamos	dormirían
+dormir	subj	duerma	duermas	duerma	durmamos	duerman
+dormir	imp	-	duerme	duerma	-	duerman
+dormir	impneg	-	duermas	duerma	-	duerman
+dormir	ger	durmiendo
+dormir	part	dormido
+morir	pres	muero	mueres	muere	morimos	mueren
+morir	pret	morí	moriste	murió	morimos	murieron
+morir	impf	moría	morías	moría	moríamos	morían
+morir	fut	moriré	morirás	morirá	moriremos	morirán
+morir	cond	moriría	morirías	moriría	moriríamos	morirían
+morir	subj	muera	mueras	muera	muramos	mueran
+morir	imp	-	muere	muera	-	mueran
+morir	impneg	-	mueras	muera	-	mueran
+morir	ger	muriendo
+morir	part	muerto
+pedir	pres	pido	pides	pide	pedimos	piden
+pedir	pret	pedí	pediste	pidió	pedimos	pidieron
+pedir	impf	pedía	pedías	pedía	pedíamos	pedían
+pedir	fut	pediré	pedirás	pedirá	pediremos	pedirán
+pedir	cond	pediría	pedirías	pediría	pediríamos	pedirían
+pedir	subj	pida	pidas	pida	pidamos	pidan
+pedir	imp	-	pide	pida	-	pidan
+pedir	impneg	-	pidas	pida	-	pidan
+pedir	ger	pidiendo
+pedir	part	pedido
+jugar	pres	juego	juegas	juega	jugamos	juegan
+jugar	pret	jugué	jugaste	jugó	jugamos	jugaron
+jugar	impf	jugaba	jugabas	jugaba	jugábamos	jugaban
+jugar	fut	jugaré	jugarás	jugará	jugaremos	jugarán
+jugar	cond	jugaría	jugarías	jugaría	jugaríamos	jugarían
+jugar	subj	juegue	juegues	juegue	juguemos	jueguen
+jugar	imp	-	juega	juegue	-	jueguen
+jugar	impneg	-	juegues	juegue	-	jueguen
+jugar	ger	jugando
+jugar	part	jugado
+adquirir	pres	adquiero	adquieres	adquiere	adquirimos	adquieren
+adquirir	pret	adquirí	adquiriste	adquirió	adquirimos	adquirieron
+adquirir	impf	adquiría	adquirías	adquiría	adquiríamos	adquirían
+adquirir	fut	adquiriré	adquirirás	adquirirá	adquiriremos	adquirirán
+adquirir	cond	adquiriría	adquirirías	adquiriría	adquiriríamos	adquirirían
+adquirir	subj	adquiera	adquieras	adquiera	adquiramos	adquieran
+adquirir	imp	-	adquiere	adquiera	-	adquieran
+adquirir	impneg	-	adquieras	adquiera	-	adquieran
+adquirir	ger	adquiriendo
+adquirir	part	adquirido
+oler	pres	huelo	hueles	huele	olemos	huelen
+oler	pret	olí	oliste	olió	olimos	olieron
+oler	impf	olía	olías	olía	olíamos	olían
+oler	fut	oleré	olerás	olerá	oleremos	olerán
+oler	cond	olería	olerías	olería	oleríamos	olerían
+oler	subj	huela	huelas	huela	olamos	huelan
+oler	imp	-	huele	huela	-	huelan
+oler	impneg	-	huelas	huela	-	huelan
+oler	ger	oliendo
+oler	part	olido
+enviar	pres	envío	envías	envía	enviamos	envían
+enviar	pret	envié	enviaste	envió	enviamos	enviaron
+enviar	impf	enviaba	enviabas	enviaba	enviábamos	enviaban
+enviar	fut	enviaré	enviarás	enviará	enviaremos	enviarán
+enviar	cond	enviaría	enviarías	enviaría	enviaríamos	enviarían
+enviar	subj	envíe	envíes	envíe	enviemos	envíen
+enviar	imp	-	envía	envíe	-	envíen
+enviar	impneg	-	envíes	envíe	-	envíen
+enviar	ger	enviando
+enviar	part	enviado
+continuar	pres	continúo	continúas	continúa	continuamos	continúan
+continuar	pret	continué	continuaste	continuó	continuamos	continuaron
+continuar	impf	continuaba	continuabas	continuaba	continuábamos	continuaban
+continuar	fut	continuaré	continuarás	continuará	continuaremos	continuarán
+continuar	cond	continuaría	continuarías	continuaría	continuaríamos	continuarían
+continuar	subj	continúe	continúes	continúe	continuemos	continúen
+continuar	imp	-	continúa	continúe	-	continúen
+continuar	impneg	-	continúes	continúe	-	continúen
+continuar	ger	continuando
+continuar	part	continuado
+reunir	pres	reúno	reúnes	reúne	reunimos	reúnen
+reunir	pret	reuní	reuniste	reunió	reunimos	reunieron
+reunir	impf	reunía	reunías	reunía	reuníamos	reunían
+reunir	fut	reuniré	reunirás	reunirá	reuniremos	reunirán
+reunir	cond	reuniría	reunirías	reuniría	reuniríamos	reunirían
+reunir	subj	reúna	reúnas	reúna	reunamos	reúnan
+reunir	imp	-	reúne	reúna	-	reúnan
+reunir	impneg	-	reúnas	reúna	-	reúnan
+reunir	ger	reuniendo
+reunir	part	reunido
+prohibir	pres	prohíbo	prohíbes	prohíbe	prohibimos	prohíben
+prohibir	pret	prohibí	prohibiste	prohibió	prohibimos	prohibieron
+prohibir	impf	prohibía	prohibías	prohibía	prohibíamos	prohibían
+prohibir	fut	prohibiré	prohibirás	prohibirá	prohibiremos	prohibirán
+prohibir	cond	prohibiría	prohibirías	prohibiría	prohibiríamos	prohibirían
+prohibir	subj	prohíba	prohíbas	prohíba	prohibamos	prohíban
+prohibir	imp	-	prohíbe	prohíba	-	prohíban
+prohibir	impneg	-	prohíbas	prohíba	-	prohíban
+prohibir	ger	prohibiendo
+prohibir	part	prohibido
+reír	pres	río	ríes	ríe	reímos	ríen
+reír	pret	reí	reíste	rio	reímos	rieron
+reír	impf	reía	reías	reía	reíamos	reían
+reír	fut	reiré	reirás	reirá	reiremos	reirán
+reír	cond	reiría	reirías	reiría	reiríamos	reirían
+reír	subj	ría	rías	ría	riamos	rían
+reír	imp	-	ríe	ría	-	rían
+reír	impneg	-	rías	ría	-	rían
+reír	ger	riendo
+reír	part	reído
+sonreír	pres	sonrío	sonríes	sonríe	sonreímos	sonríen
+sonreír	pret	sonreí	sonreíste	sonrió	sonreímos	sonrieron
+sonreír	impf	sonreía	sonreías	sonreía	sonreíamos	sonreían
+sonreír	fut	sonreiré	sonreirás	sonreirá	sonreiremos	sonreirán
+sonreír	cond	sonreiría	sonreirías	sonreiría	sonreiríamos	sonreirían
+sonreír	subj	sonría	sonrías	sonría	sonriamos	sonrían
+sonreír	imp	-	sonríe	sonría	-	sonrían
+sonreír	impneg	-	sonrías	sonría	-	sonrían
+sonreír	ger	sonriendo
+sonreír	part	sonreído
+llamarse	pres	me llamo	te llamas	se llama	nos llamamos	se llaman
+llamarse	pret	me llamé	te llamaste	se llamó	nos llamamos	se llamaron
+llamarse	impf	me llamaba	te llamabas	se llamaba	nos llamábamos	se llamaban
+llamarse	fut	me llamaré	te llamarás	se llamará	nos llamaremos	se llamarán
+llamarse	cond	me llamaría	te llamarías	se llamaría	nos llamaríamos	se llamarían
+llamarse	subj	me llame	te llames	se llame	nos llamemos	se llamen
+llamarse	imp	-	llámate	llámese	-	llámense
+llamarse	impneg	-	te llames	se llame	-	se llamen
+llamarse	ger	llamándose
+llamarse	part	llamado
+acostarse	pres	me acuesto	te acuestas	se acuesta	nos acostamos	se acuestan
+acostarse	pret	me acosté	te acostaste	se acostó	nos acostamos	se acostaron
+acostarse	impf	me acostaba	te acostabas	se acostaba	nos acostábamos	se acostaban
+acostarse	fut	me acostaré	te acostarás	se acostará	nos acostaremos	se acostarán
+acostarse	cond	me acostaría	te acostarías	se acostaría	nos acostaríamos	se acostarían
+acostarse	subj	me acueste	te acuestes	se acueste	nos acostemos	se acuesten
+acostarse	imp	-	acuéstate	acuéstese	-	acuéstense
+acostarse	impneg	-	te acuestes	se acueste	-	se acuesten
+acostarse	ger	acostándose
+acostarse	part	acostado
+vestirse	pres	me visto	te vistes	se viste	nos vestimos	se visten
+vestirse	pret	me vestí	te vestiste	se vistió	nos vestimos	se vistieron
+vestirse	impf	me vestía	te vestías	se vestía	nos vestíamos	se vestían
+vestirse	fut	me vestiré	te vestirás	se vestirá	nos vestiremos	se vestirán
+vestirse	cond	me vestiría	te vestirías	se vestiría	nos vestiríamos	se vestirían
+vestirse	subj	me vista	te vistas	se vista	nos vistamos	se vistan
+vestirse	imp	-	vístete	vístase	-	vístanse
+vestirse	impneg	-	te vistas	se vista	-	se vistan
+vestirse	ger	vistiéndose
+vestirse	part	vestido
+irse	pres	me voy	te vas	se va	nos vamos	se van
+irse	pret	me fui	te fuiste	se fue	nos fuimos	se fueron
+irse	impf	me iba	te ibas	se iba	nos íbamos	se iban
+irse	fut	me iré	te irás	se irá	nos iremos	se irán
+irse	cond	me iría	te irías	se iría	nos iríamos	se irían
+irse	subj	me vaya	te vayas	se vaya	nos vayamos	se vayan
+irse	imp	-	vete	váyase	-	váyanse
+irse	impneg	-	te vayas	se vaya	-	se vayan
+irse	ger	yéndose
+irse	part	ido
+tener	pres	tengo	tienes	tiene	tenemos	tienen
+tener	pret	tuve	tuviste	tuvo	tuvimos	tuvieron
+tener	impf	tenía	tenías	tenía	teníamos	tenían
+tener	fut	tendré	tendrás	tendrá	tendremos	tendrán
+tener	cond	tendría	tendrías	tendría	tendríamos	tendrían
+tener	subj	tenga	tengas	tenga	tengamos	tengan
+tener	imp	-	ten	tenga	-	tengan
+tener	impneg	-	tengas	tenga	-	tengan
+tener	ger	teniendo
+tener	part	tenido
+mantener	pres	mantengo	mantienes	mantiene	mantenemos	mantienen
+mantener	pret	mantuve	mantuviste	mantuvo	mantuvimos	mantuvieron
+mantener	impf	mantenía	mantenías	mantenía	manteníamos	mantenían
+mantener	fut	mantendré	mantendrás	mantendrá	mantendremos	mantendrán
+mantener	cond	mantendría	mantendrías	mantendría	mantendríamos	mantendrían
+mantener	subj	mantenga	mantengas	mantenga	mantengamos	mantengan
+mantener	imp	-	mantén	mantenga	-	mantengan
+mantener	impneg	-	mantengas	mantenga	-	mantengan
+mantener	ger	manteniendo
+mantener	part	mantenido
+venir	pres	vengo	vienes	viene	venimos	vienen
+venir	pret	vine	viniste	vino	vinimos	vinieron
+venir	impf	venía	venías	venía	veníamos	venían
+venir	fut	vendré	vendrás	vendrá	vendremos	vendrán
+venir	cond	vendría	vendrías	vendría	vendríamos	vendrían
+venir	subj	venga	vengas	venga	vengamos	vengan
+venir	imp	-	ven	venga	-	vengan
+venir	impneg	-	vengas	venga	-	vengan
+venir	ger	viniendo
+venir	part	venido
+hacer	pres	hago	haces	hace	hacemos	hacen
+hacer	pret	hice	hiciste	hizo	hicimos	hicieron
+hacer	impf	hacía	hacías	hacía	hacíamos	hacían
+hacer	fut	haré	harás	hará	haremos	harán
+hacer	cond	haría	harías	haría	haríamos	harían
+hacer	subj	haga	hagas	haga	hagamos	hagan
+hacer	imp	-	haz	haga	-	hagan
+hacer	impneg	-	hagas	haga	-	hagan
+hacer	ger	haciendo
+hacer	part	hecho
+decir	pres	digo	dices	dice	decimos	dicen
+decir	pret	dije	dijiste	dijo	dijimos	dijeron
+decir	impf	decía	decías	decía	decíamos	decían
+decir	fut	diré	dirás	dirá	diremos	dirán
+decir	cond	diría	dirías	diría	diríamos	dirían
+decir	subj	diga	digas	diga	digamos	digan
+decir	imp	-	di	diga	-	digan
+decir	impneg	-	digas	diga	-	digan
+decir	ger	diciendo
+decir	part	dicho
+poner	pres	pongo	pones	pone	ponemos	ponen
+poner	pret	puse	pusiste	puso	pusimos	pusieron
+poner	impf	ponía	ponías	ponía	poníamos	ponían
+poner	fut	pondré	pondrás	pondrá	pondremos	pondrán
+poner	cond	pondría	pondrías	pondría	pondríamos	pondrían
+poner	subj	ponga	pongas	ponga	pongamos	pongan
+poner	imp	-	pon	ponga	-	pongan
+poner	impneg	-	pongas	ponga	-	pongan
+poner	ger	poniendo
+poner	part	puesto
+componer	pres	compongo	compones	compone	componemos	componen
+componer	pret	compuse	compusiste	compuso	compusimos	compusieron
+componer	impf	componía	componías	componía	componíamos	componían
+componer	fut	compondré	compondrás	compondrá	compondremos	compondrán
+componer	cond	compondría	compondrías	compondría	compondríamos	compondrían
+componer	subj	componga	compongas	componga	compongamos	compongan
+componer	imp	-	compón	componga	-	compongan
+componer	impneg	-	compongas	componga	-	compongan
+componer	ger	componiendo
+componer	part	compuesto
+salir	pres	salgo	sales	sale	salimos	salen
+salir	pret	salí	saliste	salió	salimos	salieron
+salir	impf	salía	salías	salía	salíamos	salían
+salir	fut	saldré	saldrás	saldrá	saldremos	saldrán
+salir	cond	saldría	saldrías	saldría	saldríamos	saldrían
+salir	subj	salga	salgas	salga	salgamos	salgan
+salir	imp	-	sal	salga	-	salgan
+salir	impneg	-	salgas	salga	-	salgan
+salir	ger	saliendo
+salir	part	salido
+valer	pres	valgo	vales	vale	valemos	valen
+valer	pret	valí	valiste	valió	valimos	valieron
+valer	impf	valía	valías	valía	valíamos	valían
+valer	fut	valdré	valdrás	valdrá	valdremos	valdrán
+valer	cond	valdría	valdrías	valdría	valdríamos	valdrían
+valer	subj	valga	valgas	valga	valgamos	valgan
+valer	imp	-	vale	valga	-	valgan
+valer	impneg	-	valgas	valga	-	valgan
+valer	ger	valiendo
+valer	part	valido
+traer	pres	traigo	traes	trae	traemos	traen
+traer	pret	traje	trajiste	trajo	trajimos	trajeron
+traer	impf	traía	traías	traía	traíamos	traían
+traer	fut	traeré	traerás	traerá	traeremos	traerán
+traer	cond	traería	traerías	traería	traeríamos	traerían
+traer	subj	traiga	traigas	traiga	traigamos	traigan
+traer	imp	-	trae	traiga	-	traigan
+traer	impneg	-	traigas	traiga	-	traigan
+traer	ger	trayendo
+traer	part	traído
+oír	pres	oigo	oyes	oye	oímos	oyen
+oír	pret	oí	oíste	oyó	oímos	oyeron
+oír	impf	oía	oías	oía	oíamos	oían
+oír	fut	oiré	oirás	oirá	oiremos	oirán
+oír	cond	oiría	oirías	oiría	oiríamos	oirían
+oír	subj	oiga	oigas	oiga	oigamos	oigan
+oír	imp	-	oye	oiga	-	oigan
+oír	impneg	-	oigas	oiga	-	oigan
+oír	ger	oyendo
+oír	part	oído
+caer	pres	caigo	caes	cae	caemos	caen
+caer	pret	caí	caíste	cayó	caímos	cayeron
+caer	impf	caía	caías	caía	caíamos	caían
+caer	fut	caeré	caerás	caerá	caeremos	caerán
+caer	cond	caería	caerías	caería	caeríamos	caerían
+caer	subj	caiga	caigas	caiga	caigamos	caigan
+caer	imp	-	cae	caiga	-	caigan
+caer	impneg	-	caigas	caiga	-	caigan
+caer	ger	cayendo
+caer	part	caído
+estar	pres	estoy	estás	está	estamos	están
+estar	pret	estuve	estuviste	estuvo	estuvimos	estuvieron
+estar	impf	estaba	estabas	estaba	estábamos	estaban
+estar	fut	estaré	estarás	estará	estaremos	estarán
+estar	cond	estaría	estarías	estaría	estaríamos	estarían
+estar	subj	esté	estés	esté	estemos	estén
+estar	imp	-	está	esté	-	estén
+estar	impneg	-	estés	esté	-	estén
+estar	ger	estando
+estar	part	estado
+poder	pres	puedo	puedes	puede	podemos	pueden
+poder	pret	pude	pudiste	pudo	pudimos	pudieron
+poder	impf	podía	podías	podía	podíamos	podían
+poder	fut	podré	podrás	podrá	podremos	podrán
+poder	cond	podría	podrías	podría	podríamos	podrían
+poder	subj	pueda	puedas	pueda	podamos	puedan
+poder	imp	-	puede	pueda	-	puedan
+poder	impneg	-	puedas	pueda	-	puedan
+poder	ger	pudiendo
+poder	part	podido
+querer	pres	quiero	quieres	quiere	queremos	quieren
+querer	pret	quise	quisiste	quiso	quisimos	quisieron
+querer	impf	quería	querías	quería	queríamos	querían
+querer	fut	querré	querrás	querrá	querremos	querrán
+querer	cond	querría	querrías	querría	querríamos	querrían
+querer	subj	quiera	quieras	quiera	queramos	quieran
+querer	imp	-	quiere	quiera	-	quieran
+querer	impneg	-	quieras	quiera	-	quieran
+querer	ger	queriendo
+querer	part	querido
+saber	pres	sé	sabes	sabe	sabemos	saben
+saber	pret	supe	supiste	supo	supimos	supieron
+saber	impf	sabía	sabías	sabía	sabíamos	sabían
+saber	fut	sabré	sabrás	sabrá	sabremos	sabrán
+saber	cond	sabría	sabrías	sabría	sabríamos	sabrían
+saber	subj	sepa	sepas	sepa	sepamos	sepan
+saber	imp	-	sabe	sepa	-	sepan
+saber	impneg	-	sepas	sepa	-	sepan
+saber	ger	sabiendo
+saber	part	sabido
+caber	pres	quepo	cabes	cabe	cabemos	caben
+caber	pret	cupe	cupiste	cupo	cupimos	cupieron
+caber	impf	cabía	cabías	cabía	cabíamos	cabían
+caber	fut	cabré	cabrás	cabrá	cabremos	cabrán
+caber	cond	cabría	cabrías	cabría	cabríamos	cabrían
+caber	subj	quepa	quepas	quepa	quepamos	quepan
+caber	imp	-	cabe	quepa	-	quepan
+caber	impneg	-	quepas	quepa	-	quepan
+caber	ger	cabiendo
+caber	part	cabido
+andar	pres	ando	andas	anda	andamos	andan
+andar	pret	anduve	anduviste	anduvo	anduvimos	anduvieron
+andar	impf	andaba	andabas	andaba	andábamos	andaban
+andar	fut	andaré	andarás	andará	andaremos	andarán
+andar	cond	andaría	andarías	andaría	andaríamos	andarían
+andar	subj	ande	andes	ande	andemos	anden
+andar	imp	-	anda	ande	-	anden
+andar	impneg	-	andes	ande	-	anden
+andar	ger	andando
+andar	part	andado
+conducir	pres	conduzco	conduces	conduce	conducimos	conducen
+conducir	pret	conduje	condujiste	condujo	condujimos	condujeron
+conducir	impf	conducía	conducías	conducía	conducíamos	conducían
+conducir	fut	conduciré	conducirás	conducirá	conduciremos	conducirán
+conducir	cond	conduciría	conducirías	conduciría	conduciríamos	conducirían
+conducir	subj	conduzca	conduzcas	conduzca	conduzcamos	conduzcan
+conducir	imp	-	conduce	conduzca	-	conduzcan
+conducir	impneg	-	conduzcas	conduzca	-	conduzcan
+conducir	ger	conduciendo
+conducir	part	conducido
+ser	pres	soy	eres	es	somos	son
+ser	pret	fui	fuiste	fue	fuimos	fueron
+ser	impf	era	eras	era	éramos	eran
+ser	fut	seré	serás	será	seremos	serán
+ser	cond	sería	serías	sería	seríamos	serían
+ser	subj	sea	seas	sea	seamos	sean
+ser	imp	-	sé	sea	-	sean
+ser	impneg	-	seas	sea	-	sean
+ser	ger	siendo
+ser	part	sido
+ir	pres	voy	vas	va	vamos	van
+ir	pret	fui	fuiste	fue	fuimos	fueron
+ir	impf	iba	ibas	iba	íbamos	iban
+ir	fut	iré	irás	irá	iremos	irán
+ir	cond	iría	irías	iría	iríamos	irían
+ir	subj	vaya	vayas	vaya	vayamos	vayan
+ir	imp	-	ve	vaya	-	vayan
+ir	impneg	-	vayas	vaya	-	vayan
+ir	ger	yendo
+ir	part	ido
+haber	pres	he	has	ha	hemos	han
+haber	pret	hube	hubiste	hubo	hubimos	hubieron
+haber	impf	había	habías	había	habíamos	habían
+haber	fut	habré	habrás	habrá	habremos	habrán
+haber	cond	habría	habrías	habría	habríamos	habrían
+haber	subj	haya	hayas	haya	hayamos	hayan
+haber	imp	-	he	haya	-	hayan
+haber	impneg	-	hayas	haya	-	hayan
+haber	ger	habiendo
+haber	part	habido
+dar	pres	doy	das	da	damos	dan
+dar	pret	di	diste	dio	dimos	dieron
+dar	impf	daba	dabas	daba	dábamos	daban
+dar	fut	daré	darás	dará	daremos	darán
+dar	cond	daría	darías	daría	daríamos	darían
+dar	subj	dé	des	dé	demos	den
+dar	imp	-	da	dé	-	den
+dar	impneg	-	des	dé	-	den
+dar	ger	dando
+dar	part	dado
+ver	pres	veo	ves	ve	vemos	ven
+ver	pret	vi	viste	vio	vimos	vieron
+ver	impf	veía	veías	veía	veíamos	veían
+ver	fut	veré	verás	verá	veremos	verán
+ver	cond	vería	verías	vería	veríamos	verían
+ver	subj	vea	veas	vea	veamos	vean
+ver	imp	-	ve	vea	-	vean
+ver	impneg	-	veas	vea	-	vean
+ver	ger	viendo
+ver	part	visto
+abrir	pres	abro	abres	abre	abrimos	abren
+abrir	pret	abrí	abriste	abrió	abrimos	abrieron
+abrir	impf	abría	abrías	abría	abríamos	abrían
+abrir	fut	abriré	abrirás	abrirá	abriremos	abrirán
+abrir	cond	abriría	abrirías	abriría	abriríamos	abrirían
+abrir	subj	abra	abras	abra	abramos	abran
+abrir	imp	-	abre	abra	-	abran
+abrir	impneg	-	abras	abra	-	abran
+abrir	ger	abriendo
+abrir	part	abierto
+escribir	pres	escribo	escribes	escribe	escribimos	escriben
+escribir	pret	escribí	escribiste	escribió	escribimos	escribieron
+escribir	impf	escribía	escribías	escribía	escribíamos	escribían
+escribir	fut	escribiré	escribirás	escribirá	escribiremos	escribirán
+escribir	cond	escribiría	escribirías	escribiría	escribiríamos	escribirían
+escribir	subj	escriba	escribas	escriba	escribamos	escriban
+escribir	imp	-	escribe	escriba	-	escriban
+escribir	impneg	-	escribas	escriba	-	escriban
+escribir	ger	escribiendo
+escribir	part	escrito

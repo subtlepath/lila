@@ -1,0 +1,21 @@
+# Unit 5: La ciudad y el transporte / City and transport. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u05.l01 ¿A dónde vas? (ir a + place)
+ir		verb		to go	A1			city			Voy al mercado. Voy a comer (Unit 8): I'm going to eat.	
+# --- u05.l02 ¿Dónde queda? (place). Also new here, rows in core.tsv: cerca, cuadra
+# --- u05.l03 Siga derecho (directions, usted commands)
+# --- u05.l04 En el metro (transport). Also new here, row in core.tsv: boleto
+camión		noun	m	bus (city bus); truck	A1		x	transport		autobús	Autobús is for long-distance coaches.	
+# --- supporting (no lesson introduces these; usable from Unit 5 on)
+primero		adj		first	A1			numbers	apoc=primer		El primer piso; la primera calle.	
+# --- names
+Beto		propn		Beto (short for Alberto or Roberto)	A1							
+Ciudad de México		propn		Mexico City	A1							
+Zócalo		propn		the Zócalo (Mexico City's main square)	A1							
+Reforma		propn		Reforma (avenue in Mexico City)	A1							
+Insurgentes		propn		Insurgentes (avenue in Mexico City)	A1							
+Bellas Artes		propn		Bellas Artes (palace and metro station)	A1							
+Roma		propn		Roma (neighborhood in Mexico City); Rome	A1							
+Condesa		propn		Condesa (neighborhood in Mexico City)	A1							

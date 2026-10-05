@@ -1,0 +1,118 @@
+number: 3
+title: Con permiso
+title_en: Excuse me
+level: A1
+new: [por favor, de nada, perdón, disculpe, con permiso, mande, me permite, provecho, ahorita, un momentito, órale, bueno#hello]
+notes:
+  - kind: culture
+    title: Mexican courtesy
+    text: |
+      A few small phrases make you sound polite in Mexico:
+
+      - _con permiso_ — said when you pass in front of someone, squeeze off a crowded bus, or leave a table or a room. The answer is _pásele_ or _adelante_ (go ahead).
+      - _¡provecho!_ — said to people who are eating, even strangers, when you pass their table or leave a restaurant. Answer _gracias_.
+      - _¿mande?_ — the polite "pardon?", and the polite answer when someone calls your name. A bare _¿qué?_ can sound rude.
+      - _¿me permite?_ — "may I?", to get past someone or to take or see something.
+      - _¿bueno?_ — how Mexicans answer the phone.
+
+      _Por favor_ and _gracias_ go everywhere. A request without them sounds blunt.
+  - kind: usage
+    title: Ahorita and other little words
+    text: |
+      Mexicans soften what they say with diminutives: _un momentito_ (just a moment), _ahorita_ (from _ahora_, now).
+
+      _Ahorita_ is famously flexible. It can mean right now, in a few minutes, later today, or, politely, never:
+
+      - _Ahorita vengo._ — I'll be right back.
+      - _Ahorita no, gracias._ — Not right now, thanks. This is the polite way to turn down a street vendor.
+
+      Listen to the context and the tone. If you need something now, Mexicans joke _¿ahorita ahorita?_ or say _ya_ (now).
+  - kind: usage
+    title: "¡Órale!"
+    text: |
+      _¡Órale!_ is an all-purpose *informal* word. It can mean "OK, let's do it!", "wow!" or "come on, hurry up!", and the tone tells you which. Use it with friends, not in formal situations.
+sentences:
+  - es: "{Por favor}, más despacio."
+    en: "Slower, please."
+    order: true
+  - es: "Repita, {por favor}."
+    en: "Could you repeat that, please?"
+  - es: "Gracias. —{De nada}."
+    en: "Thank you. —You're welcome."
+  - es: "Gracias por todo. —{De nada}."
+    en: "Thanks for everything. —You're welcome."
+  - es: "¡Ay, {perdón}!"
+    en: "Oh, sorry!"
+  - es: "{Perdón}, ¿es su llave?"
+    en: "Excuse me, is this your key?"
+  - es: "{Disculpe}, ¿usted es de aquí?"
+    en: "Excuse me, are you from here?"
+    order: true
+  - es: "{Disculpe}, ¿usted es la señora Ruiz?"
+    en: "Excuse me, are you Mrs. Ruiz?"
+  - es: "{Con permiso}, señora."
+    en: "Excuse me, ma'am."
+    note: "Said when you pass someone, go ahead of them, or leave a room or a table."
+  - es: "[Buenas noches|buenas noches] a todos. {Con permiso}."
+    en: "Good night, everyone. I'll be going."
+    note: "Con permiso is also what you say as you leave a table or a room."
+  - es: "¿{Mande|mande}, señora?"
+    en: "Yes, ma'am?"
+    note: "The polite answer when someone calls you."
+  - es: "¿{Mande|mande}? Más despacio, por favor."
+    en: "Sorry? More slowly, please."
+  - es: "¿{Me permite} el libro?"
+    en: "May I see the book?"
+  - es: "¿{Me permite} su llave?"
+    en: "May I have your key?"
+  - es: "Con permiso. ¡{Provecho}!"
+    en: "Excuse me. Enjoy your meal!"
+    note: "Said to people eating as you pass their table or leave."
+  - es: "¡{Provecho}! —Gracias."
+    en: "Enjoy your meal! —Thank you."
+  - es: "{Ahorita}, señora."
+    en: "Right away, ma'am."
+    note: "Ahorita can mean right now, in a little while, or later."
+  - es: "{Ahorita} no, gracias."
+    en: "Not right now, thanks."
+    order: true
+  - es: "{Un momentito}, por favor."
+    en: "Just a moment, please."
+  - es: "Sí, {un momentito}."
+    en: "Yes, just a moment."
+  - es: "¿Una cerveza? —¡{Órale}!"
+    en: "A beer? —Sure!"
+    note: "Informal: only with friends."
+  - es: "¿Unos tacos? —¡{Órale}!"
+    en: "Some tacos? —You bet!"
+    note: "Informal: only with friends."
+  - es: "¿{Bueno|bueno#hello}? —Hola, soy Ana."
+    en: "Hello? —Hi, it's Ana."
+    note: "Mexicans answer the phone with ¿Bueno?"
+  - es: "¿{Bueno|bueno#hello}? ¿Quién es?"
+    en: "Hello? Who is this?"
+dialogue:
+  title: En la taquería
+  title_en: At the taco stand
+  lines:
+    - speaker: Taquero
+      es: "¡Buenas tardes, señorita!"
+      en: "Good afternoon, miss!"
+    - speaker: Ana
+      es: "Buenas tardes. Unos tacos [al pastor|al pastor], por favor."
+      en: "Good afternoon. Some tacos al pastor, please."
+    - speaker: Taquero
+      es: "¿Con todo?"
+      en: "With everything?"
+    - speaker: Ana
+      es: "Sí, con todo. Y un agua de limón, por favor."
+      en: "Yes, with everything. And a limeade, please."
+    - speaker: Taquero
+      es: "Sí, ahorita. Un momentito."
+      en: "Sure, just a moment."
+    - speaker: Señor
+      es: "Con permiso. ¡Provecho!"
+      en: "Excuse me. Enjoy your meal!"
+    - speaker: Ana
+      es: "Gracias, señor."
+      en: "Thank you, sir."

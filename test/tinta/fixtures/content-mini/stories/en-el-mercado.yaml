@@ -1,0 +1,21 @@
+title: Luis en México
+title_en: Luis in Mexico
+level: A1
+kind: reading
+lesson: u01.l02
+lines:
+  - es: "Luis vive en México."
+    en: "Luis lives in Mexico."
+  - es: "Come tacos con su amigo."
+    en: "He eats tacos with his friend."
+    paragraph: true
+  - es: "¡Los tacos son muy buenos!"
+    en: "The tacos are very good!"
+questions:
+  - q: "¿Dónde vive Luis?"
+    options: ["En México", "En Roma", "En la casa"]
+    answer: 0
+  - q: "What does Luis eat?"
+    lang: en
+    options: ["tacos", "potatoes", "nothing", "bread"]
+    answer: 0

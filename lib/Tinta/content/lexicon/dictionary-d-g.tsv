@@ -1,0 +1,848 @@
+# Dictionary-only headwords d-g: lookup, respelling and verb tables, no items (docs/content-style.md section 6).
+# TAB-separated. Keys must not repeat a course word's key; verbs the conjugator cannot infer are declared
+# in content/verbs/irregular/dictionary-d-g.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+# --- D: verbs
+dañar		verb		to damage; to harm; to hurt	B1				Hacer daño: to hurt (someone), to be bad for (you).	
+deberse		verb		to be due to	B2				Se debe a la lluvia: it's due to the rain.	
+decepcionar		verb		to disappoint; to let down	B1				Not "to deceive" (that is engañar).	
+decidirse		verb		to make up one's mind	B1				¡Decídete!: Make up your mind!	
+declarar		verb		to declare; to testify	B1					
+decorar		verb		to decorate	A2					
+dedicar		verb		to dedicate; to devote	B1				Dedicarse a: to do for a living.	
+defender		verb		to defend; to stand up for	B1					
+definir		verb		to define	B1					
+deletrear		verb		to spell (out)	A2				¿Cómo se deletrea?: How do you spell it?	
+demandar		verb		to sue; to demand	B2				Usually to sue: lo demandó. To demand is usually exigir.	
+demostrar		verb		to prove; to show; to demonstrate	B1					
+denunciar		verb		to report (a crime); to denounce	B1				Levantar una denuncia: to file a police report.	
+depender		verb		to depend	A2				Depende: it depends. Depender de: to depend on.	
+depositar		verb		to deposit; to pay into (an account)	B1				Te deposito mañana: I'll pay into your account tomorrow.	
+derramar		verb		to spill	B1					
+derretir		verb		to melt	B1				Derretirse: to melt (by itself). Se derritió el hielo.	
+derrotar		verb		to defeat; to beat	B2					
+desabrochar		verb		to unbutton; to unfasten	B1					
+desanimarse		verb		to lose heart; to get discouraged	B1					
+desarrollar		verb		to develop	B1					
+descargar		verb		to download; to unload	A2				Se me descargó el celular: my phone died (descargarse).	
+desconectar		verb		to disconnect; to unplug	B1					
+desconfiar		verb		to distrust; to be suspicious	B1				Desconfiar de alguien: not to trust someone.	
+descongelar		verb		to defrost; to thaw	B1					
+descontar		verb		to take off (a price); to deduct	B1					
+describir		verb		to describe	A2					
+descuidar		verb		to neglect	B2				¡Descuida!: Don't worry!	
+desempacar		verb		to unpack	B1		x		Mexico: empacar to pack, desempacar to unpack.	
+desesperar		verb		to make impatient; to despair	B1				Me desespera: it drives me crazy. Desesperarse: to lose patience.	
+deshacer		verb		to undo; to take apart	B1				Deshacerse de: to get rid of.	
+desinfectar		verb		to disinfect	B1					
+desmayarse		verb		to faint	B1					
+desobedecer		verb		to disobey	B1					
+desocupar		verb		to vacate; to free up	B1		x		¿Ya desocupó la mesa?: Are you done with the table? Desocuparse: to get free (from work).	
+despedir		verb		to fire (from a job); to see off	B1				Lo despidieron: he was fired. Despedirse: to say goodbye.	
+despegar		verb		to take off (plane); to peel off	B1					
+desperdiciar		verb		to waste	B1					
+despertar		verb		to wake (someone) up	A2				Despiértame a las seis. To wake up yourself: despertarse.	
+destacar		verb		to stand out; to highlight	B2					
+destapar		verb		to open; to uncork; to unclog	B1				Destapar el baño: to unclog the toilet.	
+destruir		verb		to destroy	B1					
+desvelarse		verb		to stay up late; to lose sleep	B1		x		Me desvelé: I stayed up late (and I'm tired).	
+desvestirse		verb		to get undressed	B1					
+detener		verb		to stop; to arrest	B1				Detenerse: to stop (yourself). Lo detuvo la policía: the police arrested him.	
+detestar		verb		to hate; to detest	B1					
+dictar		verb		to dictate; to give (a lecture)	B1				Dictar una conferencia: to give a lecture.	
+digerir		verb		to digest	B2					
+dirigir		verb		to direct; to manage; to lead	B1				Dirigirse a: to head for; to speak to.	
+disculpar		verb		to excuse; to forgive	A2				Disculparse: to apologize. Disculpe: excuse me.	
+diseñar		verb		to design	B1					
+disfrazarse		verb		to dress up (in costume)	B1				Disfrazarse de: to dress up as.	
+disimular		verb		to hide (a feeling); to pretend	B2					
+disminuir		verb		to decrease; to reduce	B2					
+disolver		verb		to dissolve	B2					
+disparar		verb		to shoot; to fire	B1					
+distinguir		verb		to tell apart; to distinguish	B1					
+distraer		verb		to distract	B1				Distraerse: to get distracted.	
+distribuir		verb		to distribute	B2					
+divertirse		verb		to have fun; to have a good time	A2				¡Que te diviertas!: Have fun!	
+dividir		verb		to divide; to split	B1					
+doblar		verb		to fold; to turn (a corner); to dub	B1				Doblar a la derecha: to turn right (Mexico also says dar vuelta).	
+dominar		verb		to master; to dominate	B1					
+donar		verb		to donate	B1					
+dorar		verb		to brown (food)	B1				Dorar la cebolla: to brown the onion.	
+dormirse		verb		to fall asleep; to oversleep	A2				Me dormí: I fell asleep, or I overslept.	
+ducharse		verb		to shower; to take a shower	A2				Mexico usually says bañarse.	
+dudar		verb		to doubt	B1				Lo dudo: I doubt it.	
+# --- D: nouns
+dado		noun	m	die (dice)	B1				Los dados: dice. Also the participle of dar.	
+dama		noun	f	lady	B1				Damas y caballeros: ladies and gentlemen. Las damas: checkers.	
+daño		noun	m	damage; harm	B1				Hacer daño: to hurt; to be bad for (you).	
+danza		noun	f	dance (as an art)	B1				A dance at a party is un baile.	
+debate		noun	m	debate	B1					
+deberes		noun	mpl	homework (Spain)	A2				Spain. In Mexico: la tarea.	
+debilidad		noun	f	weakness	B1					
+década		noun	f	decade	B1					
+decepción		noun	f	disappointment	B1				False friend: deception is engaño.	
+declaración		noun	f	statement; declaration	B1				Declaración de impuestos: tax return.	
+decoración		noun	f	decoration; decor	B1					
+defecto		noun	m	flaw; defect	B1					
+defensa		noun	f	defense; bumper (of a car)	B1		x		Mexico: la defensa is a car bumper.	
+definición		noun	f	definition	B1					
+delantal		noun	m	apron	B1					
+delegación		noun	f	borough (Mexico City); delegation	B2		x		Mexico City's boroughs were delegaciones; they are now alcaldías.	
+delfín		noun	m	dolphin	A2					
+delicia		noun	f	delight; delicious thing	B1				¡Qué delicia!: How delicious!	
+delincuente		noun	mf	criminal; offender	B1					
+delito		noun	m	crime; offense	B1					
+demanda		noun	f	lawsuit; demand	B2					
+democracia		noun	f	democracy	B1					
+demonio		noun	m	demon; devil	B1				¡Demonios!: Damn! (mild)	
+dentadura		noun	f	teeth; set of teeth	B1				Dentadura postiza: false teeth.	
+dependiente		noun	mf	shop assistant; clerk	B1					
+deportista		noun	mf	athlete; sportsperson	A2					
+depresión		noun	f	depression	B1					
+derecho	derecho#law	noun	m	right; law (subject)	B1				Los derechos humanos: human rights. Estudiar derecho: to study law.	
+derrota		noun	f	defeat	B1					
+desacuerdo		noun	m	disagreement	B1				Estar en desacuerdo: to disagree.	
+desafío		noun	m	challenge	B1					
+desagüe		noun	m	drain; drainpipe	B1					
+desaparición		noun	f	disappearance	B1					
+desarmador		noun	m	screwdriver	B1		x		The Mexican word; elsewhere destornillador.	
+desarrollo		noun	m	development	B1					
+descanso		noun	m	rest; break	A2					
+descripción		noun	f	description	B1					
+descubrimiento		noun	m	discovery	B1					
+descuento		noun	m	discount	A2					
+desempleo		noun	m	unemployment	B1			pl=-		
+deseo		noun	m	wish; desire	B1				Pide un deseo: make a wish.	
+desesperación		noun	f	despair; desperation	B1					
+desfile		noun	m	parade	B1					
+desgracia		noun	f	misfortune; disgrace	B1				Por desgracia: unfortunately.	
+desierto		noun	m	desert	A2					
+desmadre		noun	m	mess; chaos; wild party	B1	vulgar	x		Vulgar. Standard: desorden, lío.	
+desodorante		noun	m	deodorant	A2					
+desorden		noun	m	mess; disorder	A2					
+despacho		noun	m	office; study (room)	B1					
+despapaye		noun	m	mess; commotion	B2	informal	x		Informal, milder than desmadre. Standard: desorden, lío.	
+despedida		noun	f	farewell; going-away party	B1				Despedida de soltera: bachelorette party.	
+despensa		noun	f	groceries; pantry	B1		x		Hacer la despensa: to do the grocery shopping. Vales de despensa: grocery vouchers from an employer.	
+despertador		noun	m	alarm clock	A2					
+destapador		noun	m	bottle opener	B1		x			
+destinatario		noun	mf	addressee; recipient	B1					
+destornillador		noun	m	screwdriver	B1				Mexico usually says desarmador.	
+desventaja		noun	f	disadvantage	B1					
+detective		noun	mf	detective	B1					
+detención		noun	f	arrest; detention	B1					
+detergente		noun	m	detergent; laundry soap	A2					
+devolución		noun	f	refund; return	A2				¿Aceptan devoluciones?: Do you take returns?	
+diablo		noun	m	devil	B1					
+diadema		noun	f	headband; tiara	B1					
+diagnóstico		noun	m	diagnosis	B1					
+diálogo		noun	m	dialogue; conversation	B1					
+diamante		noun	m	diamond	B1					
+diario	diario#newspaper	noun	m	newspaper; diary	A2					
+dibujo		noun	m	drawing	A2				Dibujos animados: cartoons (Mexico: caricaturas).	
+diccionario		noun	m	dictionary	A1					
+dicho		noun	m	saying	B1				Como dice el dicho: as the saying goes.	
+dieta		noun	f	diet	A2				Estar a dieta: to be on a diet.	
+dificultad		noun	f	difficulty	B1					
+difunto		noun	mf	deceased; dead person	B1				Los fieles difuntos: All Souls' Day (November second).	
+digestión		noun	f	digestion	B1					
+dignidad		noun	f	dignity	B1					
+dilema		noun	m	dilemma	B1					
+dinosaurio		noun	m	dinosaur	A2					
+diploma		noun	m	diploma; certificate	B1					
+diplomado		noun	m	certificate course	B2		x		A short professional course with a certificate.	
+diputado		noun	mf	congressman; representative	B2				A member of the Cámara de Diputados.	
+direccional		noun	f	turn signal; indicator	B1		x		Pon la direccional: use your turn signal.	
+directorio		noun	m	directory; phone book	B1					
+discapacidad		noun	f	disability	B1				Persona con discapacidad: person with a disability.	
+disciplina		noun	f	discipline	B1					
+disco		noun	m	record; disc	B1				Disco duro: hard drive.	
+discriminación		noun	f	discrimination	B2					
+disculpa		noun	f	apology	A2				Pedir disculpas: to apologize.	
+discurso		noun	m	speech	B1					
+discusión		noun	f	argument; discussion	B1				Usually an argument: tuvimos una discusión.	
+diseñador		noun	mf	designer	B1					
+diseño		noun	m	design	B1					
+disfraz		noun	m	costume; disguise	B1					
+disgusto		noun	m	upset; displeasure; quarrel	B1				False friend: disgust is asco. Llevarse un disgusto: to get upset.	
+disparo		noun	m	shot; gunshot	B1					
+dispositivo		noun	m	device	B1					
+distancia		noun	f	distance	A2					
+distrito		noun	m	district	B1					
+diversión		noun	f	fun; entertainment	B1					
+divisa		noun	f	foreign currency	B1				Casa de cambio: currency exchange office.	
+división		noun	f	division	B1					
+documentación		noun	f	documents; paperwork	B1				Traiga su documentación: bring your papers.	
+documental		noun	m	documentary	B1					
+documento		noun	m	document	A2				Los documentos: your papers, your ID.	
+domicilio		noun	m	home; address (formal)	B1				Servicio a domicilio: home delivery.	
+dominó		noun	m	dominoes; domino	B1					
+dona		noun	f	doughnut; hair tie	A2		x		Mexico: dona (from donut). Also a scrunchie or hair tie.	
+donación		noun	f	donation	B1					
+donador		noun	mf	donor	B1		x		Donador de sangre: blood donor. Elsewhere donante.	
+dormitorio		noun	m	bedroom; dormitory	B1				Mexico usually says recámara for bedroom.	
+dosis		noun	f	dose	B1					
+drama		noun	m	drama	B1				¡No hagas drama!: Don't make a fuss!	
+drenaje		noun	m	sewer system; drainage	B1					
+droga		noun	f	drug (illegal)	B1				A medicine is una medicina or un medicamento.	
+ducha		noun	f	shower	A2				Mexico usually says regadera.	
+dulce	dulce#candy	noun	m	candy; sweet	A1		x		Los dulces: candy. Dulcería: candy store.	
+dulcería		noun	f	candy store	A2		x			
+# --- D: adjectives
+decente		adj		decent	B1					
+decepcionado		adj		disappointed	B1					
+decidido		adj		determined; decided	B1					
+delantero		adj		front	B1				El asiento delantero: the front seat.	
+delicado		adj		delicate; fragile; touchy	B1					
+dental		adj		dental	A2				Hilo dental: dental floss. Pasta dental: toothpaste.	
+deportivo		adj		sports; sporty	B1				Zapatos deportivos: sneakers (Mexico: tenis).	
+deprimido		adj		depressed	B1					
+desabrido		adj		bland; tasteless	B1					
+desagradable		adj		unpleasant; nasty	B1					
+desagradecido		adj		ungrateful	B1					
+desaparecido		adj		missing; disappeared	B1					
+descafeinado		adj		decaffeinated	A2					
+descalzo		adj		barefoot	B1					
+descompuesto		adj		broken; out of order	A2		x		Mexico: El elevador está descompuesto.	
+desconocido		adj		unknown	B1				Un desconocido: a stranger.	
+descuidado		adj		careless; neglected	B1					
+desechable		adj		disposable	B1				Platos desechables: paper or plastic plates.	
+desempleado		adj		unemployed	B1					
+desesperado		adj		desperate; impatient	B1					
+desgraciado		adj		wretched; (insult) jerk	B1	informal			As an insult (¡desgraciado!) it is strong. Neutral sense: unfortunate.	
+deshidratado		adj		dehydrated	B1					
+desnudo		adj		naked	B1				Informal in Mexico: encuerado.	
+desocupado		adj		free; vacant; unoccupied	A2		x		¿Está desocupado?: Is this (seat, table) free?	
+desordenado		adj		messy; untidy	A2					
+despejado		adj		clear (sky)	B1					
+despistado		adj		absent-minded; scatterbrained	B1					
+desvelado		adj		tired from staying up late	B1		x			
+detallista		adj		thoughtful (with little gifts)	B1		x		Es muy detallista: he always remembers little gifts and details.	
+digital		adj		digital	B1					
+digno		adj		worthy; dignified; decent	B1					
+dinámico		adj		dynamic; energetic	B1					
+discreto		adj		discreet	B1					
+disponible		adj		available	B1					
+dispuesto		adj		willing; ready	B1				Estar dispuesto a: to be willing to.	
+distinto		adj		different; distinct	A2					
+distraído		adj		distracted; absent-minded	B1					
+divino		adj		divine; lovely	B1					
+doble		adj		double	A2				Cuarto doble: double room.	
+doloroso		adj		painful	B1					
+doméstico		adj		domestic; household	B1				Animal doméstico: pet. Trabajo doméstico: housework.	
+dorado		adj		golden; gold; crispy-fried	B1		x		Tacos dorados: rolled tacos fried until crispy.	
+dormilón		adj		fond of sleeping; sleepyhead	B1					
+dramático		adj		dramatic	B1					
+drogado		adj		high (on drugs); drugged	B1					
+duro		adj		hard; tough	A2				Huevo duro: hard-boiled egg.	
+# --- D: expressions and others
+dar a luz		expr		to give birth	B1					
+dar chance		expr		to let; to give a chance	B1	informal	x		Informal. ¿Me das chance?: Will you let me? Standard: dejar, permitir.	
+dar de alta		expr		to register; to discharge (hospital)	B1				Darse de alta: to sign up (with an office or service).	
+dar de baja		expr		to cancel; to unsubscribe; to drop	B1				Darse de baja: to cancel a membership or a phone line.	
+dar el avión		expr		to humor; to pretend to listen	B2	informal	x		Informal. Le di el avión: I just went along with him.	
+dar igual		expr		not to matter; to make no difference	A2				Me da igual: I don't mind; it's all the same to me.	
+dar las gracias		expr		to thank; to say thank you	A2					
+dar lata		expr		to pester; to be a nuisance	B1	informal	x		Informal. Deja de dar lata: stop bugging me. Standard: molestar.	
+dar una vuelta		expr		to go for a walk or a ride	A2					
+dar vuelta		expr		to turn (left, right)	A2		x		Da vuelta a la derecha: turn right.	
+darse cuenta		expr		to realize; to notice	A2				Darse cuenta de algo. To realize a plan is realizar.	
+darse por vencido		expr		to give up	B1					
+de a gratis		expr		for free	B1	informal	x		Informal. Standard: gratis.	
+de a tiro		expr		completely; really	B2	informal	x		Informal, rural and northern. Está de a tiro feo: it's really ugly.	
+de antemano		expr		in advance; beforehand	B1				Gracias de antemano: thanks in advance.	
+de broma		expr		as a joke; jokingly	B1					
+de buenas		expr		in a good mood; lucky	B1		x		Hoy está de buenas: he's in a good mood today.	
+de hecho		expr		in fact; actually	A2					
+de ida y vuelta		expr		round-trip; return	A2				Un boleto de ida y vuelta: a round-trip ticket. Mexico also says redondo.	
+de inmediato		expr		immediately	B1					
+de lujo		expr		luxury; deluxe; great	B1					
+de malas		expr		in a bad mood; unlucky	B1		x		Andar de malas: to be in a bad mood, or having bad luck.	
+de memoria		expr		by heart	B1					
+de moda		expr		fashionable; in style	A2				Estar de moda: to be in fashion. Pasado de moda: out of date.	
+de paso		expr		on the way; in passing	B1				Voy de paso: I'm just passing through.	
+de pelos		expr		great; awesome	B1	informal	x		Informal. Estuvo de pelos: it was awesome. Standard: excelente.	
+de pie		expr		standing (up)	A2					
+de pilón		expr		on top of that; as a bonus	B1		x		Te doy uno de pilón: I'll throw one in for free.	
+de plano		expr		really; totally; definitely	B1		x		De plano no puedo: I really can't.	
+de pronto		expr		suddenly	B1					
+de todos modos		expr		anyway; in any case	B1					
+de última hora		expr		last-minute	B1					
+de un jalón		expr		in one go; without stopping	B1	informal	x		Informal. Standard: de una vez, sin parar.	
+de una vez		expr		once and for all; right away	B1				Hazlo de una vez: just do it now.	
+de verdad		expr		really; truly; real	A2				¿De verdad?: Really?	
+de vez en cuando		expr		from time to time; now and then	A2					
+de vuelta		expr		back; again	B1				Estar de vuelta: to be back.	
+debido a		expr		due to; because of	B1					
+décimo		adj		tenth	A2					
+desde luego		expr		of course; certainly	B1					
+día festivo		noun	m	public holiday	A2			pl=días festivos	Also día feriado.	
+dizque		adv		supposedly; so-called	B1	informal	x		Informal. Dizque estaba enfermo: he was supposedly sick (I doubt it). Standard: supuestamente.	
+# --- E: verbs
+echarse		verb		to lie down; to throw oneself	B1				Me eché un rato: I lay down for a while. Echarse a perder: to go bad.	
+editar		verb		to edit; to publish	B1					
+educar		verb		to raise (children); to educate	B1				Bien educado: well-mannered.	
+ejercer		verb		to practice (a profession)	B2					
+eliminar		verb		to delete; to eliminate	B1				For a file or message Mexico also says borrar.	
+embarazarse		verb		to get pregnant	B1					
+embarrar		verb		to smear; to get (something) dirty	B1				Te embarraste de salsa: you got salsa all over yourself.	
+emborracharse		verb		to get drunk	B1					
+emigrar		verb		to emigrate	B1					
+emocionarse		verb		to get excited; to be moved	B1					
+empacar		verb		to pack (a suitcase)	A2		x		Empacar las maletas: to pack.	
+empatar		verb		to tie; to draw (a game)	B1					
+empeorar		verb		to get worse; to make worse	B1					
+emplear		verb		to employ; to use	B1					
+emprender		verb		to start (a business); to undertake	B1					
+encargar		verb		to order; to entrust	B1		x		Encargar un pastel: to order a cake. Te encargo a mi perro: please look after my dog.	
+encariñarse		verb		to grow fond of	B1				Encariñarse con alguien.	
+encender		verb		to light; to turn on	A2				Mexico usually says prender.	
+encerrar		verb		to lock in; to shut in	B1				Encerrarse: to shut yourself in.	
+enchilarse		verb		to burn one's mouth (with chili)	B1		x		¡Me enchilé!: My mouth is on fire!	
+enchufar		verb		to plug in	B1				Mexico also says conectar.	
+encoger		verb		to shrink	B1				Se encogió la playera: the T-shirt shrank. Encogerse de hombros: to shrug.	
+encontrarse		verb		to meet; to run into; to feel	A2				Me encontré a Ana: I ran into Ana. ¿Cómo se encuentra?: How are you feeling?	
+enfadarse		verb		to get angry (Spain)	B1				Spain. In Mexico: enojarse.	
+enfrentar		verb		to face; to confront	B1					
+enfriar		verb		to cool; to chill	B1				Enfriarse: to get cold. Se enfría la comida.	
+engordar		verb		to gain weight; to be fattening	A2				Engordé dos kilos: I gained two kilos.	
+engrapar		verb		to staple	B1		x			
+enjuagar		verb		to rinse	B1				Enjuague bucal: mouthwash.	
+enloquecer		verb		to go crazy; to drive crazy	B2					
+enojar		verb		to make angry; to annoy	A2				Me enoja: it makes me angry. To get angry: enojarse.	
+ensayar		verb		to rehearse; to practice	B1					
+ensuciar		verb		to dirty; to get dirty	B1				Ensuciarse: to get dirty.	
+enterarse		verb		to find out; to hear (about)	A2				¿Te enteraste?: Did you hear? Enterarse de algo.	
+enterrar		verb		to bury	B1					
+entrar		verb		to go in; to come in; to enter	A1				Mexico says entrar a: entrar a la casa.	
+entrenar		verb		to train; to coach	B1					
+entretener		verb		to entertain; to hold up	B1				Entretenerse: to keep busy; to be delayed.	
+entrevistar		verb		to interview	B1					
+envejecer		verb		to grow old; to age	B1					
+envolver		verb		to wrap	B1				¿Se lo envuelvo?: Shall I wrap it?	
+escalar		verb		to climb	B1					
+escanear		verb		to scan	B1					
+escapar		verb		to escape	B1				Escaparse: to run away; to get away.	
+esconder		verb		to hide	A2				Esconderse: to hide (yourself).	
+escupir		verb		to spit	B1					
+esforzarse		verb		to make an effort; to try hard	B1					
+espantar		verb		to scare; to scare away	B1					
+espiar		verb		to spy (on)	B2					
+establecer		verb		to establish; to set up	B2					
+estallar		verb		to explode; to burst; to break out	B1					
+estirar		verb		to stretch	B1					
+estorbar		verb		to be in the way	B1				¿Te estorbo?: Am I in your way?	
+estornudar		verb		to sneeze	A2				When someone sneezes, Mexicans say ¡Salud!	
+estrellarse		verb		to crash	B1				Se estrelló contra un poste: he crashed into a pole.	
+estrenar		verb		to use for the first time; to premiere	B1				Estreno zapatos: I'm wearing new shoes. Estrenar una película: to release a film.	
+estresarse		verb		to get stressed	B1					
+estropear		verb		to break; to ruin (Spain)	B1				Mainly Spain. In Mexico: descomponer (machines), echar a perder (food, plans). Estropearse: to break down.	
+evaluar		verb		to evaluate; to assess	B2					
+exagerar		verb		to exaggerate; to overdo	B1				¡No exageres!: Don't exaggerate!	
+examinar		verb		to examine	B1					
+exigir		verb		to demand; to require	B1					
+experimentar		verb		to experience; to experiment	B2					
+explorar		verb		to explore	B1					
+explotar		verb		to explode; to exploit	B1					
+exponer		verb		to present (in class); to exhibit; to expose	B1		x		At school in Mexico, exponer is to give a presentation to the class.	
+expresar		verb		to express	B1					
+exprimir		verb		to squeeze (juice)	B1				Exprimir limones: to squeeze limes.	
+expulsar		verb		to expel; to throw out	B1					
+extender		verb		to spread; to extend; to issue	B1					
+extraviar		verb		to lose; to misplace	B2	formal			Formal: objetos extraviados, lost property. Everyday: perder.	
+# --- E: nouns
+eclipse		noun	m	eclipse	B1					
+economía		noun	f	economy; economics	B1					
+edición		noun	f	edition; editing	B1					
+editor		noun	mf	editor	B1					
+edredón		noun	m	comforter; duvet	B1					
+efecto		noun	m	effect	B1				Efectos secundarios: side effects.	
+egresado		noun	mf	graduate (of a school)	B1		x			
+eje		noun	m	axis; axle	B1				Eje vial: a major avenue in Mexico City.	
+eje vial		noun	m	major avenue (Mexico City)	B2		x	pl=ejes viales	Mexico City's numbered through avenues.	
+ejecutivo		noun	mf	executive	B1					
+ejército		noun	m	army	B1					
+ejote		noun	m	green bean	A2		x		From Nahuatl.	
+elección		noun	f	election; choice	B1					
+electricidad		noun	f	electricity	A2			pl=-		
+elefante		noun	m	elephant	A1					
+elemento		noun	m	element; police officer	B1		x		Mexico: un elemento (de la policía) is a police officer.	
+embajador		noun	mf	ambassador	B1					
+embarazo		noun	m	pregnancy	B1				False friend: embarrassment is pena or vergüenza.	
+embotellamiento		noun	m	traffic jam	B1				Mexico also says tráfico: hay mucho tráfico.	
+emigrante		noun	mf	emigrant; migrant	B1					
+emoción		noun	f	emotion; excitement	B1				¡Qué emoción!: How exciting!	
+empanada		noun	f	empanada; turnover	A2					
+empate		noun	m	tie; draw (game)	B1					
+emprendedor		noun	mf	entrepreneur	B1					
+empresario		noun	mf	businessman; businesswoman	B1					
+encargado		noun	mf	person in charge; manager	A2				¿Quién es el encargado?: Who's in charge?	
+encendedor		noun	m	lighter	B1					
+enchufe		noun	m	plug	B1				In Mexico the wall socket is el contacto.	
+encía		noun	f	gum (in the mouth)	B1					
+encuentro		noun	m	meeting; encounter; match	B1					
+encuesta		noun	f	survey; poll	B1					
+endulzante		noun	m	sweetener	A2					
+enemigo		noun	mf	enemy	B1					
+energía		noun	f	energy; power (electricity)	A2					
+enfermería		noun	f	infirmary; nursing	B1					
+enfrijolada		noun	f	tortilla in bean sauce	B1		x		Like an enchilada, but in bean sauce.	
+engrapadora		noun	f	stapler	B1		x			
+enlace		noun	m	link; connection	B1				Mexico also says liga for a web link.	
+enojo		noun	m	anger	B1					
+ensayo		noun	m	essay; rehearsal; test	B1					
+enseñanza		noun	f	teaching; education	B1					
+entierro		noun	m	burial; funeral	B1					
+entrega		noun	f	delivery; handing in	B1				Entrega a domicilio: home delivery.	
+entrenador		noun	mf	coach; trainer	B1					
+entrenamiento		noun	m	training; practice	B1					
+entretenimiento		noun	m	entertainment	B1					
+entusiasmo		noun	m	enthusiasm	B1					
+enunciado		noun	m	sentence; statement	B1				School word for a sentence; also oración.	
+envase		noun	m	container; empty bottle	B1		x		Mexico: return el envase (the empty bottle) to get your deposit back.	
+envidia		noun	f	envy	B1				¡Qué envidia!: I'm so jealous! Jealousy in love is celos.	
+envío		noun	m	shipping; delivery; shipment	A2				Envío gratis: free shipping.	
+epazote		noun	m	epazote (herb)	B1		x	pl=-	From Nahuatl. Cooked with black beans and in quesadillas.	
+epidemia		noun	f	epidemic	B1					
+episodio		noun	m	episode	B1					
+época		noun	f	time; period; era	B1				En esa época: back then.	
+equilibrio		noun	m	balance	B1					
+equivocación		noun	f	mistake	B1					
+escala		noun	f	stopover; scale	B1				Un vuelo sin escalas: a nonstop flight.	
+escalofrío		noun	m	shiver; chill	B1				Tengo escalofríos: I have the chills.	
+escalón		noun	m	step (of stairs)	A2					
+escamoles		noun	mpl	ant larvae (a delicacy)	B2		x		From Nahuatl. Eaten in central Mexico in spring.	
+escándalo		noun	m	scandal; racket (noise)	B1					
+escáner		noun	m	scanner	B1					
+escaparate		noun	m	shop window (Spain)	B1				Spain. In Mexico: el aparador.	
+escarabajo		noun	m	beetle	B1					
+escasez		noun	f	shortage; scarcity	B1				Escasez de agua: water shortage.	
+escena		noun	f	scene	B1					
+escenario		noun	m	stage; setting	B1					
+escondidas		noun	fpl	hide-and-seek	A2		x		Jugar a las escondidas. A escondidas: secretly.	
+escorpión		noun	m	scorpion	B1				Mexico usually says alacrán.	
+escritor		noun	mf	writer	A2					
+escritorio		noun	m	desk	A2					
+escritura		noun	f	writing; deed	B1				Escrituras: property deeds.	
+escudo		noun	m	shield; coat of arms	B1				El escudo nacional: Mexico's eagle-and-snake emblem.	
+escultura		noun	f	sculpture	B1					
+escurridor		noun	m	dish rack; colander	B1					
+esfuerzo		noun	m	effort	B1					
+esguince		noun	m	sprain	B1					
+esmalte		noun	m	nail polish; enamel	B1				Esmalte de uñas: nail polish.	
+esmog		noun	m	smog	B1			pl=-		
+espada		noun	f	sword	B1					
+espárrago		noun	m	asparagus	B1					
+especia		noun	f	spice	B1				Not especie (kind, species).	
+especialidad		noun	f	specialty	B1				La especialidad de la casa: the house specialty.	
+especialista		noun	mf	specialist	B1					
+especie		noun	f	species; kind	B1				Una especie de: a kind of.	
+espectáculo		noun	m	show; spectacle	B1					
+espectador		noun	mf	spectator; viewer	B1					
+espera		noun	f	wait; waiting	A2				Sala de espera: waiting room.	
+espía		noun	mf	spy	B1					
+espina		noun	f	thorn; fish bone	B1					
+espinaca		noun	f	spinach	A2				Usually plural: espinacas.	
+espinilla		noun	f	shin; blackhead	B1					
+espíritu		noun	m	spirit	B1					
+esponja		noun	f	sponge	A2					
+espuma		noun	f	foam; froth	B1					
+esqueleto		noun	m	skeleton	B1					
+esquí		noun	m	skiing; ski	B1					
+estado de cuenta		noun	m	bank statement	B1					
+estafa		noun	f	scam; fraud	B1					
+estampilla		noun	f	(postage) stamp	B1				Mexico also says timbre.	
+estancia		noun	f	stay; family room	B1				Estancia infantil: daycare center.	
+estante		noun	m	shelf	A2					
+estatua		noun	f	statue	B1					
+estatura		noun	f	height (of a person)	B1				¿Cuánto mides?: How tall are you?	
+este	este#east	noun	m	east	A2			pl=-	Also oriente.	
+estilista		noun	mf	hairdresser; stylist	B1					
+estilo		noun	m	style	A2					
+estrategia		noun	f	strategy	B1					
+estreñimiento		noun	m	constipation	B1			pl=-		
+estreno		noun	m	premiere; new release	B1					
+estructura		noun	f	structure	B1					
+estuche		noun	m	case (for glasses, pencils)	B1					
+estudio		noun	m	study; studio	A2				Los estudios: your education.	
+estupidez		noun	f	stupid thing; stupidity	B1	informal			Rude about someone's idea. Milder: tontería.	
+etapa		noun	f	stage; phase	B1					
+etiqueta		noun	f	label; tag; etiquette	B1				De etiqueta: formal (dress).	
+euro		noun	m	euro	A2					
+evaluación		noun	f	evaluation; assessment	B1					
+evento		noun	m	event	A2					
+evidencia		noun	f	evidence	B1					
+ex		noun	mf	ex (former partner)	A2			pl=ex	Mi ex: my ex. Los ex: exes.	
+excepción		noun	f	exception	B1					
+exceso		noun	m	excess	B1				Exceso de equipaje: excess baggage. Exceso de velocidad: speeding.	
+excursión		noun	f	trip; outing	A2					
+excusa		noun	f	excuse	A2					
+expectativa		noun	f	expectation	B1					
+expediente		noun	m	file; record	B2					
+experimento		noun	m	experiment	B1					
+experto		noun	mf	expert	B1					
+explicación		noun	f	explanation	A2					
+explosión		noun	f	explosion	B1					
+exposición		noun	f	exhibition; class presentation	B1		x		At school in Mexico: a presentation you give to the class.	
+expresión		noun	f	expression	B1					
+extensión		noun	f	extension; extension cord	B1					
+extintor		noun	m	fire extinguisher	B1					
+extraterrestre		noun	mf	alien; extraterrestrial	B1					
+# --- E: adjectives
+ecológico		adj		ecological; eco-friendly	B1					
+económico		adj		cheap; inexpensive; economic	A2				In stores económico usually means cheap.	
+educativo		adj		educational	B1					
+eficiente		adj		efficient	B1					
+egoísta		adj		selfish	B1					
+eléctrico		adj		electric; electrical	A2					
+electrónico		adj		electronic	B1				Correo electrónico: email.	
+elegante		adj		elegant; smart (dress)	A2					
+embarazoso		adj		awkward; embarrassing	B1					
+emocional		adj		emotional	B1					
+emocionante		adj		exciting	B1					
+empanizado		adj		breaded	B1		x		Pollo empanizado: breaded chicken.	
+empapado		adj		soaked; drenched	B1					
+encantador		adj		charming; lovely	B1					
+enchilado		adj		spicy; covered in chili	B1		x		Estoy enchilado: my mouth is burning (from chili).	
+encuerado		adj		naked	B1	informal	x		Informal. Standard: desnudo.	
+enfadado		adj		angry (Spain)	B1				Spain. In Mexico: enojado.	
+enlatado		adj		canned	B1					
+enojón		adj		grumpy; quick to anger	B1		x		Es muy enojón: he gets angry easily.	
+entretenido		adj		entertaining; busy	B1					
+entrometido		adj		nosy; meddling	B1					
+entusiasmado		adj		enthusiastic; excited	B1					
+envidioso		adj		envious; jealous	B1					
+equis		adj		so-so; whatever	B1	informal	x		Informal. Está equis: it's nothing special. Standard: regular. Also the letter x.	
+escolar		adj		school	A2				Útiles escolares: school supplies.	
+esencial		adj		essential	B1					
+espacial		adj		space	B1				Nave espacial: spaceship.	
+espantoso		adj		dreadful; horrible	B1					
+específico		adj		specific	B1					
+espectacular		adj		spectacular	B1		x		Mexico: un espectacular is a billboard.	
+espeso		adj		thick (liquid)	B1					
+espiritual		adj		spiritual	B1					
+estándar		adj		standard	B1					
+estatal		adj		state	B1				Gobierno estatal: state government.	
+estimado		adj		dear (in letters); esteemed	B1	formal			Estimado señor: Dear Sir.	
+estrecho		adj		narrow; tight	B1				For tight clothes Mexico says apretado.	
+estreñido		adj		constipated	B1					
+estresado		adj		stressed (out)	A2					
+estricto		adj		strict	B1					
+estupendo		adj		wonderful; great	B1				Mexico more often says excelente, or padre (informal).	
+estúpido		adj		stupid	B1	informal			Rude when said to someone. Milder: tonto.	
+eterno		adj		eternal; endless	B1					
+europeo		adj		European	A2					
+evidente		adj		obvious; evident	B1					
+exacto		adj		exact; precise	A2				¡Exacto!: Exactly!	
+exagerado		adj		over the top; exaggerated	B1				¡Qué exagerado!: You're overreacting!	
+exhausto		adj		exhausted	B1					
+exigente		adj		demanding; strict	B1					
+exitoso		adj		successful	B1					
+exquisito		adj		delicious; exquisite	B1					
+exterior		adj		outside; outer; foreign	B1				Relaciones exteriores: foreign affairs.	
+extra		adj		extra	A2				Horas extra: overtime.	
+extraño		adj		strange; odd	A2				Extrañar: to miss. A stranger is usually un desconocido.	
+extraordinario		adj		extraordinary; special	B1					
+extremo		adj		extreme	B1					
+# --- E: expressions and others
+e		conj		and (before i-, hi-)	A2				Replaces y before an i sound: padres e hijos.	
+echar a andar		expr		to start (a machine, a plan)	B1				No puedo echar a andar el carro: I can't get the car started.	
+echar a perder		expr		to spoil; to ruin	B1				Se echó a perder la leche: the milk went bad.	
+echar de menos		expr		to miss (someone)	B1				Mexico usually says extrañar.	
+echar la culpa		expr		to blame	B1				Me echó la culpa: he blamed me.	
+echar los perros		expr		to hit on; to flirt with	B2	informal	x		Informal. Le está echando los perros: he's hitting on her. Standard: coquetear.	
+echar porras		expr		to cheer on	B1		x		Le echamos porras al equipo: we cheered on the team.	
+echar un ojo		expr		to keep an eye on; to have a look	B1				Échale un ojo a mi maleta: keep an eye on my bag.	
+echar una mano		expr		to give a hand	A2				¿Me echas una mano?: Can you give me a hand?	
+echarle ganas		expr		to give it your all; to try hard	A2		x		¡Échale ganas!: Go for it! Give it your best!	
+eh		interj		hey; huh?; right?	A1				At the end of a sentence, ¿eh? asks for agreement.	
+en absoluto		expr		not at all	B1				It means "not at all", not "absolutely".	
+en cambio		expr		on the other hand; instead	B1					
+en camino		expr		on the way	A2				Ya voy en camino: I'm on my way.	
+en caso de		expr		in case of	B1					
+en chinga		expr		really fast; in a rush	B2	vulgar	x		Vulgar. Standard: muy rápido.	
+en contra		expr		against	B1				Estar en contra de: to be against.	
+en cuanto		expr		as soon as	B1				En cuanto llegues: as soon as you arrive. En cuanto a: as for.	
+en fin		expr		anyway; in short	B1					
+en forma		expr		fit; in shape	B1				Estar en forma: to be in shape.	
+en friega		expr		really fast; nonstop	B2	informal	x		Informal. Trabajamos en friega: we worked nonstop. Standard: muy rápido, sin parar.	
+en general		expr		in general; generally	A2					
+en línea		expr		online	A2				Pagar en línea: to pay online.	
+en medio de		expr		in the middle of; between	A2					
+en paz		expr		in peace; alone	A2				¡Déjame en paz!: Leave me alone!	
+en punto		expr		sharp; on the dot	A1				A las tres en punto: at three o'clock sharp.	
+en realidad		expr		actually; in fact	A2				Actually is en realidad; actualmente means currently.	
+en todo caso		expr		in any case	B1					
+en vez de		expr		instead of	A2					
+en vivo		expr		live (broadcast, music)	A2					
+en voz alta		expr		aloud; out loud	A2					
+en voz baja		expr		quietly; in a low voice	A2					
+enhorabuena		interj		congratulations (Spain)	B1				Spain. In Mexico: ¡Felicidades!	
+entre semana		expr		on weekdays	A2					
+épale		interj		whoa!; hey!	B1	informal	x		Informal. Said to stop someone, or in surprise.	
+es decir		expr		that is; I mean	B1					
+es que		expr		it's just that; the thing is	A2				Es que no tengo tiempo: it's just that I don't have time.	
+este	este#um	interj		um; uh (hesitation)	A2		x		Mexican filler word: Este... no sé.	
+etcétera		adv		et cetera; and so on	B1					
+excepto		prep		except	B1					
+# --- F: verbs
+fabricar		verb		to make; to manufacture	B1					
+facturar		verb		to invoice; to bill	B2		x		Mexico: to issue a factura (tax invoice). For luggage Mexico says documentar.	
+fallecer		verb		to pass away; to die	B1	formal			Formal. Everyday: morir.	
+fascinar		verb		to love; to fascinate	B1				Works like gustar: me fascina: I love it.	
+fastidiar		verb		to annoy; to bother	B1					
+felicitar		verb		to congratulate	A2				Te felicito: congratulations.	
+fiar		verb		to sell on credit; to trust	B1				Hoy no se fía: no credit today. Fiarse de: to trust.	
+fijar		verb		to fix; to set (a date, a price)	B1				Fijarse: to notice; to pay attention.	
+filmar		verb		to film	B1					
+fingir		verb		to pretend; to fake	B1					
+flipar		verb		to be amazed; to freak out (Spain)	B2	informal			Informal, Spain. In Mexico: alucinar, or ¡no manches! (informal).	
+flotar		verb		to float	B1					
+formar		verb		to form; to make up	B1				Formarse: to line up (Mexico): fórmese aquí.	
+forrar		verb		to cover (a book); to line	B1		x		Forrar los cuadernos: to cover your notebooks (a school chore in Mexico).	
+forzar		verb		to force	B1					
+fracasar		verb		to fail	B1					
+fregar		verb		to scrub; to wash (dishes)	B1				In Mexico fregar usually means to annoy (informal).	
+fregar	fregar#annoy	verb		to bother; to annoy; to ruin	B1	informal	x		Informal. ¡No friegues!: No way!, or stop bugging me. Standard: molestar.	
+freír		verb		to fry	A2				Participle: frito (huevos fritos).	
+frenar		verb		to brake; to stop	B1					
+frotar		verb		to rub	B1					
+fundirse		verb		to burn out (bulb); to melt	B1				Se fundió el foco: the light bulb burned out.	
+# --- F: nouns
+fábrica		noun	f	factory	A2				False friend: fabric is tela.	
+fachada		noun	f	front (of a building); facade	B1					
+fachas		noun	fpl	sloppy clothes; scruffy look	B2	informal	x		Informal. Andar en fachas: to look a mess.	
+facilidad		noun	f	ease; facility	B1				Facilidades de pago: payment plans.	
+factura		noun	f	invoice; tax receipt	A2		x		¿Va a querer factura?: Do you need an official invoice? (for taxes)	
+facultad		noun	f	faculty; school (of a university)	B1					
+falla		noun	f	fault; failure; glitch	B1				Falla técnica: technical fault.	
+falta		noun	f	lack; absence; foul	A2				Hacer falta: to be needed. Sin falta: without fail.	
+fama		noun	f	fame; reputation	B1			pl=-		
+fan		noun	mf	fan	A2			pl=fans		
+fanático		noun	mf	fan; fanatic	B1				Fanático del futbol: soccer fan.	
+fantasía		noun	f	fantasy; imagination	B1					
+fantasma		noun	m	ghost	B1					
+faro		noun	m	lighthouse; headlight	B1					
+fayuca		noun	f	contraband goods	B2	informal	x		Informal. Standard: contrabando.	
+fe		noun	f	faith	B1			pl=-	De buena fe: in good faith.	
+felicitación		noun	f	congratulation	B1				Mexico usually says ¡Felicidades!	
+fenómeno		noun	m	phenomenon	B1					
+ferretería		noun	f	hardware store	A2					
+ferrocarril		noun	m	railroad; railway	B1					
+festival		noun	m	festival	B1					
+fiador		noun	mf	guarantor (for a rental)	B2		x		Landlords in Mexico often ask for a fiador or an aval.	
+fianza		noun	f	bail; bond	B2					
+fibra		noun	f	fiber; scouring pad	B1		x		Mexico: la fibra is the scrubbing pad for dishes.	
+ficción		noun	f	fiction	B1				Ciencia ficción: science fiction.	
+ficha		noun	f	token; card; slip	B1		x		Ficha de depósito: deposit slip. Tome su ficha: take a number.	
+fideo		noun	m	noodle; vermicelli	A2		x		Sopa de fideo: Mexican tomato noodle soup.	
+fierro		noun	m	iron; scrap metal	B1		x		Mexican for hierro. ¡Fierro!: let's go! (informal)	
+figura		noun	f	figure; shape	B1					
+filete		noun	m	fillet; steak	A2					
+filosofía		noun	f	philosophy	B1					
+filtro		noun	m	filter	B1					
+fin de semana		noun	m	weekend	A1				El fin de semana: on the weekend.	
+finanzas		noun	fpl	finance; finances	B1					
+firma		noun	f	signature; firm	A2					
+fiscal		noun	mf	prosecutor; district attorney	B2					
+fiscalía		noun	f	prosecutor's office	B2				Where crimes are reported in Mexico: levantar una denuncia en la fiscalía.	
+física		noun	f	physics	B1			pl=-		
+flauta		noun	f	flute; rolled fried taco	B1		x		Flautas: long rolled tacos fried until crispy.	
+flecha		noun	f	arrow	B1					
+fleco		noun	m	bangs (hair); fringe	B1		x			
+flequillo		noun	m	bangs; fringe (Spain)	B1				Spain. In Mexico: el fleco.	
+flete		noun	m	freight; moving van	B1		x		Contratar un flete: to hire a van to move house.	
+flojera		noun	f	laziness; lack of energy	A2		x	pl=-	¡Qué flojera!: What a drag! Me da flojera: I can't be bothered.	
+flor de calabaza		noun	f	squash blossom	B1		x		Eaten in quesadillas and soups.	
+florería		noun	f	flower shop	A2		x			
+florero		noun	m	vase	B1					
+fogata		noun	f	campfire; bonfire	B1					
+fólder		noun	m	folder (paper)	A2		x	pl=fólders		
+folleto		noun	m	brochure; leaflet	B1					
+fontanero		noun	mf	plumber (Spain)	B1				Spain. In Mexico: el plomero.	
+formación		noun	f	training; education; formation	B1					
+formulario		noun	m	form (to fill in)	A2				Llenar un formulario: to fill in a form. Mexico also says forma.	
+fortaleza		noun	f	fortress; strength	B1					
+fortuna		noun	f	fortune; luck	B1					
+fósforo		noun	m	match; phosphorus	B1				Mexico usually says cerillo.	
+fotocopia		noun	f	photocopy	A2				Mexico often says just copia.	
+fotografía		noun	f	photograph; photography	A2					
+fotógrafo		noun	mf	photographer	A2				Not a photograph (fotografía, foto).	
+fracaso		noun	m	failure	B1					
+fraccionamiento		noun	m	housing development	B1		x		A gated or planned neighborhood.	
+fractura		noun	f	fracture	B1					
+frambuesa		noun	f	raspberry	A2					
+franela		noun	f	flannel; cleaning cloth	B1		x			
+franelero		noun	mf	street parking attendant	B2		x		Waves drivers into parking spots for tips, often with a red cloth.	
+frasco		noun	m	jar; small bottle	A2					
+fraude		noun	m	fraud	B1					
+frecuencia		noun	f	frequency	B1				Con frecuencia: often.	
+fregadero		noun	m	kitchen sink	B1				Mexico also says tarja.	
+fregona		noun	f	mop (Spain)	B1				Spain. In Mexico: el trapeador. In Mexico fregona is also the feminine of fregón (informal: awesome).	
+freno		noun	m	brake	B1					
+frigorífico		noun	m	fridge (Spain)	B1				Spain. In Mexico: el refrigerador, or el refri.	
+frustración		noun	f	frustration	B1					
+fuegos artificiales		noun	mpl	fireworks	A2				Mexico also says cohetes.	
+fuerza		noun	f	strength; force	A2				A fuerza: by force; necessarily. ¿A fuerza?: Do I have to?	
+fuga		noun	f	leak; escape	B1				Fuga de gas: gas leak.	
+fulano		noun	mf	so-and-so; what's-his-name	B1				Fulano, mengano y zutano: Tom, Dick and Harry.	
+fumador		noun	mf	smoker	B1					
+función		noun	f	function; show (performance)	B1				La función de las ocho: the eight o'clock show.	
+funcionario		noun	mf	official; civil servant	B1					
+funda		noun	f	cover; case; pillowcase	B1				Funda de almohada: pillowcase.	
+funeral		noun	m	funeral	B1					
+funeraria		noun	f	funeral home	B1					
+furgoneta		noun	f	van (Spain)	B1				Spain. In Mexico: la camioneta.	
+# --- F: adjectives
+fabuloso		adj		fabulous	B1					
+fantástico		adj		fantastic	A2					
+fascinante		adj		fascinating	B1					
+fatal		adj		awful; terrible; fatal	B1				Me fue fatal: it went terribly.	
+federal		adj		federal	B1					
+femenino		adj		feminine; female; women's	B1					
+fiel		adj		faithful; loyal	B1					
+fijo		adj		fixed; steady; permanent	B1				Teléfono fijo: landline. Trabajo fijo: steady job.	
+filoso		adj		sharp (blade)	B1		x			
+financiero		adj		financial	B1					
+fino		adj		fine; thin; refined	B1					
+firme		adj		firm; steady	B1					
+físico		adj		physical	B1				Educación física: PE.	
+flaco		adj		skinny; thin	A2				Flaco, flaca: also an affectionate nickname.	
+flexible		adj		flexible	B1					
+fodongo		adj		slovenly; sloppy at home	B2	informal	x		Informal. Andar fodongo: to slob around in old clothes. Standard: desarreglado.	
+folclórico		adj		folk; traditional	B1				Ballet folclórico: Mexican folk dance company.	
+foráneo		adj		from out of town	B1		x		Camión foráneo: long-distance bus.	
+formal		adj		formal; reliable	B1				Una persona formal: a reliable person.	
+frágil		adj		fragile; frail	B1					
+franco		adj		frank; open	B1					
+frecuente		adj		frequent	B1					
+fregado		adj		in a bad way; tough; damned	B1	informal	x		Informal. ¡Qué fregado!: How awful! Standard: difícil, en mal estado.	
+fregón		adj		awesome; really good at something	B1	informal	x		Informal. Es bien fregón para el futbol: he's really good at soccer. Standard: muy bueno.	
+fresa	fresa#posh	adj		posh; preppy; snobbish	A2	informal	x		Informal. Una niña fresa: a posh, preppy girl. Fresa is also strawberry.	
+friolento		adj		sensitive to the cold	B1		x		Soy muy friolento: I feel the cold a lot.	
+frustrado		adj		frustrated	B1					
+fundamental		adj		fundamental; essential	B1					
+furioso		adj		furious	B1					
+# --- F: expressions
+favor de		expr		please (on signs and notices)	A2		x		Favor de no fumar: please do not smoke.	
+frente a		expr		in front of; opposite; facing	A2					
+# --- G: verbs
+garantizar		verb		to guarantee	B1					
+gatear		verb		to crawl (baby)	B1					
+girar		verb		to turn; to spin	B1					
+golpear		verb		to hit; to beat; to knock	B1					
+gozar		verb		to enjoy	B1				Gozar de buena salud: to enjoy good health.	
+grabar		verb		to record; to film	A2					
+graduarse		verb		to graduate	B1					
+gruñir		verb		to growl; to grumble	B2					
+guiar		verb		to guide; to lead	B1					
+guiñar		verb		to wink	B1					
+# --- G: nouns
+gabacho		noun	mf	American; gringo	B1	informal	x		Informal and a bit mocking. El gabacho: the US. Standard: estadounidense.	
+gafas		noun	fpl	glasses; sunglasses (Spain)	B1				Spain. In Mexico: los lentes; sunglasses are lentes de sol.	
+gafete		noun	m	ID badge; name tag	B1		x			
+galán		noun	m	heartthrob; leading man	B1					
+galaxia		noun	f	galaxy	B1					
+galería		noun	f	gallery	B1					
+gallina		noun	f	hen; chicken	A2				Informal: a coward.	
+gallo		noun	m	rooster	A2		x		Llevar gallo: to serenade. Se le salió un gallo: his voice cracked.	
+gamba		noun	f	shrimp; prawn (Spain)	B1				Spain. In Mexico: el camarón.	
+ganado		noun	m	cattle; livestock	B1					
+ganador		noun	mf	winner	B1					
+ganancia		noun	f	profit; earnings	B1					
+gancho		noun	m	hook; clothes hanger	A2		x		Mexico: un gancho is a clothes hanger.	
+gandalla		noun	mf	cheat; someone who takes advantage	B1	informal	x		Informal. No seas gandalla: don't be greedy and grab it all. Standard: abusivo.	
+ganga		noun	f	bargain	B1					
+garaje		noun	m	garage	A2				Mexico usually says cochera.	
+garantía		noun	f	warranty; guarantee	B1					
+garbanzo		noun	m	chickpea	B1					
+garita		noun	f	border crossing; checkpoint	B1		x			
+garnacha		noun	f	fried street snack	B1		x		Garnachas: fried antojitos such as sopes, quesadillas and gorditas.	
+garrapata		noun	f	tick (insect)	B1					
+gasa		noun	f	gauze	B1					
+gasto		noun	m	expense	B1				Gastos: expenses.	
+gastritis		noun	f	gastritis	B1					
+gel		noun	m	gel; hair gel	A2					
+gemelo		noun	mf	twin	A2				Mexico also says cuate.	
+generación		noun	f	generation	B1					
+género		noun	m	gender; genre; kind	B1					
+genio		noun	m	genius; temper	B1				Tener mal genio: to be bad-tempered.	
+geografía		noun	f	geography	A2					
+germen		noun	m	germ	B1					
+gerundio		noun	m	gerund (-ndo form)	B1					
+gesto		noun	m	gesture; facial expression	B1					
+gilipollas		noun	mf	idiot; jerk (Spain)	B2	vulgar			Vulgar, Spain. In Mexico: pendejo (also vulgar); polite: tonto.	
+gimnasia		noun	f	gymnastics	B1					
+ginecólogo		noun	mf	gynecologist	B1					
+gira		noun	f	tour	B1				Estar de gira: to be on tour.	
+girasol		noun	m	sunflower	B1					
+gis		noun	m	chalk	A2		x			
+globo		noun	m	balloon; globe	A2					
+gloria		noun	f	glory	B1					
+gobernador		noun	mf	governor	B1					
+godínez		noun	mf	office worker	B1	informal	x	pl=godínez	Informal and humorous: a nine-to-five office employee. Standard: oficinista.	
+golf		noun	m	golf	B1			pl=-		
+golfo		noun	m	gulf	B1				El golfo de México: the Gulf of Mexico.	
+golosina		noun	f	sweet; treat	B1					
+goma		noun	f	eraser; rubber; gum	A2		x		Mexico: goma (de borrar) is an eraser.	
+gomita		noun	f	gummy candy	A2		x			
+gorro		noun	m	hat; wool cap	A2					
+gorrón		noun	mf	freeloader	B1	informal			Informal. Someone who always lets others pay.	
+gota		noun	f	drop	A2				Gotas para los ojos: eye drops.	
+gotera		noun	f	leak (in a roof)	B1					
+grabación		noun	f	recording	B1					
+gracia		noun	f	grace; charm	B1				No me hace gracia: I don't find it funny.	
+graduación		noun	f	graduation	B1					
+gráfica		noun	f	graph; chart	B1					
+gramática		noun	f	grammar	A2					
+gramo		noun	m	gram	A2					
+granada		noun	f	pomegranate; grenade	B1					
+granja		noun	f	farm	A2				Mexico also says rancho.	
+grano		noun	m	grain; pimple	B1				Granos: pimples. Café de grano: whole-bean coffee.	
+grapa		noun	f	staple	B1					
+grasa		noun	f	fat; grease	A2					
+gratitud		noun	f	gratitude	B1			pl=-		
+grieta		noun	f	crack	B1					
+grifo		noun	m	faucet; tap (Spain)	B1				Spain. In Mexico: la llave (del agua).	
+grillo		noun	m	cricket	B1					
+gringa		noun	f	flour tortilla taco with pork and cheese	B1		x		Made with al pastor pork. Gringa is also the feminine of gringo.	
+grito		noun	m	shout; scream	B1		x		El Grito: the cry of Independence, on the night of September fifteenth.	
+grosería		noun	f	swear word; rude thing	A2		x		Decir groserías: to swear.	
+grúa		noun	f	tow truck; crane	B1				Se lo llevó la grúa: it was towed.	
+guacamaya		noun	f	macaw	B1		x			
+guaje		noun	m	gourd	B2		x		From Nahuatl. Hacerse guaje: to play dumb (informal).	
+guajolota		noun	f	tamale sandwich	B2		x		A tamal in a bread roll, a Mexico City breakfast.	
+guanábana		noun	f	soursop	B1					
+guante		noun	m	glove	A2					
+guardaespaldas		noun	mf	bodyguard	B1					
+guardia		noun	mf	guard	B1					
+guarnición		noun	f	side dish; garnish	B1				¿Qué guarnición quiere?: Which side would you like?	
+guarura		noun	mf	bodyguard	B2	informal	x		Informal. Standard: guardaespaldas.	
+guayabera		noun	f	guayabera (embroidered shirt)	B1		x			
+guerra		noun	f	war	A2					
+guion		noun	m	script; hyphen	B1					
+guisante		noun	m	pea (Spain)	B1				Spain. In Mexico: el chícharo.	
+gusano		noun	m	worm; caterpillar	A2					
+gusto		noun	m	pleasure; taste	A2				Mucho gusto: nice to meet you. A gusto: comfortable. Con gusto: with pleasure.	
+# --- G: adjectives
+gastado		adj		worn out; used up	B1					
+gay		adj		gay	B1			pl=gays		GAY
+general		adj		general	B1				En general: in general. Por lo general: usually.	
+generoso		adj		generous	B1					
+genial		adj		great; brilliant	A2					
+gigante		adj		giant; huge	A2					
+global		adj		global	B1					
+glotón		adj		greedy (with food)	B1					
+gordo		adj		fat; thick	A1				Gordo, gorda, gordito: also affectionate nicknames.	
+gracioso		adj		funny	A2				Funny ha-ha. Funny strange is raro.	
+grandioso		adj		magnificent; grand	B1					
+grasoso		adj		greasy; oily	B1		x			
+gratuito		adj		free (of charge)	B1				Everyday: gratis.	
+griego		adj		Greek	B1					
+gritón		adj		loud; always shouting	B1					
+grueso		adj		thick	B1					
+guay		adj		cool; great (Spain)	B1	informal		pl=guays	Spain only. In Mexico say padre or chido (informal).	
+# --- G: expressions
+ganarse la vida		expr		to earn a living	B1					
+gracias a		expr		thanks to	A2					
+guau		interj		wow!	A1					

@@ -1,0 +1,125 @@
+number: 1
+title: "¿Qué vas a hacer?"
+title_en: What are you going to do?
+level: A1
+new: [fin, fiesta, cumpleaños, cine, película, venir, ver, invitar, visitar, viajar, quedarse, próximo]
+conjugate: ["venir:pres", "ver:pres"]
+reviewer_notes: "Birthday note: is the ¡Mordida! custom described fairly, and is 'invited for six, arrive at seven' a fair generalisation?"
+notes:
+  - kind: grammar
+    title: Ir a + infinitive
+    text: |
+      To say what you are going to do, use _ir_ in the present, then _a_, then the infinitive. This is the everyday Mexican way to talk about the future.
+
+      - _Voy a ver una película._ — I'm going to watch a movie.
+      - _¿Qué vas a hacer el sábado?_ — What are you doing on Saturday?
+      - _Sofía va a venir a la fiesta._ — Sofía is going to come to the party.
+
+      _Vamos a_ + infinitive also means "let's": _¡Vamos a comer!_ (Let's eat!)
+
+      With a verb like _quedarse_, the pronoun goes before _ir_ or on the end of the infinitive. Both are correct and both are common: _Me voy a quedar en casa._ = _Voy a quedarme en casa._
+  - kind: usage
+    title: Inviting in Mexico
+    text: |
+      To invite a friend, ask _¿Vienes a...?_ or _¿Quieres ir a...?_: _¿Vienes a mi fiesta?_ _¿Quieres ir al cine?_
+
+      _Te invito_ means more than "I invite you": it means *I'm paying*. _Te invito un café_ is "coffee's on me". If someone invites you out, they usually expect to pay.
+
+      - To accept: _¡Sí, claro!_ or just _¡Va!_ (OK!)
+      - To say no gently: _Ahorita no puedo, gracias._ or _Gracias, pero el sábado no puedo._
+
+      For "next week", you will hear both _la próxima semana_ and, very often in Mexico, _la semana que entra_.
+  - kind: culture
+    title: Birthday parties
+    text: |
+      At a Mexican birthday everyone sings _Las mañanitas_, the traditional birthday song, usually just before the cake. Some families sing it at dawn, outside the birthday person's window.
+
+      When the birthday person takes the first bite of the cake, the guests shout _¡Mordida!_ (bite!), and someone may push their face into it. Children's parties also have a _piñata_ full of candy.
+
+      Parties start late and run long: guests invited for six often arrive at seven and stay until midnight. Bring something to share, such as sodas or a dessert, and say goodbye to everyone before you leave.
+sentences:
+  - es: "¿Qué vas a hacer el {fin} de semana?"
+    en: "What are you doing this weekend?"
+    order: true
+  - es: "Este {fin} de semana voy a Puebla."
+    en: "This weekend I'm going to Puebla."
+  - es: "Hay una {fiesta} en casa de Sofía."
+    en: "There's a party at Sofía's place."
+  - es: "¿Vienes a la {fiesta} del sábado?"
+    en: "Are you coming to the party on Saturday?"
+  - es: "El sábado es el {cumpleaños} de Memo."
+    en: "Saturday is Memo's birthday."
+  - es: "¿Cuándo es tu {cumpleaños}? —En abril."
+    en: "When's your birthday? —In April."
+  - es: "¿Vamos al {cine} el viernes?"
+    en: "Shall we go to the movies on Friday?"
+    order: true
+  - es: "Hay un {cine} nuevo en el centro."
+    en: "There's a new movie theater downtown."
+  - es: "Voy a ver una {película} con Ana."
+    en: "I'm going to see a movie with Ana."
+  - es: "Esta {película} es muy buena."
+    en: "This movie is really good."
+  - es: "Mis papás {vienen} en diciembre."
+    en: "My parents are coming in December."
+  - es: "¿{Vienes} conmigo al cine? Te invito."
+    en: "Are you coming to the movies with me? My treat."
+    note: "Te invito: I'm paying."
+  - es: "¿Quieres {ver} una película?"
+    en: "Do you want to watch a movie?"
+    order: true
+  - es: "Los domingos {vemos} el futbol."
+    en: "On Sundays we watch soccer."
+  - es: "Hoy {invito} yo."
+    en: "Today it's on me."
+    reviewer_notes: "Is 'Hoy invito yo' how you would offer to pay?"
+    note: "Invitar means to pay for someone: this is how you offer to pay the check."
+  - es: "Te {invito} un café."
+    en: "Let me buy you a coffee."
+  - es: "Voy a {visitar} a mis abuelos."
+    en: "I'm going to visit my grandparents."
+    note: "Visitar takes a before a person: visitar a mis abuelos."
+  - es: "Los domingos {visito} a mi mamá."
+    en: "On Sundays I visit my mom."
+  - es: "Me gusta mucho {viajar}."
+    en: "I really like traveling."
+  - es: "En agosto vamos a {viajar} a la playa."
+    en: "In August we're taking a trip to the beach."
+  - es: "Hoy me {quedo} en casa."
+    en: "I'm staying home today."
+    order: true
+  - es: "¿Te {quedas} a cenar?"
+    en: "Will you stay for dinner?"
+  - es: "Me voy a {quedar|quedarse} hasta el domingo."
+    en: "I'm going to stay until Sunday."
+    note: "Also: Voy a quedarme hasta el domingo. Both orders are correct."
+  - es: "La {próxima} semana voy a Monterrey."
+    en: "Next week I'm going to Monterrey."
+  - es: "El {próximo} viernes voy al cine contigo."
+    en: "Next Friday I'll go to the movies with you."
+dialogue:
+  title: "¿Vienes a la fiesta?"
+  title_en: Are you coming to the party?
+  lines:
+    - speaker: Tom
+      es: "¿[Bueno|bueno#hello]?"
+      en: "Hello?"
+    - speaker: Sofía
+      es: "Hola, Tom, soy Sofía. ¿Qué vas a hacer este fin de semana?"
+      en: "Hi, Tom, it's Sofía. What are you doing this weekend?"
+    - speaker: Tom
+      es: "Nada. Me voy a quedar en casa a ver una película."
+      en: "Nothing much. I'm going to stay home and watch a movie."
+    - speaker: Sofía
+      es: "¿[Por qué|por qué] no vienes a la fiesta de Memo? El sábado es su cumpleaños."
+      en: "Why don't you come to Memo's party? Saturday is his birthday."
+    - speaker: Tom
+      es: "¡Sí, va! ¿Llevo algo?"
+      reviewer_notes: "¡Sí, va! as a casual 'Sure!' between friends: natural? (va links to ir.)"
+      en: "Sure! Should I bring anything?"
+    - speaker: Sofía
+      es: "Unos refrescos. Y el próximo domingo te invito al cine."
+      en: "Some sodas. And next Sunday, the movies are on me."
+    - speaker: Tom
+      es: "¡Gracias! Nos vemos el sábado."
+      en: "Thanks! See you Saturday."

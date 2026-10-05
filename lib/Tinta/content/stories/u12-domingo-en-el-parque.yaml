@@ -1,0 +1,44 @@
+title: Un domingo en el parque
+title_en: A Sunday in the park
+level: A2
+kind: reading
+lesson: u12.l03
+lines:
+  - es: "El domingo, Ana y Sofía [fueron|ir] al parque."
+    en: "On Sunday, Ana and Sofía went to the park."
+  - es: "Había mucha gente y muchos niños con papalotes."
+    en: "There were lots of people, and lots of kids with kites."
+  - es: "Un señor vendía elotes, y otro vendía cacahuates con chile y limón."
+    en: "A man was selling corn on the cob, and another one was selling peanuts with chili and lime."
+  - es: "Ana compró un elote con chile."
+    en: "Ana bought an ear of corn with chili."
+    paragraph: true
+  - es: "Sofía le dijo: “¿Sabes qué? Elote viene del náhuatl.”"
+    en: "Sofía told her: “You know what? Elote comes from Nahuatl.”"
+  - es: "“¿Neta? ¿Y chapulín también?”, preguntó Ana."
+    en: "“Really? And chapulín too?” Ana asked."
+  - es: "“Sí. Y guajolote, y tamal, y cacahuate…”"
+    en: "“Yes. And guajolote, and tamal, and cacahuate…”"
+  - es: "De repente, el papalote de un niño se quedó en un árbol."
+    en: "Suddenly, a little boy's kite got stuck in a tree."
+    paragraph: true
+  - es: "El niño empezó a gritar."
+    en: "The boy started to shout."
+  - es: "Un señor muy alto agarró el papalote y se lo dio."
+    en: "A very tall man grabbed the kite and gave it to him."
+  - es: "Su mamá lo apapachó, y el niño ya estaba contento."
+    en: "His mom gave him a hug, and the boy was happy again."
+  - es: "Ana pensó: “¡El náhuatl está en todos lados!”"
+    en: "Ana thought: “Nahuatl is everywhere!”"
+    paragraph: true
+questions:
+  - q: "¿Qué compró Ana?"
+    options: ["Un elote con chile", "Un papalote", "Unos tamales"]
+    answer: 0
+  - q: "¿Dónde se quedó el papalote?"
+    options: ["En un árbol", "En la calle", "En la casa"]
+    answer: 0
+  - q: "What did Sofía tell Ana about the word elote?"
+    lang: en
+    options: ["It comes from Nahuatl", "It's from Spain", "It means peanut"]
+    answer: 0

@@ -1,0 +1,4 @@
+# Unit 5 confusable sets (fragment of confusables.yaml).
+- name: derecha / derecho
+  lemmas: [derecha, derecho]
+  note: A la derecha is on the right. Derecho is straight ahead, as in siga derecho.

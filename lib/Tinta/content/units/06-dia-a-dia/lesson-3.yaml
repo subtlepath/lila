@@ -1,0 +1,130 @@
+number: 3
+title: ¿Qué hora es?
+title_en: What time is it?
+level: A1
+reviewer_notes:
+  - "Time note: Son diez para las tres, cuarto para, de la mañana, de la tarde, de la noche, mediodía for noon. Is that how Mexicans say it?"
+  - "Culture note: the 24-hour clock is for timetables only; parties start later than the stated time; work, classes, doctors and long-distance buses run on the clock. Fair?"
+  - "Sentence notes: Mexico says en la mañana, en la tarde, en la noche; the long Sunday comida with the family is a tradition. Correct?"
+new: [hora, mañana#morning, tarde, noche, semana, lunes, martes, miércoles, jueves, viernes, sábado, domingo]
+conjugate: []
+notes:
+  - kind: grammar
+    title: Telling the time
+    text: |
+      Ask _¿Qué hora es?_ The answer uses _ser_ with _la_ or _las_, because _hora_ is feminine:
+
+      - _Es la una._ — It's one o'clock. (singular, for one only)
+      - _Son las dos._ — It's two o'clock.
+      - _Son las dos y cuarto._ — It's a quarter past two.
+      - _Son las dos y media._ — It's two thirty.
+      - _Son cuarto para las tres._ — It's a quarter to three.
+      - _Son diez para las tres._ — It's ten to three.
+
+      _Cuarto para_ and _diez para_ are the Mexican way to give the minutes before the hour. Add _de la mañana_, _de la tarde_ or _de la noche_ for a.m. and p.m. "At" a time is _a las_: _a las ocho_, _a la una_. Noon is _mediodía_.
+  - kind: usage
+    title: Days of the week
+    text: |
+      Days are masculine and written in lower case: _lunes, martes, miércoles, jueves, viernes, sábado, domingo_. The article does the work of English "on":
+
+      - _el lunes_ — on Monday (this coming one)
+      - _los lunes_ — on Mondays (every week)
+      - _de lunes a viernes_ — Monday to Friday
+
+      _Sábado_ and _domingo_ add _-s_ in the plural: _los sábados_, _los domingos_. The others stay the same: _los martes_.
+
+      After _ser_ there is no article: _Hoy es martes._
+  - kind: culture
+    title: Mexican time
+    text: |
+      The 24-hour clock is for bus timetables and official notices. In speech, say _a las ocho de la noche_.
+
+      Social time is relaxed. A party _a las ocho_ really starts later, and arriving on the dot can catch your hosts still getting ready. Work, classes, doctors and long-distance buses run on the clock.
+
+      Remember _ahorita_: it can mean right now or some time later. If you need a real time, ask _¿A qué hora?_
+sentences:
+  - es: "¿Qué {hora} es?"
+    en: "What time is it?"
+    order: true
+  - es: "¿A qué {hora} abren?"
+    en: "What time do you open?"
+  - es: "¿A qué {hora} es la comida? —A las dos y media."
+    en: "What time is lunch? —At two thirty."
+  - es: "Es la una de la {mañana|mañana#morning}."
+    en: "It's one in the morning."
+  - es: "El desayuno es a las siete de la {mañana|mañana#morning}."
+    en: "Breakfast is at seven in the morning."
+  - es: "Son las cuatro de la {tarde|tarde}."
+    en: "It's four in the afternoon."
+  - es: "En la {tarde|tarde} juego futbol."
+    en: "In the afternoon I play soccer."
+    note: "Mexico says en la mañana, en la tarde, en la noche."
+  - es: "Son las diez de la {noche}."
+    en: "It's ten at night."
+    order: true
+  - es: "Son cuarto para las ocho de la {noche}."
+    en: "It's a quarter to eight in the evening."
+    note: "Cuarto para: a quarter to, the Mexican way."
+    reviewer_notes: "Son cuarto para las ocho or Es cuarto para las ocho? The time note uses Son."
+  - es: "La {semana} tiene siete días."
+    en: "A week has seven days."
+  - es: "[Trabajo|trabajar] cinco días a la {semana}."
+    en: "I work five days a week."
+  - es: "El {lunes} empiezo un [trabajo|trabajo] nuevo."
+    en: "On Monday I start a new job."
+  - es: "[Trabajo|trabajar] de {lunes} a viernes."
+    en: "I work Monday to Friday."
+    order: true
+  - es: "Hoy es {martes}."
+    en: "Today is Tuesday."
+  - es: "Los {martes} juego futbol."
+    en: "I play soccer on Tuesdays."
+  - es: "El {miércoles} [como|comer] con mi abuela."
+    en: "On Wednesday I'm having lunch with my grandma."
+  - es: "Los {miércoles} la farmacia cierra a las nueve."
+    en: "On Wednesdays the pharmacy closes at nine."
+  - es: "El {jueves} regreso a Chicago."
+    en: "On Thursday I'm going back to Chicago."
+  - es: "¿Qué haces el {jueves}?"
+    en: "What are you doing on Thursday?"
+  - es: "Los {viernes} cenamos tacos."
+    en: "On Fridays we have tacos for dinner."
+  - es: "El {viernes} la oficina cierra a las tres."
+    en: "On Friday the office closes at three."
+  - es: "Los {sábados} limpio la casa."
+    en: "On Saturdays I clean the house."
+  - es: "El {sábado} [trabajo|trabajar] hasta mediodía."
+    en: "On Saturday I'm working until noon."
+  - es: "Los {domingos} comemos con la familia."
+    en: "On Sundays we have lunch with the family."
+    note: "The long Sunday comida with the whole family is a Mexican tradition."
+  - es: "El {domingo} no [trabajo|trabajar]."
+    en: "I'm not working on Sunday."
+dialogue:
+  title: ¿A qué hora abren?
+  title_en: What time do you open?
+  lines:
+    - speaker: Ana
+      es: "Buenas noches, señor. Perdón, ¿qué hora es?"
+      en: "Good evening, sir. Excuse me, what time is it?"
+    - speaker: Señor
+      es: "Son las ocho y media de la noche."
+      en: "It's eight thirty."
+    - speaker: Ana
+      es: "Gracias. ¿Y a qué hora abren [mañana|mañana]?"
+      en: "Thank you. And what time do you open tomorrow?"
+    - speaker: Señor
+      es: "De lunes a sábado, de nueve de la [mañana|mañana#morning] a diez de la noche."
+      en: "Monday to Saturday, from nine in the morning to ten at night."
+    - speaker: Ana
+      es: "¿Y el domingo?"
+      en: "And on Sunday?"
+    - speaker: Señor
+      es: "El domingo abrimos a las nueve y cerramos a las tres de la [tarde|tarde]."
+      en: "On Sunday we open at nine and close at three in the afternoon."
+    - speaker: Ana
+      es: "Muy bien. Entonces vuelvo [mañana|mañana] en la [mañana|mañana#morning]. ¡Gracias!"
+      en: "Great. Then I'll come back tomorrow morning. Thanks!"
+    - speaker: Señor
+      es: "De nada. ¡Buenas noches!"
+      en: "You're welcome. Good night!"

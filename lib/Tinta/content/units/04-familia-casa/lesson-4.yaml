@@ -1,0 +1,126 @@
+number: 4
+title: ¿Cómo es?
+title_en: What's he like?
+level: A1
+new: [hombre, mujer, alto, chaparro, joven, viejo, güero, bonito, feo, nuevo, simpático, amable]
+conjugate: []
+reviewer_notes:
+  - "Describing note: chaparro is untagged (neutral), güero is informal. Is chaparro fine about family members, and is the advice on viejo vs mayor right?"
+  - "Culture note: ¡Joven! for waiters and clerks 'of almost any age'. Too broad?"
+notes:
+  - kind: grammar
+    title: Adjectives agree
+    text: |
+      An adjective takes the gender and number of its noun. Adjectives that end in _-o_ have four forms; most others have two:
+
+      - _alto, alta, altos, altas_ — tall
+      - _amable, amables_ — kind
+      - _joven, jóvenes_ — young
+
+      Adjectives usually go *after* the noun: _una casa nueva_, _un hombre alto_, _las sillas feas_. A group of men and women takes the masculine: _Mis papás son altos._
+
+      To say what someone or something is like, use _ser_: _¿Cómo es tu hermano? —Es alto y muy simpático._
+  - kind: usage
+    title: Describing people kindly
+    text: |
+      - _chaparro_, _chaparra_ — short. This is the everyday Mexican word, and it is friendly. Textbooks say _bajo_.
+      - _güero_, _güera_ — blond or fair-skinned. It is *informal* but warm: street vendors call any light-skinned customer _güero_ or _güera_.
+      - _mayor_ — older, elderly. Use it for people: _una señora mayor_. _Viejo_ (old) is fine for things, _un carro viejo_, but can sound rude about a person.
+
+      Mexicans comment on looks more openly than many English speakers, usually with affection. Keep your own descriptions kind.
+  - kind: culture
+    title: "¡Joven!"
+    text: |
+      _Joven_ means young, and it is also how you politely get the attention of a waiter, a clerk or a delivery person, man or woman, of almost any age:
+
+      - _¡Joven! ¿Me trae la cuenta, por favor?_
+
+      For an older man say _señor_, and for a woman _señora_ or _señorita_. Shop staff will often call you _joven_ too.
+sentences:
+  - es: "Mi abuelo es un {hombre} alto."
+    en: "My grandfather is a tall man."
+  - es: "¿Quién es el {hombre} de la puerta?"
+    en: "Who's the man at the door?"
+  - es: "Es una {mujer} muy simpática."
+    en: "She's a really nice woman."
+  - es: "Las {mujeres} de mi familia son altas."
+    en: "The women in my family are tall."
+  - es: "Mi hermano es muy {alto}."
+    en: "My brother is very tall."
+    order: true
+  - es: "Mis primas son {altas}."
+    en: "My cousins are tall."
+  - es: "Mi mamá es {chaparra}."
+    en: "My mom is short."
+    reviewer_notes: "Is it fine to call your own mom chaparra (neutral, affectionate)?"
+  - es: "Soy {chaparro}, pero mi papá es alto."
+    en: "I'm short, but my dad is tall."
+  - es: "Tu tía es muy {joven}."
+    en: "Your aunt is very young."
+  - es: "Los papás de Ana son {jóvenes}."
+    en: "Ana's parents are young."
+  - es: "Mi carro es muy {viejo}."
+    en: "My car is really old."
+  - es: "El edificio es {viejo}, pero el departamento es nuevo."
+    en: "The building is old, but the apartment is new."
+  - es: "Memo es alto y {güero}."
+    en: "Memo is tall and blond."
+    note: "Informal, but friendly."
+  - es: "Mi hermana es {güera}, [como|como] mi mamá."
+    en: "My sister is blond, like my mom."
+    reviewer_notes: "güero about one's own family: natural, and is the 'Informal, but friendly' note right?"
+    note: "Informal, but friendly."
+  - es: "¡Qué {bonito} departamento!"
+    en: "What a pretty apartment!"
+  - es: "Tu recámara es muy {bonita}."
+    en: "Your bedroom is very pretty."
+    order: true
+  - es: "El edificio es {feo}, pero la azotea es muy bonita."
+    en: "The building is ugly, but the roof terrace is lovely."
+  - es: "Las sillas son muy {feas}."
+    en: "The chairs are really ugly."
+  - es: "Tengo un carro {nuevo}."
+    en: "I have a new car."
+    order: true
+  - es: "Es nuestra casa {nueva}."
+    en: "It's our new house."
+  - es: "Memo es muy {simpático}."
+    en: "Memo is really likeable."
+    reviewer_notes: "simpático vs amable: the cloze also offers amable. Does 'really likeable' rule amable out?"
+    note: "Simpático: fun to be with, easy to like."
+  - es: "Tus amigos son muy {simpáticos}."
+    en: "Your friends are a lot of fun."
+    reviewer_notes: "Translated 'a lot of fun' to rule out amables. Too far from simpático?"
+  - es: "Muy {amable}, gracias."
+    en: "That's very kind of you, thanks."
+  - es: "Es usted muy {amable}."
+    en: "You're very kind."
+    note: "Amable: kind and helpful. A standard way to thank a stranger."
+dialogue:
+  title: ¿Cómo es tu hermano?
+  title_en: What's your brother like?
+  lines:
+    - speaker: Ana
+      es: "Sofía, ¿cómo es tu hermano Memo?"
+      en: "Sofía, what's your brother Memo like?"
+    - speaker: Sofía
+      es: "Es alto y güero, y muy simpático."
+      en: "He's tall and blond, and really fun."
+    - speaker: Ana
+      es: "¿Y cuántos años tiene?"
+      en: "And how old is he?"
+    - speaker: Sofía
+      es: "Es muy joven: tiene veintidós años. ¿Y cómo es tu vecino nuevo?"
+      en: "He's very young: he's twenty-two. And what's your new neighbor like?"
+    - speaker: Ana
+      es: "Es un hombre mayor, chaparro y muy amable."
+      en: "He's an older man, short and very kind."
+    - speaker: Sofía
+      es: "¿Y el edificio?"
+      en: "And the building?"
+    - speaker: Ana
+      es: "El edificio es viejo, pero mi departamento es nuevo y muy bonito."
+      en: "The building is old, but my apartment is new and really nice."
+    - speaker: Sofía
+      es: "¡Ay, qué bien!"
+      en: "Oh, that's great!"

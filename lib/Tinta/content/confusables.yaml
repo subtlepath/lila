@@ -1,0 +1,14 @@
+# Authored distractor sets (PLAN.md 4.3). Members of a set are shown as
+# distractors for each other first, in vocabulary and cloze exercises.
+- name: tú / usted
+  lemmas: [tú, usted]
+  note: Tú with friends, family and children; usted with strangers, elders and service staff.
+- name: papa / papá
+  lemmas: [papa, papá]
+  note: The written accent changes the word. Papa is a potato; papá is dad.
+- name: pero / perro
+  lemmas: [pero, perro]
+  note: Pero (but) has a single tapped r; perro (dog) has a trilled rr.
+- name: caro / carro
+  lemmas: [caro, carro]
+  note: Caro (expensive) has a single tapped r; carro (car) has a trilled rr.

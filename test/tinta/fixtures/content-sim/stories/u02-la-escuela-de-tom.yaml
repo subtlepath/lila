@@ -1,0 +1,48 @@
+title: La escuela de Tom
+title_en: "Tom's school"
+level: A1
+kind: reading
+lesson: u02.l03
+reviewer_notes:
+  - "The teacher uses tú with Tom; he calls her maestra. Natural?"
+  - "“Sí, maestra. Estoy cansado, nada más.” for “Yes, I'm just tired.”: natural?"
+lines:
+  - es: "Tom es de Chicago, pero estudia español en México."
+    en: "Tom is from Chicago, but he's studying Spanish in Mexico."
+  - es: "Es estudiante en una escuela de español."
+    en: "He's a student at a Spanish school."
+  - es: "La maestra se llama Elena. Es mexicana y habla muy despacio."
+    en: "The teacher's name is Elena. She's Mexican, and she speaks very slowly."
+  - es: "Los estudiantes son ocho: tres de Canadá y cinco de Estados Unidos."
+    en: "There are eight students: three from Canada and five from the United States."
+    paragraph: true
+  - es: "Todos hablan inglés, pero en la escuela hablan español."
+    en: "They all speak English, but at school they speak Spanish."
+  - es: "Hoy Tom está cansado y [un poco|un poco] triste."
+    en: "Today Tom is tired and a little sad."
+    paragraph: true
+  - es: "Elena habla con Tom: “¿Estás bien?”"
+    en: "Elena talks to Tom: “Are you OK?”"
+  - es: "“Sí, maestra. Estoy cansado, nada más.”"
+    en: "“Yes, I'm just tired.”"
+  - es: "Después, Tom está en un café con Sofía."
+    en: "Later, Tom is at a café with Sofía."
+    paragraph: true
+  - es: "Sofía es ingeniera y es amiga de Tom."
+    en: "Sofía is an engineer, and she's Tom's friend."
+  - es: "Con Sofía, Tom habla español todo el día y está muy contento."
+    en: "With Sofía, Tom speaks Spanish all day, and he's very happy."
+questions:
+  - q: "¿Dónde estudia Tom?"
+    options: ["En México", "En Chicago", "En Canadá"]
+    answer: 0
+  - q: "¿Cuántos estudiantes son?"
+    options: ["Cinco", "Ocho", "Tres"]
+    answer: 1
+  - q: "¿Cómo está Tom hoy?"
+    options: ["Cansado y un poco triste", "Enojado", "Muy contento"]
+    answer: 0
+  - q: "Who is Sofía?"
+    lang: en
+    options: ["Tom's friend, an engineer", "Tom's teacher", "A student from Canada"]
+    answer: 0

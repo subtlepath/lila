@@ -1,0 +1,164 @@
+# Course plan for Unit 5. Format: content-plan/README.md.
+unit: 5
+dir: units/05-ciudad-transporte
+title: "La ciudad y el transporte"
+title_en: "City and transport"
+level: A1
+goals:
+  - "Say where you are going with ir a and name the places of a Mexican city."
+  - "Ask where a place is and understand the answer: cerca, lejos, enfrente, a la derecha."
+  - "Ask for directions and follow them when they are given with usted commands."
+  - "Get around by metro, city bus and pesero."
+grammar_scope: >-
+  Present tense, now with ir (voy, vas...), saber, seguir and the reflexives subirse,
+  bajarse, irse (as 'me voy' only if natural); ir a + place (NOT ir a + infinitive,
+  which is Unit 8); usted and ustedes commands as direction formulas (siga, camine,
+  cruce, dé vuelta, tome, pregunte). Not yet: past tenses, object pronouns lo/la.
+lexicon: content/lexicon/u05.tsv
+supporting: [hasta, desde, adentro, afuera, arriba, abajo, primero, segundo, tercero, rápido]
+names: [Beto, Ciudad de México, Zócalo, Reforma, Insurgentes, Bellas Artes, Roma, Condesa]
+lessons:
+  - id: u05.l01
+    number: 1
+    title: "¿A dónde vas?"
+    title_en: "Where are you going?"
+    level: A1
+    grammar:
+      focus: "Ir (voy, vas, va, vamos, van) + a/al + place; ¿A dónde?"
+      can_do: "Say where you and others are going and name the places of a town."
+    new: [ir, ciudad, centro, colonia, mercado, tienda, banco, cajero, farmacia, parque, iglesia, comprar]
+    rows_in_core: []
+    conjugate: ["ir:pres"]
+    dialogue:
+      title: "En la calle"
+      title_en: "In the street"
+      where: "A street in Coyoacán, Saturday morning (keep the day out of the lines)."
+      who: "Sofía and her older neighbor doña Laura."
+      address: "Sofía says usted to doña Laura; doña Laura says tú to Sofía (older to younger)."
+      happens: "Doña Laura: ¿A dónde vas, Sofía? Sofía goes to the bank, then to the mercado to buy tortillas. Doña Laura goes to the farmacia and then to the iglesia in the centro. They say the colonia's mercado is very good."
+    notes:
+      - kind: grammar
+        title: "Ir: to go"
+        covers: "voy, vas, va, vamos, van. Ir a + place: Voy a la farmacia. A + el becomes al: Voy al mercado. Ask ¿A dónde vas? ¡Vamos! also means let's go."
+      - kind: culture
+        title: "Centro and colonia"
+        covers: "Every Mexican town has a centro: a plaza (often called the zócalo) with the main church, the town hall and the market. Cities are divided into colonias; every address names one (colonia Roma). Use cajeros inside banks or malls."
+    confusables: []
+    cautions:
+      - "ir a + infinitive ('Voy a comprar') belongs to u08.l01: in this unit ir a + place only."
+      - "ir and irse are both lemmas: 'voy' links to ir; 'me voy' to irse (the compiler decides from the pronoun before it). Check the link lines on the review page."
+      - "'ve' is both the tú imperative of ir and ver's present (u08): avoid 've' here."
+      - "cajero is ATM or cashier (mf, so cajera is generated): make the English decide."
+      - "banco is bank and bench: context must decide."
+      - "Days of the week are u06.l03: keep them out of sentences."
+
+  - id: u05.l02
+    number: 2
+    title: "¿Dónde queda?"
+    title_en: "Where is it?"
+    level: A1
+    grammar:
+      focus: "Saying where with estar or quedar + cerca de, lejos de, enfrente de, al lado de, atrás de, entre, en la esquina, a la derecha/izquierda."
+      can_do: "Ask where a place is and understand where it is in relation to other places."
+    new: [quedar, cerca, lejos, enfrente, atrás, lado, entre, esquina, cuadra, avenida, derecha, izquierda]
+    rows_in_core: [cerca, cuadra]
+    conjugate: ["quedar:pres.3s", "quedar:pres.3p"]
+    dialogue:
+      title: "¿Está lejos?"
+      title_en: "Is it far?"
+      where: "A corner on avenida Insurgentes."
+      who: "Tom, looking for a farmacia, and a señor at a newsstand."
+      address: "usted both ways: strangers. Tom opens with Disculpe, señor."
+      happens: "Tom: ¿Dónde queda la farmacia? Señor: No está lejos, a dos cuadras, en la esquina de Insurgentes y Reforma, enfrente del banco, al lado de la iglesia. Tom repeats it back; the señor corrects him: a la derecha, no a la izquierda."
+    notes:
+      - kind: grammar
+        title: "Saying where"
+        covers: "estar or quedar + cerca de, lejos de, enfrente de, al lado de, atrás de, entre... y..., en la esquina, a la derecha, a la izquierda. De + el becomes del: enfrente del parque."
+      - kind: usage
+        title: "¿Dónde queda?"
+        covers: "¿Dónde queda...? is the everyday Mexican way to ask where a place is (¿Dónde está...? also works). Distances go by blocks: a tres cuadras. Mexico says atrás de more than detrás de."
+      - kind: culture
+        title: "Asking the way"
+        covers: "People rarely say no sé and may guess, so ask two people. Aquí a la vuelta means just around the corner. Directions use landmarks: the church, the bank, the corner store."
+    confusables: []
+    cautions:
+      - "entre is a preposition; entrar is not in the lexicon, so the usted command 'Entre' would not link: use 'Pase'."
+      - "Write atrás de, enfrente de (the Mexican forms)."
+      - "del/al are supporting contraction rows: 'enfrente del parque', 'al lado del banco'."
+      - "quedar also means 'to fit' (u07.l02); here only location."
+      - "cerca/lejos are adverbs: no agreement."
+      - "Write 'Insurgentes y Reforma', not 'Reforma y Insurgentes': y becomes e before an i sound, and e is not in the lexicon."
+
+  - id: u05.l03
+    number: 3
+    title: "Siga derecho"
+    title_en: "Keep going straight"
+    level: A1
+    grammar:
+      focus: "Usted (and ustedes) commands as direction formulas: siga, camine, cruce, dé vuelta, tome, busque, pregunte; how they come from the yo form."
+      can_do: "Ask a stranger for help and directions, and follow directions given with usted commands."
+    new: [perdido, ayudar, preguntar, saber, buscar, seguir, derecho, cruzar, semáforo, banqueta, caminar, vuelta]
+    rows_in_core: []
+    conjugate: ["seguir:imp", "cruzar:imp", "caminar:imp", "saber:pres"]
+    dialogue:
+      title: "Estoy perdido"
+      title_en: "I'm lost"
+      where: "The historic center, near the Zócalo."
+      who: "Tom and a señora walking by."
+      address: "usted both ways: strangers."
+      happens: "Tom: Disculpe, ¿me ayuda? Estoy perdido. Busco Bellas Artes. Señora: ¿Sabe dónde está el Zócalo? Tom: Sí. Señora: Siga derecho por la avenida, camine dos cuadras, en el semáforo dé vuelta a la izquierda, cruce la calle y camine por la banqueta. Tom thanks her: Muy amable."
+    notes:
+      - kind: grammar
+        title: "Directions with usted"
+        covers: "Take the yo form, drop -o, add the other vowel: sigo, siga; camino, camine; cruzo, cruce; tomo, tome. Dar gives dé (with an accent). For a group: sigan, caminen, crucen."
+      - kind: usage
+        title: "Asking for help"
+        covers: "Disculpe, ¿me ayuda? / ¿Sabe dónde está...? / Busco... / Estoy perdido (perdida). Preguntar is to ask a question; asking for something is pedir (Unit 6). Derecho (straight on) is not derecha (right)."
+      - kind: culture
+        title: "On foot"
+        covers: "Walk on the banqueta, cross at the semáforo, and expect drivers not to stop. Mexicans give directions by landmarks and say aquí a la vuelta for just around the corner."
+    confusables: ["derecha / derecho"]
+    cautions:
+      - "Commands with attached pronouns (dígame, bájese) cannot be targets; target siga, cruce, camine, dé."
+      - "'No sé': sé is both saber (pres.1s) and ser (tú imperative), so the compiler reports it ambiguous; write [sé|saber]."
+      - "'dé vuelta' needs the accent on dé (from dar)."
+      - "derecho/derecha: the confusable set offers the partner, so the sentence must decide (seguir derecho vs a la derecha)."
+      - "Tú commands (sigue, cruza) only between friends; a stranger gets usted."
+      - "buscar takes no 'for': 'Busco el metro'. preguntar here; pedir is u06.l02."
+
+  - id: u05.l04
+    number: 4
+    title: "En el metro"
+    title_en: "On the metro"
+    level: A1
+    grammar:
+      focus: "Subirse a, bajarse de, llegar a, tomar/agarrar + transport; en metro, en camión."
+      can_do: "Take the metro, a city bus or a pesero, ask where to get off and say how you get to places."
+    new: [metro, camión, pesero, estación, parada, boleto, subirse, bajarse, llegar, lleno, agarrar, manejar]
+    rows_in_core: [boleto]
+    conjugate: ["llegar:pres", "bajarse:pres"]
+    dialogue:
+      title: "¿Dónde me bajo?"
+      title_en: "Where do I get off?"
+      where: "A full metro car, then a pesero on Insurgentes."
+      who: "Tom and Sofía, and the pesero driver don Beto."
+      address: "Tom and Sofía tú; both usted to don Beto (don is a supporting row)."
+      happens: "The metro is full; they get off at the next station and take a pesero. Tom asks don Beto ¿Pasa por la Condesa? and ¿Dónde me bajo para el parque? Don Beto: en la segunda parada. Sofía calls out ¡Bajan! and they get off. Tom: En Chicago manejo, pero aquí no."
+    notes:
+      - kind: grammar
+        title: "Getting on and off"
+        covers: "Subirse a (Me subo al camión), bajarse de or en (Me bajo en la estación Insurgentes), llegar a (Llego a la parada). Tomar or agarrar el metro; ir en metro, en camión, en taxi."
+      - kind: usage
+        title: "Take the bus, never coger"
+        covers: "In Spain coger means to take a bus; in Mexico ~coger~ is vulgar. Say tomar or agarrar. Camión is the city bus; autobús is for long-distance coaches. Carro is a car and manejar is to drive."
+      - kind: culture
+        title: "Getting around Mexico City"
+        covers: "The Metro has a cheap flat fare and a rechargeable card; the front cars are for women and children at rush hour. Peseros (also micros) stop anywhere: pay the driver and call out ¡Bajan! to get off."
+    confusables: []
+    cautions:
+      - "Never 'coger' (lint error, vulgar); in notes write ~coger~. Use camión, not autobús, for a city bus."
+      - "subirse/bajarse are reflexive: 'Me bajo aquí'. Do not add an adjective bajo to the lexicon: it would take over every 'bajo'."
+      - "'¡Bajan!' (bajar, ustedes) links to bajarse: fine in the dialogue, never a target."
+      - "llegar a, not en: 'Llego a la estación'."
+      - "Add propn rows for any other station or street you name; Insurgentes, Zócalo, Bellas Artes, Reforma, Roma, Condesa are in u05.tsv."
+      - "'El metro va lleno' uses ir + adjective: fine."

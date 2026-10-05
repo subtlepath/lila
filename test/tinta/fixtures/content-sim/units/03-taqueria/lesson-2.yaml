@@ -1,0 +1,123 @@
+number: 2
+title: Me encanta el picante
+title_en: I love spicy food
+level: A1
+reviewer_notes:
+  - "Culture note: Nahuatl spoken by over a million people; aguacate from ahuacatl, jitomate from xitomatl, chile from chilli. Correct?"
+  - "Usage note: pica poquito usually means quite a lot; either salsa can be the hot one. Fair?"
+new: [gustar, encantar, bueno, rico, dulce, picante, picar, salsa, cebolla, cilantro, aguacate, jitomate]
+conjugate: ["gustar:pres.3s", "gustar:pres.3p", "encantar:pres.3s"]
+notes:
+  - kind: grammar
+    title: "Gustar: what pleases you"
+    text: |
+      Spanish says "it pleases me" instead of "I like". The thing you like is the subject, so the verb agrees with it:
+
+      - _Me gusta el aguacate._ — I like avocado. (one thing)
+      - _Me gustan los tacos._ — I like tacos. (several)
+
+      The small word in front says who likes it: _me_ (me), _te_ (you), _le_ (him, her, you formal), _nos_ (us), _les_ (them, you all). For emphasis or contrast add _a mí_, _a ti_, _a él_, _a Sofía_: _A mí me gusta, pero a Tom no._
+
+      There is no "yo gusto" for "I like". _Encantar_ (to love a thing) works the same way and is stronger: _Me encanta el picante._
+  - kind: usage
+    title: Spicy and tasty
+    text: |
+      - _picar_ — to be spicy: _¿Pica?_ (Is it spicy?) If the answer is _pica poquito_ (just a little), be careful: it usually means quite a lot.
+      - _picante_ — spicy: _La salsa verde es muy picante._
+      - _rico_ — delicious, said with _estar_: _¡Está muy rico!_ With _ser_, _rico_ means rich.
+
+      Most taco stands set out a _salsa verde_ and a _salsa roja_. Either can be the hot one, so ask before you pour.
+  - kind: culture
+    title: Food words from Nahuatl
+    text: |
+      Many Mexican food words come from Nahuatl, the language of the Aztecs, still spoken by over a million people:
+
+      - _aguacate_ from _ahuacatl_ — avocado
+      - _jitomate_ from _xitomatl_ — red tomato
+      - _chile_ from _chilli_ — chili pepper
+
+      In central Mexico _tomate_ is the small green tomatillo of salsa verde, so a red tomato is a _jitomate_. Ask for _jitomate_ at the market.
+sentences:
+  - es: "Me {gusta} el aguacate."
+    en: "I like avocado."
+  - es: "Me {gustan} los tacos [al pastor|al pastor]."
+    en: "I like tacos al pastor."
+    note: "Gustan: the tacos are plural."
+  - es: "¿Te {gusta} la salsa verde?"
+    en: "Do you like the green salsa?"
+    order: true
+  - es: "Me {encanta} el picante."
+    en: "I love spicy food."
+  - es: "A Sofía le {encantan} los chiles."
+    en: "Sofía loves chilies."
+  - es: "Es una taquería muy {buena|bueno}."
+    en: "It's a really good taco place."
+  - es: "Elena es una maestra muy {buena|bueno}."
+    en: "Elena is a very good teacher."
+  - es: "¡Está muy {rico}!"
+    en: "It's delicious!"
+    reviewer_notes: "The cloze also offers bueno (Está muy bueno). Is the English 'delicious' enough to rule it out?"
+    order: true
+  - es: "Las quesadillas están muy {ricas}."
+    en: "The quesadillas are delicious."
+  - es: "Un café y un pan {dulce}, por favor."
+    en: "A coffee and a sweet roll, please."
+    note: "Pan dulce: Mexican sweet bread, for breakfast or supper."
+    reviewer_notes: "Pan dulce for breakfast or supper (merienda): accurate? Is un pan dulce the natural way to order one?"
+  - es: "No me gusta el café {dulce}."
+    en: "I don't like sweet coffee."
+  - es: "La salsa verde es muy {picante}."
+    en: "The green salsa is very spicy."
+  - es: "Tom no come nada {picante}."
+    en: "Tom doesn't eat anything spicy."
+  - es: "¿La salsa roja {pica}?"
+    en: "Is the red salsa spicy?"
+  - es: "Los chiles {pican} mucho."
+    en: "Chilies are really hot."
+  - es: "Tacos sin {salsa}, por favor."
+    en: "Tacos with no salsa, please."
+  - es: "Me encanta la {salsa} verde."
+    en: "I love the green salsa."
+  - es: "Un taco sin {cebolla}, por favor."
+    en: "One taco with no onion, please."
+  - es: "No me gusta la {cebolla}."
+    en: "I don't like onion."
+  - es: "Con cebolla y {cilantro}, por favor."
+    en: "With onion and cilantro, please."
+    order: true
+  - es: "Me encanta el {cilantro}."
+    en: "I love cilantro."
+  - es: "El {aguacate} es muy caro."
+    en: "Avocado is really expensive."
+    reviewer_notes: "True enough today to say as a general statement?"
+  - es: "Una torta con {aguacate}, por favor."
+    en: "A torta with avocado, please."
+  - es: "La salsa roja es de {jitomate}."
+    en: "Red salsa is made with tomato."
+  - es: "Una torta sin {jitomate}."
+    en: "A torta with no tomato."
+dialogue:
+  title: "¿Pica?"
+  title_en: Is it spicy?
+  lines:
+    - speaker: Tom
+      es: "Disculpe, ¿la salsa verde pica?"
+      en: "Excuse me, is the green salsa spicy?"
+    - speaker: Chuy
+      es: "Sí, pica mucho. La roja pica [un poco|un poco]."
+      en: "Yes, it's very hot. The red one is a little spicy."
+    - speaker: Sofía
+      es: "¡A mí me encanta el picante! ¿Y a ti, Tom?"
+      en: "I love spicy food! What about you, Tom?"
+    - speaker: Tom
+      es: "A mí no. Me gusta mucho el aguacate, pero no me gusta la cebolla."
+      en: "Not me. I really like the avocado, but I don't like onion."
+    - speaker: Sofía
+      es: "¡A mí tampoco!"
+      en: "Me neither!"
+    - speaker: Chuy
+      es: "¿Quiere más cilantro?"
+      en: "Would you like more cilantro?"
+    - speaker: Tom
+      es: "Sí, gracias. ¡Está muy rico!"
+      en: "Yes, thanks. It's delicious!"

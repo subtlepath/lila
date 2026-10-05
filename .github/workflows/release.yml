@@ -102,12 +102,29 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
       - name: Download firmware assets
         uses: actions/download-artifact@v4
         with:
           path: dist
           pattern: lila-*.bin
           merge-multiple: true
+
+      # Learn Spanish reads the course from /tinta/course.pack on the SD card. Compiled from a scratch copy, so
+      # content/ids.lock is never written, and stamped with the tagged commit's time.
+      - name: Build the Spanish course pack
+        run: |
+          pip install "pyyaml>=6.0.2"
+          cp -R lib/Tinta/content "$RUNNER_TEMP/tinta-content"
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+            python3 lib/Tinta/tools/packc --content "$RUNNER_TEMP/tinta-content" --out dist/course.pack --quiet
 
       - name: Attach firmware assets
         env:
@@ -119,5 +136,5 @@ jobs:
             test -f "dist/lila-${version}-${device}.bin"
           done
           test "$(find dist -maxdepth 1 -type f -name 'lila-*.bin' | wc -l)" -eq 5
-          gh release upload "$RELEASE_TAG" dist/lila-*.bin \
+          gh release upload "$RELEASE_TAG" dist/lila-*.bin dist/course.pack \
             --repo "$GITHUB_REPOSITORY" --clobber

@@ -1,0 +1,132 @@
+number: 1
+title: Todos los días
+title_en: Every day
+level: A1
+reviewer_notes:
+  - "Meal times note: desayuno 7 to 9 a.m. (chilaquiles, huevos on weekends), la comida 2 to 4 p.m. as the main meal, a light cena 8 to 10 p.m. (pan dulce with coffee or chocolate). Correct?"
+  - "Platicar note: Charlar and conversar exist too, but platicar is what you will hear. Fair?"
+new: [desayunar, comida, cenar, cocinar, limpiar, hacer, leer, escribir, escuchar, música, platicar, regresar]
+conjugate: ["cenar:pres", "leer:pres", "escribir:pres", "hacer:pres"]
+notes:
+  - kind: grammar
+    title: Regular verbs in the present
+    text: |
+      Most verbs follow one of three patterns. Drop _-ar_, _-er_ or _-ir_ and add the ending for each person:
+
+      - _hablar_: _hablo, hablas, habla, hablamos, hablan_
+      - _comer_: _como, comes, come, comemos, comen_
+      - _vivir_: _vivo, vives, vive, vivimos, viven_
+
+      _-er_ and _-ir_ verbs differ only in the _nosotros_ form: _comemos_, _vivimos_.
+
+      _Hacer_ (to do, to make) is regular except for _yo_: _hago, haces, hace, hacemos, hacen_. When someone asks _¿Qué haces?_, answer with the verb for what you do: _Leo._ _Cocino._
+
+      The present also covers today and the near future: _Hoy limpio la casa_ (I'm cleaning the house today).
+  - kind: culture
+    title: Mexican meal times
+    text: |
+      Mexico eats on its own clock:
+
+      - _el desayuno_, 7 to 9 a.m. On weekends it is big: _chilaquiles_, _huevos_, _pan dulce_.
+      - _la comida_, the main meal of the day, between 2 and 4 p.m. Families sit down together, and many workplaces stop for it. Translate it as lunch or the midday meal.
+      - _la cena_, 8 to 10 p.m., is light: _pan dulce_ with coffee or hot chocolate, or a few tacos.
+
+      So _la comida es a las tres_ means lunch is at three, and _comida_ on its own is also food in general: _comida mexicana_.
+  - kind: usage
+    title: Platicar
+    text: |
+      _Platicar_ is the everyday Mexican word for chatting: _platicar con alguien_, to chat with someone. _Hablar_ is to speak or talk in general.
+
+      - _Platico con los vecinos._ — I chat with the neighbors.
+      - _Hablo inglés y español._ — I speak English and Spanish.
+
+      A chat is _una plática_, and so is a talk someone gives. _Charlar_ and _conversar_ exist too, but _platicar_ is what you will hear.
+sentences:
+  - es: "{Desayuno|desayunar} café y pan dulce."
+    en: "I have coffee and pan dulce for breakfast."
+    note: "Pan dulce: Mexican sweet bread."
+  - es: "¿Y tú qué {desayunas}? ¿Huevos?"
+    en: "And what do you have for breakfast? Eggs?"
+  - es: "La {comida} es a las tres."
+    en: "Lunch is at three."
+    note: "La comida is the main meal of the day, between two and four."
+    order: true
+  - es: "La {comida} de la fonda es muy rica."
+    en: "The food at the fonda is really good."
+  - es: "Siempre {ceno} con mi familia."
+    en: "I always have dinner with my family."
+    order: true
+  - es: "Nosotros {cenamos} pan dulce con chocolate."
+    en: "We have pan dulce and hot chocolate for supper."
+    note: "La cena is a light meal, often pan dulce."
+  - es: "Mi mamá {cocina|cocinar} muy rico."
+    en: "My mom is a great cook."
+    note: "Cocina here is the verb: she cooks."
+    reviewer_notes: "Natural, or would you say cocina muy bien?"
+  - es: "A veces {cocino} para mis amigos."
+    en: "Sometimes I cook for my friends."
+  - es: "Hoy {limpio} la casa."
+    en: "I'm cleaning the house today."
+    order: true
+  - es: "¿Quién {limpia} la cocina?"
+    en: "Who cleans the kitchen?"
+  - es: "¿Y tú qué {haces} todos los días?"
+    en: "And what do you do every day?"
+  - es: "{Hago} la cena para mis hijos."
+    en: "I make dinner for my kids."
+  - es: "¿Qué {hacen} ustedes después del [trabajo|trabajo]?"
+    en: "What do you all do after work?"
+  - es: "Mi abuelo {lee} mucho."
+    en: "My grandpa reads a lot."
+  - es: "{Leo} un libro en español."
+    en: "I'm reading a book in Spanish."
+  - es: "{Escribo} mensajes en español."
+    en: "I write messages in Spanish."
+  - es: "Sofía le {escribe} a su mamá."
+    en: "Sofía writes to her mom."
+  - es: "{Escucho} música en el metro."
+    en: "I listen to music on the subway."
+    note: "No word for to: escucho música."
+  - es: "Los niños nunca {escuchan}."
+    en: "The kids never listen."
+  - es: "¿Qué {música} te gusta?"
+    en: "What kind of music do you like?"
+  - es: "Me encanta la {música} mexicana."
+    en: "I love Mexican music."
+  - es: "{Platico} con los vecinos."
+    en: "I chat with the neighbors."
+    order: true
+  - es: "Me gusta {platicar} con mi abuela."
+    en: "I like chatting with my grandma."
+  - es: "Mi papá {regresa} del [trabajo|trabajo] muy cansado."
+    en: "My dad comes home from work really tired."
+  - es: "Después de la comida, {regreso} a la oficina."
+    en: "After lunch, I go back to the office."
+dialogue:
+  title: ¿Qué haces todos los días?
+  title_en: What do you do every day?
+  lines:
+    - speaker: Mariana
+      es: "Tom, ¿qué haces todos los días?"
+      en: "Tom, what do you do every day?"
+    - speaker: Tom
+      es: "Estudio español, leo y escribo mucho. ¿Y tú?"
+      en: "I study Spanish, and I read and write a lot. How about you?"
+    - speaker: Mariana
+      es: "[Desayuno|desayunar] café y pan dulce, y luego [trabajo|trabajar] en la oficina."
+      en: "I have coffee and pan dulce for breakfast, and then I work at the office."
+    - speaker: Tom
+      es: "¿Y la comida?"
+      en: "And lunch?"
+    - speaker: Mariana
+      es: "La comida es a las tres, con mi familia. Luego regreso a casa y ceno algo."
+      en: "Lunch is at three, with my family. Then I go home and have a bite for dinner."
+    - speaker: Tom
+      es: "Yo cocino, limpio el departamento y escucho música."
+      en: "I cook, clean the apartment and listen to music."
+    - speaker: Mariana
+      es: "¿Y con quién hablas español?"
+      en: "And who do you speak Spanish with?"
+    - speaker: Tom
+      es: "Platico mucho con los vecinos. ¡Son muy amables!"
+      en: "I chat a lot with the neighbors. They're really nice!"

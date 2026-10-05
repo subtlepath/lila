@@ -1,0 +1,47 @@
+title: Cuando Tom era niño
+title_en: When Tom was a kid
+level: A2
+kind: reading
+lesson: u10.l02
+lines:
+  - es: "Tom creció en Chicago, en un barrio con muchas familias mexicanas."
+    en: "Tom grew up in Chicago, in a neighborhood with lots of Mexican families."
+  - es: "Su vecina era una señora de Oaxaca."
+    en: "His neighbor was a woman from Oaxaca."
+  - es: "Era muy amable y siempre le hablaba en español."
+    en: "She was very kind and always spoke to him in Spanish."
+  - es: "Ella le enseñó a decir “gracias”, “por favor” y “¡provecho!”."
+    en: "She taught him to say “gracias”, “por favor” and “¡provecho!”."
+  - es: "En la primaria, Tom jugaba futbol con los niños del barrio."
+    en: "In elementary school, Tom played soccer with the neighborhood kids."
+    paragraph: true
+  - es: "Después de la escuela, veían caricaturas en la casa de la vecina."
+    en: "After school, they watched cartoons at the neighbor's house."
+  - es: "Los sábados, Tom iba en bicicleta al parque con su papá."
+    en: "On Saturdays, Tom rode his bike to the park with his dad."
+  - es: "En la prepa, Tom estudió español."
+    en: "In high school, Tom studied Spanish."
+    paragraph: true
+  - es: "La clase era a las ocho de la [mañana|mañana#morning] y los exámenes eran difíciles, pero a Tom le gustaban."
+    en: "The class was at eight in the morning and the exams were hard, but Tom liked them."
+  - es: "Ahora Tom vive en la Ciudad de México."
+    en: "Now Tom lives in Mexico City."
+    paragraph: true
+  - es: "Extraña a su familia, pero no extraña el frío de Chicago."
+    en: "He misses his family, but he doesn't miss the Chicago cold."
+  - es: "Y todavía se acuerda de su vecina de Oaxaca."
+    en: "And he still remembers his neighbor from Oaxaca."
+questions:
+  - q: "¿Dónde creció Tom?"
+    options: ["En Chicago", "En Oaxaca", "En la Ciudad de México"]
+    answer: 0
+  - q: "¿Quién le hablaba a Tom en español?"
+    options: ["Su papá", "Una vecina", "Su maestra de la prepa"]
+    answer: 1
+  - q: "¿Qué hacían los niños después de la escuela?"
+    options: ["Veían caricaturas", "Estudiaban español", "Iban al rancho"]
+    answer: 0
+  - q: "What doesn't Tom miss about Chicago?"
+    lang: en
+    options: ["The cold", "His family", "His neighbor"]
+    answer: 0

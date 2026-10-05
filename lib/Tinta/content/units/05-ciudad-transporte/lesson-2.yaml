@@ -1,0 +1,123 @@
+number: 2
+title: ¿Dónde queda?
+title_en: Where is it?
+level: A1
+new: [quedar, cerca, lejos, enfrente, atrás, lado, entre, esquina, cuadra, avenida, derecha, izquierda]
+conjugate: ["quedar:pres.3s", "quedar:pres.3p"]
+reviewer_notes:
+  - "Usage note: Mexicans say atrás de more than detrás de, and enfrente de more than delante de. Agree?"
+notes:
+  - kind: grammar
+    title: Saying where
+    text: |
+      Say where a place is with _estar_ or _quedar_ and one of these:
+
+      - _cerca de_ — near; _lejos de_ — far from
+      - _enfrente de_ — across from, opposite
+      - _al lado de_ — next to; _atrás de_ — behind
+      - _entre..._ _y..._ — between... and...
+      - _en la esquina_ — on the corner
+      - _a la derecha_ — on the right; _a la izquierda_ — on the left
+
+      _De_ and _el_ join into _del_: _enfrente del parque_, _al lado del banco_. With _la_ nothing changes: _cerca de la iglesia_.
+
+      _Cerca_ and _lejos_ never change their ending: _La tienda está cerca. Los bancos están lejos._
+  - kind: usage
+    title: ¿Dónde queda?
+    text: |
+      _¿Dónde queda...?_ is the everyday Mexican way to ask where a place is. _¿Dónde está...?_ means the same and is just as correct.
+
+      - _¿Dónde queda el mercado?_ — Where's the market?
+      - _¿Dónde quedan los baños?_ — Where are the restrooms?
+
+      Distances in town go by blocks: _a dos cuadras_ (two blocks away). Mexicans say _atrás de_ more than _detrás de_, and _enfrente de_ more than _delante de_.
+  - kind: culture
+    title: Asking the way
+    text: |
+      Many people would rather guess than say _no sé_ (I don't know), so ask two people and see if they agree.
+
+      Directions use landmarks: the church, the bank, the corner store, a big tree. _Aquí a la vuelta_ means just around the corner, and _aquí enfrente_ means right across the street.
+sentences:
+  - es: "¿Dónde {queda} la farmacia?"
+    en: "Where's the pharmacy?"
+    order: true
+  - es: "¿Dónde {quedan} los baños?"
+    en: "Where are the restrooms?"
+  - es: "El mercado {queda} muy cerca."
+    en: "The market is really close."
+  - es: "La farmacia está muy {cerca}."
+    en: "The pharmacy is very close."
+  - es: "Vivo {cerca} del parque."
+    en: "I live near the park."
+  - es: "¿Está {lejos}?"
+    en: "Is it far?"
+  - es: "Mi oficina queda {lejos} de mi casa."
+    en: "My office is far from home."
+  - es: "El banco está {enfrente} del parque."
+    en: "The bank is across from the park."
+  - es: "La tienda está aquí {enfrente}."
+    en: "The store is right across the street."
+    reviewer_notes: "'aquí enfrente' = right across the street: natural?"
+  - es: "El baño está {atrás}."
+    en: "The restroom is in the back."
+  - es: "Hay un parque {atrás} de la iglesia."
+    en: "There's a park behind the church."
+  - es: "La farmacia está al {lado} del banco."
+    en: "The pharmacy is next to the bank."
+    order: true
+  - es: "Mi vecina vive al {lado}."
+    en: "My neighbor lives next door."
+  - es: "La tienda está {entre} el banco y la farmacia."
+    en: "The store is between the bank and the pharmacy."
+  - es: "Mi casa queda {entre} el parque y el mercado."
+    en: "My house is between the park and the market."
+  - es: "La farmacia está en la {esquina}."
+    en: "The pharmacy is on the corner."
+  - es: "El banco está en la {esquina} de Insurgentes y Reforma."
+    en: "The bank is on the corner of Insurgentes and Reforma."
+  - es: "Está a dos {cuadras}."
+    en: "It's two blocks away."
+  - es: "La iglesia está a una {cuadra} de aquí."
+    en: "The church is a block from here."
+  - es: "Vivo en la {avenida} Insurgentes."
+    en: "I live on Insurgentes Avenue."
+  - es: "Reforma es una {avenida} muy bonita."
+    en: "Reforma is a really beautiful avenue."
+  - es: "El baño está a la {derecha}."
+    en: "The restroom is on the right."
+    order: true
+  - es: "La iglesia queda a la {derecha} del banco."
+    en: "The church is to the right of the bank."
+  - es: "La farmacia está a la {izquierda}."
+    en: "The pharmacy is on the left."
+  - es: "Mi casa es la de la {izquierda}."
+    en: "My house is the one on the left."
+    reviewer_notes: "Natural phrasing for 'the one on the left'?"
+dialogue:
+  title: ¿Está lejos?
+  title_en: Is it far?
+  lines:
+    - speaker: Tom
+      es: "Disculpe, señor. ¿Dónde queda la farmacia?"
+      en: "Excuse me, sir. Where's the pharmacy?"
+    - speaker: Señor
+      es: "No está lejos, a dos cuadras. En la esquina de Insurgentes y Reforma."
+      en: "It's not far, two blocks away. On the corner of Insurgentes and Reforma."
+    - speaker: Tom
+      es: "¿En la esquina?"
+      en: "On the corner?"
+    - speaker: Señor
+      es: "Sí, enfrente del banco, al lado de la iglesia."
+      en: "Yes, across from the bank, next to the church."
+    - speaker: Tom
+      es: "Muy bien. A dos cuadras, a la izquierda."
+      en: "Got it. Two blocks, on the left."
+    - speaker: Señor
+      es: "No, no. A la derecha, no a la izquierda."
+      en: "No, no. On the right, not on the left."
+    - speaker: Tom
+      es: "¡Ah, a la derecha! Muchas gracias, señor."
+      en: "Oh, on the right! Thank you very much, sir."
+    - speaker: Señor
+      es: "De nada, joven."
+      en: "You're welcome, young man."

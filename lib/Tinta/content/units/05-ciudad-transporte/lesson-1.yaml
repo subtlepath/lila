@@ -1,0 +1,120 @@
+number: 1
+title: ¿A dónde vas?
+title_en: Where are you going?
+level: A1
+new: [ir, ciudad, centro, colonia, mercado, tienda, banco, cajero, farmacia, parque, iglesia, comprar]
+conjugate: ["ir:pres"]
+reviewer_notes:
+  - "Culture note: advice to use ATMs inside banks, shops or malls by day. Fair and not alarmist?"
+notes:
+  - kind: grammar
+    title: "Ir: to go"
+    text: |
+      _Ir_ (to go) is irregular in every form of the present:
+
+      - _yo voy_ — I go, I'm going
+      - _tú vas_ — you go
+      - _él, ella, usted va_ — he goes, she goes, you go
+      - _nosotros vamos_ — we go
+      - _ellos, ellas, ustedes van_ — they go, you all go
+
+      The place comes after _a_: _Voy a la farmacia._ When _a_ meets _el_, they join into _al_: _Voy al mercado_, never ~a el mercado~. To ask where someone is going, say _¿A dónde vas?_
+
+      _¡Vamos!_ on its own means "let's go!", and _¿Vamos al parque?_ is "shall we go to the park?"
+  - kind: culture
+    title: Centro and colonia
+    text: |
+      Every Mexican town has a _centro_, the old heart of town: a main square, often called the _zócalo_, with the main church, the town hall and a market close by. _Voy al centro_ means "I'm going downtown".
+
+      Cities are divided into _colonias_ (neighborhoods), and every address names one: _colonia Roma_, _colonia Juárez_. Give the colonia to a taxi driver and you are halfway there.
+
+      Use the _cajeros_ (ATMs) inside banks, shops or malls, by day if you can. Street ones are more often tampered with.
+sentences:
+  - es: "Y tú, ¿a dónde {vas}?"
+    en: "And where are you going?"
+    order: true
+  - es: "{Voy} al mercado."
+    en: "I'm going to the market."
+    note: "A + el becomes al."
+  - es: "¿{Vamos} al parque?"
+    en: "Shall we go to the park?"
+  - es: "Ana {va} a la farmacia."
+    en: "Ana's going to the pharmacy."
+    order: true
+  - es: "La {ciudad} es muy grande."
+    en: "The city is really big."
+  - es: "Me encanta la {ciudad}."
+    en: "I love the city."
+  - es: "Voy al {centro}."
+    en: "I'm going downtown."
+  - es: "El mercado está en el {centro}."
+    en: "The market is downtown."
+  - es: "Vivo en la {colonia} Roma."
+    en: "I live in the Roma neighborhood."
+  - es: "¿En qué {colonia} vives?"
+    en: "What neighborhood do you live in?"
+  - es: "Voy al {mercado} por tortillas."
+    en: "I'm going to the market for tortillas."
+    reviewer_notes: "ir por = go and get: natural and neutral?"
+    note: "Ir por: to go and get something."
+  - es: "El {mercado} de la colonia es muy [bueno|bueno]."
+    en: "The neighborhood market is really good."
+  - es: "¿Hay una {tienda} por aquí?"
+    en: "Is there a store around here?"
+  - es: "En la {tienda} hay refrescos y leche."
+    en: "They have sodas and milk at the store."
+    reviewer_notes: "Translated 'They have sodas and milk at the store'. OK?"
+  - es: "Necesito ir al {banco}."
+    en: "I need to go to the bank."
+  - es: "¿Hay un {banco} en la colonia?"
+    en: "Is there a bank in the neighborhood?"
+  - es: "¿Hay un {cajero} por aquí?"
+    en: "Is there an ATM around here?"
+  - es: "La {cajera} es muy amable."
+    en: "The cashier is very nice."
+  - es: "¿Dónde hay una {farmacia}?"
+    en: "Where can I find a pharmacy?"
+  - es: "La {farmacia} está en la calle Juárez."
+    en: "The pharmacy is on Juárez Street."
+  - es: "Los niños están en el {parque}."
+    en: "The kids are at the park."
+    order: true
+  - es: "Hay un {parque} muy bonito en mi colonia."
+    en: "There's a really nice park in my neighborhood."
+  - es: "La {iglesia} está en el centro."
+    en: "The church is downtown."
+  - es: "Mi abuela va a la {iglesia}."
+    en: "My grandma goes to church."
+  - es: "{Compro} tortillas en el mercado."
+    en: "I buy tortillas at the market."
+  - es: "Mi mamá {compra} leche en la tienda."
+    en: "My mom buys milk at the store."
+dialogue:
+  title: En la calle
+  title_en: In the street
+  reviewer_notes: "Doña Laura is Ana's neighbor elsewhere; here she and Sofía just meet in the street. She says tú to Sofía, Sofía says usted to her. Natural?"
+  lines:
+    - speaker: Laura
+      es: "¡Buenos días, Sofía! ¿A dónde vas?"
+      en: "Good morning, Sofía! Where are you off to?"
+    - speaker: Sofía
+      es: "Buenos días, doña Laura. Voy al banco, y luego al mercado."
+      en: "Good morning, doña Laura. I'm going to the bank, and then to the market."
+    - speaker: Laura
+      es: "¿Al mercado de la colonia?"
+      en: "The neighborhood market?"
+    - speaker: Sofía
+      es: "Sí, voy por tortillas. ¿Y usted? ¿A dónde va?"
+      en: "Yes, I'm going for tortillas. And you? Where are you going?"
+    - speaker: Laura
+      es: "Voy a la farmacia, y luego a la iglesia del centro."
+      en: "I'm going to the pharmacy, and then to the church downtown."
+    - speaker: Sofía
+      es: "El mercado de la colonia es muy [bueno|bueno], ¿no?"
+      en: "The neighborhood market is really good, isn't it?"
+    - speaker: Laura
+      es: "¡Sí! Y las tortillas son muy ricas."
+      en: "Yes! And the tortillas are delicious."
+    - speaker: Sofía
+      es: "Hasta luego, doña Laura."
+      en: "See you later, doña Laura."

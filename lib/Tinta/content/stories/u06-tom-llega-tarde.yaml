@@ -1,0 +1,43 @@
+title: Tom siempre llega tarde
+title_en: Tom is always late
+level: A1
+kind: reading
+lesson: u06.l04
+lines:
+  - es: "Tom se despierta a las siete, pero no se levanta."
+    en: "Tom wakes up at seven, but he doesn't get up."
+  - es: "Duerme diez minutos más."
+    en: "He sleeps ten more minutes."
+  - es: "A las siete y media, Tom se levanta."
+    en: "At seven thirty, Tom gets up."
+  - es: "Se baña y se viste muy rápido. No desayuna."
+    en: "He showers and gets dressed really fast. He doesn't have breakfast."
+    paragraph: true
+  - es: "Se lava los dientes y sale de casa a las ocho."
+    en: "He brushes his teeth and leaves home at eight."
+  - es: "La escuela está lejos, y el metro está muy lleno."
+    en: "The school is far away, and the subway is packed."
+  - es: "Tom llega a la escuela a las nueve y cuarto."
+    en: "Tom gets to school at a quarter past nine."
+    paragraph: true
+  - es: "La maestra Elena dice: “Buenos días, Tom. ¡Otra vez [tarde|tarde#late]!”"
+    en: "Elena, the teacher, says, “Good morning, Tom. Late again!”"
+  - es: "Tom dice: “Perdón, maestra. [Mañana|mañana] me levanto temprano.”"
+    en: "Tom says, “Sorry, teacher. Tomorrow I'll get up early.”"
+  - es: "¿Y [mañana|mañana]? ¡Otra vez [tarde|tarde#late]!"
+    en: "And tomorrow? Late again!"
+    paragraph: true
+questions:
+  - q: "¿A qué hora se levanta Tom?"
+    options: ["A las siete", "A las siete y media", "A las ocho", "A las nueve y cuarto"]
+    answer: 1
+  - q: "¿Qué no hace Tom en la mañana?"
+    options: ["No desayuna", "No se baña", "No se viste"]
+    answer: 0
+  - q: "Why does Tom arrive late?"
+    lang: en
+    options: ["He stays in bed too long", "The school is closed", "He has breakfast with Elena"]
+    answer: 0
+  - q: "¿Cómo está el metro?"
+    options: ["Muy lleno", "Muy cerca", "Cerrado"]
+    answer: 0

@@ -1,0 +1,129 @@
+number: 2
+title: Fui a Oaxaca
+title_en: I went to Oaxaca
+level: A2
+new: [vacaciones, viaje, avión, aeropuerto, maleta, pasaporte, mar, alberca, pirámide, foto, divertido, increíble]
+conjugate: ["ir:pret", "hacer:pret", "tener:pret", "estar:pret", "ver:pret"]
+reviewer_notes: "Travel note: busiest at Semana Santa, summer and December; puentes; most people travel by long-distance bus; Teotihuacán an easy day trip from Mexico City; Monte Albán just outside Oaxaca; hotels advertise their alberca. Accurate?"
+notes:
+  - kind: grammar
+    title: Irregular preterites
+    text: |
+      The most common verbs have irregular preterites.
+
+      _Ser_ and _ir_ share one set of forms: _fui, fuiste, fue, fuimos, fueron_.
+
+      Many others take a new stem and the endings _-e, -iste, -o, -imos, -ieron_, with no written accents:
+
+      - _hacer_: _hice, hiciste, hizo_ (with z)
+      - _tener_: _tuve_; _estar_: _estuve_; _poder_: _pude_
+      - _venir_: _vine_; _querer_: _quise_
+
+      _Decir_ and _traer_ have a _j_ and take _-eron_: _dije, dijeron_; _traje, trajeron_.
+
+      _Dar_ and _ver_ are short, with no accents: _di, dio_; _vi, vio_.
+  - kind: usage
+    title: "Fue: was or went?"
+    text: |
+      _Fue_ can mean "was" (from _ser_) or "went" (from _ir_). The rest of the sentence tells you which:
+
+      - _Fui a Oaxaca._ — I went to Oaxaca. (_a_ and a place: _ir_)
+      - _Fue increíble._ — It was amazing. (a description: _ser_)
+
+      _¿Cómo te fue?_ means "How did it go?" Ask it after a trip, an exam or a job interview, and answer _Me fue bien_ or _Me fue mal_.
+  - kind: culture
+    title: Travelling in Mexico
+    text: |
+      Mexicans travel most at _Semana Santa_ (Holy Week, in March or April), in the summer and over the December holidays. Long weekends, called _puentes_ (bridges), also fill the buses, hotels and beaches.
+
+      Most people travel by long-distance bus, which is comfortable and cheap. For long distances, such as Mexico City to Cancún, flying is quicker.
+
+      Teotihuacán, with its Pyramid of the Sun, is an easy day trip from Mexico City. Monte Albán, the ancient Zapotec city on a hilltop, is just outside Oaxaca. On the coast, hotels advertise their _alberca_ (swimming pool) even when the beach is next door.
+sentences:
+  - es: "En diciembre me voy de {vacaciones}."
+    en: "I'm going on vacation in December."
+    note: "Vacaciones is always plural: las vacaciones."
+  - es: "¿Cómo te [fue|ir] en las {vacaciones}?"
+    en: "How was your vacation?"
+  - es: "¿[Qué tal|qué tal] el {viaje}?"
+    en: "How was the trip?"
+    order: true
+  - es: "¡Buen {viaje|viaje}, Tom!"
+    en: "Have a good trip, Tom!"
+  - es: "[Fuimos|ir] a Cancún en {avión}."
+    en: "We flew to Cancún."
+  - es: "El {avión} sale a las seis de la [mañana|mañana#morning]."
+    en: "The plane leaves at six in the morning."
+  - es: "Estuve tres horas en el {aeropuerto}."
+    en: "I spent three hours at the airport."
+  - es: "¿Cómo llego al {aeropuerto}?"
+    en: "How do I get to the airport?"
+    order: true
+  - es: "En el aeropuerto perdieron mi {maleta}."
+    en: "They lost my suitcase at the airport."
+  - es: "Mi {maleta} es la azul."
+    en: "My suitcase is the blue one."
+  - es: "¿[Me permite|me permite] su {pasaporte}?"
+    en: "May I see your passport?"
+  - es: "Tuvimos un problema con el {pasaporte}."
+    en: "We had a problem with the passport."
+  - es: "El sábado [fuimos|ir] al {mar}."
+    reviewer_notes: "ir al mar for a day at the sea: natural, or only ir a la playa?"
+    en: "On Saturday we went to the ocean."
+  - es: "Vi el {mar} por primera vez."
+    en: "I saw the ocean for the first time."
+  - es: "Hizo mucho calor, pero el hotel tiene {alberca}."
+    en: "It was really hot, but the hotel has a pool."
+    note: "Alberca is the Mexican word for a swimming pool."
+  - es: "Los niños jugaron en la {alberca}."
+    en: "The kids played in the pool."
+  - es: "Vimos la {pirámide} del Sol."
+    en: "We saw the Pyramid of the Sun."
+  - es: "En Teotihuacán hay dos {pirámides} grandes."
+    en: "There are two big pyramids at Teotihuacán."
+  - es: "Tomé muchas {fotos}."
+    en: "I took a lot of pictures."
+    order: true
+    note: "Foto is feminine: la foto, las fotos."
+  - es: "¿Me tomas una {foto}?"
+    en: "Can you take a picture of me?"
+  - es: "El viaje [fue|ser] muy {divertido}."
+    en: "The trip was a lot of fun."
+  - es: "Mi tío es muy {divertido}."
+    en: "My uncle is really funny."
+  - es: "¡[Fue|ser] {increíble}!"
+    en: "It was amazing!"
+  - es: "Las pirámides son {increíbles}."
+    en: "The pyramids are amazing."
+  - es: "{Fui|ir} a Oaxaca en diciembre."
+    en: "I went to Oaxaca in December."
+    order: true
+dialogue:
+  title: "¿Qué tal el viaje?"
+  title_en: How was the trip?
+  lines:
+    - speaker: Sofía
+      es: "¡Hola, Tom! ¿[Qué tal|qué tal] tu viaje?"
+      en: "Hi, Tom! How was your trip?"
+    - speaker: Tom
+      es: "Bien, pero en el aeropuerto perdieron mi maleta."
+      en: "Good, but they lost my suitcase at the airport."
+    - speaker: Sofía
+      es: "¡Ay, no! ¿Y qué hiciste?"
+      en: "Oh, no! So what did you do?"
+    - speaker: Tom
+      es: "Compré ropa en el mercado y [fui|ir] a Monte Albán. Vi las pirámides."
+      reviewer_notes: "Are Monte Albán's structures called pirámides in everyday speech?"
+      en: "I bought some clothes at the market and went to Monte Albán. I saw the pyramids."
+    - speaker: Sofía
+      es: "¿Y te gustó?"
+      en: "And did you like it?"
+    - speaker: Tom
+      es: "¡[Fue|ser] increíble! También [fui|ir] al mar, y el hotel tiene alberca. Tomé muchas fotos."
+      en: "It was amazing! I also went to the beach, and the hotel has a pool. I took lots of pictures."
+    - speaker: Sofía
+      es: "¿Y tu maleta?"
+      en: "And your suitcase?"
+    - speaker: Tom
+      es: "Llegó dos días después."
+      en: "It showed up two days later."

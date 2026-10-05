@@ -1,0 +1,107 @@
+number: 3
+title: La r, la z y la x
+title_en: R, z, c and x
+level: A1
+new: [pero, perro, caro, carro, zapato, cerveza, cocina, taxi, mexicano, tlapalería]
+notes:
+  - kind: pronunciation
+    title: r and rr
+    text: |
+      Spanish has two r sounds, and they tell words apart.
+
+      - A single _r_ between vowels is one quick tap of the tongue, like the "tt" in American "butter": _pero_ `PEH-roh` (but), _caro_ `KAH-roh` (expensive).
+      - _rr_, and _r_ at the start of a word, is a trill of several quick taps: _perro_ `PEH-rroh` (dog), _carro_ `KAH-rroh` (car), _rico_ `RREE-koh` (tasty).
+
+      If you cannot trill yet, make _rr_ longer and stronger than the single _r_. You will be understood.
+  - kind: pronunciation
+    title: z, ce and ci sound like s
+    text: |
+      In Mexico, as in all of Latin America, _z_ and the _c_ of _ce_ and _ci_ sound exactly like _s_. This is called _seseo_.
+
+      - _zapato_ `sah-PAH-toh`
+      - _cerveza_ `sehr-BEH-sah`
+      - _cocina_ `koh-SEE-nah`
+
+      The "th" sound you may hear in Spain is not used in Mexico. Before _a_, _o_ and _u_, _c_ is a "k": _carro_, _cocina_.
+  - kind: pronunciation
+    title: The letter x, and tl
+    text: |
+      Many Mexican words come from Nahuatl, the language of the Aztecs, and keep its spelling. The letter _x_ has four readings:
+
+      - like "ks", in most everyday words: _taxi_ `TAHK-see`
+      - like _j_ ("h"): _México_ `MEH-hee-koh`, _mexicano_, _Oaxaca_ `wah-HAH-kah`
+      - like _s_: _Xochimilco_ `soh-chee-MEEL-koh`
+      - like "sh", in some Nahuatl and Maya names: _Xola_ `SHOH-lah`, a street in Mexico City
+
+      Place names do not follow one rule, so learn each one. Never say _México_ with a "ks".
+
+      The pair _tl_, also from Nahuatl, starts a syllable together: _tlapalería_ `tlah-pah-leh-REE-ah` (hardware store), _Tlalpan_ `TLAHL-pahn`.
+sentences:
+  - es: "El {perro} es de Ana."
+    en: "The dog is Ana's."
+    order: true
+  - es: "Pollo para el {perro}."
+    en: "Chicken for the dog."
+  - es: "Español sí, {pero} inglés no."
+    en: "Spanish, yes, but not English."
+  - es: "El hotel es muy {caro}."
+    en: "The hotel is very expensive."
+  - es: "Los zapatos son muy {caros}."
+    en: "The shoes are very expensive."
+  - es: "Mi {carro} es rojo."
+    en: "My car is red."
+    order: true
+  - es: "El {carro} es de mi papá."
+    en: "The car is my dad's."
+  - es: "Los {zapatos} de Ana son rojos."
+    en: "Ana's shoes are red."
+  - es: "Unos {zapatos} para la playa."
+    en: "Some shoes for the beach."
+  - es: "Una {cerveza}, por favor."
+    en: "A beer, please."
+  - es: "La {cerveza} es para papá."
+    en: "The beer is for Dad."
+  - es: "La {cocina|cocina} es amarilla."
+    en: "The kitchen is yellow."
+    order: true
+  - es: "Un libro de {cocina|cocina} mexicana."
+    en: "A Mexican cookbook."
+    note: "Cocina is a kitchen, and also a country's cooking."
+  - es: "El {taxi} es caro."
+    en: "The taxi is expensive."
+  - es: "Un {taxi} a Xochimilco, por favor."
+    en: "A taxi to Xochimilco, please."
+  - es: "Soy {mexicano}."
+    en: "I'm Mexican."
+  - es: "Sofía es {mexicana}."
+    en: "Sofía is Mexican."
+  - es: "Mi papá es {mexicano}, de Oaxaca."
+    en: "My dad is Mexican, from Oaxaca."
+  - es: "La {tlapalería} es de mi papá."
+    en: "The hardware store is my dad's."
+  - es: "Una {tlapalería} en Tlalpan."
+    en: "A hardware store in Tlalpan."
+  - es: "La calle Xola, por favor."
+    en: "Xola Street, please."
+dialogue:
+  title: En el taxi
+  title_en: In the taxi
+  lines:
+    - speaker: Taxista
+      es: "¿A dónde, señorita?"
+      en: "Where to, miss?"
+    - speaker: Sofía
+      es: "A Xochimilco, por favor."
+      en: "To Xochimilco, please."
+    - speaker: Taxista
+      es: "¿Es de aquí?"
+      en: "Are you from here?"
+    - speaker: Sofía
+      es: "No, soy de Oaxaca."
+      en: "No, I'm from Oaxaca."
+    - speaker: Taxista
+      es: "¡Oaxaca! ¡El chocolate de Oaxaca!"
+      en: "Oaxaca! Oaxacan chocolate!"
+    - speaker: Sofía
+      es: "Sí, ¡y el café también!"
+      en: "Yes, and the coffee too!"

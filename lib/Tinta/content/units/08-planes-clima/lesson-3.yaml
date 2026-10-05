@@ -1,0 +1,117 @@
+number: 3
+title: "¿Qué estás haciendo?"
+title_en: What are you doing?
+level: A1
+new: [esperar, llamar, marcar, contestar, descansar, aprender, tarea, ejercicio, tele, bailar, cantar, correr]
+conjugate: ["esperar:pres", "llamar:pres"]
+reviewer_notes:
+  - "Phone note: te llamo, te marco and te hablo all taught as everyday Mexican for I'll call you; te marco al rato for in a bit. Right?"
+  - "Dialogue: ¿va? and Va. as OK? and OK. between friends (they link to ir). Natural?"
+notes:
+  - kind: grammar
+    title: Estar + -ando, -iendo
+    text: |
+      To say what is happening right now, use _estar_ and the gerund, the Spanish -ing form:
+
+      - _-ar_ verbs take _-ando_: _estoy esperando_ (I'm waiting)
+      - _-er_ and _-ir_ verbs take _-iendo_: _estás comiendo_, _está escribiendo_
+
+      A few gerunds change: _leyendo_ (reading), _durmiendo_ (sleeping), _diciendo_ (saying), _pidiendo_ (asking for), _yendo_ (going).
+
+      Use it only for what is going on at this moment. For plans, Spanish uses _ir a_: _Mañana voy a trabajar_, not "estoy trabajando mañana". And an English -ing that works as a noun is an infinitive in Spanish: _Me gusta correr._ (I like running.)
+  - kind: usage
+    title: On the phone
+    text: |
+      Mexicans answer the phone with _¿Bueno?_ To say "I'll call you", you can use any of these:
+
+      - _Te llamo._
+      - _Te marco._ (literally "I'll dial you")
+      - _Te hablo._ (literally "I'll talk to you"; very Mexican)
+
+      Other useful phrases:
+
+      - _¿De parte de quién?_ — Who's calling?
+      - _Ahorita no puedo, estoy manejando._ — I can't right now, I'm driving.
+      - _Te marco al rato._ — I'll call you in a bit.
+sentences:
+  - es: "Estoy {esperando} el camión."
+    en: "I'm waiting for the bus."
+    order: true
+    note: "Esperar already includes for: espero el camión."
+  - es: "Te {espero} en la estación."
+    en: "I'll wait for you at the station."
+  - es: "Ana me {llama} todos los días."
+    en: "Ana calls me every day."
+  - es: "Voy a {llamar} a mi mamá."
+    en: "I'm going to call my mom."
+    order: true
+  - es: "Te {marco} más [tarde|tarde#late]."
+    en: "I'll call you later."
+    order: true
+  - es: "No contesta. Voy a {marcar} otra vez."
+    en: "She's not answering. I'll call again."
+  - es: "Ana no {contesta} el celular."
+    en: "Ana isn't answering her phone."
+  - es: "Cuando manejo, no {contesto} el celular."
+    en: "When I'm driving, I don't answer my phone."
+  - es: "Estoy cansada. Voy a {descansar}."
+    en: "I'm tired. I'm going to rest."
+  - es: "Ana está leyendo y yo estoy {descansando}."
+    en: "Ana is reading and I'm resting."
+  - es: "Estoy {aprendiendo} a manejar."
+    en: "I'm learning to drive."
+    order: true
+  - es: "Quiero {aprender} a cocinar."
+    en: "I want to learn to cook."
+  - es: "Memo todavía está haciendo la {tarea}."
+    en: "Memo is still doing his homework."
+  - es: "Hoy tengo mucha {tarea}."
+    en: "I have a lot of homework today."
+  - es: "Estoy haciendo {ejercicio}."
+    en: "I'm working out."
+    note: "Hacer ejercicio: to work out, to exercise."
+  - es: "Hago {ejercicio} todas las mañanas."
+    en: "I work out every morning."
+  - es: "Mi mamá está viendo la {tele}."
+    en: "My mom is watching TV."
+  - es: "No hay nada [bueno|bueno] en la {tele}."
+    en: "There's nothing good on TV."
+  - es: "¿Quieres {bailar}?"
+    en: "Do you want to dance?"
+  - es: "Todos están {bailando}, pero Memo está durmiendo."
+    en: "Everyone's dancing, but Memo is asleep."
+  - es: "Mi abuela {canta} muy bonito."
+    reviewer_notes: "bonito as an adverb (canta muy bonito): natural and neutral?"
+    en: "My grandma sings beautifully."
+    note: "Muy bonito works as an adverb in Mexico: beautifully."
+  - es: "¿Quién está {cantando}?"
+    en: "Who's singing?"
+  - es: "Luis está {corriendo} en el parque."
+    en: "Luis is running in the park."
+  - es: "Los sábados {corro} con Luis."
+    en: "On Saturdays I go running with Luis."
+dialogue:
+  title: "¿Bueno?"
+  title_en: Hello?
+  lines:
+    - speaker: Tom
+      es: "Sofía no contesta. Le marco otra vez."
+      en: "Sofía isn't answering. I'll call her again."
+    - speaker: Sofía
+      es: "¿[Bueno|bueno#hello]? Perdón, Tom, estoy manejando."
+      en: "Hello? Sorry, Tom, I'm driving."
+    - speaker: Tom
+      es: "Ah, perdón. ¿Vas a tu casa?"
+      en: "Oh, sorry. Are you going home?"
+    - speaker: Sofía
+      es: "Sí. ¿Y tú? ¿Qué estás haciendo?"
+      en: "Yes. What about you? What are you up to?"
+    - speaker: Tom
+      es: "Estoy en el metro, esperando a Ana. ¿Y Memo?"
+      en: "I'm at the metro, waiting for Ana. How's Memo?"
+    - speaker: Sofía
+      es: "Está haciendo la tarea, y mi mamá está viendo la tele. Te marco más [tarde|tarde#late], ¿va?"
+      en: "He's doing his homework, and my mom is watching TV. I'll call you later, OK?"
+    - speaker: Tom
+      es: "Va. ¡Hasta luego!"
+      en: "OK. Bye!"

@@ -1,0 +1,130 @@
+number: 1
+title: ¿A cómo el kilo?
+title_en: How much a kilo?
+level: A1
+reviewer_notes:
+  - "The grammar note says that in Mexico ese often covers over there too. Do you agree?"
+  - "Supporting word added for the dialogue: tuna (prickly pear). Check the gloss and the note."
+  - "Market note: ¿A cómo el kilo?, ¿Qué le damos?, ¿Algo más? / Es todo. Do vendors call anyone güero, güera or joven, and is that friendly rather than rude?"
+  - "Tianguis note: from Nahuatl tianquiztli; set up on a fixed weekday in each colonia; el pilón for a free extra. Correct?"
+new: [tianguis, fruta, verdura, naranja, manzana, mango, durazno, nopal, kilo, este, ese, aquel]
+conjugate: []
+notes:
+  - kind: grammar
+    title: This and that
+    text: |
+      Spanish points at three distances, and the word agrees with the noun:
+
+      - _este, esta, estos, estas_ — this, these (near me)
+      - _ese, esa, esos, esas_ — that, those (near you, or not far)
+      - _aquel, aquella, aquellos, aquellas_ — that, those (over there)
+
+      _Este mango_, _esta naranja_, _esos duraznos_, _aquella fruta_. Without a noun they mean this one, that one: _¿Estos o esos?_
+
+      _Esto_ and _eso_ stand for something you don't name: _¿Qué es eso?_ In Mexico _ese_ often covers "over there" too.
+
+      Mind the accent: _esta_ is this; _está_ is is.
+  - kind: usage
+    title: Market Spanish
+    text: |
+      A few phrases get you through any market stall:
+
+      - _¿A cómo el kilo?_ — How much a kilo? Also _¿A cómo los mangos?_
+      - _medio kilo_, _un cuarto_ — half a kilo, a quarter kilo
+      - _¿Qué le damos?_ — What can I get you? (the vendor)
+      - _¿Algo más?_ — Anything else? Answer _Es todo_ (that's all).
+
+      Vendors call their regular customers _marchante_ or _marchanta_, and anyone _güero_, _güera_ or _joven_. It is friendly and informal, not personal.
+  - kind: culture
+    title: The tianguis
+    text: |
+      A _tianguis_, from Nahuatl _tianquiztli_ (market), is a street market that sets up on a fixed day of the week in each _colonia_: the Tuesday tianguis, the Sunday tianguis. Stalls under colored awnings sell fruit, vegetables, food, clothes and second-hand goods.
+
+      Bring cash in small bills and your own bag. Vendors often let you taste the fruit, and a regular may get a little extra for free, _el pilón_.
+sentences:
+  - es: "Hay {tianguis} los domingos."
+    en: "There's a street market on Sundays."
+  - es: "Compro fruta en el {tianguis}."
+    en: "I buy fruit at the street market."
+    order: true
+  - es: "La {fruta} está muy rica."
+    en: "The fruit is really good."
+  - es: "Me gusta la {fruta} con chile y limón."
+    en: "I like fruit with chili and lime."
+    note: "Fruit with chili powder and lime is a favorite Mexican snack."
+    reviewer_notes: "Fruit with chili and lime: a fair description?"
+  - es: "[Como|comer] mucha {verdura}."
+    en: "I eat a lot of vegetables."
+    note: "In the singular, verdura often means vegetables in general."
+    reviewer_notes: "Is Como mucha verdura natural?"
+  - es: "¿Las {verduras}? Allá, al lado de la fruta."
+    en: "The vegetables? Over there, next to the fruit."
+  - es: "Un kilo de {naranjas}, por favor."
+    en: "A kilo of oranges, please."
+    order: true
+  - es: "Las {naranjas} están muy dulces."
+    en: "The oranges are really sweet."
+  - es: "Quiero dos {manzanas} verdes."
+    en: "I'd like two green apples."
+  - es: "Esta {manzana} está muy dulce."
+    en: "This apple is really sweet."
+  - es: "Me encanta el {mango} con chile."
+    en: "I love mango with chili."
+  - es: "¿A cómo el {mango}?"
+    en: "How much are the mangoes?"
+  - es: "Los {duraznos} están muy caros."
+    en: "The peaches are really expensive."
+  - es: "¿Esto es un {durazno}?"
+    en: "Is this a peach?"
+  - es: "Medio kilo de {nopales}, por favor."
+    en: "Half a kilo of nopales, please."
+  - es: "¿Qué es eso? —Es un {nopal}."
+    en: "What's that? —It's a nopal."
+    note: "Nopales: cactus paddles, cleaned of their spines and eaten grilled or in salads."
+  - es: "¿A cómo el {kilo}?"
+    en: "How much a kilo?"
+    order: true
+  - es: "Están a cuarenta pesos el {kilo}."
+    en: "They're forty pesos a kilo."
+  - es: "{Este} mango está muy dulce."
+    en: "This mango is really sweet."
+    order: true
+  - es: "¿Me da {estas} naranjas?"
+    en: "Can I have these oranges?"
+  - es: "¿Cuánto cuestan {esos} mangos?"
+    en: "How much are those mangoes?"
+  - es: "No, {esas} no. Las verdes, por favor."
+    en: "No, not those. The green ones, please."
+  - es: "¿Qué es {aquella} fruta?"
+    en: "What's that fruit over there?"
+  - es: "¿Y {aquellos} mangos?"
+    en: "And those mangoes over there?"
+dialogue:
+  title: En el tianguis
+  title_en: At the street market
+  lines:
+    - speaker: Lupe
+      es: "¡Buenos días, marchanta! ¿Qué le damos?"
+      en: "Good morning, dear! What can I get you?"
+    - speaker: Ana
+      es: "Buenos días, doña Lupe. ¿A cómo el mango?"
+      en: "Good morning, doña Lupe. How much are the mangoes?"
+    - speaker: Lupe
+      es: "A cuarenta pesos el kilo, güera."
+      en: "Forty pesos a kilo, honey."
+      reviewer_notes: "Vendor calling the customer marchanta and güera: are the translations dear and honey right in tone?"
+    - speaker: Ana
+      es: "¿Estos o esos?"
+      en: "These or those?"
+    - speaker: Lupe
+      es: "Esos, los amarillos. ¡Están muy dulces!"
+      en: "Those, the yellow ones. They're really sweet!"
+    - speaker: Ana
+      es: "Un kilo de esos y un kilo de naranjas. ¿Y qué es aquella fruta roja?"
+      en: "A kilo of those and a kilo of oranges. And what's that red fruit over there?"
+    - speaker: Lupe
+      es: "Es tuna, la fruta del nopal. ¿Algo más?"
+      en: "It's tuna, the fruit of the nopal cactus. Anything else?"
+    - speaker: Ana
+      es: "Medio kilo de nopales, y es todo."
+      en: "Half a kilo of nopales, and that's all."

@@ -1,0 +1,127 @@
+# Course plan for Unit 8. Format: content-plan/README.md.
+unit: 8
+dir: units/08-planes-clima
+title: "Planes y clima"
+title_en: "Plans and weather"
+level: A1
+goals:
+  - "Make plans and invite people with ir a + infinitive."
+  - "Talk about the weather and Mexico's rainy and dry seasons."
+  - "Say what is happening right now with estar + -ando, -iendo."
+grammar_scope: >-
+  Present tense; ir a + infinitive for plans; weather with hacer, estar, hay, llover;
+  present progressive (estar + gerund, including leyendo, durmiendo, diciendo). Not
+  yet: preterite (Unit 9), the future tense (never needed: ir a + infinitive is the
+  everyday future).
+lexicon: content/lexicon/u08.tsv
+supporting: [mes, enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre,
+  noviembre, diciembre, temporada, todavía, conmigo, contigo, mañanitas]
+names: []
+lessons:
+  - id: u08.l01
+    number: 1
+    title: "¿Qué vas a hacer?"
+    title_en: "What are you going to do?"
+    level: A1
+    grammar:
+      focus: "Ir a + infinitive for plans; vamos a = let's; reflexives with ir a (me voy a quedar / voy a quedarme)."
+      can_do: "Say what you are going to do this weekend, invite someone and accept or turn down an invitation."
+    new: [fin, fiesta, cumpleaños, cine, película, venir, ver, invitar, visitar, viajar, quedarse, próximo]
+    rows_in_core: [fiesta, venir]
+    conjugate: ["venir:pres", "ver:pres"]
+    dialogue:
+      title: "¿Vienes a la fiesta?"
+      title_en: "Are you coming to the party?"
+      where: "A phone call on Thursday evening."
+      who: "Sofía and Tom."
+      address: "tú: friends."
+      happens: "Sofía: ¿Qué vas a hacer el fin de semana? Tom was going to stay home and watch a movie. Sofía invites him to Memo's birthday party on Saturday; ¿Vienes? Tom accepts. Sofía: y el próximo domingo te invito al cine (te invito = my treat)."
+    notes:
+      - kind: grammar
+        title: "Ir a + infinitive"
+        covers: "voy a + infinitive = going to: Voy a ver una película. It is the everyday Mexican future. Vamos a + infinitive also means let's: ¡Vamos a comer! Reflexive pronouns go before ir or on the infinitive: Me voy a quedar / Voy a quedarme."
+      - kind: usage
+        title: "Inviting in Mexico"
+        covers: "¿Vienes a...? ¿Quieres ir a...? Te invito means I'm paying. Accept with ¡Sí, claro! or ¡Va! Decline gently: Ahorita no puedo, gracias. La semana que entra = next week."
+      - kind: culture
+        title: "Birthday parties"
+        covers: "Las mañanitas is sung for birthdays, at dawn or with the cake; children's parties have a piñata. Parties start late and run long; bring something to share."
+    confusables: []
+    cautions:
+      - "'ve' is ver (pres.3s) and ir (tú imperative): the compiler reports it ambiguous; mark [ve|ver]."
+      - "'ven' is venir (tú imperative) and ver (pres.3p): mark it."
+      - "quedarse vs quedar: 'me quedo' links to quedarse from the pronoun; 'queda' alone to quedar (location). Check the link lines."
+      - "invitar implies paying: 'Te invito un café' = it's on me; translate accordingly."
+      - "No future tense (iré, vendrá): ir a + infinitive only."
+      - "Months are supporting rows, best used in lesson 2."
+
+  - id: u08.l02
+    number: 2
+    title: "¿Cómo está el clima?"
+    title_en: "What's the weather like?"
+    level: A1
+    grammar:
+      focus: "Weather: hace calor, frío, fresco, sol; está nublado; llueve, va a llover; tengo calor/frío; creer que."
+      can_do: "Describe today's weather, say what it will be like, and say what to wear or take."
+    new: [clima, tiempo, calor, frío, fresco, sol, lluvia, llover, nublado, paraguas, ponerse, creer]
+    rows_in_core: [frío]
+    conjugate: ["llover:pres.3s", "ponerse:pres"]
+    dialogue:
+      title: "Va a llover"
+      title_en: "It's going to rain"
+      where: "The entrance of Ana's building, a July afternoon in Mexico City."
+      who: "Ana and doña Laura."
+      address: "Ana says usted to doña Laura; doña Laura says tú to Ana."
+      happens: "Doña Laura: Llévate el paraguas, va a llover. Ana: ¿Usted cree? Está nublado, but this morning there was sun. Laura: En julio llueve todas las tardes. Ana asks if it is cold; Laura: Hace fresco, ponte una chamarra."
+    notes:
+      - kind: grammar
+        title: "Talking about the weather"
+        covers: "Hace calor, frío, fresco, sol (also hay sol). Está nublado. Llueve (it rains, it's raining); va a llover. For people: tengo calor, tengo frío."
+      - kind: usage
+        title: "Clima and tiempo"
+        covers: "Mexicans usually ask ¿Cómo está el clima? Tiempo is both time and weather: ¿Qué tiempo hace? Never say ~estoy caliente~ for I'm hot: say tengo calor."
+      - kind: culture
+        title: "Rainy season"
+        covers: "Central Mexico has a temporada de lluvias from about June to October, with afternoon downpours, and a dry season the rest of the year. Mexico City sits at 2,240 m, so mornings are cool; the coasts are hot and humid."
+    confusables: ["calor / caliente"]
+    cautions:
+      - "People: 'tengo calor', 'tengo frío'; never 'estoy caliente'."
+      - "Months are supporting rows (u08.tsv): use them here ('En julio llueve mucho') and later; every row needs an example sentence by integration."
+      - "creer and pensar share the sense 'think' (never offered against each other)."
+      - "ponerse = put on (clothes) or become; 'poner' (put) is not a lemma: avoid 'poner la mesa'."
+      - "frío is an adjective row used in 'hace frío': fine."
+      - "tiempo is time and weather: the English must decide."
+
+  - id: u08.l03
+    number: 3
+    title: "¿Qué estás haciendo?"
+    title_en: "What are you doing?"
+    level: A1
+    grammar:
+      focus: "Present progressive: estar + -ando/-iendo (leyendo, durmiendo, diciendo); only for what is happening now."
+      can_do: "Say what you and others are doing right now, on the phone or in a message."
+    new: [esperar, llamar, marcar, contestar, descansar, aprender, tarea, ejercicio, tele, bailar, cantar, correr]
+    rows_in_core: [contestar]
+    conjugate: ["esperar:pres", "llamar:pres"]
+    dialogue:
+      title: "¿Bueno?"
+      title_en: "Hello?"
+      where: "A phone call."
+      who: "Tom calls Sofía."
+      address: "tú: friends."
+      happens: "Sofía does not answer; Tom calls again. Sofía: ¿Bueno? Perdón, estoy manejando. Tom is waiting at the metro station. ¿Qué estás haciendo? Memo is doing homework, her mom is watching TV. Sofía: Te marco más tarde."
+    notes:
+      - kind: grammar
+        title: "Estar + -ando, -iendo"
+        covers: "estoy esperando, estás comiendo, está escribiendo. Irregular gerunds: leyendo, durmiendo, diciendo, pidiendo, yendo. Use it only for what is happening now: for plans say Voy a trabajar."
+      - kind: usage
+        title: "On the phone"
+        covers: "Answer ¿Bueno? Te llamo, te marco and, very Mexican, te hablo all mean I'll call you. ¿De parte de quién? = who's calling? Ahorita no puedo, estoy manejando."
+    confusables: []
+    cautions:
+      - "llamar and llamarse are both lemmas: 'me llamo' links to llamarse after me; 'te llamo' (I'll call you) to llamar. Check the link lines and mark when the rule guesses wrong."
+      - "Gerunds with attached pronouns (esperándote) cannot be targets."
+      - "No progressive for plans or habits: 'Mañana voy a trabajar', not 'estoy trabajando mañana'."
+      - "tele (TV) is the everyday word; la televisión is not a lemma."
+      - "todavía is supporting (u08.tsv): 'todavía no' is useful."
+      - "English -ing as a noun is a Spanish infinitive: 'Me gusta correr'."

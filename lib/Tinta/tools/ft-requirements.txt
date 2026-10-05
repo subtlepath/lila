@@ -1,0 +1,4 @@
+# FreeType for tools/otf2freeink.py, installed into build/ft-venv. The wheel
+# bundles FreeType 2.13.2; otf2freeink.py refuses any other version, since
+# hinting and rasterisation change between FreeType releases.
+freetype-py==2.5.1

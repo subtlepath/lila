@@ -1,0 +1,80 @@
+# Respelling overrides for the pronunciation respeller (tools/packc/respell.py).
+#
+# The compiler respells every lemma and phrase by rule (seseo, yeísmo, silent
+# h, stress from the accent rules). List a word here only when the rules give
+# the wrong Mexican reading:
+#   - x read as h (México), sh (Xola) or s (Tlaxcala) rather than ks (taxi);
+#   - place and personal names with non-Spanish spelling (Nahuatl, Maya);
+#   - English loans said the Mexican way (jeans = YEENS, hobby = HOH-bee).
+# Regular words (fútbol, chamba, Guadalajara, atleta, náhuatl) do not belong
+# here. A lemma or phrase that needs a one-off reading can carry its own
+# `pron:` in the lesson or lexicon instead.
+#
+# Keys: the word in lower case with its accents. An override applies to that
+# exact form only, so list plurals and feminines too (mexicano, mexicanas).
+# A key may be several words (hot dog); it then replaces the whole phrase.
+#
+# Values follow the conventions in the docstring of tools/packc/respell.py:
+#   - plain ASCII letters, syllables joined by "-", words by one space;
+#   - the stressed syllable in CAPITALS, the rest lower case;
+#   - a = ah, e = eh, i = ee, o = oh, u = oo; ai = eye, ei = ay, oi = oy, au = ow;
+#   - h = the Spanish j sound, y = ll/y, ny = ñ, rr = trilled r, s for z/ce/ci,
+#     sh = English sh (only in names and loans), tl stays tl.
+
+overrides:
+  # x said as Spanish j (h)
+  méxico: MEH-hee-koh
+  mexicano: meh-hee-KAH-noh
+  mexicana: meh-hee-KAH-nah
+  mexicanos: meh-hee-KAH-nohs
+  mexicanas: meh-hee-KAH-nahs
+  mexiquense: meh-hee-KEHN-seh
+  mexicali: meh-hee-KAH-lee
+  oaxaca: wah-HAH-kah
+  oaxaqueño: wah-hah-KEH-nyoh
+  oaxaqueña: wah-hah-KEH-nyah
+  texas: TEH-hahs
+  texano: teh-HAH-noh
+  texana: teh-HAH-nah
+  xalapa: hah-LAH-pah
+  ximena: hee-MEH-nah
+  xavier: hah-BYEHR
+
+  # x said as sh (Nahuatl and Maya names)
+  xola: SHOH-lah
+  xcaret: eesh-kah-REHT
+  uxmal: oosh-MAHL
+  xoloitzcuintle: shoh-loh-eets-KWEEN-tleh
+
+  # x said as s. Word-initial x is s by rule already; Xochimilco is listed
+  # because it is the textbook example of this reading.
+  xochimilco: soh-chee-MEEL-koh
+  tlaxcala: tlahs-KAH-lah
+  ixtapa: ees-TAH-pah
+  taxco: TAHS-koh
+  tuxtla: TOOS-tlah
+
+  # English loans as said in Mexico. wifi, internet and okey come out right by
+  # rule; they are pinned here because loans are where a rule change would
+  # surprise. fútbol, béisbol, suéter and clóset are regular Spanish spellings.
+  ok: oh-KAY
+  okey: oh-KAY
+  wifi: WEE-fee
+  internet: een-tehr-NEHT
+  email: EE-mayl
+  sándwich: SAHN-weech
+  sándwiches: SAHN-wee-chehs
+  pizza: PEET-sah
+  pizzas: PEET-sahs
+  pizzería: peet-seh-REE-ah
+  jeans: YEENS
+  hot dog: hoht DOHG
+  hot dogs: hoht DOHGS
+  hot cakes: hoht KAYKS
+  sushi: SOO-shee
+  show: SHOH
+  hobby: HOH-bee
+  whisky: WEES-kee
+  selfie: SEHL-fee
+  hámster: HAHMS-tehr
+  whatsapp: WAHTS-ahp

@@ -1,0 +1,9 @@
+# Respelling overrides for the phrasebook (content/phrasebook/*.yaml). Same
+# format and conventions as content/pronunciation.yaml.
+
+overrides:
+  # Brand name: the double x is one ks, as in taxi.
+  oxxo: OHK-soh
+  # English loan as said in Mexico; by rule the ck would split into k-k.
+  ticket: TEE-keht
+  tickets: TEE-kehts

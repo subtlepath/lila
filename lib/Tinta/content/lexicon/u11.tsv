@@ -1,0 +1,46 @@
+# Unit 11: Salud y emergencias / Health and emergencies. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u11.l01 Me duele la cabeza (doler)
+cuerpo		noun	m	body	A2			body				
+cabeza		noun	f	head	A2			body				
+ojo		noun	m	eye	A2			body			¡Ojo!: Watch out!	
+garganta		noun	f	throat	A2			body				
+estómago		noun	m	stomach	A2			body			Informal: la panza.	
+espalda		noun	f	back (of the body)	A2			body				
+brazo		noun	m	arm	A2			body				
+mano		noun	f	hand	A2			body			Feminine although it ends in -o: la mano.	
+pierna		noun	f	leg	A2			body				
+pie		noun	m	foot	A2			body			A pie: on foot.	
+muela		noun	f	molar; back tooth	A2			body			Me duele una muela: I have a toothache.	
+doler		verb		to hurt; to ache	A2			body			Works like gustar: me duelen los pies.	
+# --- u11.l02 ¿Qué tiene? (symptoms, tener que, deber). Also new here, row in core.tsv: doctor
+sentirse		verb		to feel	A2			health			Me siento mal: I don't feel well.	
+consultorio		noun	m	doctor's office	A2			health			Many pharmacies have a consultorio next door.	
+fiebre		noun	f	fever	A2			health				
+gripa		noun	f	cold; flu	A2		x	health		gripe; resfriado		
+tos		noun	f	cough	A2			health				
+dolor		noun	m	pain; ache	A2			health			Dolor de cabeza: headache.	
+mareado		adj		dizzy; nauseous	A2			health				
+medicina		noun	f	medicine	A2			health				
+pastilla		noun	f	pill; tablet	A2			health				
+receta		noun	f	prescription; recipe	A2			health				
+deber		verb		should; must; to owe	A2			grammar			Debes descansar: you should rest.	
+# --- u11.l03 ¡Auxilio! (usted commands, emergencies)
+auxilio		interj		help! (emergency)	A2			health			Primeros auxilios: first aid.	
+emergencia		noun	f	emergency	A2			health				
+accidente		noun	m	accident	A2			health				
+herido		adj		injured; wounded	A2			health				
+sangre		noun	f	blood	A2			body				
+ambulancia		noun	f	ambulance	A2			health				
+hospital		noun	m	hospital	A2			health				
+enfermero		noun	mf	nurse	A2			health				
+cuidado		noun	m	care; careful!	A2			health			¡Cuidado!: Careful! Con cuidado: carefully.	
+moverse		verb		to move	A2			body			No se mueva: don't move.	
+quemarse		verb		to burn oneself; to get burned	A2			health				
+cortarse		verb		to cut oneself	A2			health				
+# --- supporting (no lesson introduces these; usable from Unit 11 on)
+salud		noun	f	health; cheers!; bless you!	A2			health			¡Salud!: after a sneeze, or as a toast.	
+# --- names
+Cruz Roja		propn		the Red Cross (ambulance service)	A1							

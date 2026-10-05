@@ -1,0 +1,237 @@
+title: "Frecuentes A, parte cuatro"
+sentences:
+  # 151 error
+  - es: "[Fue|ser] un {error}."
+    en: "It was a mistake."
+    order: true
+  - es: "Hay un {error} en la cuenta."
+    en: "There's a mistake in the check."
+    order: true
+  # 152 llamada
+  - es: "Tengo una {llamada} perdida de mi mamá."
+    en: "I have a missed call from my mom."
+  - es: "Perdón, tengo que contestar esta {llamada}."
+    en: "Sorry, I have to take this call."
+  # 153 llorar
+  - es: "El bebé {llora} toda la noche."
+    en: "The baby cries all night."
+    order: true
+  - es: "Ya no {llores}, te compro otro."
+    en: "Don't cry anymore, I'll buy you another one."
+  # 154 relación
+  - es: "Tengo una buena {relación} con mi jefe."
+    en: "I have a good relationship with my boss."
+  # 155 puesto
+  - es: "[Compramos|comprar:pret.1p] tacos en el {puesto} de la esquina."
+    en: "We bought tacos at the stall on the corner."
+    note: "Un puesto: a street stall, as in un puesto de tacos."
+  - es: "Ana consiguió un {puesto} en el banco."
+    en: "Ana got a job at the bank."
+  # 156 verdadero
+  - es: "Es una historia {verdadera}."
+    en: "It's a true story."
+    order: true
+  # 157 grupo
+  - es: "Vamos a ir en {grupo} a Teotihuacán."
+    en: "We're going to Teotihuacán as a group."
+  # 158 pobre
+  - es: "¡{Pobre} perro! Tiene hambre."
+    en: "Poor dog! He's hungry."
+    note: "Before a noun, pobre means 'poor thing'; after it, 'without money'."
+  - es: "[Era|ser:impf.3s] una familia muy {pobre}."
+    en: "They were a very poor family."
+  # 159 detrás
+  - es: "El baño está {detrás} de la cocina."
+    en: "The restroom is behind the kitchen."
+    note: "Everyday Mexican speech often says atrás de."
+  # 160 a lo mejor
+  - es: "{A lo mejor} llueve más [tarde|tarde#late]."
+    en: "Maybe it'll rain later."
+    note: "A lo mejor takes the normal present, not the future."
+  - es: "{A lo mejor} no viene."
+    en: "Maybe he won't come."
+    order: true
+  # 161 agradecer
+  - es: "Te lo {agradezco} mucho."
+    en: "I really appreciate it."
+    order: true
+  # 162 subir
+  - es: "{Subimos|subir:pret.1p} a la pirámide del Sol."
+    en: "We climbed the Pyramid of the Sun."
+  - es: "{Subí} las maletas al cuarto."
+    en: "I took the suitcases up to the room."
+    note: "Getting on a bus or into a car is subirse: me subo al camión."
+  # 163 suyo
+  - es: "¿Esta maleta es {suya}, señora?"
+    en: "Is this suitcase yours, ma'am?"
+  # 164 voz
+  - es: "[Lee|leer:imp.2s] en {voz} alta."
+    en: "Read out loud."
+    order: true
+    note: "En voz alta: out loud. En voz baja: quietly."
+  - es: "Tienes una {voz} muy bonita."
+    en: "You have a really nice voice."
+  # 165 responder
+  - es: "No me {respondió} el mensaje."
+    en: "He didn't answer my message."
+    note: "Contestar is more common in everyday speech."
+  # 166 siguiente
+  - es: "Me bajo en la {siguiente} estación."
+    en: "I'm getting off at the next station."
+  - es: "¡El {siguiente}, por favor!"
+    en: "Next, please!"
+  # 167 entregar
+  - es: "Tengo que {entregar} la tarea [mañana|mañana]."
+    en: "I have to hand in my homework tomorrow."
+  # 168 información
+  - es: "Necesito más {información}."
+    en: "I need more information."
+    order: true
+    note: "Información is uncountable: never informaciones for facts."
+  # 169 favor
+  - es: "¿Me haces un {favor}?"
+    en: "Can you do me a favor?"
+    order: true
+  # 170 valer
+  - es: "{Vale} la pena ir a Oaxaca."
+    en: "It's worth going to Oaxaca."
+    allow: [vale]
+    note: "Vale la pena: it's worth it. Vale for OK is Spain; Mexico says sale or está bien."
+  # 171 realmente
+  - es: "¿{Realmente} quieres ir?"
+    en: "Do you really want to go?"
+  # 172 casarse
+  - es: "Mis papás se {casaron} en Puebla."
+    en: "My parents got married in Puebla."
+  - es: "¿Cuándo te {casas}?"
+    en: "When are you getting married?"
+    order: true
+    note: "Casarse con alguien: to marry someone."
+  # 173 tierra
+  - es: "Los niños llegaron llenos de {tierra}."
+    en: "The kids came home covered in dirt."
+    note: "Tierra: earth, land, and the dirt on your shoes."
+  # 174 odiar
+  - es: "{Odio} [levantarme|levantarse] temprano."
+    en: "I hate getting up early."
+  # 175 a poco
+  - es: "¿{A poco} no sabías?"
+    en: "You really didn't know?"
+    note: "¿A poco?: really?, no way! A Mexican way to show surprise."
+  # 176 acá
+  - es: "[Ven|venir] {acá}, Toño."
+    en: "Come here, Toño."
+    order: true
+  - es: "Pásale, {acá} hay lugar."
+    en: "Come on in, there's room here."
+    note: "Mexico uses acá as much as aquí."
+  # 177 rato
+  - es: "Esperé un buen {rato}."
+    en: "I waited quite a while."
+  # 178 apurarse
+  - es: "Nos tenemos que {apurar}."
+    en: "We have to hurry."
+    order: true
+  - es: "Si no te {apuras}, vamos a llegar [tarde|tarde#late]."
+    en: "If you don't hurry, we're going to be late."
+    note: "¡Apúrate!: hurry up!"
+  # 179 enojarse
+  - es: "No te {enojes}."
+    en: "Don't get mad."
+    order: true
+  - es: "Mi papá se {enojó} mucho."
+    en: "My dad got really mad."
+    note: "Mexico says enojarse; enfadarse sounds Spanish."
+  # 180 checar
+  - es: "Déjame {checar} mi celular."
+    en: "Let me check my phone."
+    note: "Checar, from English 'check': checo, checas."
+  # 181 recién
+  - es: "Las tortillas están {recién} hechas."
+    en: "The tortillas are freshly made."
+  - es: "Ellos son {recién} casados."
+    en: "They're newlyweds."
+  # 182 prender
+  - es: "¿Puedes {prender} la luz?"
+    en: "Can you turn on the light?"
+    order: true
+  - es: "Diego, {prende|prender:imp.2s} la tele."
+    en: "Diego, turn on the TV."
+  # 183 al rato
+  - es: "Nos vemos {al rato}."
+    en: "See you in a bit."
+    order: true
+    note: "Al rato: later today, in a while. It can be ten minutes or five hours."
+  # 184 frijol
+  - es: "¿Quiere {frijoles} con sus huevos, señor?"
+    en: "Would you like beans with your eggs, sir?"
+  - es: "Los {frijoles} de mi abuela son los mejores."
+    en: "My grandma's beans are the best."
+  # 185 nomás
+  - es: "{Nomás} estoy viendo, gracias."
+    en: "I'm just looking, thanks."
+    note: "Say this in a shop when someone offers to help."
+  - es: "Está {nomás} a dos cuadras."
+    en: "It's just two blocks away."
+  # 186 encargarse
+  - es: "Ana se {encargó} de todo."
+    en: "Ana took care of everything."
+    order: true
+  - es: "¿Quién se {encarga} de la comida?"
+    en: "Who's in charge of the food?"
+  # 187 cita
+  - es: "Tengo {cita} con el doctor a las cuatro."
+    en: "I have a doctor's appointment at four."
+  - es: "[Mañana|mañana] tengo una {cita} con Laura."
+    en: "I have a date with Laura tomorrow."
+  # 188 guardar
+  - es: "Toño, {guarda|guardar:imp.2s} tus juguetes."
+    en: "Toño, put your toys away."
+  # 189 respuesta
+  - es: "No [sé|saber] la {respuesta}."
+    en: "I don't know the answer."
+    order: true
+  # 190 demás
+  - es: "¿Dónde están los {demás}?"
+    en: "Where are the others?"
+    note: "Los demás: the others, everyone else."
+  # 191 campo
+  - es: "Mis abuelos viven en el {campo}."
+    en: "My grandparents live in the countryside."
+    order: true
+  # 192 frente
+  - es: "Tienes algo en la {frente}."
+    en: "You have something on your forehead."
+  # 193 continuar
+  - es: "Vamos a {continuar} [mañana|mañana]."
+    en: "We'll continue tomorrow."
+  # 194 línea
+  - es: "[Tome|tomar:imp.3s] la {línea} dos del metro."
+    en: "Take Line Two of the metro."
+  # 195 caja
+  - es: "[Pague|pagar:imp.3s] en {caja}, por favor."
+    en: "Please pay at the register."
+    note: "In a shop, la caja is the checkout."
+  - es: "¿Dónde pongo esta {caja}?"
+    en: "Where do I put this box?"
+  # 196 pena
+  - es: "Me da {pena} pedirle dinero."
+    en: "I'm embarrassed to ask him for money."
+    note: "In Mexico, me da pena means 'I'm embarrassed', not 'I'm sad'."
+  - es: "¡Qué {pena}!"
+    en: "How embarrassing!"
+  # 197 profesor
+  - es: "El {profesor} de historia es muy [bueno|bueno]."
+    en: "The history professor is really good."
+    note: "Maestro is the everyday word for a schoolteacher; profesor is common at university."
+  # 198 atención
+  - es: "Pon {atención}."
+    en: "Pay attention."
+  # 199 cliente
+  - es: "El {cliente} siempre tiene la razón."
+    en: "The customer is always right."
+    order: true
+  # 200 canción
+  - es: "Me encanta esta {canción}."
+    en: "I love this song."
+    order: true

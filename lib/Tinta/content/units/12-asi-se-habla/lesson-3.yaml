@@ -1,0 +1,134 @@
+number: 3
+title: Palabras del náhuatl
+title_en: Words from Nahuatl
+level: A2
+reviewer_notes:
+  - "Culture facts: more than a million and a half Nahuatl speakers today; rosca de reyes on 6 January, tamales and atole on 2 February; mole de guajolote as celebration food (Puebla, Oaxaca); toasted chapulines as a snack in Oaxaca. Accurate?"
+  - "Etymologies: cuate 'probably' from coatl; tocayo, apapachar and mitote marked as disputed; tamal, atole and mole from tamalli, atolli, molli. Please confirm."
+  - "'A Memo le salió el niño en la rosca' for finding the baby figure. Natural?"
+  - "The abuela says tú to everyone; the young people say usted to her."
+new: [elote, tamal, atole, mole, guajolote, chapulín, cacahuate, molcajete, papalote, tocayo, apapachar, mitote]
+conjugate: ["apapachar:pres"]
+notes:
+  - kind: culture
+    title: Nahuatl in everyday Spanish
+    text: |
+      Nahuatl, the language of the Mexica (the Aztecs), is still spoken today by more than a million and a half people in Mexico. Mexican Spanish took hundreds of words from it, most of them for food, plants, animals and everyday things. The Nahuatl ending _-tl_ usually became _-te_:
+
+      - _aguacate_ (from _ahuacatl_), _elote_ (_elotl_), _cacahuate_ (_cacahuatl_)
+      - _guajolote_ (_huexolotl_), _molcajete_ (_molcaxitl_)
+      - _papalote_ (_papalotl_, butterfly), _popote_ (_popotl_)
+
+      _Tamal_, _atole_ and _mole_ come from _tamalli_, _atolli_ and _molli_ (sauce), and _chapulín_ from _chapolin_.
+
+      For some everyday words the history is less sure. _Cuate_ (buddy) probably comes from _coatl_, snake, which also meant twin. _Tocayo_, _apapachar_ and _mitote_ are often traced to Nahuatl too, but scholars do not all agree.
+  - kind: pronunciation
+    title: tl and x
+    text: |
+      Words from Nahuatl brought two spellings with them.
+
+      _tl_ is said together, and it starts a syllable: _náhuatl_ `NAH-wahtl`, _tlapalería_ `tlah-pah-leh-REE-ah`, _Tlalpan_ `TLAHL-pahn`. Do not split it into "t" and "l" in two syllables.
+
+      _x_ has four readings, so learn each word as you meet it:
+
+      - like Spanish _j_ ("h"): _México_ `MEH-hee-koh`, _Oaxaca_ `wah-HAH-kah`
+      - like "s": _Xochimilco_ `soh-chee-MEEL-koh`
+      - like "sh": _Xola_ `SHOH-lah`
+      - like "ks", in most other words: _taxi_ `TAHK-see`, _examen_ `ehk-SAH-mehn`
+
+      The words of this lesson follow the normal rules: _guajolote_ `gwah-hoh-LOH-teh`, _chapulín_ `chah-poo-LEEN`.
+  - kind: culture
+    title: Feast days and food
+    text: |
+      - On 6 January, _Día de Reyes_, families share a _rosca de reyes_, a ring-shaped sweet bread with small figures of the baby Jesus baked inside.
+      - Whoever finds a figure provides the _tamales_ and _atole_ on 2 February, _Día de la Candelaria_ (Candlemas).
+      - _Mole_, often _mole de guajolote_, is the dish of big celebrations: weddings, baptisms, a town's feast day. Puebla and Oaxaca are famous for it.
+      - In the evening, street stands sell _elotes_ and _esquites_ (corn kernels in a cup) with lime, chili and cheese.
+      - In Oaxaca, toasted _chapulines_ (grasshoppers) with lime and chili are a popular snack.
+sentences:
+  - es: "Un {elote} con limón y chile, por favor."
+    en: "Corn on the cob with lime and chili, please."
+  - es: "En la esquina venden {elotes}."
+    en: "They sell corn on the cob on the corner."
+  - es: "¿Me da dos {tamales} de pollo?"
+    en: "Can I have two chicken tamales?"
+  - es: "Los {tamales} de mi abuela son los mejores."
+    en: "My grandma's tamales are the best."
+  - es: "Un {atole} de chocolate, por favor."
+    en: "A chocolate atole, please."
+    note: "Atole: a hot, thick corn drink."
+  - es: "El {atole} está muy caliente."
+    en: "The atole is very hot."
+  - es: "Me encanta el {mole} de Oaxaca."
+    en: "I love Oaxacan mole."
+    order: true
+  - es: "Mi tía hace {mole} para las fiestas."
+    en: "My aunt makes mole for special occasions."
+  - es: "Para la fiesta, hicimos mole de {guajolote}."
+    en: "For the party, we made turkey mole."
+  - es: "Mi abuelo tiene {guajolotes} en el rancho."
+    en: "My grandpa keeps turkeys on his ranch."
+  - es: "¿Ya comiste {chapulines}?"
+    en: "Have you tried chapulines yet?"
+    note: "Chapulines: toasted grasshoppers, a snack in Oaxaca."
+  - es: "En Oaxaca venden {chapulines} con limón."
+    en: "In Oaxaca they sell chapulines with lime."
+  - es: "Una bolsa de {cacahuates}, por favor."
+    en: "A bag of peanuts, please."
+    order: true
+  - es: "Los {cacahuates} con chile son muy ricos."
+    en: "Peanuts with chili are really tasty."
+  - es: "Hago la salsa en el {molcajete}."
+    en: "I make the salsa in the molcajete."
+    order: true
+  - es: "El {molcajete} de mi abuela es muy viejo."
+    en: "My grandmother's stone mortar is very old."
+  - es: "Memo le compró un {papalote} a su primo."
+    en: "Memo bought his cousin a kite."
+  - es: "El {papalote} se quedó en el árbol."
+    en: "The kite got stuck in the tree."
+  - es: "Me llamo Luis. —¡{Tocayo}!"
+    en: "My name is Luis. —Same as mine!"
+    note: "Tocayo: someone with your name."
+  - es: "Ana es mi {tocaya}."
+    en: "Ana and I have the same name."
+  - es: "Mi abuela me {apapacha} mucho."
+    en: "My grandma spoils me with hugs."
+  - es: "Cuando estoy triste, mi mamá me {apapacha}."
+    en: "When I'm sad, my mom gives me a big hug."
+  - es: "[Ven|venir], ¿me {apapachas}?"
+    en: "Come here, will you give me a hug?"
+  - es: "Los niños hacen mucho {mitote}."
+    en: "The kids are making a big racket."
+    note: "Informal."
+  - es: "¿Qué es este {mitote}?"
+    en: "What's all this commotion?"
+    note: "Informal."
+dialogue:
+  title: Día de la Candelaria
+  title_en: Candlemas Day
+  lines:
+    - speaker: Abuela
+      es: "¡Pásenle, pásenle! Hoy es dos de febrero: ¡la Candelaria!"
+      en: "Come in, come in! Today is the second of February: Candlemas!"
+    - speaker: Tom
+      es: "¿Y qué se come en la Candelaria?"
+      en: "And what do people eat at Candlemas?"
+    - speaker: Sofía
+      es: "¡Tamales y atole! A Memo le salió el niño en la rosca, por eso hoy él invita."
+      en: "Tamales and atole! Memo got the baby figure in the rosca, so today he's treating everyone."
+    - speaker: Memo
+      es: "Y la abuela hizo mole de guajolote. Tom, ¿ya comiste chapulines?"
+      en: "And Grandma made turkey mole. Tom, have you ever had chapulines?"
+    - speaker: Tom
+      es: "Sí, en Oaxaca. ¡Todo está muy rico!"
+      en: "Yes, in Oaxaca. Everything is delicious!"
+    - speaker: Abuela
+      es: "¡Qué [bueno|bueno]! [Ven|venir], te apapacho. ¿Tom es Tomás? ¡[Como|como] mi esposo! Son tocayos."
+      en: "Wonderful! Come here, give me a hug. Is Tom short for Tomás? Like my husband! You're namesakes."
+    - speaker: Sofía
+      es: "Abuela, ¿quiere más atole?"
+      en: "Grandma, would you like more atole?"
+    - speaker: Abuela
+      es: "Sí, gracias. ¡Y esos niños, qué mitote hacen afuera!"
+      en: "Yes, thank you. And those kids, what a racket they're making outside!"

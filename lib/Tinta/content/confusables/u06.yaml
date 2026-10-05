@@ -1,0 +1,4 @@
+# Unit 6 confusable sets (fragment of content/confusables.yaml; same format).
+- name: pedir / preguntar
+  lemmas: [pedir, preguntar]
+  note: English "ask" is two verbs. Pedir is to ask for or order something; preguntar is to ask a question.

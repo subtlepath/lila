@@ -1,0 +1,48 @@
+title: Tom y la chamarra
+title_en: Tom and the jacket
+level: A2
+kind: reading
+lesson: u07.l03
+lines:
+  - es: "Tom necesita una chamarra, pero en las tiendas del centro la ropa es muy cara."
+    en: "Tom needs a jacket, but clothes are very expensive in the stores downtown."
+  - es: "Sofía dice: “En el tianguis es más barata. ¡Vamos el domingo!”"
+    en: "Sofía says, “It's cheaper at the street market. Let's go on Sunday!”"
+  - es: "El domingo, Tom y Sofía van al tianguis."
+    en: "On Sunday, Tom and Sofía go to the street market."
+    paragraph: true
+  - es: "Hay chamarras azules, negras y grises."
+    en: "There are blue, black and gray jackets."
+  - es: "La gris es más barata, pero es peor."
+    en: "The gray one is cheaper, but it's not as good."
+  - es: "Tom se prueba una chamarra negra. Le queda muy bien."
+    en: "Tom tries on a black jacket. It fits him really well."
+  - es: "Tom pregunta: “¿Cuánto cuesta?” El señor dice: “Doscientos cincuenta, joven.”"
+    en: "Tom asks, “How much is it?” The man says, “Two hundred fifty, young man.”"
+    reviewer_notes: "Is a jacket for 250 pesos at a tianguis, bargained to 220, a plausible price?"
+  - es: "Sofía habla con el señor: “¿Nos la deja en doscientos?”"
+    en: "Sofía talks to the man: “Will you let us have it for two hundred?”"
+    paragraph: true
+  - es: "El señor dice: “Se la dejo en doscientos veinte.”"
+    en: "The man says, “I'll let you have it for two hundred twenty.”"
+  - es: "Tom paga con un billete de quinientos, y el señor le da el [cambio|cambio]: doscientos ochenta pesos."
+    en: "Tom pays with a five-hundred-peso bill, and the man gives him his change: two hundred eighty pesos."
+  - es: "Tom está muy contento."
+    en: "Tom is very happy."
+    paragraph: true
+  - es: "Su chamarra es tan bonita [como|como] las de la tienda, ¡pero es mucho más barata!"
+    en: "His jacket is as nice as the ones in the store, but it's much cheaper!"
+questions:
+  - q: "¿Dónde es más barata la ropa?"
+    options: ["En el tianguis", "En el centro", "En la tienda"]
+    answer: 0
+  - q: "¿Cuánto paga Tom por la chamarra?"
+    options: ["Doscientos veinte pesos", "Doscientos cincuenta pesos", "Doscientos pesos", "Quinientos pesos"]
+    answer: 0
+  - q: "Who bargains with the vendor?"
+    lang: en
+    options: ["Sofía", "Tom", "Doña Lupe"]
+    answer: 0
+  - q: "¿Cuánto es el cambio?"
+    options: ["Doscientos ochenta pesos", "Doscientos veinte pesos", "Quinientos pesos"]
+    answer: 0

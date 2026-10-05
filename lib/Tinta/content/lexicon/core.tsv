@@ -1,0 +1,176 @@
+# Course lexicon: every word used in lesson sentences, dialogues, stories and the phrasebook.
+# TAB-separated. Columns are documented in docs/content-style.md.
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- Greetings and courtesy (Unit 1)
+hola		interj		hi; hello	A1			greetings			
+buenos días		expr		good morning	A1			greetings			Until about noon.
+buenas tardes		expr		good afternoon	A1			greetings			From noon until dark.
+buenas noches		expr		good evening; good night	A1			greetings			After dark, to say hello or goodbye.
+qué tal		expr		how's it going?; how are you?	A1			greetings				qué onda
+qué onda		expr		what's up?	A1	informal	x	greetings			With friends only.
+más o menos		expr		so-so; more or less	A1			greetings			
+mucho gusto		expr		nice to meet you	A1			greetings			The answer is igualmente.
+adiós		interj		goodbye	A1			greetings				hasta luego
+hasta luego		expr		see you later; bye	A1			greetings			
+hasta mañana		expr		see you tomorrow	A1			greetings			
+gracias		interj		thank you; thanks	A1			courtesy			
+por favor		expr		please	A1			courtesy			
+de nada		expr		you're welcome	A1			courtesy			
+perdón		interj		sorry; excuse me; pardon	A1			courtesy			
+disculpe		interj		excuse me; sorry (formal)	A1			courtesy			To get attention or apologize. To a friend: disculpa.
+con permiso		expr		excuse me (to get by or leave)	A1		x	courtesy			Said when passing someone or leaving a room or table.
+mande		interj		pardon?; yes? (when called)	A1		x	courtesy			Polite Mexican way to ask someone to repeat.
+me permite		expr		may I?; excuse me	A1			courtesy			To get past someone, or to ask to take or see something.
+provecho		interj		enjoy your meal	A1		x	courtesy			Said to people eating, even strangers.
+un momentito		expr		just a moment	A1			courtesy			
+un poco		expr		a little; a bit	A1			grammar			
+órale		interj		OK!; wow!; come on!	A1	informal	x	feelings				bueno#hello
+bueno	bueno#hello	interj		hello? (answering the phone)	A1		x	courtesy			Mexicans answer the phone with ¿Bueno?
+ay		interj		oh!; ouch!	A1			feelings			
+ah		interj		ah!; oh, I see	A1			feelings			
+al pastor		expr		spit-roasted marinated pork (taco filling)	A1		x	food			
+# --- Pronouns
+yo		pron		I	A1			people			
+tú		pron		you (informal)	A1			people			Friends, family, children.
+usted		pron		you (formal)	A1			people			Strangers, elders, service. Takes the él/ella verb form.
+él		pron		he; him	A1			people			
+ella		pron		she; her	A1			people			
+nosotros		pron		we (men or a mixed group)	A1			people			
+nosotras		pron		we (women only)	A1			people			
+ustedes		pron		you (plural)	A1			people			The only plural you in Mexico, formal or not.
+ellos		pron		they (men or a mixed group)	A1			people			
+ellas		pron		they (women only)	A1			people			
+me		pron		me; myself	A1			people			
+te		pron		you; yourself (object, informal)	A1			people			
+se		pron		himself; herself; yourself (formal); themselves	A1			people			
+le		pron		(to) him; (to) her; (to) you (formal)	A1			people			
+qué		pron		what; how (in exclamations)	A1			questions			
+quién		pron		who	A1			questions	pl=quiénes		
+algo		pron		something; anything	A1			things			
+todo		pron		everything; all	A1			things	f=toda; mpl=todos; fpl=todas		
+# --- Articles and determiners
+el		det	m	the (masculine)	A1			grammar			
+la		det	f	the (feminine)	A1			grammar			
+los		det	mpl	the (masculine plural)	A1			grammar			
+un		det	m	a; an (masculine); (plural) some	A1			grammar	pl=unos		
+una		det	f	a; an (feminine)	A1			grammar			
+mi		det		my	A1			people	pl=mis		
+tu		det		your (informal)	A1			people	pl=tus		
+su		det		his; her; its; your (formal); their	A1			people	pl=sus		
+mucho		det		much; a lot (of); many	A1			grammar	f=mucha; mpl=muchos; fpl=muchas		
+# --- Prepositions and conjunctions
+de		prep		of; from	A1			grammar			
+en		prep		in; on; at	A1			grammar			
+con		prep		with	A1			grammar			
+sin		prep		without	A1			grammar			
+para		prep		for; to; in order to	A1			grammar			
+por		prep		for (a reason); through; by	A1			grammar			
+a		prep		to; at	A1			grammar			
+y		conj		and	A1			grammar			
+pero		conj		but	A1			grammar			
+# --- Adverbs and question words
+no		adv		no; not	A1			grammar			
+sí		adv		yes	A1			grammar			
+muy		adv		very	A1			grammar			
+más		adv		more; -er (in comparisons)	A1			grammar			
+bien		adv		well; fine	A1			feelings			
+igualmente		adv		likewise; same to you	A1			greetings			
+también		adv		also; too	A1			grammar			
+aquí		adv		here	A1			places			
+cerca		adv		near; close by	A1			places			
+despacio		adv		slowly	A1			grammar			
+mañana		adv		tomorrow	A1			time			As a noun, la mañana is the morning.
+ahorita		adv		right now; in a moment; later	A1		x	time			Mexican softener; how soon depends on context.	ahora
+cómo		adv		how	A1			questions			
+dónde		adv		where	A1			questions			
+cuánto		adv		how much	A1			questions			
+# --- Numbers
+dos		num		two	A1			numbers			
+tres		num		three	A1			numbers			
+# --- Verbs
+ser		verb		to be (identity, origin)	A1			grammar			
+estar		verb		to be (location, state)	A1			grammar			
+llamarse		verb		to be called; to be named	A1			people			
+hablar		verb		to speak; to talk	A1			people			
+comer		verb		to eat	A1			food			
+tomar		verb		to take; to drink	A1			food			In Mexico, the everyday verb for to drink.
+vivir		verb		to live	A1			home			
+dar		verb		to give	A1			things			¿Me da...? is the usual way to order.
+pasar		verb		to pass; to come in; to go by; to happen	A1			city			
+llevar		verb		to carry; to take (along)	A1			things			
+venir		verb		to come	A1			city			
+saludar		verb		to greet; to say hello	A1			greetings			
+contestar		verb		to answer	A1			people			
+picar		verb		to be spicy; to sting	A1			food			
+# --- Adjectives
+bueno		adj		good	A1			describing	apoc=buen		
+grande		adj		big; large	A1			describing	apoc=gran		
+chico		adj		small; little	A1			describing			Also a noun: boy, kid.
+nuevo		adj		new	A1			describing			
+bonito		adj		pretty; nice	A1			describing			
+rico		adj		delicious; tasty; rich	A1			describing			
+caro		adj		expensive	A1			describing			
+amable		adj		kind; friendly	A1			describing			
+frío		adj		cold	A1			describing			
+picante		adj		spicy (hot)	A1			describing			Picante is spicy; caliente is hot to the touch.
+feliz		adj		happy	A1			feelings			
+mexicano		adj		Mexican	A1			people			
+bienvenido		adj		welcome	A1			greetings			
+# --- Food and drink
+taco		noun	m	taco	A1			food			
+papa		noun	f	potato	A1		x	food		patata	
+café		noun	m	coffee; café	A1			food			
+agua		noun	f	water	A1			food			Feminine, but el agua and un agua.
+limón		noun	m	lime	A1		x	food			In Mexico, the small green lime.
+plátano		noun	m	banana	A1			food		banana	
+pollo		noun	m	chicken (food)	A1			food			
+jugo		noun	m	juice	A1		x	food		zumo	
+naranja		noun	f	orange (fruit)	A1			food			
+chile		noun	m	chili pepper	A1			food			
+mole		noun	m	mole, a rich sauce of chilies and spices	A1		x	food			
+cerveza		noun	f	beer	A1			food			
+leche		noun	f	milk	A1			food			
+chocolate		noun	m	chocolate	A1			food			
+comida		noun	f	food; meal	A1			food			
+cocina		noun	f	kitchen; cuisine	A1			home			
+salsa		noun	f	salsa; sauce	A1			food			
+cebolla		noun	f	onion	A1			food			
+cuenta		noun	f	check; bill	A1			food			
+fonda		noun	f	small family restaurant	A1		x	food			
+# --- Home, family and people
+casa		noun	f	house; home	A1			home			
+mesa		noun	f	table	A1			home			
+llave		noun	f	key	A1			home			
+baño		noun	m	bathroom; restroom	A1			home			
+departamento		noun	m	apartment	A1		x	home		piso; apartamento	
+papá		noun	m	dad	A1			family			Mis papás: my parents.
+mamá		noun	f	mom	A1			family			
+familia		noun	f	family	A1			family			
+niño		noun	mf	child; little boy or girl	A1			people			
+gente		noun	f	people	A1			people			Singular in Spanish: la gente es.
+señor		noun	m	man; sir; Mr.	A1			people			
+señora		noun	f	woman; lady; ma'am; Mrs.	A1			people			
+señorita		noun	f	young woman; miss	A1			people			
+amigo		noun	mf	friend	A1			people			
+vecino		noun	mf	neighbor	A1			people			
+doctor		noun	mf	doctor	A1			people			
+maestro		noun	mf	teacher	A1			people			Mexican students call their teacher maestro or maestra.
+mesero		noun	mf	waiter	A1		x	people		camarero	
+# --- Town and things
+calle		noun	f	street	A1			city			
+cuadra		noun	f	block (of a street)	A1			city			
+hotel		noun	m	hotel	A1			city			
+playa		noun	f	beach	A1			city			
+carro		noun	m	car	A1		x	city		coche; auto	Coche is also heard, especially in Mexico City.
+taxi		noun	m	taxi	A1			city			
+boleto		noun	m	ticket	A1		x	city		billete	In Mexico a billete is a banknote.
+tlapalería		noun	f	hardware store	A2		x	city			From Nahuatl. Also ferretería.
+libro		noun	m	book	A1			things			
+zapato		noun	m	shoe	A1			things			
+perro		noun	m	dog	A1			things			
+fiesta		noun	f	party	A1			time			
+año		noun	m	year	A1			time			
+día		noun	m	day	A1			time			
+vida		noun	f	life	A1			time			
+español		noun	m	Spanish (language)	A1			language			
+inglés		noun	m	English (language)	A1			language			

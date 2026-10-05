@@ -1,0 +1,129 @@
+# Course plan for Unit 11. Format: content-plan/README.md.
+unit: 11
+dir: units/11-salud
+title: "Salud y emergencias"
+title_en: "Health and emergencies"
+level: A2
+goals:
+  - "Say what hurts and describe common symptoms."
+  - "Understand advice given with tener que and deber, and get medicine at a pharmacy."
+  - "Ask for help in an emergency and understand instructions given with usted commands."
+grammar_scope: >-
+  Doler like gustar; tener que + infinitive; deber + infinitive; sentirse; usted and
+  ustedes commands, regular and irregular (venga, vaya, tenga, sea), with pronouns
+  attached (siéntese) and before negative commands (no se mueva). Past tenses as needed.
+  No subjunctive beyond the commands (and fixed 'Que te mejores').
+lexicon: content/lexicon/u11.tsv
+supporting: [salud]
+names: [Cruz Roja]
+lessons:
+  - id: u11.l01
+    number: 1
+    title: "Me duele la cabeza"
+    title_en: "I have a headache"
+    level: A2
+    grammar:
+      focus: "Doler works like gustar: me duele + singular, me duelen + plural; body parts with el/la."
+      can_do: "Say what hurts and ask others what hurts."
+    new: [cuerpo, cabeza, ojo, garganta, estómago, espalda, brazo, mano, pierna, pie, muela, doler]
+    rows_in_core: []
+    conjugate: ["doler:pres.3s", "doler:pres.3p"]
+    dialogue:
+      title: "¿Qué te duele?"
+      title_en: "What hurts?"
+      where: "Sofía's apartment, the day after a futbol game."
+      who: "Tom and Sofía."
+      address: "tú: friends."
+      happens: "Tom can hardly walk: le duelen las piernas y la espalda. Sofía teases him: no hace ejercicio. He also has a toothache: me duele una muela. Sofía: Tienes que descansar."
+    notes:
+      - kind: grammar
+        title: "Doler works like gustar"
+        covers: "Me duele la cabeza; me duelen los pies. Who hurts: me, te, le, nos, les. Body parts take el/la, not mi: Me duele la mano. ¿Qué te duele? / ¿Qué le duele?"
+      - kind: usage
+        title: "Body words"
+        covers: "La mano is feminine. A muela is a back tooth (me duele una muela = toothache); diente is any tooth. Informal: la panza (belly). ¡Ojo! = watch out."
+      - kind: culture
+        title: "Home remedies"
+        covers: "Many Mexicans reach first for té de manzanilla, caldo de pollo or a rub of Vaporub. When someone sneezes, say ¡Salud!"
+    confusables: []
+    cautions:
+      - "Definite article with body parts: 'Me duele la cabeza', never 'mi cabeza'."
+      - "doler agrees with the body part (duele/duelen); cloze options are doler forms, so the noun decides."
+      - "mano is feminine though it ends in -o: a good gender item."
+      - "doctor is introduced in lesson 2: avoid it here."
+      - "'Tienes que' uses tener (u04); do not add tener to conjugate (u04.l01 already drills tener:pres)."
+
+  - id: u11.l02
+    number: 2
+    title: "¿Qué tiene?"
+    title_en: "What's wrong?"
+    level: A2
+    grammar:
+      focus: "Tener + symptom (fiebre, tos, gripa, dolor de...); tener que + infinitive; deber + infinitive; sentirse."
+      can_do: "Describe symptoms to a doctor or pharmacist and understand basic advice."
+    new: [sentirse, consultorio, fiebre, gripa, tos, dolor, mareado, doctor, medicina, pastilla, receta, deber]
+    rows_in_core: [doctor]
+    conjugate: ["sentirse:pres", "deber:pres"]
+    dialogue:
+      title: "En el consultorio"
+      title_en: "At the doctor's office"
+      where: "A small doctor's office next to a pharmacy."
+      who: "Ana and the doctora Ruiz."
+      address: "usted both ways: doctor and adult patient."
+      happens: "Doctora: ¿Qué tiene? Ana: Me siento mal; tengo fiebre y tos since yesterday, and she is a little mareada. Doctora: Es gripa. Tiene que descansar y debe tomar mucha agua. She writes a receta for some pastillas, tres veces al día (vez is supporting). Ana: Gracias, doctora."
+    notes:
+      - kind: grammar
+        title: "Tener que and deber"
+        covers: "Tener que + infinitive = have to (Tiene que descansar). Deber + infinitive = should (Debe tomar agua). ¿Qué tiene? = What's wrong? Tengo fiebre, tos, gripa, dolor de cabeza. Me siento mal, me siento mareada."
+      - kind: usage
+        title: "Mexican health words"
+        covers: "Gripa is the Mexican cold or flu (~gripe~ in Spain). Estoy enfermo, enferma = I'm sick; estoy malo, estoy mala is colloquial. Wish someone well with Que te mejores."
+      - kind: culture
+        title: "Doctors next to pharmacies"
+        covers: "Many pharmacies have a consultorio next door with a cheap consultation. Many medicines are sold without a receta, but antibiotics need one. Workers with social security go to the IMSS."
+    confusables: []
+    cautions:
+      - "Do not drill tener again (tener:pres items exist in u04.l01): tener appears in sentences only."
+      - "Usted between doctor and adult patient."
+      - "No medical advice beyond the everyday (rest, water, see a doctor); no doses."
+      - "receta is prescription and recipe: the English must decide."
+      - "sentirse + adverb (Me siento mal) or agreeing adjective (Me siento cansada)."
+      - "'Gripe' fails no lint but is not Mexican: write gripa (gripe is an accepted typed answer only)."
+      - "enfermarse is not in the plan: say 'Estoy enferma' or 'Me siento mal'."
+
+  - id: u11.l03
+    number: 3
+    title: "¡Auxilio!"
+    title_en: "Help!"
+    level: A2
+    grammar:
+      focus: "Usted and ustedes commands, regular and irregular (venga, vaya, tenga, llame, no se mueva), with pronouns attached (siéntese) or before negatives."
+      can_do: "Call for help, report an accident, and follow instructions from emergency services."
+    new: [auxilio, emergencia, accidente, herido, sangre, ambulancia, hospital, enfermero, cuidado, moverse, quemarse, cortarse]
+    rows_in_core: []
+    conjugate: ["llamar:imp", "venir:imp", "moverse:impneg"]
+    dialogue:
+      title: "Un accidente"
+      title_en: "An accident"
+      where: "A street corner; a cyclist has fallen."
+      who: "Tom, the cyclist (señora) and a nurse who stops to help."
+      address: "usted throughout: strangers in an emergency."
+      happens: "Tom: ¿Está bien, señora? No se mueva. The señora has a cut and a little blood on her arm. The enfermera: Llame a la Cruz Roja (nueve uno uno). Tom calls: Hay un accidente en la esquina de... Hay una herida. The ambulance arrives; the paramedic says Tenga cuidado and they take her to the hospital."
+    notes:
+      - kind: grammar
+        title: "Commands with usted and ustedes"
+        covers: "From the yo form: llamo, llame; vengo, venga; tengo, tenga. Irregular: vaya, sea, esté, dé. Pronouns attach to positive commands (siéntese, cálmese) and go before negative ones (no se mueva). Ustedes: llamen, vengan."
+      - kind: usage
+        title: "Emergency phrases"
+        covers: "¡Auxilio! ¡Cuidado! Llame al nueve uno uno. Necesito una ambulancia. ¿Dónde está el hospital? Me corté. Me quemé."
+      - kind: culture
+        title: "911 and the Cruz Roja"
+        covers: "911 works nationwide. The Cruz Roja runs many ambulances and is funded by donations. Public hospitals (IMSS, ISSSTE) and private ones both take emergencies."
+    confusables: []
+    cautions:
+      - "There is deliberately no noun 'ayuda' row (every '¿me ayuda?' would warn): '¡Ayuda!' links to ayudar. Use ¡Auxilio! as the target, and never write 'la ayuda' (la before a verb form becomes an object pronoun)."
+      - "Commands with attached pronouns (cálmese, siéntese) cannot be targets."
+      - "911 is spelled 'nueve uno uno'."
+      - "Keep injuries minor (a cut, a burn, a fall from a bike); no graphic detail."
+      - "Check the generated 'moverse:impneg' forms in the dump (no te muevas, no se mueva, no se muevan)."
+      - "'Llame' links to llamar (no reflexive pronoun before it): check the link line."

@@ -1,0 +1,73 @@
+# Unit 5: La ciudad y el transporte / City and transport. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u05.l01 ¿A dónde vas? (ir a + place)
+ir		verb		to go	A1			city			Voy al mercado. Voy a comer (Unit 8): I'm going to eat.	
+ciudad		noun	f	city	A1			city				
+centro		noun	m	downtown; center	A1			city			El centro: the historic heart of a town.	
+colonia		noun	f	neighborhood	A1		x	city			Addresses give the colonia: colonia Roma.	
+mercado		noun	m	market	A1			city				
+tienda		noun	f	store; shop	A1			city				
+banco		noun	m	bank; bench	A1			city				
+cajero		noun	mf	ATM; cashier	A1			money			Cajero automático: ATM.	
+farmacia		noun	f	pharmacy; drugstore	A1			city				
+parque		noun	m	park	A1			city				
+iglesia		noun	f	church	A1			city				
+comprar		verb		to buy	A1			money				
+# --- u05.l02 ¿Dónde queda? (place). Also new here, rows in core.tsv: cerca, cuadra
+quedar		verb		to be located; to fit	A1			city			¿Dónde queda?: Where is it? Me queda bien: it fits me.	
+lejos		adv		far; far away	A1			places			Lejos de: far from.	
+enfrente		adv		in front; across (the street)	A1			places			Enfrente de: across from.	
+atrás		adv		behind; at the back	A1			places			Atrás de: behind. Mexico prefers it to detrás de.	
+lado		noun	m	side	A1			places			Al lado de: next to.	
+entre		prep		between; among	A1			places				
+esquina		noun	f	corner (of a street)	A1			city				
+avenida		noun	f	avenue	A1			city				
+derecha		noun	f	right (side)	A1			places			A la derecha: on the right.	
+izquierda		noun	f	left (side)	A1			places			A la izquierda: on the left.	
+# --- u05.l03 Siga derecho (directions, usted commands)
+perdido		adj		lost	A1			feelings			Estoy perdido: I'm lost.	
+ayudar		verb		to help	A1			courtesy			¿Me ayuda?: Can you help me?	
+preguntar		verb		to ask (a question)	A1			courtesy			To ask for something is pedir.	
+saber		verb		to know; to know how to	A1			grammar			No sé: I don't know.	
+buscar		verb		to look for	A1			things			No for: busco el metro.	
+seguir		verb		to follow; to keep going	A1			city			Siga derecho: keep going straight.	
+derecho		adv		straight (ahead)	A1			places			Not derecha (right).	
+cruzar		verb		to cross	A1			city				
+semáforo		noun	m	traffic light	A1			city				
+banqueta		noun	f	sidewalk	A1		x	city		acera		
+caminar		verb		to walk	A1			city				
+vuelta		noun	f	turn	A1			city			Dé vuelta a la derecha: turn right.	
+# --- u05.l04 En el metro (transport). Also new here, row in core.tsv: boleto
+metro		noun	m	subway; metro	A1			transport				
+camión		noun	m	bus (city bus); truck	A1		x	transport		autobús	Autobús is for long-distance coaches.	
+pesero		noun	m	minibus (on a fixed route)	A1		x	transport		microbús	Also el micro. To get off, call out ¡Bajan!	
+estación		noun	f	station	A1			transport				
+parada		noun	f	stop (bus stop)	A1			transport				
+subirse		verb		to get on; to get in	A1			transport				
+bajarse		verb		to get off; to get out	A1			transport			Me bajo aquí: I'm getting off here.	
+llegar		verb		to arrive; to get (somewhere)	A1			transport			Llegar a: to get to.	
+lleno		adj		full	A1			describing				
+agarrar		verb		to take; to grab; to catch	A1			transport			Agarrar or tomar el metro. Never coger: it is vulgar in Mexico.	
+manejar		verb		to drive	A1		x	transport		conducir		
+# --- supporting (no lesson introduces these; usable from Unit 5 on)
+hasta		prep		until; up to; as far as	A1			places				
+desde		prep		from; since	A1			places				
+adentro		adv		inside	A1			places				
+afuera		adv		outside	A1			places				
+arriba		adv		up; upstairs; above	A1			places				
+abajo		adv		down; downstairs; below	A1			places				
+primero		adj		first	A1			numbers	apoc=primer		El primer piso; la primera calle.	
+segundo		adj		second	A1			numbers				
+tercero		adj		third	A1			numbers	apoc=tercer			
+rápido		adj		fast; quick; quickly	A1			describing				
+# --- names
+Beto		propn		Beto (short for Alberto or Roberto)	A1							
+Ciudad de México		propn		Mexico City	A1							
+Zócalo		propn		the Zócalo (Mexico City's main square)	A1							
+Reforma		propn		Reforma (avenue in Mexico City)	A1							
+Insurgentes		propn		Insurgentes (avenue in Mexico City)	A1							
+Bellas Artes		propn		Bellas Artes (palace and metro station)	A1							
+Roma		propn		Roma (neighborhood in Mexico City); Rome	A1							
+Condesa		propn		Condesa (neighborhood in Mexico City)	A1							

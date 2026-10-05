@@ -1,0 +1,46 @@
+title: El departamento de Tom
+title_en: Tom's apartment
+level: A1
+kind: reading
+lesson: u04.l04
+lines:
+  - es: "Tom necesita un departamento."
+    en: "Tom needs an apartment."
+  - es: "Doña Lupe renta un departamento chico en un edificio viejo."
+    en: "Doña Lupe rents out a small apartment in an old building."
+  - es: "El edificio es feo, pero el departamento es nuevo y muy bonito."
+    en: "The building is ugly, but the apartment is new and very nice."
+  - es: "Tiene una recámara con clóset, una sala, una cocina y un baño."
+    en: "It has a bedroom with a closet, a living room, a kitchen and a bathroom."
+  - es: "Hay agua caliente, y la estufa y la regadera son de gas."
+    en: "There's hot water, and the stove and the shower run on gas."
+    paragraph: true
+  - es: "Pero hay un problema: no hay refrigerador."
+    en: "But there's a problem: there's no fridge."
+  - es: "¡Y Tom necesita un refrigerador para la leche y las cervezas!"
+    en: "And Tom needs a fridge for the milk and the beers!"
+  - es: "Doña Lupe es una señora mayor, chaparra y muy amable."
+    en: "Doña Lupe is an older lady, short and very kind."
+    paragraph: true
+  - es: "Su hijo también vive en el edificio. Es un hombre joven y muy simpático."
+    en: "Her son lives in the building too. He's a young man, and very easy to like."
+    reviewer_notes: "simpático translated 'very easy to like'. OK?"
+  - es: "El hijo de doña Lupe le da a Tom un refrigerador viejo."
+    en: "Doña Lupe's son gives Tom an old fridge."
+  - es: "Ahora Tom está muy contento en su casa nueva."
+    en: "Now Tom is very happy in his new home."
+    paragraph: true
+questions:
+  - q: "¿Cómo es el edificio?"
+    options: ["Viejo y feo", "Nuevo y bonito", "Muy grande"]
+    answer: 0
+  - q: "¿Qué problema hay en el departamento?"
+    options: ["No hay refrigerador", "No hay agua caliente", "No hay cama"]
+    answer: 0
+  - q: "¿Cómo es doña Lupe?"
+    options: ["Mayor y muy amable", "Joven y güera", "Joven y alta"]
+    answer: 0
+  - q: "Who gives Tom a fridge?"
+    lang: en
+    options: ["Doña Lupe's son", "Sofía", "Doña Lupe"]
+    answer: 0

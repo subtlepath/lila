@@ -1,0 +1,8 @@
+# Frozen simulator fixture, made by tools/sim/make-fixture.py from content/
+# (Units 0-3, a deck sample, two phrasebook categories, dictionary rows).
+# Do not edit by hand or sync with content/; it has its own ids.lock.
+# Tinta: Mexican Spanish for English speakers (PLAN.md section 7).
+# Bump `version` whenever a release changes the content.
+title: Tinta
+version: 1
+locale: es-MX

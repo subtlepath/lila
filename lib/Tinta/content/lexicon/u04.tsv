@@ -1,0 +1,59 @@
+# Unit 4: La familia y la casa / Family and home. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u04.l01 Mi familia (tener). Also new here, row in core.tsv: familia
+hermano		noun	mf	brother (hermana: sister)	A1			family			Hermanos: brothers, or brothers and sisters.	
+hijo		noun	mf	son (hija: daughter)	A1			family			Hijos: sons, or children.	
+esposo		noun	mf	husband (esposa: wife)	A1			family				
+novio		noun	mf	boyfriend (novia: girlfriend)	A1			family			Also fiancé, and groom at a wedding.	
+abuelo		noun	mf	grandfather (abuela: grandma)	A1			family			Abuelos: grandparents.	
+tío		noun	mf	uncle (tía: aunt)	A1			family				
+primo		noun	mf	cousin	A1			family				
+mayor		adj		older; elderly; bigger	A1			family			Mi hermana mayor: my older sister.	viejo
+menor		adj		younger; smaller	A1			family				
+casado		adj		married	A1			family			Estoy casado and soy casado are both heard.	
+tener		verb		to have	A1			grammar			Tengo veinte años: I'm twenty. Tengo que...: I have to...	
+# --- u04.l02 Mi casa es su casa (possessives). Also new here, rows in core.tsv: vivir, departamento, baño, vecino
+edificio		noun	m	building	A1			home				
+piso		noun	m	floor (level of a building)	A1			home			Not an apartment: that is un departamento.	
+puerta		noun	f	door	A1			home				
+sala		noun	f	living room	A1			home				
+cuarto		noun	m	room; quarter (of an hour)	A1			home			Las dos y cuarto: a quarter past two.	
+recámara		noun	f	bedroom	A1		x	home		dormitorio; habitación		
+azotea		noun	f	flat roof; roof terrace	A1			home			Mexican homes keep the water tank and the laundry up here.	
+nuestro		det		our	A1			people	f=nuestra; mpl=nuestros; fpl=nuestras			
+# --- u04.l03 ¿Hay agua caliente? (hay)
+haber		verb		to have (auxiliary); there is, there are (hay)	A1			grammar			Hay un baño. To say where it is: el baño está arriba.	
+cama		noun	f	bed	A1			home				
+silla		noun	f	chair	A1			home				
+clóset		noun	m	closet; built-in wardrobe	A1		x	home	pl=clósets	armario		
+regadera		noun	f	shower	A1		x	home		ducha	Also a watering can.	
+estufa		noun	f	stove	A1		x	home			In Spain an estufa is a heater.	
+refrigerador		noun	m	refrigerator; fridge	A1		x	home		nevera; frigorífico	Informal: el refri.	
+luz		noun	f	light; electricity	A1			home			Pagar la luz: to pay the electric bill.	
+gas		noun	m	gas (cooking, hot water)	A1			home			Many homes use a gas tank refilled by truck.	
+caliente		adj		hot (to the touch)	A1			describing			For the weather say hace calor; for yourself, tengo calor.	
+rentar		verb		to rent	A1		x	home		alquilar	Se renta: for rent.	
+necesitar		verb		to need	A1			things				
+# --- u04.l04 ¿Cómo es? (adjective agreement). Also new here, rows in core.tsv: bonito, nuevo, amable
+hombre		noun	m	man	A1			people				
+mujer		noun	f	woman; wife	A1			people				
+alto		adj		tall; high	A1			describing				
+chaparro		adj		short (person)	A1		x	describing		bajo	The everyday Mexican word; bajo is standard.	
+joven		adj		young	A1			describing			¡Joven!: how you call a waiter or a clerk.	
+viejo		adj		old	A1			describing			For people, mayor is more polite.	
+güero		adj		blond; fair-skinned	A1	informal	x	describing			Vendors call any light-skinned customer güero or güera.	
+feo		adj		ugly	A1			describing				
+simpático		adj		nice; likeable	A1			describing				
+# --- supporting (no lesson introduces these; usable from Unit 4 on)
+cosa		noun	f	thing	A1			things				
+problema		noun	m	problem	A1			things			Masculine: el problema. No hay problema.	
+alguien		pron		someone; anyone	A1			people				
+nadie		pron		nobody; no one	A1			people				
+soltero		adj		single (not married)	A1			family				
+don		noun	m	Mr. (respectful, before a first name)	A1			people	pl=don		Don Beto, don Toño: respect and warmth.	
+doña		noun	f	Mrs.; Ms. (respectful, before a first name)	A1			people				
+# --- names
+Memo		propn		Memo (short for Guillermo)	A1							
+Lupe		propn		Lupe (short for Guadalupe)	A1							

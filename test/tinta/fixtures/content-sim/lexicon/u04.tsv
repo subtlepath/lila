@@ -1,0 +1,18 @@
+# Unit 4: La familia y la casa / Family and home. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u04.l01 Mi familia (tener). Also new here, row in core.tsv: familia
+hermano		noun	mf	brother (hermana: sister)	A1			family			Hermanos: brothers, or brothers and sisters.	
+tener		verb		to have	A1			grammar			Tengo veinte años: I'm twenty. Tengo que...: I have to...	
+# --- u04.l02 Mi casa es su casa (possessives). Also new here, rows in core.tsv: vivir, departamento, baño, vecino
+# --- u04.l03 ¿Hay agua caliente? (hay)
+haber		verb		to have (auxiliary); there is, there are (hay)	A1			grammar			Hay un baño. To say where it is: el baño está arriba.	
+# --- u04.l04 ¿Cómo es? (adjective agreement). Also new here, rows in core.tsv: bonito, nuevo, amable
+simpático		adj		nice; likeable	A1			describing				
+# --- supporting (no lesson introduces these; usable from Unit 4 on)
+soltero		adj		single (not married)	A1			family				
+doña		noun	f	Mrs.; Ms. (respectful, before a first name)	A1			people				
+# --- names
+Memo		propn		Memo (short for Guillermo)	A1							
+Lupe		propn		Lupe (short for Guadalupe)	A1							

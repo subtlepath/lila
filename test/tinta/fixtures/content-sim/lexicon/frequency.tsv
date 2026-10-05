@@ -1,0 +1,19 @@
+# Frequency deck: high-frequency words that no lesson introduces (docs/content-style.md section 6).
+# TAB-separated. freq = rank in the deck (1 = most frequent); rows are in freq order.
+# Batches for deck writers are in content-plan/deck/batches.yaml; how the list was made is in
+# content-plan/deck/README.md. Every row needs a sentence in content/deck/*.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn	freq	link
+# --- Batch A: freq 1-333
+# --- Batch B: freq 334-666
+# --- Batch C: freq 667-999
+así		adv		like this; like that; so	A1			grammar			Así es: that's right. Así que: so.		1	
+mirar		verb		to look (at); to watch	A1			things					2	
+verdad		noun	f	truth; right? (¿verdad?)	A2			courtesy			¿Verdad? at the end of a sentence asks for agreement.		3	
+alguno		det		some; any	A2			grammar	apoc=algún; f=alguna; mpl=algunos; fpl=algunas				4	
+parecer		verb		to seem; to suit (¿te parece?)	A2			grammar			¿Te parece bien?: is that OK with you?		5	
+sentir		verb		to feel; to be sorry (lo siento)	A2			feelings			Lo siento: I'm sorry. Feeling well or ill is sentirse: me siento mal.		6	
+oír		verb		to hear	A1			things			¡Oye!: Hey! (to get a friend's attention). ¡Oiga! to a stranger.		9	
+estrella		noun	f	star	A2			weather					216	
+duda		noun	f	doubt; question	A2			things			¿Tienes alguna duda?: Do you have any questions?		259	
+bistec		noun	m	thin-cut beef steak	A2		x	food	pl=bistecs				910	
+pinche		adj		damn; lousy	A2	vulgar	x	slang			Vulgar. Understand it; do not use it.		1007	

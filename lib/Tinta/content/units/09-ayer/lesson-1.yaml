@@ -1,0 +1,134 @@
+number: 1
+title: "¿Qué hiciste ayer?"
+title_en: What did you do yesterday?
+level: A2
+new: [ayer, anoche, anteayer, pasado, terminar, olvidar, perder, encontrar, conocer, gastar, ganar, partido]
+conjugate: ["hablar:pret", "comer:pret", "escribir:pret", "llegar:pret.1s", "pagar:pret.1s", "buscar:pret.1s"]
+reviewer_notes: "Futbol note: the team list, and Quedaron uno a uno for a one-all tie."
+notes:
+  - kind: grammar
+    title: "The preterite: regular verbs"
+    text: |
+      The preterite tells what happened and is over: _Ayer comí tacos._ (Yesterday I ate tacos.)
+
+      - _-ar_: _hablé, hablaste, habló, hablamos, hablaron_
+      - _-er_ and _-ir_: _comí, comiste, comió, comimos, comieron_
+
+      The written accent matters: _hablo_ is "I speak", _habló_ is "he spoke". The _nosotros_ form of _-ar_ and _-ir_ verbs is the same in both tenses (_hablamos_: we speak, we spoke), so a word like _ayer_ tells you which.
+
+      Some _yo_ forms change spelling to keep their sound: _llegué_, _pagué_, _busqué_, _empecé_, _crucé_. _Leer_ gives _leyó_. Stem-changing _-ir_ verbs change only in the third person: _pidió_, _durmió_.
+  - kind: usage
+    title: Preterite, not he comido
+    text: |
+      Mexicans use the preterite for anything that is over, even if it happened today or a minute ago:
+
+      - _Hoy comí tacos._ — I had tacos today.
+      - _¿Ya comiste?_ — Have you eaten yet?
+      - _Ya terminé._ — I've finished.
+      - _¿Ya viste la película?_ — Have you seen the movie?
+
+      Where English says "have you...?" or "I've...", Mexican Spanish almost always uses the preterite, often with _ya_ (already, yet). The present perfect (_he comido_) exists, but in everyday Mexican speech it is far rarer than in Spain.
+  - kind: culture
+    title: Monday futbol talk
+    text: |
+      _¿Viste el partido?_ opens many Monday conversations at work. _Futbol_ is the national sport, and almost everyone has a team: América, Chivas, Pumas, Cruz Azul, or in Monterrey, Tigres and Rayados.
+
+      Fans talk about their team as "we":
+
+      - _¡Ganamos!_ — We won!
+      - _Perdimos dos a uno._ — We lost two to one.
+      - _Quedaron uno a uno._ — It was a one-all tie.
+
+      If you don't follow the game, just ask _¿Quién ganó?_ People love to tell you.
+sentences:
+  - es: "{Ayer} hablé con mi mamá."
+    en: "I talked to my mom yesterday."
+  - es: "¿Qué hiciste {ayer}?"
+    en: "What did you do yesterday?"
+    order: true
+  - es: "{Anoche} no dormí bien."
+    en: "I didn't sleep well last night."
+    order: true
+  - es: "{Anoche} [cenamos|cenar:pret.1p] en casa de Luis."
+    en: "Last night we had dinner at Luis's place."
+  - es: "{Anteayer} comí con Sofía."
+    en: "The day before yesterday I had lunch with Sofía."
+    note: "Many Mexicans say antier."
+  - es: "Llegué de Monterrey {anteayer}."
+    en: "I got back from Monterrey the day before yesterday."
+  - es: "La semana {pasada} visité a mis abuelos."
+    en: "Last week I visited my grandparents."
+    note: "Pasado goes after the noun: la semana pasada, el año pasado."
+  - es: "El año {pasado} viajé a Cancún."
+    en: "Last year I took a trip to Cancún."
+  - es: "Ya {terminé} la tarea."
+    en: "I've already finished my homework."
+    order: true
+    note: "Mexico uses the preterite where English says I've finished."
+  - es: "¿A qué hora {terminó} el partido?"
+    en: "What time did the game end?"
+  - es: "Se me {olvidó} el paraguas."
+    en: "I forgot my umbrella."
+    note: "Se me olvidó is the everyday way to say I forgot."
+  - es: "Ana {olvidó} su celular en el taxi."
+    reviewer_notes: "olvidar = leave behind: natural here, or would you say se le olvidó?"
+    en: "Ana left her phone in the taxi."
+  - es: "{Perdí} mis llaves."
+    en: "I lost my keys."
+  - es: "Ayer {perdí} el camión."
+    en: "I missed the bus yesterday."
+  - es: "Busqué mis llaves y las {encontré} en la cocina."
+    en: "I looked for my keys and found them in the kitchen."
+  - es: "¿Dónde {encontraste} tu celular?"
+    en: "Where did you find your phone?"
+  - es: "{Conocí} a Sofía en una fiesta."
+    en: "I met Sofía at a party."
+    note: "In the preterite, conocer means to meet someone for the first time."
+  - es: "¿Dónde {conociste} a tu novia?"
+    en: "Where did you meet your girlfriend?"
+  - es: "Ayer {gasté} quinientos pesos."
+    en: "I spent five hundred pesos yesterday."
+  - es: "¿Cuánto {gastaste} en la fiesta?"
+    en: "How much did you spend on the party?"
+  - es: "Mi hermano {gana} muy bien."
+    reviewer_notes: "gana muy bien = earns good money: natural?"
+    en: "My brother earns good money."
+  - es: "¡{Ganamos|ganar:pret.1p} tres a uno!"
+    en: "We won three to one!"
+  - es: "¿Viste el {partido} de futbol?"
+    en: "Did you see the soccer game?"
+    order: true
+  - es: "¿Quién ganó el {partido}?"
+    en: "Who won the game?"
+  - es: "¿Ya {comiste}?"
+    en: "Have you eaten yet?"
+    note: "Ya + preterite: Have you... yet?"
+dialogue:
+  title: El lunes en la oficina
+  title_en: Monday at the office
+  lines:
+    - speaker: Diego
+      es: "Hola, Mariana. ¿Viste el partido? ¡[Ganamos|ganar:pret.1p]!"
+      en: "Hi, Mariana. Did you see the game? We won!"
+    - speaker: Mariana
+      es: "No, no lo vi. Me quedé en casa: limpié, cociné y terminé un libro."
+      en: "No, I didn't see it. I stayed home: I cleaned, cooked and finished a book."
+    - speaker: Diego
+      es: "¿Nada más?"
+      en: "That's it?"
+    - speaker: Mariana
+      es: "Ah, y anoche perdí mis llaves. ¡Y las encontré en la cocina! ¿Y tú?"
+      en: "Oh, and last night I lost my keys. And I found them in the kitchen! What about you?"
+    - speaker: Diego
+      es: "Yo salí con unos amigos y gasté mucho dinero."
+      en: "I went out with some friends and spent a lot of money."
+    - speaker: Mariana
+      es: "¿Ya desayunaste?"
+      reviewer_notes: "The plan's brief had ¿Ya comiste?; changed because it is Monday morning. OK?"
+      en: "Have you had breakfast yet?"
+    - speaker: Diego
+      es: "No, todavía no."
+      en: "No, not yet."
+    - speaker: Mariana
+      es: "¡Vamos por un café!"
+      en: "Let's go get a coffee!"

@@ -1,0 +1,4 @@
+# Unit 2 confusable sets (fragment of confusables.yaml).
+- name: ser / estar
+  lemmas: [ser, estar]
+  note: Ser says who or what someone is and where they are from. Estar says where they are and how they are right now.

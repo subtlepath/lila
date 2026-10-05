@@ -1,0 +1,56 @@
+# Phrasebook words: lexicon rows that only content/phrasebook/*.yaml needs.
+# TAB-separated; columns as in docs/content-style.md section 6. A phrase that uses a word counts as its example;
+# these rows make no vocabulary items. Sections follow the phrasebook categories.
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note
+# --- Taco stand (taqueria.yaml)
+suadero		noun	m	suadero, a soft beef cut for tacos	B1		x	food
+milanesa		noun	f	breaded cutlet (beef or chicken)	A2			food
+# --- Restaurant, fonda and café (restaurante.yaml)
+comida corrida		noun	f	set lunch (at a fonda)	A2		x	food	pl=comidas corridas		Soup, rice, a main dish and a drink at a fixed price.
+guisado		noun	m	stew; main dish (of the day)	A2		x	food			Tacos de guisado: tacos filled with home-style stews.
+purificado		adj		purified	B1			food			Agua purificada: purified drinking water.
+deslactosado		adj		lactose-free	B1			food
+# --- Market and tianguis (mercado.yaml)
+licuado		noun	m	smoothie (blended with milk)	A2		x	food
+# --- Shopping and money (compras.yaml)
+comisión		noun	f	fee; commission	B1			money
+transferencia		noun	f	bank transfer	B1			money
+redondear		verb		to round up (a total)	B1			money
+ticket		noun	m	receipt (from a till)	A2		x	money	pl=tickets		Said TEE-keht.
+tragarse		verb		to swallow	B1
+# --- Getting around (transporte.yaml)
+transbordar		verb		to change (trains or lines)	B1			transport
+cajuela		noun	f	trunk (of a car)	A2		x	transport		maletero
+documentar		verb		to check in (luggage)	B1		x	transport		facturar
+retrasarse		verb		to be delayed; to run late	B1			transport
+autorizado		adj		authorized; official	B1
+# --- Hotel and home (alojamiento.yaml)
+aire acondicionado		noun	m	air conditioning	A2			home	pl=-
+amueblado		adj		furnished	B1			home
+depósito		noun	m	deposit	B1			money
+aval		noun	m	guarantor (for a lease)	B1			home
+gotear		verb		to drip; to leak	B1			home
+garrafón		noun	m	big water jug (20 liters)	A2		x	home
+# --- Health and pharmacy (salud.yaml)
+mosco		noun	m	mosquito; fly	A2		x	health		mosquito
+repelente		noun	m	insect repellent	B1			health
+genérico		adj		generic	B1			health
+penicilina		noun	f	penicillin	B1			health
+diabético		adj		diabetic	B1			health
+# --- Emergencies and safety (emergencias.yaml)
+denuncia		noun	f	police report; complaint	B1						Levantar una denuncia: to report a crime.
+embajada		noun	f	embassy	A2			places
+# --- Phone, internet and errands (tramites.yaml)
+chip		noun	m	SIM card; chip	A2			things	pl=chips
+recarga		noun	f	top-up (phone credit)	A2			money
+descargarse		verb		to run down (battery); to die (phone)	B1
+# --- Making plans (planes.yaml)
+cada quien		expr		each person; everyone	A2		x				Cada quien paga lo suyo: everyone pays for their own.
+# --- Mexican expressions (expresiones.yaml)
+qué oso		expr		how embarrassing!	A2	informal	x	slang			Standard: qué vergüenza, qué pena.
+ya merito		expr		almost; nearly there	A2		x	time
+crudo	crudo#hungover	adj		hungover (slang)	A2	informal	x	slang			La cruda: the hangover.
+chale		interj		darn!; oh, man!	A2	informal	x	slang
+# --- Names (propn: no items, no example needed)
+OXXO		propn		OXXO (chain of corner stores)	A2
+Ministerio Público		propn		public prosecutor's office (where crimes are reported)	B1

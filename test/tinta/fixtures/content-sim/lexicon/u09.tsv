@@ -1,0 +1,11 @@
+# Unit 9: Ayer / Yesterday. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u09.l01 ¿Qué hiciste ayer? (regular preterite)
+anoche		adv		last night	A2			time				
+# --- u09.l02 Fui a Oaxaca (irregular preterite)
+# --- u09.l03 ¿Qué pasó? (telling what happened)
+# --- names
+Teotihuacán		propn		Teotihuacán (ancient city with pyramids)	A1							
+Monte Albán		propn		Monte Albán (Zapotec ruins near Oaxaca)	A1							

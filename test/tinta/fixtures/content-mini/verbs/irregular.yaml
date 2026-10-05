@@ -1,0 +1,53 @@
+# Fixture irregulars, written out in full so the fixture does not depend on
+# the conjugator's irregular-verb rules.
+ser:
+  forms:
+    pres.1s: soy
+    pres.2s: eres
+    pres.3s: es
+    pres.1p: somos
+    pres.3p: son
+    pret.1s: fui
+    pret.2s: fuiste
+    pret.3s: fue
+    pret.1p: fuimos
+    pret.3p: fueron
+    impf.1s: era
+    impf.2s: eras
+    impf.3s: era
+    impf.1p: éramos
+    impf.3p: eran
+    subj.1s: sea
+    subj.2s: seas
+    subj.3s: sea
+    subj.1p: seamos
+    subj.3p: sean
+    imp.2s: sé
+    imp.3s: sea
+    imp.3p: sean
+    impneg.2s: seas
+    impneg.3s: sea
+    impneg.3p: sean
+estar:
+  forms:
+    pres.1s: estoy
+    pres.2s: estás
+    pres.3s: está
+    pres.1p: estamos
+    pres.3p: están
+    pret.1s: estuve
+    pret.2s: estuviste
+    pret.3s: estuvo
+    pret.1p: estuvimos
+    pret.3p: estuvieron
+    subj.1s: esté
+    subj.2s: estés
+    subj.3s: esté
+    subj.1p: estemos
+    subj.3p: estén
+    imp.2s: está
+    imp.3s: esté
+    imp.3p: estén
+    impneg.2s: estés
+    impneg.3s: esté
+    impneg.3p: estén

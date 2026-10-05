@@ -9,12 +9,12 @@
 #   // modules: text lang
 #
 # and is built with lib/Tinta/src/core/<module>/*.cpp for those modules only.
-# Tests run from test/tinta, so fixture paths are relative to it. The course
-# packs in fixtures/ are compiled by ../spanish's tools/packc; fixtures/full.pack
-# (the whole course, about 3 MB) is not committed, and the tests that need it
-# are skipped without it:
+# Tests run from test/tinta, so fixture paths are relative to it. The fixtures
+# are compiled by lib/Tinta/tools (make-fixtures.sh); fixtures/full.pack (the
+# whole course, about 3 MB) is not committed, and the tests that need it are
+# skipped without it:
 #
-#   (cd ../spanish && python3 tools/packc --out <lila>/test/tinta/fixtures/full.pack)
+#   sh test/tinta/make-fixtures.sh --full
 #
 # TINTA_PACK_SOURCE=file reads every pack through the SD card's block cache
 # and string copies instead of memory.
@@ -46,6 +46,17 @@ for test in "$HERE"/*_test.cpp; do
   done
 
   ran=$((ran + 1))
+  # The scheduler must stay in float: the ESP32-C3 has no FPU, so a stray
+  # double runs as double-precision soft-float.
+  if [ "$name" = fsrs_test ]; then
+    for src in "$ROOT/lib/Tinta/src/core/srs"/*.cpp; do
+      if ! $CXX -std=c++17 -fsyntax-only -Wdouble-promotion -Werror -I"$ROOT/lib/Tinta/src" "$src"; then
+        echo "FAIL $name (double promotion in $(basename "$src"))"
+        status=1
+        continue 2
+      fi
+    done
+  fi
   # shellcheck disable=SC2086
   if ! $CXX $FLAGS $INCLUDES $sources "$test" -o "$OUT/$name"; then
     echo "BUILD FAIL $name"

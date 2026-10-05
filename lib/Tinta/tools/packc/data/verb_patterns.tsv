@@ -1,0 +1,191 @@
+# Common Spanish verbs that the conjugator's rules alone would get wrong, with
+# the kind of content/verbs/irregular.yaml entry they need. Written by hand;
+# tools/packc/tests/test_reference.py checks it against an external verb table.
+#
+# The compiler refuses a lexicon verb that matches a line here but has no entry
+# in irregular.yaml (an entry `regular: true` overrides). A line starting with
+# "-" is an ending shared by a verb family and matches every verb ending with it
+# (-tener: tener, mantener, obtener, detener); only endings whose whole family
+# conjugates alike are listed (not -sentar: presentar is regular).
+#
+# verb or -ending<TAB>pattern   (e>ie o>ue e>i u>ue i>ie accent irregular)
+
+# --- e > ie -----------------------------------------------------------------------
+pensar	e>ie
+cerrar	e>ie
+-cerrar	e>ie
+empezar	e>ie
+comenzar	e>ie
+despertar	e>ie
+sentar	e>ie
+calentar	e>ie
+aventar	e>ie
+reventar	e>ie
+-comendar	e>ie
+nevar	e>ie
+-negar	e>ie
+regar	e>ie
+fregar	e>ie
+gobernar	e>ie
+merendar	e>ie
+temblar	e>ie
+tropezar	e>ie
+atravesar	e>ie
+confesar	e>ie
+enterrar	e>ie
+apretar	e>ie
+quebrar	e>ie
+sembrar	e>ie
+helar	e>ie
+manifestar	e>ie
+acertar	e>ie
+alentar	e>ie
+tentar	e>ie
+entender	e>ie
+atender	e>ie
+extender	e>ie
+tender	e>ie
+perder	e>ie
+-cender	e>ie
+defender	e>ie
+verter	e>ie
+-sentir	e>ie
+-ferir	e>ie
+-mentir	e>ie
+-vertir	e>ie
+-gerir	e>ie
+hervir	e>ie
+herir	e>ie
+arrepentir	e>ie
+requerir	e>ie
+
+# --- o > ue, u > ue -------------------------------------------------------------------
+-contar	o>ue
+-contrar	o>ue
+costar	o>ue
+acostar	o>ue
+recostar	o>ue
+almorzar	o>ue
+-cordar	o>ue
+-mostrar	o>ue
+-probar	o>ue
+soñar	o>ue
+volar	o>ue
+sonar	o>ue
+resonar	o>ue
+rogar	o>ue
+-colgar	o>ue
+soltar	o>ue
+volcar	o>ue
+colar	o>ue
+-forzar	o>ue
+consolar	o>ue
+renovar	o>ue
+tostar	o>ue
+apostar	o>ue
+poblar	o>ue
+rodar	o>ue
+tronar	o>ue
+-mover	o>ue
+soler	o>ue
+doler	o>ue
+llover	o>ue
+morder	o>ue
+moler	o>ue
+torcer	o>ue
+oler	o>ue
+dormir	o>ue
+jugar	u>ue
+
+# --- e > i ---------------------------------------------------------------------------
+-pedir	e>i
+-servir	e>i
+-petir	e>i
+-medir	e>i
+-vestir	e>i
+-seguir	e>i
+-regir	e>i
+elegir	e>i
+gemir	e>i
+rendir	e>i
+reñir	e>i
+teñir	e>i
+ceñir	e>i
+concebir	e>i
+derretir	e>i
+-reír	e>i accent
+
+# --- i > ie --------------------------------------------------------------------------
+-quirir	i>ie
+
+# --- written accent on a stressed i or u -----------------------------------------------
+-enviar	accent
+desviar	accent
+-fiar	accent
+guiar	accent
+criar	accent
+vaciar	accent
+variar	accent
+esquiar	accent
+ampliar	accent
+enfriar	accent
+resfriar	accent
+espiar	accent
+actuar	accent
+continuar	accent
+graduar	accent
+evaluar	accent
+situar	accent
+efectuar	accent
+acentuar	accent
+insinuar	accent
+habituar	accent
+reunir	accent
+prohibir	accent
+rehusar	accent
+aislar	accent
+fotografiar	accent
+extraviar	accent
+
+# --- irregular (several kinds of entry) -------------------------------------------------
+ser	irregular
+estar	irregular
+ir	irregular
+haber	irregular
+dar	irregular
+ver	irregular
+prever	irregular
+saber	irregular
+caber	irregular
+poder	irregular
+querer	irregular
+andar	irregular
+desandar	irregular
+-tener	irregular
+-venir	irregular
+-hacer	irregular
+satisfacer	irregular
+-decir	irregular
+-poner	irregular
+-salir	irregular
+-valer	irregular
+-traer	irregular
+-caer	irregular
+-oír	irregular
+-volver	irregular
+-solver	irregular
+morir	irregular
+-abrir	irregular
+-cubrir	irregular
+-scribir	irregular
+romper	irregular
+freír	irregular
+proveer	irregular
+pudrir	irregular
+cocer	irregular
+mecer	irregular
+errar	irregular
+erguir	irregular
+asir	irregular
+avergonzar	irregular
+agorar	irregular

@@ -1,0 +1,696 @@
+# Dictionary-only headwords h-o: lookup rows with no items or examples (docs/content-style.md section 6).
+# TAB-separated. Verbs the conjugator cannot infer are declared in content/verbs/irregular/dictionary-h-o.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+# --- h
+hábil		adj		skillful; capable	B1				Días hábiles: working days (Monday to Friday).	
+habilidad		noun	f	skill; ability	B1					
+habitación		noun	f	room; bedroom; hotel room	A2				At home Mexicans usually say el cuarto or la recámara.	
+habitante		noun	mf	inhabitant; resident	B1					
+hábito		noun	m	habit	B1					
+habitual		adj		usual; regular	B1					
+hablador		adj		talkative; boastful; fibbing	B1	informal	x		¡Qué hablador!: what a fibber! (teasing).	
+hace rato		expr		a while ago	A2				Hace ratito: just a moment ago.	
+hacer caso		expr		to pay attention; to listen to	A2				Hazme caso: listen to me. No me hace caso: he ignores me.	
+hacer cola		expr		to queue; to stand in line (Spain)	B1				In Mexico: hacer fila.	
+hacer falta		expr		to be needed; to be missed	A2				Works like gustar: me haces falta: I miss you. Hace falta sal: it needs salt.	
+hacerse		verb		to become; to pretend to be	B1				Se hizo rico: he got rich. Hacerse el tonto: to play dumb.	
+hacha		noun	f	axe; hatchet	B1				Takes el in the singular: el hacha, las hachas.	
+hacienda		noun	f	estate; ranch; the tax office	B1				Hacienda (with the SAT) is the Mexican tax authority.	
+halcón		noun	m	falcon; hawk	B2					
+hallar		verb		to find	B1	formal			Written style. Everyday Spanish says encontrar.	
+hamaca		noun	f	hammock	A2					
+hámster		noun	m	hamster	A2			pl=hámsteres		
+hasta pronto		expr		see you soon	A1					
+hay que		expr		one has to; you have to	A1				Hay que + infinitive: hay que pagar en la caja: you pay at the till.	
+helada		noun	f	frost	B1					
+heladería		noun	f	ice-cream shop	A2				Mexico also says nevería.	
+helar		verb		to freeze	B1				Usually helarse: se heló el agua. Everyday Mexico says congelar.	
+helicóptero		noun	m	helicopter	A2					
+hembra		noun	f	female (animal)	B1				Macho and hembra are for animals; for people say hombre and mujer.	
+hemorragia		noun	f	bleeding; hemorrhage	B1					
+heredar		verb		to inherit	B1					
+herencia		noun	f	inheritance; heritage	B1					
+herida		noun	f	wound; injury	A2					
+herir		verb		to wound; to hurt	B1				For everyday injuries say lastimar: me lastimé.	
+hermanastro		noun	mf	stepbrother (hermanastra: stepsister)	B1				A half brother is a medio hermano.	
+héroe		noun	mf	hero (heroína: heroine)	B1			f=heroína	Heroína is also heroin, the drug.	
+hervir		verb		to boil	A2				Ya hierve el agua: the water is boiling.	
+hielera		noun	f	cooler; ice chest	A2		x			
+hierba		noun	f	herb; weed; grass	A2				A lawn is el pasto. Hierbas de olor: a bundle of cooking herbs.	
+hierbabuena		noun	f	mint; spearmint	A2				Common in Mexican soups and teas.	
+hierro		noun	m	iron (metal)	B1					
+hígado		noun	m	liver	B1					
+higiene		noun	f	hygiene	B1			pl=-		
+higo		noun	m	fig	B1					
+hilo		noun	m	thread	B1				Hilo dental: dental floss.	
+himno		noun	m	anthem; hymn	B1				El Himno Nacional: the national anthem.	
+hincarse		verb		to kneel (down)	B1		x		Also arrodillarse.	
+hinchado		adj		swollen	B1					
+hipo		noun	m	hiccups	A2			pl=-	Tener hipo: to have the hiccups.	
+hipócrita		adj		hypocritical; hypocrite	B1					
+hispanohablante		noun	mf	Spanish speaker	B1					
+histérico		adj		hysterical; worked up	B1					
+histórico		adj		historic; historical	B1				Centro histórico: the old town.	
+historieta		noun	f	comic strip; comic book	B1					
+hobby		noun	m	hobby	A2			pl=hobbies	Also pasatiempo.	
+hocico		noun	m	snout; (rude) mouth	B1	informal			Rude when said of a person: ¡cierra el hocico!: shut your trap!	
+hogar		noun	m	home; household	A2				To go home is ir a la casa.	
+homenaje		noun	m	tribute; homage	B2					
+hondo		adj		deep	B1				Also profundo.	
+honesto		adj		honest	A2					
+hongo		noun	m	mushroom; fungus	A2				Quesadilla de hongos: mushroom quesadilla.	
+honor		noun	m	honor	B1					
+honrado		adj		honest; upright	B1					
+hora pico		noun	f	rush hour	A2		x	pl=horas pico	Spain says hora punta.	
+hora punta		noun	f	rush hour (Spain)	B1			pl=horas punta	In Mexico: la hora pico.	
+hormiga		noun	f	ant	A2					
+hornear		verb		to bake	A2					
+horror		noun	m	horror	B1				¡Qué horror!: how awful!	
+hortera		adj		tacky; tasteless (Spain)	B1	informal			Spain only. In Mexico: corriente, de mal gusto.	
+hospedaje		noun	m	lodging; accommodation	B1					
+hospedarse		verb		to stay (at a hotel)	A2				¿Dónde te hospedas?: where are you staying?	
+hostia		interj		damn!; wow! (Spain)	B2	vulgar			Spain only, and crude. Also the communion wafer.	
+hot cakes		noun	mpl	pancakes	A2		x			
+hot dog		noun	m	hot dog	A2			pl=hot dogs	Informal Mexico also says jocho.	
+hoy en día		expr		nowadays	A2					
+huachinango		noun	m	red snapper	B1		x		Huachinango a la veracruzana is a classic dish.	
+huapango		noun	m	huapango (folk music and dance)	B2		x		Music of the Huasteca region, with falsetto singing.	
+huarache		noun	m	leather sandal; oval masa snack	A2		x		Also a long oval masa base with beans and toppings.	
+hucha		noun	f	piggy bank (Spain)	B1				In Mexico: la alcancía.	
+hueco		noun	m	hole; gap; hollow	B1				As an adjective: hollow.	
+huelga		noun	f	strike (labor)	B1				Estar en huelga: to be on strike.	
+huella		noun	f	footprint; track; fingerprint	B1				Huella digital: fingerprint.	
+huérfano		noun	mf	orphan	B1					
+huerto		noun	m	vegetable garden; orchard	B1				Also la huerta.	
+huésped		noun	mf	guest (hotel, lodging)	B1				A guest at home or at a party is un invitado.	
+hueva		noun	f	laziness; drag; fish roe	B1	vulgar	x		¡Qué hueva!: what a drag! Crude. Neutral: qué flojera.	
+huevón		adj		lazy; lazybones	B1	vulgar	x		Crude. Neutral: flojo.	
+huevos rancheros		noun	mpl	fried eggs on tortillas with salsa	A2		x			
+huipil		noun	m	embroidered tunic (indigenous)	B1		x		The traditional blouse of Maya and other indigenous women.	
+huir		verb		to flee; to run away	B1				Everyday Spanish: escaparse.	
+huitlacoche		noun	m	corn smut (a delicacy)	B1		x		A black corn fungus eaten in quesadillas. Also cuitlacoche.	
+hule		noun	m	rubber; plastic sheeting	B1		x		From Nahuatl. Hule espuma: foam rubber.	
+humanidad		noun	f	humanity; mankind	B1					
+humano		adj		human	A2				Ser humano: human being.	
+humedad		noun	f	humidity; damp	B1					
+húmedo		adj		humid; damp	B1					
+humilde		adj		humble; poor	B1					
+humillar		verb		to humiliate	B2					
+humo		noun	m	smoke	A2					
+hundir		verb		to sink	B1				Hundirse: to sink; to collapse.	
+# --- i
+ida		noun	f	going; outward journey	A2				Boleto de ida: one-way ticket.	
+ida y vuelta		expr		round trip	A2				Un boleto de ida y vuelta: a round-trip ticket.	
+ideal		adj		ideal; perfect	A2					
+idéntico		adj		identical	B1					
+identidad		noun	f	identity	B1					
+identificación		noun	f	identification; ID card	A2				In Mexico the usual ID is the INE (voter card).	
+identificar		verb		to identify	B1					
+idiota		noun	mf	idiot	A2	informal			Insulting.	
+ídolo		noun	m	idol	B1					
+ignorante		adj		ignorant	B1					
+ignorar		verb		to not know; to ignore	B1				First sense is not to know: ignoro la respuesta. To ignore someone is also no hacer caso.	
+igualdad		noun	f	equality	B1					
+iguana		noun	f	iguana	A2					
+ilegal		adj		illegal	B1					
+ilusión		noun	f	hope; dream; illusion	B1				Mostly a hope or excitement: tengo mucha ilusión.	
+imagen		noun	f	image; picture	A2					
+imaginación		noun	f	imagination	B1					
+imán		noun	m	magnet; fridge magnet	B1					
+imbécil		noun	mf	idiot; imbecile	B1	informal			Insulting.	
+imitar		verb		to imitate; to copy	B1					
+impaciente		adj		impatient	B1					
+impedir		verb		to prevent; to stop	B1				Impedir que + subjunctive.	
+imponer		verb		to impose	B2					
+importancia		noun	f	importance	B1					
+impresión		noun	f	impression; printing	B1					
+impresionante		adj		impressive; amazing	B1					
+impresionar		verb		to impress; to shock	B1					
+impresora		noun	f	printer	A2					
+imprevisto		noun	m	unexpected problem	B1				Tuve un imprevisto: something came up.	
+imprimir		verb		to print	A2				Participle: impreso (imprimido is also correct).	
+impuesto		noun	m	tax	B1					
+impuntual		adj		unpunctual; late	B1					
+incapacidad		noun	f	disability; sick leave	B1		x		In Mexico also the IMSS medical note that excuses you from work.	
+incapaz		adj		incapable; unable	B1					
+inconveniente		noun	m	problem; drawback	B1				¿Hay algún inconveniente?: is there any problem?	
+incorrecto		adj		incorrect; wrong	A2					
+independencia		noun	f	independence	B1				Mexico's Independence Day is September 16.	
+independiente		adj		independent	B1					
+indicación		noun	f	sign; instruction	B1				Indicaciones: directions; a doctor's instructions.	
+indicar		verb		to indicate; to point out	B1					
+índice		noun	m	index; rate; index finger	B1					
+indígena		adj		indigenous	B1				Also a noun: los indígenas. Pueblos indígenas: indigenous peoples.	
+indigestión		noun	f	indigestion	B1					
+industria		noun	f	industry	B1					
+infancia		noun	f	childhood	B1					
+infantil		adj		children's; childish	B1					
+infarto		noun	m	heart attack	B1					
+infección		noun	f	infection	A2					
+infeliz		adj		unhappy; wretch	B1					
+infiel		adj		unfaithful	B1					
+infierno		noun	m	hell	B1					
+inflación		noun	f	inflation	B2					
+inflamación		noun	f	swelling; inflammation	B1					
+inflar		verb		to inflate; to blow up	B1					
+influencia		noun	f	influence	B1					
+influenza		noun	f	flu; influenza	A2		x		Mexico also says gripa.	
+influir		verb		to influence	B1					
+informal		adj		informal; unreliable	B1		x		Una persona informal: someone who does not keep their word. Comercio informal: street trade.	
+informar		verb		to inform	B1					
+informática		noun	f	computing; IT	B1			pl=-		
+informe		noun	m	report	B1					
+infracción		noun	f	traffic ticket; offense	B1		x		Me pusieron una infracción: I got a ticket.	
+ingeniería		noun	f	engineering	B1					
+ingenuo		adj		naive	B1					
+ingrediente		noun	m	ingredient	A2					
+ingresar		verb		to enter; to be admitted; to pay in	B1				Ingresar al hospital: to be admitted. Ingresar dinero: to deposit money.	
+ingreso		noun	m	income; admission	B1				Ingresos: earnings.	
+iniciar		verb		to start; to begin	B1				Everyday Spanish: empezar.	
+inicio		noun	m	start; beginning; home (screen)	B1					
+injusto		adj		unfair; unjust	B1					
+inmediato		adj		immediate	B1				De inmediato: right away.	
+inmenso		adj		huge; immense	B1					
+inmigración		noun	f	immigration	B1					
+inmigrante		noun	mf	immigrant	B1					
+inmobiliaria		noun	f	real-estate agency	B1					
+inocente		adj		innocent; naive	B1				December 28, Día de los Santos Inocentes, is Mexico's April Fools' Day.	
+inodoro		noun	m	toilet (bowl)	B1				Mexico usually says el baño or el excusado.	
+inolvidable		adj		unforgettable	B1					
+inquieto		adj		restless; worried	B1					
+inquilino		noun	mf	tenant	B1					
+inscribirse		verb		to enroll; to sign up	B1					
+inscripción		noun	f	enrollment; registration	B1					
+insecto		noun	m	insect; bug	A2					
+inseguro		adj		insecure; unsafe	B1					
+insistir		verb		to insist	B1					
+insolación		noun	f	sunstroke	B1					
+insoportable		adj		unbearable	B1					
+instalar		verb		to install; to set up	B1					
+instante		noun	m	instant; moment	B1					
+instituto		noun	m	high school (Spain); institute	A2				In Mexico: la secundaria or la prepa (preparatoria).	
+instrucción		noun	f	instruction	B1				Instrucciones: directions for use.	
+instrumento		noun	m	instrument	B1					
+insultar		verb		to insult	B1					
+insulto		noun	m	insult	B1					
+integral		adj		whole-wheat; comprehensive	A2				Pan integral: whole-wheat bread.	
+intención		noun	f	intention	B1					
+intenso		adj		intense	B1					
+intercambiar		verb		to exchange; to swap	B1					
+intercambio		noun	m	exchange	B1				Intercambio de idiomas: language exchange.	
+interés		noun	m	interest	B1				Intereses: interest on money.	
+interfón		noun	m	intercom; entry phone	B1		x			
+interior		adj		interior; inside; inner	B1				Ropa interior: underwear.	
+intermitente		noun	m	turn signal (Spain)	B1				In Mexico: la direccional.	
+internacional		adj		international	A2					
+interruptor		noun	m	light switch	B1				Mexico also says apagador.	
+íntimo		adj		intimate; close	B1				Un amigo íntimo: a close friend.	
+intolerante		adj		intolerant	B1				Intolerante a la lactosa: lactose intolerant.	
+intoxicación		noun	f	poisoning	B1				Intoxicación (por alimentos): food poisoning. It does not mean drunkenness.	
+introducir		verb		to insert; to bring in	B1				To introduce a person is presentar.	
+inundación		noun	f	flood	B1					
+inútil		adj		useless	B1					
+inventar		verb		to invent; to make up	B1					
+invento		noun	m	invention	B1					
+inversión		noun	f	investment	B2					
+invertir		verb		to invest; to reverse	B2					
+investigación		noun	f	research; investigation	B1					
+investigar		verb		to investigate; to research	B1					
+irregular		adj		irregular	B1					
+itacate		noun	m	food for the road	B2		x		From Nahuatl: food packed for a trip or to take home after a party.	
+IVA		noun	m	VAT; sales tax	B1			pl=-	Impuesto al valor agregado: 16% in Mexico, usually included in prices.	
+izquierdo		adj		left (side)	A2				La mano izquierda: the left hand. Left-handed is zurdo.	
+# --- j
+jacaranda		noun	f	jacaranda (tree)	B1				Its purple blossoms fill Mexico City in March.	
+jaguar		noun	m	jaguar	B1					
+jaiba		noun	f	crab	A2		x		The swimming crab of coastal cocktails and soups; cangrejo is the general word.	
+jalapeño		noun	m	jalapeño (pepper)	A2		x		Dried and smoked, it becomes a chipotle.	
+jale		noun	m	work; job; gig	B1	informal	x		Mainly northern Mexico. Standard: el trabajo.	
+jalea		noun	f	jelly	B1					
+japonés		adj		Japanese	A2					
+jardinero		noun	mf	gardener	B1					
+jaripeo		noun	m	Mexican rodeo (bull riding)	B2		x			
+jarocho		adj		from Veracruz	B1		x		Son jarocho: the folk music of Veracruz.	
+jarra		noun	f	pitcher; jug	A2				Agua de jarra: fresh fruit water.	
+jarro		noun	m	clay mug; jug	B1				Café de olla is served in a clay jarrito.	
+jarrón		noun	m	vase	B1					
+jaula		noun	f	cage	B1					
+jeans		noun	mpl	jeans	A2				Also pantalón de mezclilla.	
+jengibre		noun	m	ginger	B1					
+jerga		noun	f	slang; floor cloth	B1		x		In Mexico la jerga is also the cloth used to mop floors.	
+jeringa		noun	f	syringe	B1					
+jersey		noun	m	sweater (Spain)	A2			pl=jerséis	In Mexico: el suéter.	
+jícara		noun	f	gourd bowl	B2		x		Used for drinks such as tejate and pozol.	
+jirafa		noun	f	giraffe	A2					
+joder		verb		to screw; to annoy	B1	vulgar			No me jodas: don't mess with me.	
+jodido		adj		screwed; in a bad way	B1	vulgar			Estoy jodido: I'm in trouble.	
+jornada		noun	f	working day; shift	B1				Jornada laboral: working hours.	
+jorongo		noun	m	poncho	B2		x		A woolen Mexican poncho.	
+joya		noun	f	jewel; piece of jewelry	B1				Joyas: jewelry.	
+joyería		noun	f	jewelry store	B1					
+jubilación		noun	f	retirement; pension	B1					
+jubilado		noun	mf	retiree	B1				Also an adjective: está jubilado: he's retired.	
+jubilarse		verb		to retire	B1					
+judía		noun	f	bean (Spain)	B1				In Mexico: el frijol; green beans are ejotes.	
+judío		adj		Jewish	B1					
+juego		noun	m	game; set	A2				Juego de llaves: set of keys. Juegos Olímpicos: Olympic Games.	
+juez		noun	mf	judge	B1			f=jueza		
+jugoso		adj		juicy	A2					
+juicio		noun	m	trial; judgment; sense	B1				Perder el juicio: to lose your mind.	
+junta		noun	f	meeting	A2		x		Tengo junta: I have a meeting. Also a board or council.	
+juntar		verb		to put together; to collect	A2				Juntarse: to get together; to hang out.	
+jurar		verb		to swear; to promise	B1					
+justicia		noun	f	justice	B1					
+juventud		noun	f	youth	B1					
+juzgar		verb		to judge	B1					
+# --- k
+karaoke		noun	m	karaoke	A2					
+karate		noun	m	karate	A2			pl=-		
+kermés		noun	f	charity fair; fete	B1		x		A parish or school fundraiser with food and games.	
+kiosco		noun	m	bandstand; kiosk; newsstand	A2				Most Mexican town squares have a kiosco in the middle.	
+kiwi		noun	m	kiwi (fruit)	A2					
+# --- l
+labial		noun	m	lipstick	B1					
+laboral		adj		work; labor	B1				Derechos laborales: workers' rights.	
+laboratorio		noun	m	laboratory; lab	B1				Análisis de laboratorio: lab tests.	
+lacio		adj		straight (hair)	A2				Pelo lacio: straight hair. Curly is chino.	
+lácteos		noun	mpl	dairy products	A2					
+ladrar		verb		to bark	A2					
+ladrillo		noun	m	brick	B1					
+lagartija		noun	f	lizard; push-up	A2		x		Hacer lagartijas: to do push-ups.	
+lágrima		noun	f	tear (crying)	B1					
+laguna		noun	f	lagoon; lake	B1					
+lamentar		verb		to regret; to be sorry about	B1				Lamentamos las molestias: we apologize for the inconvenience.	
+lamer		verb		to lick	B1					
+lámpara		noun	f	lamp; light	A2					
+lana		noun	f	wool	B1				Informal Mexico also uses lana for money.	
+lancha		noun	f	motorboat; launch	A2					
+langosta		noun	f	lobster; locust	B1					
+lanzar		verb		to throw; to launch	B1				Everyday Mexico says aventar for throw.	
+laptop		noun	f	laptop	A2			pl=laptops	Also la computadora portátil.	LAHP-tohp
+largarse		verb		to leave; to clear off	B1	informal			¡Lárgate!: get out! Rude.	
+latino		adj		Latin American; Latin	B1					
+latir		verb		to beat (heart); to sense	B1		x		Mexico, informal: me late que...: I have a feeling that... Me late: I like it.	
+lavadero		noun	m	washboard sink; laundry area	B1		x		The concrete sink for washing clothes by hand, often on the roof.	
+lavatrastes		noun	m	dish soap; kitchen sink	A2		x		Trastes: the dishes.	
+lazo		noun	m	bow; tie; lasso	B1				Lazos familiares: family ties.	
+leal		adj		loyal	B1					
+lección		noun	f	lesson	A2					
+lectura		noun	f	reading	A2					
+legal		adj		legal	B1					
+lejano		adj		distant; far-off	B1					
+lejía		noun	f	bleach (Spain)	B1				In Mexico: el cloro.	
+leña		noun	f	firewood	B1					
+lenguaje		noun	m	language (way of speaking)	B1				A language such as Spanish is un idioma or una lengua.	
+lenteja		noun	f	lentil	A2				Sopa de lentejas: lentil soup.	
+lentes		noun	mpl	glasses	A2				Lentes de sol: sunglasses. Lentes de contacto: contact lenses.	
+león		noun	mf	lion (leona: lioness)	A2					
+lesión		noun	f	injury	B1					
+letrero		noun	m	sign; notice	A2					
+ley		noun	f	law	B1					
+liberar		verb		to free; to release	B1					
+libertad		noun	f	freedom; liberty	B1					
+librería		noun	f	bookstore	A2				Not a library: that is la biblioteca.	
+librero		noun	m	bookcase; bookshelf	A2		x		Also a bookseller.	
+libreta		noun	f	notebook	A2					
+licenciatura		noun	f	bachelor's degree	B1				Four or five years of university; a graduate is a licenciado.	
+licor		noun	m	liquor; liqueur	B1					
+líder		noun	mf	leader	B1					
+liga		noun	f	rubber band; league	B1		x		In Mexico a liga is also an elastic band.	
+ligar		verb		to flirt; to pick up (someone)	B1	informal			Also to bind or link.	
+lima		noun	f	nail file; sweet lime	B1		x		In Mexico lima is a mild citrus fruit; the green lime is limón.	
+límite		noun	m	limit	B1				Límite de velocidad: speed limit.	
+limonada		noun	f	limeade; lemonade	A2		x		Made with green limones, so it is limeade.	
+limosna		noun	f	spare change (for begging)	B1				Pedir limosna: to beg.	
+limpieza		noun	f	cleaning; cleanliness	A2				Hacer la limpieza: to do the cleaning. Also a ritual cleansing.	
+limpio		adj		clean	A1					
+linterna		noun	f	flashlight	B1					
+liquidación		noun	f	severance pay; clearance sale	B1				In Mexico, the payment owed when you are let go.	
+líquido		noun	m	liquid	B1					
+liso		adj		smooth; plain	B1					
+lista		noun	f	list	A2				Pasar lista: to take attendance.	
+listón		noun	m	ribbon	A2		x			
+litera		noun	f	bunk bed; berth	B1					
+literatura		noun	f	literature	B1					
+litro		noun	m	liter	A2					
+llama		noun	f	flame; llama	B1					
+llavero		noun	m	key ring	A2					
+llenar		verb		to fill; to fill in	A2				Llene el formulario: fill in the form.	
+llevarse		verb		to take (away); to get along	A2				Me lo llevo: I'll take it. Llevarse bien: to get along well.	
+llevarse bien		expr		to get along well	A2				Me llevo bien con mi suegra: I get along well with my mother-in-law.	
+llorón		adj		crybaby; whiny	B1				La Llorona: the weeping woman of Mexican legend.	
+llovizna		noun	f	drizzle	B1					
+lloviznar		verb		to drizzle	B1					
+lluvioso		adj		rainy	A2					
+lo siento		expr		I'm sorry	A1					
+lobo		noun	m	wolf	B1					
+local		noun	m	shop; premises	B1				Also an adjective: local.	
+localizar		verb		to locate; to reach (by phone)	B1				No lo puedo localizar: I can't get hold of him.	
+locura		noun	f	madness; crazy thing	B1					
+lodo		noun	m	mud	A2					
+lógico		adj		logical	B1				¡Lógico!: of course!	
+logro		noun	m	achievement	B1					
+loma		noun	f	hill	B1					
+lombriz		noun	f	worm; earthworm	B1					
+lomo		noun	m	loin; back (animal)	B1				Lomo de cerdo: pork loin.	
+lona		noun	f	canvas; tarp	B1					
+lonchera		noun	f	lunchbox	A2		x			
+lonchería		noun	f	snack bar; lunch counter	B1		x			
+longaniza		noun	f	spiced pork sausage	B1				A long sausage, similar to chorizo.	
+loro		noun	m	parrot	A2				Mexico often says perico.	
+lote		noun	m	lot; plot; batch	B1				Lote baldío: vacant lot.	
+lotería		noun	f	lottery; lotería (picture bingo)	A2				Mexican lotería is a bingo game with picture cards such as El Gallo.	
+lucha libre		noun	f	Mexican wrestling	A2		x	pl=-		
+luchador		noun	mf	wrestler; fighter	A2					
+luchar		verb		to fight; to struggle	B1					
+lucir		verb		to look; to show off	B1				Luces muy bien: you look great.	
+luego luego		adv		right away	B1		x		Lo hizo luego luego: he did it straight away.	
+lujo		noun	m	luxury	B1				De lujo: luxury; great.	
+lumbre		noun	f	fire; flame	B1		x		Prende la lumbre: light the burner (or the fire).	
+luna de miel		noun	f	honeymoon	B1			pl=lunas de miel		
+lunar		noun	m	mole (on skin); polka dot	B1				De lunares: polka-dot.	
+# --- m
+maceta		noun	f	flowerpot	A2					
+machaca		noun	f	dried shredded beef	B1		x		Northern Mexico, often scrambled with eggs.	
+machete		noun	m	machete	B1					
+machismo		noun	m	male chauvinism; sexism	B1			pl=-		
+macho		noun	m	male (animal); macho man	B1				Also an adjective: macho.	
+machucar		verb		to crush; to squash	B1		x		Me machuqué el dedo: I caught my finger.	
+madrazo		noun	m	hard blow; punch	B1	vulgar	x		Se dio un madrazo: he got badly hurt. Crude.	
+madrina		noun	f	godmother; sponsor (at a wedding)	B1				Mexican weddings and quinceañeras have many padrinos and madrinas.	
+madrugar		verb		to get up early	A2					
+maestría		noun	f	master's degree; mastery	B1					
+magia		noun	f	magic	B1					
+magnífico		adj		magnificent; superb	B1					
+mago		noun	mf	magician; wizard	B1					
+maguey		noun	m	maguey; agave	B1		x		The plant that gives pulque and mezcal.	
+maicena		noun	f	cornstarch	B1				Atole de maicena: a sweet hot cornstarch drink.	
+majo		adj		nice; lovely (Spain)	B1	informal			Spain only. In Mexico: simpático, buena onda.	
+malcriado		adj		spoiled; rude (child)	B1					
+maldito		adj		damned; cursed	B1	informal			Stronger and vulgar: pinche.	
+maleducado		adj		rude; bad-mannered	B1					
+malentendido		noun	m	misunderstanding	B1					
+malestar		noun	m	discomfort; unease	B1					
+maletero		noun	m	car trunk (Spain); porter	B1				In Mexico the trunk is la cajuela.	
+malteada		noun	f	milkshake	A2		x		Spain says batido.	
+mameluco		noun	m	romper; coveralls	B1		x			
+mamey		noun	m	mamey (fruit)	B1		x		A tropical fruit with orange flesh, popular in licuados and ice cream.	
+mamila		noun	f	baby bottle	B1		x		Also biberón.	
+mamón		adj		arrogant; obnoxious	B1	vulgar	x		Crude. Neutral: presumido.	
+mancha		noun	f	stain; spot	A2					
+manchar		verb		to stain; to get dirty	A2					
+mandado		noun	m	errand; grocery shopping	A2		x		Hacer el mandado: to do the grocery shopping.	
+mandil		noun	m	apron	B1		x		Also delantal.	
+mando		noun	m	remote control (Spain); command	B1				In Mexico the remote is el control.	
+mandón		adj		bossy	B1					
+manga		noun	f	sleeve	A2				De manga corta: short-sleeved.	
+manguera		noun	f	hose	B1					
+manifestación		noun	f	demonstration; protest	B1				Also una marcha.	
+manija		noun	f	handle (door)	B1					
+mañoso		adj		sly; tricky; fussy	B1		x		In Mexico also a picky eater.	
+manta		noun	f	banner; cotton cloth	B1		x		In Mexico a manta is a cloth banner or plain cotton; a blanket is a cobija.	
+manteca		noun	f	lard; shortening	B1				Butter is mantequilla.	
+mantecada		noun	f	muffin (Mexican)	B1		x		A sweet bread baked in a red paper cup.	
+mantel		noun	m	tablecloth	A2					
+mantenimiento		noun	m	maintenance	B1					
+manual		noun	m	manual; handbook	B1				Also an adjective: manual.	
+manzanilla		noun	f	chamomile	A2				Té de manzanilla: chamomile tea.	
+mapache		noun	m	raccoon	B1					
+maquiladora		noun	f	assembly plant	B1		x		Factories, mostly near the US border, that assemble imported parts for export.	
+maquillaje		noun	m	makeup	A2					
+maquillarse		verb		to put on makeup	A2					
+maratón		noun	m	marathon	B1					
+maravilla		noun	f	wonder; marvel	B1				¡Qué maravilla!: how wonderful!	
+maravilloso		adj		wonderful; marvelous	A2					
+marca		noun	f	brand; mark	A2				¿De qué marca?: what brand?	
+marcador		noun	m	marker (pen); score	B1				Mexico also says plumón for a marker.	
+marco		noun	m	frame	B1					
+marea		noun	f	tide	B1					
+marearse		verb		to get dizzy; to get carsick	A2					
+mareo		noun	m	dizziness; nausea	B1					
+margarita		noun	f	daisy; margarita (drink)	A2					
+marido		noun	m	husband	A2				Esposo is more usual in Mexico.	
+marihuana		noun	f	marijuana	B1				Informal: mota.	
+mariposa		noun	f	butterfly	A2				Monarch butterflies (monarcas) winter in Michoacán.	
+mariscos		noun	mpl	seafood; shellfish	A2				Un coctel de mariscos: a seafood cocktail.	
+marisquería		noun	f	seafood restaurant	B1					
+marrano		noun	m	pig; slob	B1	informal	x		Also puerco. As an insult: a dirty or greedy person.	
+marrón		adj		brown	B1			f=-	Mexico usually says café: zapatos cafés.	
+martillo		noun	m	hammer	A2					
+más bien		expr		rather; actually	B1				No es caro, más bien barato: it's not expensive, rather cheap.	
+más tarde		expr		later	A1					
+masaje		noun	m	massage	B1					
+máscara		noun	f	mask	A2				Lucha libre wrestlers wear máscaras.	
+mascarilla		noun	f	face mask	B1				A medical mask is usually a cubrebocas in Mexico.	
+masticar		verb		to chew	B1					
+matrícula		noun	f	enrollment; registration number	B1				A car's license plate is la placa (las placas) in Mexico.	
+matrimonio		noun	m	marriage; married couple	B1					
+máximo		adj		maximum; top	B1					
+mayonesa		noun	f	mayonnaise	A2					
+mayoría		noun	f	majority; most	B1				La mayoría de la gente: most people.	
+mayúscula		noun	f	capital letter	A2					
+mazapán		noun	m	peanut candy	A2		x		In Mexico mazapán is a crumbly peanut candy, not almond marzipan.	
+mazorca		noun	f	ear of corn; cob	B1					
+mecate		noun	m	rope; cord	B1		x		From Nahuatl.	
+mecedora		noun	f	rocking chair	B1					
+mechero		noun	m	lighter (Spain)	B1				In Mexico: el encendedor.	
+medalla		noun	f	medal	B1					
+medias		noun	fpl	tights; pantyhose	B1				Socks are calcetines.	
+medicamento		noun	m	medicine; medication	A2					
+medida		noun	f	measurement; measure; size	B1				A la medida: made to measure.	
+medio ambiente		noun	m	environment	B1			pl=-		
+medio tiempo		noun	m	part-time; half-time	B1			pl=-	Trabajo de medio tiempo: part-time job.	
+medir		verb		to measure; to be (height)	A2				¿Cuánto mides?: how tall are you?	
+mejilla		noun	f	cheek	B1				Also cachete.	
+mellizo		noun	mf	twin	B1				Mexico also says cuate or gemelo.	
+melocotón		noun	m	peach (Spain)	A2				In Mexico: el durazno.	
+memela		noun	f	thick masa snack	B1		x		A thick oval tortilla topped with beans, salsa and cheese.	
+memoria		noun	f	memory; USB stick	A2				Memoria USB: flash drive.	
+memorizar		verb		to memorize	B1					
+mencionar		verb		to mention	B1					
+mendigo		noun	mf	beggar	B1					
+mendigo	mendigo#damn	adj		damn; rotten	B1	informal	x		Mexico: a mild stand-in for maldito. ¡Mendigo perro!: damn dog!	
+menso		adj		dumb; silly	A2	informal	x		Mild. Standard: tonto.	
+mensual		adj		monthly	B1					
+mensualidad		noun	f	monthly payment	B1				Pagar en mensualidades: to pay in installments.	
+menta		noun	f	mint	A2					
+mental		adj		mental	B1					
+mente		noun	f	mind	B1					
+mentiroso		adj		lying; liar	A2				¡Mentiroso!: liar!	
+menudo		noun	m	tripe soup	A2		x		Spicy beef-tripe soup, a weekend and hangover dish. A menudo: often.	
+mercancía		noun	f	goods; merchandise	B1					
+merecer		verb		to deserve	B1					
+merendar		verb		to have an evening snack	B1					
+merienda		noun	f	evening snack	B1					
+mermelada		noun	f	jam	A2					
+meses sin intereses		expr		interest-free installments	B1		x		Store-card offer: doce meses sin intereses.	
+meta		noun	f	goal; finish line	B1					
+metal		noun	m	metal	B1					
+metate		noun	m	grinding stone	B2		x		A stone slab for grinding corn and chiles; from Nahuatl.	
+meterse		verb		to get in; to meddle	A2				Métete: get in. No te metas: stay out of it.	
+metiche		adj		nosy; busybody	A2	informal	x		Standard: entrometido.	
+método		noun	m	method	B1					
+metro	metro#meter	noun	m	meter (unit)	A2				Also the subway.	
+mezcla		noun	f	mix; mixture	B1					
+mezclilla		noun	f	denim	A2		x		Pantalón de mezclilla: jeans.	
+miedoso		adj		fearful; scaredy-cat	A2					
+miembro		noun	m	member; limb	B1					
+mientras tanto		expr		meanwhile	A2					
+migra		noun	f	immigration police	B1	informal	x		La migra: US or Mexican immigration agents.	
+migración		noun	f	migration; immigration office	B1		x		In Mexico, Migración is the immigration authority (INM).	
+migraña		noun	f	migraine	B1					
+mijo		noun	mf	my son; dear	A2	informal	x		From mi hijo; said affectionately. Mija: my daughter; dear.	
+militar		adj		military	B1				Also a noun: soldier.	
+millonario		adj		millionaire; very rich	B1					
+milpa		noun	f	cornfield	B1		x		From Nahuatl: a field of corn, beans and squash.	
+mimar		verb		to pamper; to spoil	B1					
+mina		noun	f	mine; pencil lead	B1					
+mínimo		adj		minimum; smallest	B1				Salario mínimo: minimum wage.	
+minisúper		noun	m	convenience store	A2		x			
+minúscula		noun	f	lowercase letter	A2					
+mirada		noun	f	look; gaze	B1					
+mirador		noun	m	viewpoint; lookout	A2					
+misa		noun	f	Mass (church)	B1					
+miscelánea		noun	f	corner store	A2		x		A small neighborhood shop for groceries and snacks.	
+misión		noun	f	mission	B1					
+misterio		noun	m	mystery	B1					
+mixiote		noun	m	meat steamed in agave leaf	B1		x		The x is said sh.	mee-SHYOH-teh
+moco		noun	m	snot; mucus	B1				Tener mocos: to have a runny nose.	
+modales		noun	mpl	manners	B1					
+modelo		noun	mf	model	B1			f=-		
+modo		noun	m	way; manner; mode	B1				De todos modos: anyway.	
+mofle		noun	m	muffler (car)	B1		x			
+mogollón		noun	m	loads; a lot (Spain)	B1	informal		pl=-	Spain only. In Mexico: un montón.	
+mojar		verb		to wet; to dip	A2				Mojar el pan en el café: to dip bread in coffee.	
+mojarra		noun	f	mojarra (fried fish)	B1		x		A small fish, usually fried whole at the beach.	
+molar		verb		to be cool; to like (Spain)	B1	informal			Me mola: I love it. In Mexico: está padre, me late.	
+molde		noun	m	mold; baking tin	B1					
+moler		verb		to grind	B1				Café molido: ground coffee.	
+molestia		noun	f	bother; discomfort	B1				Disculpe la molestia: sorry for the trouble.	
+molesto		adj		annoyed; annoying	A2					
+molino		noun	m	mill	B1				Molino de nixtamal: a mill for tortilla dough.	
+mollete		noun	m	open bean-and-cheese roll	A2		x		A bolillo topped with refried beans and melted cheese.	
+monedero		noun	m	coin purse	A2					
+monja		noun	f	nun	B1					
+monje		noun	m	monk	B1					
+mono		noun	m	monkey; cartoon figure	A2				Monitos: cartoons. For cute, Mexico prefers lindo.	
+mono	mono#cute	adj		cute (Spain)	A2				Mostly Spain. In Mexico: lindo, bonito.	
+moño		noun	m	bow (ribbon); bun (hair)	A2					
+monstruo		noun	m	monster	A2					
+montar		verb		to ride; to set up	B1				Montar a caballo: to ride a horse.	
+monte		noun	m	mountain; the wild; scrubland	B1					
+monumento		noun	m	monument	A2					
+morder		verb		to bite	A2					
+moreno		adj		dark-skinned; dark-haired	A2				In Mexico moreno usually describes skin color.	
+morral		noun	m	shoulder bag	B1		x		A woven cloth or leather bag.	
+morralla		noun	f	small change; coins	B1		x			
+mostaza		noun	f	mustard	A2					
+mostrador		noun	m	counter (shop)	B1					
+motivo		noun	m	reason; motive	B1					
+mover		verb		to move (something)	A2				Moverse: to move (yourself).	
+móvil		noun	m	cell phone (Spain); mobile	A2				As a phone, Spain only. In Mexico: el celular. Datos móviles: mobile data.	
+movimiento		noun	m	movement; motion	B1					
+mudanza		noun	f	move (house); removal	B1					
+mudo		adj		mute; speechless	B1					
+mueblería		noun	f	furniture store	B1					
+muestra		noun	f	sample; sign	B1				Muestra de sangre: blood sample.	
+mugre		noun	f	dirt; grime; junk	B1		x		Informal Mexico: esta mugre: this piece of junk.	
+mujeriego		adj		womanizing; womanizer	B1					
+mula		noun	f	mule	B1					
+muñeco		noun	m	doll; figure	A2				Muñeco de nieve: snowman.	
+municipio		noun	m	municipality; town hall	B1				Mexico City has alcaldías instead.	
+murciélago		noun	m	bat	B1					
+muro		noun	m	wall	B1				A wall inside a house is la pared.	
+músculo		noun	m	muscle	B1					
+músico		noun	mf	musician	A2					
+muslo		noun	m	thigh	B1				Muslo de pollo: chicken thigh.	
+# --- n
+nacimiento		noun	m	birth; Nativity scene	B1				Mexican homes set up a nacimiento at Christmas.	
+nación		noun	f	nation	B1					
+nacional		adj		national	A2					
+nacionalidad		noun	f	nationality	A2					
+naco		adj		tacky; low-class	B1	informal	x		Classist and offensive; avoid it.	
+nada que ver		expr		nothing to do with it; not at all	B1				¡Nada que ver!: that's not it at all!	
+nadar		verb		to swim	A1					
+nalga		noun	f	buttock	B1	informal			Las nalgas: the bottom.	
+nalgada		noun	f	spanking; smack on the bottom	B1					
+nana		noun	f	nanny; grandma	B1		x		Also a lullaby.	
+nanche		noun	m	nance (small yellow fruit)	B2		x			
+narco		noun	m	drug trafficker	B1				Short for narcotraficante.	
+nata		noun	f	skin on boiled milk; cream	B1		x		In Mexico mainly the film on boiled milk, used in baking.	
+natación		noun	f	swimming	A2			pl=-		
+nativo		adj		native	B1				Hablante nativo: native speaker.	
+náusea		noun	f	nausea	B1				Tengo náuseas: I feel sick.	
+navaja		noun	f	pocketknife; razor	B1					
+nave		noun	f	ship; spacecraft; car	B1				Informal Mexico: a car (¡qué nave!).	
+navegar		verb		to sail; to browse	B1					
+navideño		adj		Christmas	A2				Comida navideña: Christmas food.	
+neblina		noun	f	mist; fog	B1					
+necesidad		noun	f	need; necessity	A2					
+necio		adj		stubborn; pesky	B1		x		In Mexico necio is stubborn or annoying, not foolish.	
+negar		verb		to deny; to refuse	B1				Negarse a: to refuse to.	
+negociar		verb		to negotiate	B1					
+nene		noun	mf	baby; little kid	A2	informal		f=nena	Nena is also said to a girl or a partner.	
+nervio		noun	m	nerve	B1				Nervios: nerves.	
+nevar		verb		to snow	A2					
+nevera		noun	f	fridge (Spain)	A2				In Mexico: el refrigerador (el refri). A portable cooler is a hielera.	
+nevería		noun	f	ice-cream parlor	A2		x			
+ni hablar		expr		no way; oh well	B1					
+ni idea		expr		no idea	A2					
+ni madres		expr		no way; not at all	B1	vulgar	x		Crude. Neutral: para nada.	
+ni siquiera		expr		not even	A2					
+nido		noun	m	nest	B1					
+niebla		noun	f	fog	B1					
+niñera		noun	f	babysitter	B1				Mexico also says nana.	
+niñez		noun	f	childhood	B1					
+nivel		noun	m	level	A2					
+nixtamal		noun	m	corn cooked in limewater	B1		x		The basis of masa for tortillas; the x is said sh.	neesh-tah-MAHL
+no hay de qué		expr		you're welcome; don't mention it	A2					
+no importa		expr		it doesn't matter	A1					
+no mames		expr		no way!; you're kidding!	B1	vulgar	x		Very common among friends but crude. Polite version: no manches.	
+no pasa nada		expr		it's OK; no problem	A2					
+nocturno		adj		night; nighttime	B1					
+nombrar		verb		to name; to appoint	B1					
+nómina		noun	f	payroll; pay	B1				Cobrar por nómina: to be paid through payroll.	
+noreste		noun	m	northeast	B1			pl=-		
+norma		noun	f	rule; standard	B1					
+noroeste		noun	m	northwest	B1			pl=-		
+norteño		adj		northern; norteño (music)	B1		x		Música norteña: accordion-based music of northern Mexico.	
+nostalgia		noun	f	nostalgia; homesickness	B1					
+notar		verb		to notice	B1					
+notario		noun	mf	notary	B2				A Mexican notario is a senior lawyer, not a clerk.	
+noticiero		noun	m	newscast; the news	A2		x			
+novato		adj		new; rookie; beginner	B1					
+novedad		noun	f	news; novelty	B1				¿Alguna novedad?: anything new?	
+novela		noun	f	novel; soap opera	A2		x		In Mexico novela often means a telenovela.	
+noveno		adj		ninth	A2					
+nuca		noun	f	back of the neck; nape	B1					
+nudo		noun	m	knot	B1					
+nuera		noun	f	daughter-in-law	B1					
+nuez		noun	f	pecan; walnut; nut	A2		x		In Mexico nuez is usually the pecan. Nuez de Castilla: walnut. Nuez moscada: nutmeg.	
+nutriólogo		noun	mf	nutritionist	B1		x		Spain says nutricionista.	
+# --- ñ
+ñero		adj		rough; lowlife	B2	informal	x		Mexico City slang, often classist. From compañero; among friends: buddy.	
+ñoño		adj		nerdy; goody-goody	B1	informal	x			
+# --- o
+oaxaqueño		adj		from Oaxaca	B1		x			
+obedecer		verb		to obey	B1					
+objetivo		noun	m	goal; objective	B1					
+objeto		noun	m	object; thing	B1					
+oblea		noun	f	wafer	B1				Thin colored wafers are a classic Mexican candy.	
+obligación		noun	f	obligation; duty	B1					
+obligar		verb		to force; to oblige	B1					
+obligatorio		adj		compulsory; mandatory	B1					
+obra		noun	f	work; play; building site	B1				Obra de teatro: play. Obra negra: the bare shell of a building.	
+obrero		noun	mf	worker; laborer	B1					
+observar		verb		to observe; to watch	B1					
+obtener		verb		to obtain; to get	B1				Everyday: conseguir, sacar.	
+obvio		adj		obvious	A2				¡Obvio!: of course!	
+ocasión		noun	f	occasion; time	B1				En ocasiones: sometimes.	
+ocote		noun	m	pine kindling	B2		x		Resin-rich pine for starting fires; from Nahuatl.	
+octavo		adj		eighth	A2					
+oculista		noun	mf	eye doctor	B1					
+ocultar		verb		to hide	B1				Everyday: esconder.	
+odio		noun	m	hatred; hate	B1					
+ofender		verb		to offend	B1					
+oficial		adj		official	B1				Also a noun: officer.	
+oficio		noun	m	trade; occupation	B1					
+ojera		noun	f	dark circle (under the eye)	B1				Tener ojeras: to have bags under your eyes.	
+ojo	ojo#careful	interj		careful!; watch out!	A2				Mexico also says ¡aguas!	
+ola		noun	f	wave (sea)	A2					
+olote		noun	m	corncob (stripped)	B1		x		From Nahuatl.	
+ombligo		noun	m	belly button; navel	B1					
+ondulado		adj		wavy	B1				Pelo ondulado: wavy hair.	
+operación		noun	f	operation; surgery	B1					
+operador		noun	mf	driver; operator	B1		x		In Mexico a bus or truck driver is often called el operador.	
+operar		verb		to operate; to operate on	B1				Me van a operar: I'm having an operation.	
+opinar		verb		to think; to give an opinion	B1				¿Tú qué opinas?: what do you think?	
+oponerse		verb		to oppose; to object	B1					
+óptica		noun	f	optician's; optics	B1					
+optimista		adj		optimistic	B1					
+opuesto		adj		opposite	B1					
+oración		noun	f	sentence; prayer	B1					
+ordenado		adj		tidy; organized	A2					
+ordenador		noun	m	computer (Spain)	A2				In Mexico: la computadora.	
+ordenar		verb		to tidy; to order	B1				In a restaurant, ordenar is to order: ¿Ya ordenaron?	
+orégano		noun	m	oregano	A2					
+orgánico		adj		organic	B1					
+organización		noun	f	organization	B1					
+orgullo		noun	m	pride	B1					
+oriente		noun	m	east; the East	B1					
+origen		noun	m	origin	B1					
+original		adj		original	B1					
+orilla		noun	f	edge; bank; shore	B1				A la orilla del mar: at the seashore.	
+orina		noun	f	urine	B1					
+orinar		verb		to urinate	B1					
+oro		noun	m	gold	A2					
+orquesta		noun	f	orchestra; band	B1					
+ortografía		noun	f	spelling	B1					
+oscuridad		noun	f	darkness	B1					
+ostión		noun	m	oyster	B1		x		Spain says ostra.	
+ostra		noun	f	oyster (Spain)	B1				In Mexico: el ostión. ¡Ostras!: wow! (Spain, mild).	
+otra vez		expr		again	A1					
+oveja		noun	f	sheep	A2					
+overol		noun	m	overalls; coveralls	B1		x			
+ovni		noun	m	UFO	B1					
+oxígeno		noun	m	oxygen	B1			pl=-		

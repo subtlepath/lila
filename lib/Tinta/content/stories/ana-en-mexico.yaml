@@ -1,0 +1,38 @@
+title: Ana en la Ciudad de México
+title_en: Ana in Mexico City
+level: A1
+kind: reading
+lesson: u04.l02
+lines:
+  - es: "Ana es de Chicago, pero vive en México."
+    en: "Ana is from Chicago, but she lives in Mexico."
+  - es: "Vive en un departamento en la calle Xola."
+    en: "She lives in an apartment on Xola Street."
+  - es: "Todos los días, Ana come en una fonda."
+    en: "Every day, Ana eats at a fonda, a small family restaurant."
+    paragraph: true
+  - es: "Ana saluda: “¡Buenas tardes!”"
+    en: "Ana says hello: “Good afternoon!”"
+  - es: "El mesero se llama Toño y siempre está contento."
+    en: "The waiter's name is Toño, and he's always cheerful."
+  - es: "Ana come tacos de papa y toma agua de limón."
+    en: "Ana eats potato tacos and drinks limeade."
+  - es: "Un señor pasa: “Con permiso. ¡Provecho!”"
+    en: "A man walks by: “Excuse me. Enjoy your meal!”"
+    paragraph: true
+  - es: "Ana le da las gracias."
+    en: "Ana thanks him."
+  - es: "¡A Ana le encanta México!"
+    en: "Ana loves Mexico!"
+    paragraph: true
+questions:
+  - q: "¿De dónde es Ana?"
+    options: ["De Chicago", "De Oaxaca", "De la calle Xola"]
+    answer: 0
+  - q: "¿Cómo se llama el mesero?"
+    options: ["Luis", "Toño", "Diego"]
+    answer: 1
+  - q: "What does the man say to Ana?"
+    lang: en
+    options: ["Enjoy your meal!", "Good night!", "What's up?", "See you tomorrow!"]
+    answer: 0

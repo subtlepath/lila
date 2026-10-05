@@ -1,0 +1,8 @@
+# Unit 10: Antes / Back then. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u10.l01 Cuando era niño (imperfect)
+# --- u10.l02 En la secundaria (imperfect: habits, description). Also new here, row in core.tsv: vida
+# --- u10.l03 Cuando tembló (preterite and imperfect together)
+temblor		noun	m	earthquake; tremor	A2			weather			More common in speech than terremoto.	

@@ -1,0 +1,26 @@
+# Proper nouns. pos is always propn; they need no example sentence and get no items.
+lemma	pos	gloss	level
+Ana	propn	Ana (name)	A1
+Luis	propn	Luis (name)	A1
+Sofía	propn	Sofía (name)	A1
+Laura	propn	Laura (name)	A1
+Diego	propn	Diego (name)	A1
+Elena	propn	Elena (name)	A1
+Tom	propn	Tom (name)	A1
+Toño	propn	Toño (short for Antonio)	A1
+Ortega	propn	Ortega (surname)	A1
+Ruiz	propn	Ruiz (surname)	A1
+México	propn	Mexico	A1
+Estados Unidos	propn	the United States	A1
+Canadá	propn	Canada	A1
+Chicago	propn	Chicago	A1
+Chiapas	propn	Chiapas (state)	A1
+Oaxaca	propn	Oaxaca (state and city)	A1
+Puebla	propn	Puebla (state and city)	A1
+Guadalajara	propn	Guadalajara (city)	A1
+Monterrey	propn	Monterrey (city)	A1
+Cancún	propn	Cancún (beach city)	A1
+Xochimilco	propn	Xochimilco (borough of Mexico City)	A1
+Tlalpan	propn	Tlalpan (borough of Mexico City)	A1
+Xola	propn	Xola (street in Mexico City)	A1
+Juárez	propn	Juárez (street name, after Benito Juárez)	A1

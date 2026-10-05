@@ -1,0 +1,126 @@
+number: 4
+title: En el metro
+title_en: On the metro
+level: A1
+new: [metro, camión, pesero, estación, parada, boleto, subirse, bajarse, llegar, lleno, agarrar, manejar]
+conjugate: ["llegar:pres", "bajarse:pres"]
+reviewer_notes:
+  - "agarrar (a bus, a taxi) is untagged, so neutral. Is that right, or is it informal next to tomar?"
+  - "Culture note: Metro paid with a rechargeable card, women's cars at rush hour, peseros paid to the driver. Accurate for Mexico City today?"
+notes:
+  - kind: grammar
+    title: Getting on and off
+    text: |
+      _Subirse_ (to get on) and _bajarse_ (to get off) are reflexive: the pronoun goes before the verb.
+
+      - _Me subo al camión._ — I get on the bus.
+      - _Me bajo en la estación Insurgentes._ — I get off at Insurgentes station.
+      - _¿Dónde nos bajamos?_ — Where do we get off?
+
+      _Llegar_ (to arrive, to get somewhere) takes _a_: _Llego a la parada._ To ask the way, say _¿Cómo llego al Zócalo?_
+
+      To take a bus or the metro, say _tomar_ or _agarrar_: _Tomo el metro. Agarramos un taxi._ To say how you travel, use _en_: _en metro_, _en camión_, _en taxi_.
+  - kind: usage
+    title: Take the bus, never coger
+    text: |
+      In Spain ~coger~ means to take or catch, but in Mexico it is a vulgar word for sex. Say _tomar_ or _agarrar_: _Tomo el camión_, _Agarra un taxi_.
+
+      Bus words differ too. In Mexico City the city bus is _el camión_. _El autobús_ is the long-distance coach between cities.
+
+      A car is a _carro_, and to drive is _manejar_.
+  - kind: culture
+    title: Getting around Mexico City
+    text: |
+      The Metro is huge, fast and cheap, with one flat fare. Pay with a rechargeable card at the turnstile. At rush hour the front cars are for women and children only.
+
+      _Peseros_ (also called _micros_) are minibuses that run fixed routes and stop almost anywhere. Pay the driver as you get on, and to get off, call out _¡Bajan!_ ("getting off!") or ask _¿Me baja en la esquina?_
+
+      Every Metro station has its own small picture as well as a name, which makes the map easy to follow.
+sentences:
+  - es: "Voy al [trabajo|trabajo] en {metro}."
+    en: "I take the metro to work."
+  - es: "El {metro} es muy rápido."
+    en: "The metro is really fast."
+  - es: "Tomo el {camión} en la esquina."
+    en: "I catch the bus on the corner."
+    note: "In Mexico a camión is a city bus."
+  - es: "¿El {camión} pasa por el centro?"
+    en: "Does the bus go through downtown?"
+  - es: "Agarramos un {pesero} en Insurgentes."
+    en: "We catch a pesero on Insurgentes."
+  - es: "Don Beto maneja un {pesero}."
+    en: "Don Beto drives a pesero."
+  - es: "Me bajo en la {estación} Insurgentes."
+    en: "I get off at Insurgentes station."
+  - es: "¿Dónde queda la {estación} del metro?"
+    en: "Where's the metro station?"
+  - es: "La {parada} del camión está en la esquina."
+    en: "The bus stop is on the corner."
+  - es: "Me bajo en la segunda {parada}."
+    en: "I get off at the second stop."
+  - es: "¿Cuánto cuesta el {boleto}?"
+    en: "How much is the ticket?"
+    reviewer_notes: "The Metro now runs mostly on cards. Is 'boleto' still natural (Metro, buses, other cities)?"
+  - es: "Necesito dos {boletos}, por favor."
+    en: "I need two tickets, please."
+  - es: "Me {subo} al camión en el centro."
+    en: "I get on the bus downtown."
+  - es: "Nos {subimos} al metro en Bellas Artes."
+    en: "We get on the metro at Bellas Artes."
+  - es: "¿Dónde me {bajo}?"
+    en: "Where do I get off?"
+    order: true
+  - es: "Ana se {baja} en la parada del parque."
+    en: "Ana gets off at the park stop."
+  - es: "Nos {bajamos} aquí."
+    en: "We're getting off here."
+    order: true
+  - es: "¿Cómo {llego} al Zócalo?"
+    en: "How do I get to the Zócalo?"
+    order: true
+  - es: "El camión {llega} al centro."
+    en: "The bus goes all the way downtown."
+    reviewer_notes: "Translated 'The bus goes all the way downtown'. Right sense of llegar here?"
+  - es: "Sofía y Tom {llegan} a la estación."
+    en: "Sofía and Tom get to the station."
+  - es: "El camión va muy {lleno}."
+    en: "The bus is really packed."
+  - es: "La estación está {llena}."
+    en: "The station is packed."
+  - es: "{Agarro} el metro en el centro."
+    en: "I catch the metro downtown."
+  - es: "¿{Agarramos} un taxi?"
+    en: "Shall we grab a taxi?"
+  - es: "No {manejo} en la Ciudad de México."
+    en: "I don't drive in Mexico City."
+  - es: "Mi papá {maneja} un taxi."
+    en: "My dad drives a taxi."
+dialogue:
+  title: ¿Dónde me bajo?
+  title_en: Where do I get off?
+  reviewer_notes: "'¡Bajan!' to get off, and the driver's 'Súbanse' to two passengers: natural pesero talk?"
+  lines:
+    - speaker: Sofía
+      es: "¡Ay, el metro va muy lleno! ¿Nos bajamos aquí y agarramos un pesero?"
+      en: "Ugh, the metro is packed! Shall we get off here and catch a pesero?"
+    - speaker: Tom
+      es: "Sí, vamos."
+      en: "Sure, let's go."
+    - speaker: Sofía
+      es: "Buenas tardes, don Beto. ¿Pasa por la Condesa?"
+      en: "Good afternoon, don Beto. Do you go through the Condesa?"
+    - speaker: Beto
+      es: "Sí, señorita. Súbanse."
+      en: "Yes, miss. Hop on."
+    - speaker: Tom
+      es: "¿Y dónde me bajo para el parque?"
+      en: "And where do I get off for the park?"
+    - speaker: Beto
+      es: "En la segunda parada, joven."
+      en: "At the second stop, young man."
+    - speaker: Sofía
+      es: "¡Bajan!"
+      en: "Getting off!"
+    - speaker: Tom
+      es: "En Chicago manejo, pero aquí no. ¡Qué rápido maneja don Beto!"
+      en: "In Chicago I drive, but not here. Don Beto drives so fast!"

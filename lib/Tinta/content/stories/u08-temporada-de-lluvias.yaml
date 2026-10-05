@@ -1,0 +1,43 @@
+title: La temporada de lluvias
+title_en: The rainy season
+level: A1
+kind: reading
+reviewer_notes: "Mexico City by month: March to May sunny and hot; rain June to October, heaviest July and August; dry from November; December to February cold mornings and nights. Accurate?"
+lesson: u08.l02
+lines:
+  - es: "Ana vive en la Ciudad de México."
+    en: "Ana lives in Mexico City."
+  - es: "En marzo, abril y mayo hace mucho sol y mucho calor."
+    en: "In March, April and May it's very sunny and hot."
+  - es: "En junio empieza la temporada de lluvias."
+    en: "In June the rainy season starts."
+  - es: "En julio y agosto hace sol en la [mañana|mañana#morning]."
+    en: "In July and August the mornings are sunny."
+    paragraph: true
+  - es: "Pero en la [tarde|tarde] está nublado y llueve mucho."
+    en: "But in the afternoon it clouds over and rains hard."
+  - es: "Por eso Ana siempre lleva su paraguas en la bolsa."
+    en: "That's why Ana always carries her umbrella in her bag."
+  - es: "En septiembre y octubre todavía llueve, pero menos."
+    en: "In September and October it still rains, but less."
+    paragraph: true
+  - es: "En noviembre ya no llueve."
+    en: "By November it doesn't rain anymore."
+  - es: "En diciembre, enero y febrero hace frío en la [mañana|mañana#morning] y en la noche."
+    en: "In December, January and February the mornings and nights are cold."
+  - es: "Para Ana, octubre es el mejor mes del año."
+    en: "For Ana, October is the best month of the year."
+    paragraph: true
+  - es: "Hace fresco, y ya no llueve mucho."
+    en: "It's cool, and it doesn't rain much anymore."
+questions:
+  - q: "¿Cuándo empieza la temporada de lluvias?"
+    options: ["En junio", "En marzo", "En noviembre"]
+    answer: 0
+  - q: "¿Qué lleva Ana en la bolsa?"
+    options: ["Su chamarra", "Su paraguas", "Su celular"]
+    answer: 1
+  - q: "Why does Ana like October?"
+    lang: en
+    options: ["It's very hot and sunny", "It rains every afternoon", "It's cool and it doesn't rain much"]
+    answer: 2

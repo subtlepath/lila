@@ -1,0 +1,76 @@
+number: 2
+title: En la taquería
+title_en: At the taco stand
+level: A1
+new: [casa, taco, agua, computadora, camión, chido, comer, hablar, vivir, estar]
+conjugate: ["estar:pres", "hablar:pres.1s"]
+notes:
+  - kind: culture
+    title: The taquería
+    text: |
+      A _taquería_ sells tacos. Say _con permiso_ when you pass someone.
+sentences:
+  - es: "Ana {vive|vivir:pres.3s} en una {casa} grande."
+    en: "Ana lives in a big house."
+  - es: "Luis {come|comer:pres.3s} dos {tacos}."
+    en: "Luis eats two tacos."
+  - es: "El {agua} está muy fría."
+    en: "The water is very cold."
+  - es: "¿{Habla|hablar:pres.3s} inglés?"
+    en: "Do you speak English?"
+  - es: "La {computadora} está en la casa."
+    en: "The computer is in the house."
+  - es: "El {camión} {está|estar:pres.3s} aquí."
+    en: "The bus is here."
+  - es: "¡Qué {chido}!"
+    en: "How cool!"
+  - es: "Son 20 pesos."
+    en: "It's 20 pesos."
+    allow: [20]       # keeps a number token in the fixture for pack_test
+  - es: "Estoy bien, gracias."
+    en: "I'm fine, thanks."
+  - es: "Mis lentes están en la mesa."
+    en: "My glasses are on the table."
+  - es: "La [papa|papa] es muy buena."
+    en: "The potato is very good."
+  - es: "El [papa|papa#pope] vive en Roma."
+    en: "The pope lives in Rome."
+  - es: "Es un buen amigo."
+    en: "He's a good friend."
+  - es: "Vivo aquí con mi amiga."
+    en: "I live here with my friend."
+  - es: "Un taco {para} Ana."
+    en: "A taco for Ana."
+  - es: "Gracias {por} el agua."
+    en: "Thanks for the water."
+  - es: "La chamba es buena."
+    en: "The job is good."
+  - es: "Ana come tacos."
+    en: "Ana eats tacos."
+    order: true
+  - es: "Es un buen día."
+    en: "It's a good day."
+  - es: "Es un año bueno para la casa."
+    en: "It's a good year for the house."
+  - es: "¿Dónde está la casa?"
+    en: "Where is the house?"
+  - es: "La mano de Ana."
+    en: "Ana's hand."
+  - es: "El tiempo es bueno."
+    en: "The weather is good."
+dialogue:
+  title: En la taquería
+  title_en: At the taco stand
+  lines:
+    - speaker: Mesero
+      es: "Buenas tardes."
+      en: "Good afternoon."
+    - speaker: Ana
+      es: "Dos tacos y un agua, por favor."
+      en: "Two tacos and a water, please."
+    - speaker: Mesero
+      es: "¿Algo más?"
+      en: "Anything else?"
+    - speaker: Ana
+      es: "No, gracias. ¿Mande? Con permiso."
+      en: "No, thanks. Pardon? Excuse me."

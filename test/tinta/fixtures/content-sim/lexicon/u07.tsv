@@ -1,0 +1,13 @@
+# Unit 7: El mercado y el tianguis / Market and street market. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u07.l01 ¿A cómo el kilo? (demonstratives). Also new here, row in core.tsv: naranja
+# --- u07.l02 ¿Me la puedo probar? (object pronouns, clothes)
+lo		pron		it; him; you (formal, object)	A1			grammar	f=la; mpl=los; fpl=las		Feminine la, plural los and las: la compro, los quiero.	
+# --- u07.l03 ¿Me lo deja más barato? (comparatives, money)
+# --- supporting (no lesson introduces these; usable from Unit 7 on)
+esto		pron		this (thing)	A1			grammar			¿Qué es esto?	
+eso		pron		that (thing)	A1			grammar				
+amarillo		adj		yellow	A1			describing				
+ciento		num		one hundred (in 101 to 199)	A1			numbers	pl=cientos		Ciento cincuenta: 150.	

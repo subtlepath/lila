@@ -1,0 +1,20 @@
+# Phrasebook words: lexicon rows that only content/phrasebook/*.yaml needs.
+# TAB-separated; columns as in docs/content-style.md section 6. A phrase that uses a word counts as its example;
+# these rows make no vocabulary items. Sections follow the phrasebook categories.
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note
+# --- Taco stand (taqueria.yaml)
+suadero		noun	m	suadero, a soft beef cut for tacos	B1		x	food
+milanesa		noun	f	breaded cutlet (beef or chicken)	A2			food
+# --- Restaurant, fonda and café (restaurante.yaml)
+# --- Market and tianguis (mercado.yaml)
+# --- Shopping and money (compras.yaml)
+# --- Getting around (transporte.yaml)
+# --- Hotel and home (alojamiento.yaml)
+# --- Health and pharmacy (salud.yaml)
+# --- Emergencies and safety (emergencias.yaml)
+# --- Phone, internet and errands (tramites.yaml)
+# --- Making plans (planes.yaml)
+# --- Mexican expressions (expresiones.yaml)
+# --- Names (propn: no items, no example needed)
+OXXO		propn		OXXO (chain of corner stores)	A2
+Ministerio Público		propn		public prosecutor's office (where crimes are reported)	B1

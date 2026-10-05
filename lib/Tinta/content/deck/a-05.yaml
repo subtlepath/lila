@@ -1,0 +1,206 @@
+title: "Frecuentes A, parte cinco"
+sentences:
+  # 201 devolver
+  - es: "Luis, ¿me {devuelves} mi libro?"
+    en: "Luis, can you give me back my book?"
+    note: "Volver is to come back yourself; devolver is to give something back."
+  - es: "Ya te {devolví} el dinero."
+    en: "I already paid you back."
+  # 202 boca
+  - es: "No hables con la {boca} llena."
+    en: "Don't talk with your mouth full."
+    order: true
+  # 203 encima
+  - es: "[Deja|dejar:imp.2s] las llaves {encima} de la mesa."
+    en: "Leave the keys on the table."
+    note: "Encima de: on top of. En la mesa also works."
+  # 204 servicio
+  - es: "El {servicio} en esta fonda es muy [bueno|bueno]."
+    en: "The service at this fonda is very good."
+  # 205 papel
+  - es: "No hay {papel} de baño."
+    en: "There's no toilet paper."
+    order: true
+  # 206 futuro
+  - es: "Nadie sabe qué va a pasar en el {futuro}."
+    en: "Nobody knows what's going to happen in the future."
+  # 207 despedirse
+  - es: "Me {despedí} de mis amigos."
+    en: "I said goodbye to my friends."
+    order: true
+  - es: "Ana se {despide} de su abuela."
+    en: "Ana says goodbye to her grandma."
+    note: "Despedirse de alguien: to say goodbye to someone."
+  # 208 ocupar
+  - es: "¿Qué {ocupas}, Memo?"
+    en: "What do you need, Memo?"
+    note: "In Mexico ocupar often means 'to need'."
+  - es: "{Ocupo} más tiempo."
+    en: "I need more time."
+    reviewer_notes: "Ocupar = to need: fine in Mexico City, or does it sound northern or rural?"
+  # 209 ofrecer
+  - es: "¿Le puedo {ofrecer} algo de tomar?"
+    en: "Can I offer you something to drink?"
+  - es: "Me {ofrecieron} un trabajo en Monterrey."
+    en: "They offered me a job in Monterrey."
+  # 210 cámara
+  - es: "Se me olvidó la {cámara}."
+    en: "I forgot my camera."
+    order: true
+  # 211 sino
+  - es: "No vivo en Puebla {sino} en Oaxaca."
+    en: "I don't live in Puebla but in Oaxaca."
+    note: "After no, 'but rather' is sino, not pero."
+  # 212 arreglar
+  - es: "Mi papá {arregla} todo en la casa."
+    en: "My dad fixes everything around the house."
+  - es: "Ya {arreglé} la regadera."
+    en: "I already fixed the shower."
+    note: "Arreglar: to fix. Arreglarse: to get ready, to dress up."
+  # 213 aire
+  - es: "Necesito {aire} fresco."
+    en: "I need some fresh air."
+    order: true
+  # 214 decisión
+  - es: "Es una {decisión} muy difícil."
+    en: "It's a very hard decision."
+    order: true
+    note: "Tomar una decisión: to make a decision."
+  # 215 jamás
+  - es: "{Jamás} voy a volver a ese lugar."
+    en: "I'm never going back to that place."
+    note: "Jamás is a stronger nunca."
+  # 216 estrella
+  - es: "En el campo se [ven|ver] muchas {estrellas}."
+    en: "You can see lots of stars in the countryside."
+  # 217 recoger
+  - es: "Tengo que {recoger} a los niños a las dos."
+    en: "I have to pick up the kids at two."
+  - es: "Diego, {recoge|recoger:imp.2s} tu ropa."
+    en: "Diego, pick up your clothes."
+  # 218 asustar
+  - es: "¡Ay, Beto, me {asustaste}!"
+    en: "Oh, Beto, you scared me!"
+  # 219 pelo
+  - es: "Ana tiene el {pelo} negro."
+    en: "Ana has black hair."
+    note: "Spanish uses the article with hair and body parts: tiene el pelo negro."
+  # 220 reírse
+  - es: "¿De qué te {ríes}?"
+    en: "What are you laughing at?"
+    order: true
+  - es: "Me {reí} mucho con la película."
+    en: "I laughed a lot at the movie."
+  # 221 edad
+  - es: "¿Qué {edad} tiene tu hijo?"
+    en: "How old is your son?"
+    order: true
+  # 222 alejarse
+  - es: "No te {alejes} mucho."
+    en: "Don't go too far."
+  # 223 romper
+  - es: "El niño {rompió} la ventana."
+    en: "The boy broke the window."
+    order: true
+    note: "Something breaking by itself is romperse: se rompió."
+  # 224 barco
+  - es: "Vimos un {barco} muy grande en el mar."
+    en: "We saw a huge ship at sea."
+  # 225 normal
+  - es: "¿Es {normal} tener tanto sueño?"
+    en: "Is it normal to be so sleepy?"
+  # 226 montón
+  - es: "Tengo un {montón} de [trabajo|trabajo]."
+    en: "I have a ton of work."
+    order: true
+    note: "Un montón de: a lot of, very common in speech."
+  # 227 mejorar
+  - es: "Tu español {mejoró} mucho."
+    en: "Your Spanish has improved a lot."
+  # 228 carrera
+  - es: "¿Qué {carrera} estudias?"
+    en: "What's your major?"
+    note: "Carrera: a university degree program."
+  # 229 reunión
+  - es: "La {reunión} es a las diez."
+    en: "The meeting is at ten."
+  # 230 evitar
+  - es: "Prefiero {evitar} el centro los sábados."
+    en: "I prefer to avoid downtown on Saturdays."
+  # 231 amar
+  - es: "Te {amo}."
+    en: "I love you."
+    note: "Te amo is for a partner. With family and friends, say te quiero."
+  # 232 muerto
+  - es: "El Día de {Muertos} es en noviembre."
+    en: "The Day of the Dead is in November."
+    note: "Muerto: dead. Estoy muerto also means 'I'm exhausted'."
+  # 233 mantener
+  - es: "Él {mantiene} a toda su familia."
+    en: "He supports his whole family."
+  # 234 acercarse
+  - es: "No te {acerques} al perro."
+    en: "Don't go near the dog."
+    order: true
+  - es: "Ya se {acerca} la Navidad."
+    en: "Christmas is coming."
+  # 235 comenzar
+  - es: "La película {comienza} a las ocho."
+    en: "The movie starts at eight."
+    note: "Empezar is the more common word in speech."
+  # 236 cómo no
+  - es: "¿Te gusta el mole? —¡{Cómo no}!"
+    en: "Do you like mole? —Of course!"
+    note: "¡Cómo no!: of course, sure. Very Mexican, and friendly."
+  # 237 cielo
+  - es: "Hoy el {cielo} está muy azul."
+    en: "The sky is really blue today."
+  # 238 pelear
+  - es: "Mis hermanos siempre se {pelean}."
+    en: "My brothers are always fighting."
+  # 239 en serio
+  - es: "Te lo digo {en serio}."
+    en: "I'm serious."
+  - es: "¿Ganaste? ¿{En serio}?"
+    en: "You won? Seriously?"
+  # 240 boda
+  - es: "Vamos a ir a la {boda} de mi prima."
+    en: "We're going to my cousin's wedding."
+  # 241 necesario
+  - es: "No es {necesario} pagar."
+    en: "You don't need to pay."
+  # 242 recuperar
+  - es: "¿{Recuperaste} tu cartera?"
+    en: "Did you get your wallet back?"
+  # 243 nacer
+  - es: "{Nací} en Guadalajara."
+    en: "I was born in Guadalajara."
+    order: true
+    note: "To be born is nacer, in the preterite: nací, naciste, nació."
+  - es: "¿Cuándo {nació} tu bebé?"
+    en: "When was your baby born?"
+  # 244 dirección
+  - es: "¿Me das tu {dirección}?"
+    en: "Can I have your address?"
+    order: true
+  # 245 público
+  - es: "¿Hay un baño {público} por aquí?"
+    en: "Is there a public restroom around here?"
+  # 246 alrededor
+  - es: "Dimos una vuelta {alrededor} del parque."
+    en: "We walked around the park."
+  # 247 mitad
+  - es: "¿Quieres la {mitad} de mi torta?"
+    en: "Do you want half of my torta?"
+    order: true
+  # 248 disfrutar
+  - es: "{Disfruté} mucho el viaje."
+    en: "I really enjoyed the trip."
+  # 249 señal
+  - es: "Aquí no hay {señal}."
+    en: "There's no signal here."
+    order: true
+  # 250 programa
+  - es: "¿Qué {programa} estás viendo?"
+    en: "What show are you watching?"
+    note: "Programa is masculine: el programa."

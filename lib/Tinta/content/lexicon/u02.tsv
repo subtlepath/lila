@@ -1,0 +1,86 @@
+# Unit 2: ¿Quién eres? / Who are you?. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u02.l01 ¿A qué te dedicas? (gender and articles). Also new here, rows in core.tsv: hablar, día, amigo, maestro
+estudiante		noun	mf	student	A1			school			One form for a man or a woman: el or la estudiante.	
+ingeniero		noun	mf	engineer	A1			work			Also a title of address: el ingeniero Ruiz.	
+compañero		noun	mf	classmate; coworker	A1			people			Compañero de trabajo: coworker.	
+escuela		noun	f	school	A1			school				
+oficina		noun	f	office	A1			work				
+trabajo		noun	m	job; work	A1			work			(Yo) trabajo also means I work.	
+trabajar		verb		to work	A1			work				
+estudiar		verb		to study	A1			school				
+# --- u02.l02 Uno, dos, tres (numbers 0-10, plurals). Also new here, rows in core.tsv: dos, tres
+cero		num		zero	A1			numbers				
+uno		num		one	A1			numbers			Before a noun: un taco, una mesa.	
+cuatro		num		four	A1			numbers				
+cinco		num		five	A1			numbers				
+seis		num		six	A1			numbers				
+siete		num		seven	A1			numbers				
+ocho		num		eight	A1			numbers				
+nueve		num		nine	A1			numbers				
+diez		num		ten	A1			numbers				
+persona		noun	f	person	A1			people			Always feminine, even for a man: una persona.	
+# --- u02.l03 ¿Cómo estás? (estar). Also new here, rows in core.tsv: estar, feliz
+hoy		adv		today	A1			time				
+cansado		adj		tired	A1			feelings				
+contento		adj		happy; glad	A1			feelings				
+triste		adj		sad	A1			feelings				
+enojado		adj		angry; mad	A1		x	feelings		enfadado	Mexico says enojado; enfadado sounds Spanish.	
+enfermo		adj		sick; ill	A1			health				
+ocupado		adj		busy	A1			feelings				
+aburrido		adj		bored; boring	A1			feelings			Estoy aburrido: I'm bored. Es aburrido: it's boring.	
+listo		adj		ready	A1			feelings			Estar listo: to be ready.	
+mal		adv		badly; not well	A1			feelings			Estoy mal: I'm not well. The opposite of bien.	
+# --- u02.l04 ¿Cuál es tu número? (numbers 11-30)
+once		num		eleven	A1			numbers				
+doce		num		twelve	A1			numbers				
+trece		num		thirteen	A1			numbers				
+catorce		num		fourteen	A1			numbers				
+quince		num		fifteen	A1			numbers				
+veinte		num		twenty	A1			numbers				
+treinta		num		thirty	A1			numbers			Thirty-one and up: treinta y uno, treinta y dos...	
+número		noun	m	number	A1			numbers				
+celular		noun	m	cell phone	A1		x	things		móvil	Often shortened to el cel.	
+computadora		noun	f	computer	A1		x	things		ordenador; computador		
+mensaje		noun	m	message; text message	A1			things				
+mandar		verb		to send	A1			things		enviar	The everyday verb for sending: te mando un mensaje.	
+# --- supporting (no lesson introduces these; usable from Unit 2 on)
+que		conj		that; than; which; who	A1			grammar				
+o		conj		or	A1			grammar				
+porque		conj		because	A1			questions			One word. ¿Por qué? (two words) asks why.	
+por qué		expr		why?	A1			questions				
+cuál		pron		which; which one; what	A1			questions	pl=cuáles		¿Cuál es tu número?: What's your number?	
+cuándo		adv		when?	A1			questions				
+cuántos		det	mpl	how many	A1			questions	fpl=cuántas			
+del		prep		of the; from the (de + el)	A1			grammar			De + el always becomes del.	
+al		prep		to the; at the (a + el)	A1			grammar			A + el always becomes al.	
+las		det	fpl	the (feminine plural)	A1			grammar				
+unas		det	fpl	some (feminine)	A1			grammar			Masculine: unos.	
+ya		adv		already; now; anymore (ya no)	A1			time			¡Ya!: now!, enough!, or done.	
+ahora		adv		now	A1			time				
+ahí		adv		there (near you)	A1			places				
+allá		adv		over there	A1			places				
+pues		conj		well; so; then	A1			grammar			A constant filler in Mexico: Pues sí. Pues no sé.	
+nada		pron		nothing; (not) anything	A1			things				
+nombre		noun	m	name	A1			people			Me llamo... is more natural than mi nombre es...	
+dedicarse		verb		to do for a living	A1			work			¿A qué te dedicas?: What do you do?	
+dieciséis		num		sixteen	A1			numbers				
+diecisiete		num		seventeen	A1			numbers				
+dieciocho		num		eighteen	A1			numbers				
+diecinueve		num		nineteen	A1			numbers				
+veintiuno		num		twenty-one	A1			numbers	f=veintiuna; apoc=veintiún		Before a masculine noun: veintiún pesos.	
+veintidós		num		twenty-two	A1			numbers				
+veintitrés		num		twenty-three	A1			numbers				
+veinticuatro		num		twenty-four	A1			numbers				
+veinticinco		num		twenty-five	A1			numbers				
+veintiséis		num		twenty-six	A1			numbers				
+veintisiete		num		twenty-seven	A1			numbers				
+veintiocho		num		twenty-eight	A1			numbers				
+veintinueve		num		twenty-nine	A1			numbers				
+jefe		noun	mf	boss	A1			work	f=jefa			
+# --- names
+Mariana		propn		Mariana (name)	A1							
+Coyoacán		propn		Coyoacán (borough of Mexico City)	A1							
+WhatsApp		propn		WhatsApp (messaging app)	A1							

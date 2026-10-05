@@ -1,0 +1,166 @@
+# Course plan for Unit 4. Format: content-plan/README.md.
+unit: 4
+dir: units/04-familia-casa
+title: "La familia y la casa"
+title_en: "Family and home"
+level: A1
+goals:
+  - "Talk about your family and say how old people are with tener."
+  - "Say whose things are with mi, tu, su and nuestro, and show someone around your home."
+  - "Say what there is in a house with hay, and ask what you need to know to rent a place."
+  - "Describe people and things with adjectives that agree."
+grammar_scope: >-
+  Present tense, now with tener (tengo, e to ie), vivir, necesitar, rentar; hay;
+  possessive determiners and de + person; adjective agreement. Not yet: ir (Unit 5),
+  reflexives other than llamarse (Unit 6), past tenses.
+lexicon: content/lexicon/u04.tsv
+supporting: [cosa, problema, alguien, nadie, soltero, don, doña]
+names: [Memo, Lupe]
+lessons:
+  - id: u04.l01
+    number: 1
+    title: "Mi familia"
+    title_en: "My family"
+    level: A1
+    grammar:
+      focus: "Tener (tengo, tienes...); tener + años for age; masculine plurals for mixed groups."
+      can_do: "Say who is in your family, how old they are and whether they are married."
+    new: [familia, hermano, hijo, esposo, novio, abuelo, tío, primo, mayor, menor, casado, tener]
+    rows_in_core: [familia]
+    conjugate: ["tener:pres"]
+    dialogue:
+      title: "La comida del domingo"
+      title_en: "Sunday lunch"
+      where: "Sofía's family home, at the long Sunday meal (the title's domingo is not linked; keep days out of the lines, they are u06.l03)."
+      who: "Sofía, her younger brother Memo, and Tom."
+      address: "tú: friends and siblings of the same age."
+      happens: "Sofía introduces Memo, su hermano menor. Memo asks Tom ¿Tienes hermanos? Tom has una hermana mayor and two cousins. Sofía's grandparents live with the family; her tío is coming too. Memo asks whether Tom is married: No, pero tengo novia en Chicago. Memo: ¿Cuántos años tienes?"
+    notes:
+      - kind: grammar
+        title: "Tener: to have"
+        covers: "tengo, tienes, tiene, tenemos, tienen (irregular yo, e to ie). Age is tener + años: Tengo veinte años, never soy veinte. Tener que comes in Unit 11."
+      - kind: usage
+        title: "One word for mixed groups"
+        covers: "The masculine plural covers men and women: hermanos (brothers and sisters), hijos (children), papás (parents), abuelos (grandparents), tíos (aunts and uncles), primos (cousins)."
+      - kind: culture
+        title: "Family in Mexico"
+        covers: "Sunday comida with the grandparents is a fixture. Godparents matter: the parents and godparents call each other compadre and comadre. Mis papás is the everyday word for parents; padres sounds formal."
+    confusables: []
+    cautions:
+      - "Age with tener + años and spelled-out numbers up to cien; no mil yet."
+      - "Family nouns are mf rows: the feminine (hermana, hija, esposa, abuela, tía, prima, novia) is generated; write them freely. mf nouns get no gender items."
+      - "casado: 'Estoy casado' is the commoner Mexican form; 'soy casado' is also heard. Never put both in one cloze. soltero is a supporting row."
+      - "mayor/menor follow the noun: 'mi hermano mayor'. 'Una señora mayor' (an older lady) is the polite word for elderly."
+      - "Possessives other than mi/tu/su (nuestro) come in lesson 2."
+      - "papás (parents) is the plural of papá (Unit 0): fine."
+
+  - id: u04.l02
+    number: 2
+    title: "Mi casa es su casa"
+    title_en: "My home is your home"
+    level: A1
+    grammar:
+      focus: "Possessives mi, tu, su, nuestro (agreeing with the thing owned) and de + person; vivir."
+      can_do: "Say where you live, show someone round your home and say whose rooms and things are."
+    new: [vivir, departamento, edificio, piso, puerta, sala, cuarto, recámara, baño, azotea, vecino, nuestro]
+    rows_in_core: [vivir, departamento, baño, vecino]
+    conjugate: ["vivir:pres"]
+    dialogue:
+      title: "Bienvenido"
+      title_en: "Welcome"
+      where: "Ana's new apartment in a building in the Roma."
+      who: "Ana, Tom, and the older neighbor doña Laura."
+      address: "Ana and Tom tú (friends); both say usted to doña Laura, who says tú to them (older to younger)."
+      happens: "Ana: Mi casa es su casa. She shows the sala, two recámaras and the baño. The building has five floors; she lives on the tercer piso (tercero is supporting; the sentence needs allow: [piso]). The laundry is on the azotea. In the hallway they meet doña Laura, la vecina: Es nuestra vecina."
+    notes:
+      - kind: grammar
+        title: "Whose is it?"
+        covers: "mi/mis, tu/tus, su/sus (his, her, its, your formal, their), nuestro/nuestra/nuestros/nuestras. They agree with the thing owned: nuestra casa, nuestros vecinos. When su is unclear, say de + person: la casa de Ana, el cuarto de ustedes."
+      - kind: usage
+        title: "Rooms and floors"
+        covers: "Recámara is the Mexican bedroom (cuarto also works); sala is the living room. Piso is a floor or story, never an apartment (that is departamento). Planta baja is the ground floor; primer piso is one up."
+      - kind: culture
+        title: "Mi casa es su casa"
+        covers: "Said when welcoming a guest. Most city people live in departamentos. Flat roofs (azoteas) hold the water tank (tinaco), the gas tank and the laundry lines."
+    confusables: []
+    cautions:
+      - "piso fails the Peninsular lint unless the sentence has allow: [piso]; use it only for floor/story."
+      - "su can be his, her, its, your (usted) or their: the English must pick one; avoid clozes on su."
+      - "nuestro agrees with the thing owned, not the owners."
+      - "cuarto here is a room; its 'quarter (of an hour)' sense is used in u06.l03 (same row)."
+      - "baño (the room) links to the noun; after a reflexive pronoun ('me baño') it links to bañarse (u06.l04). Check the link lines."
+      - "'Mi casa es su casa' is a set phrase: keep it intact."
+
+  - id: u04.l03
+    number: 3
+    title: "¿Hay agua caliente?"
+    title_en: "Is there hot water?"
+    level: A1
+    grammar:
+      focus: "Hay (there is, there are) with un/una, numbers or no article; hay versus estar; necesitar."
+      can_do: "Ask what an apartment has, say what you need, and understand the answers when renting."
+    new: [haber, cama, silla, clóset, regadera, estufa, refrigerador, luz, gas, caliente, rentar, necesitar]
+    rows_in_core: []
+    conjugate: ["necesitar:pres"]
+    dialogue:
+      title: "Se renta departamento"
+      title_en: "Apartment for rent"
+      where: "Viewing a furnished apartment with a 'Se renta' sign."
+      who: "Tom and the landlady, doña Lupe."
+      address: "usted both ways: strangers, an older person, business."
+      happens: "Tom asks ¿Hay refrigerador? ¿Hay agua caliente? Lupe: the regadera and the estufa run on gas; the luz is not included. There is a bed but only one chair; Tom says he needs a mesa (Unit 0) and two sillas. Lupe: No hay problema."
+    notes:
+      - kind: grammar
+        title: "Hay: there is, there are"
+        covers: "Hay + un/una, a number or no article: Hay una cama. Hay dos sillas. No hay gas. Never hay el or hay la. For where a known thing is, use estar: La estufa está en la cocina."
+      - kind: culture
+        title: "Renting in Mexico"
+        covers: "Se renta = for rent; la renta = the monthly rent; a deposit is normal. La luz is the electricity bill. Hot water comes from a gas heater, and the gas tank is refilled by truck."
+      - kind: usage
+        title: "Caliente, picante, calor"
+        covers: "Caliente = hot to the touch (agua caliente); picante = spicy. For the weather or your body you say hace calor and tengo calor (Unit 8). Never say estoy caliente for I'm hot: in Mexico it is sexual."
+    confusables: ["picante / caliente"]
+    cautions:
+      - "haber appears only as hay: do not add haber to conjugate (its table is the perfect auxiliary he, has, ha, not taught)."
+      - "hay never takes el/la."
+      - "Never 'estoy caliente' for people. calor is u08.l02, so leave 'tengo calor' to the note."
+      - "No rent amounts above cien (mil is u07.l03)."
+      - "luz is both light and electricity: the translation must decide."
+      - "Mexicans say el refri informally; refri is not a lemma: write refrigerador."
+
+  - id: u04.l04
+    number: 4
+    title: "¿Cómo es?"
+    title_en: "What's he like?"
+    level: A1
+    grammar:
+      focus: "Adjective agreement (four forms for -o adjectives, two for the rest); ser for what someone is like; adjectives after the noun."
+      can_do: "Describe people's looks and personality and say what things are like."
+    new: [hombre, mujer, alto, chaparro, joven, viejo, güero, bonito, feo, nuevo, simpático, amable]
+    rows_in_core: [bonito, nuevo, amable]
+    conjugate: []
+    dialogue:
+      title: "¿Cómo es tu hermano?"
+      title_en: "What's your brother like?"
+      where: "Ana's apartment, afternoon."
+      who: "Ana and Sofía."
+      address: "tú: friends."
+      happens: "Ana asks about Memo. Sofía: es alto, güero, muy simpático, y joven, tiene veintidós años. Ana describes the new neighbor: un hombre mayor, chaparro, muy amable. They agree the building is old but the apartment is new and pretty."
+    notes:
+      - kind: grammar
+        title: "Adjectives agree"
+        covers: "-o adjectives have four forms: alto, alta, altos, altas. Others have two: amable, amables; joven, jóvenes. They usually follow the noun: una casa nueva. Describe with ser: Es alto."
+      - kind: usage
+        title: "Describing people kindly"
+        covers: "Chaparro is the everyday Mexican word for short (bajo is standard). Güero, güera (blond, fair) is informal and friendly; vendors call any light-skinned customer güero. For older people say mayor rather than viejo."
+      - kind: culture
+        title: "¡Joven!"
+        covers: "Joven (young) is also how you politely call a waiter, a clerk or any young man or woman: Joven, ¿me trae la cuenta?"
+    confusables: []
+    cautions:
+      - "güero is register informal: give its sentences the note 'Informal'."
+      - "Keep descriptions of bodies and skin neutral and kind: no gordo/flaco jokes, no rankings of skin color. moreno and gordo are deliberately not in the lexicon."
+      - "viejo for people can sound rude: use it for things (un carro viejo) and mayor for people."
+      - "A feminine adjective cloze needs feminine-capable options: amable and joven fit any gender, so let the noun decide, not the ending."
+      - "simpático (likeable), amable (kind) and bonito (pretty, nice) share senses; never build a cloze where two fit the translation."
+      - "joven as an address ('¡Joven!') links to the adjective row: fine."

@@ -1,0 +1,250 @@
+# What the conjugator (tools/packc/conjugate.py) cannot infer from an
+# infinitive. Everything else is a rule:
+#   - regular -ar/-er/-ir endings, five persons (no vosotros);
+#   - spelling changes: -car/-gar/-zar/-guar before e (busqué, pagué, empecé,
+#     averigüé), -cer/-cir after a vowel -> -zco (conozco, conduzco) and after a
+#     consonant -> -zo (venzo), -ger/-gir -> -jo (escojo), -guir -> -go (sigo),
+#     -uir -> y (construyo, construyó), i -> y between vowels (leyó, oyendo),
+#     accents on hiatus (leíste, oímos, leído), no accent on monosyllables (vio,
+#     rio, hui);
+#   - consequences of a stem change: -ir verbs change e -> i and o -> u in the
+#     preterite 3rd persons, the gerund and nosotros of the subjunctive
+#     (sintió, durmiendo, pidamos);
+#   - -ducir verbs: strong preterite in -duj- (conduje, condujeron);
+#   - the subjunctive comes from an irregular yo form (tengo -> tenga);
+#   - imperatives: tú from the present él form, usted/ustedes and all negatives
+#     from the subjunctive.
+#
+# Keys (all optional):
+#   stem:       e>ie | o>ue | e>i | u>ue | i>ie   present stem change
+#   accent:     true   written accent on the stem's last i/u where stressed (envío, continúo, reúno)
+#   yo:         irregular present yo form (also gives the subjunctive stem when it ends in -o)
+#   pret:       strong preterite stem: -e -iste -o -imos -ieron (-eron after j); c -> z before o (hizo)
+#   fut:        future and conditional stem (tendr-)
+#   subj:       present subjunctive stem (sep-, vay-)
+#   imp:        {2s: ten} irregular tú imperative
+#   gerund, participle: irregular non-finite forms
+#   forms:      {tense.person: form} explicit forms, highest priority
+#               (tenses pres pret impf fut cond subj imp impneg; persons 1s 2s 3s 1p 3p)
+#   like:       a verb this one is a prefixed form of (mantener: {like: tener});
+#               stress and accents are recomputed (mantén, compuse)
+#   extra:      {form: tense.person} forms outside the table that link to this
+#               verb in sentences (haber: {extra: {hay: pres.3s}}); never drilled
+#   regular:    true   the verb is regular in the sense taught although
+#               tools/packc/data/verb_patterns.tsv lists it (the compiler refuses
+#               a listed verb that has no entry here)
+# Reflexive verbs (llamarse, irse) need no entry: the base verb is conjugated
+# and the pronouns added. Spelling follows the RAE 2010 rules.
+
+# --- completely irregular ------------------------------------------------------
+ser:
+  forms:
+    pres.1s: soy
+    pres.2s: eres
+    pres.3s: es
+    pres.1p: somos
+    pres.3p: son
+    pret.1s: fui
+    pret.2s: fuiste
+    pret.3s: fue
+    pret.1p: fuimos
+    pret.3p: fueron
+    impf.1s: era
+    impf.2s: eras
+    impf.3s: era
+    impf.1p: éramos
+    impf.3p: eran
+  subj: se
+  imp: {2s: sé}
+ir:
+  forms:
+    pres.1s: voy
+    pres.2s: vas
+    pres.3s: va
+    pres.1p: vamos
+    pres.3p: van
+    pret.1s: fui
+    pret.2s: fuiste
+    pret.3s: fue
+    pret.1p: fuimos
+    pret.3p: fueron
+    impf.1s: iba
+    impf.2s: ibas
+    impf.3s: iba
+    impf.1p: íbamos
+    impf.3p: iban
+  subj: vay
+  imp: {2s: ve}
+  gerund: yendo
+estar:
+  pret: estuv
+  forms:
+    pres.1s: estoy
+    pres.2s: estás
+    pres.3s: está
+    pres.3p: están
+    subj.1s: esté
+    subj.2s: estés
+    subj.3s: esté
+    subj.3p: estén
+haber:
+  extra: {hay: pres.3s}     # impersonal "there is/are"; the table keeps ha
+  pret: hub
+  fut: habr
+  subj: hay
+  imp: {2s: he}
+  forms:
+    pres.1s: he
+    pres.2s: has
+    pres.3s: ha
+    pres.1p: hemos
+    pres.3p: han
+dar:
+  yo: doy
+  forms:
+    pret.1s: di
+    pret.2s: diste
+    pret.3s: dio
+    pret.1p: dimos
+    pret.3p: dieron
+    subj.1s: dé
+    subj.2s: des
+    subj.3s: dé
+    subj.3p: den
+ver:
+  yo: veo
+  participle: visto
+  forms:
+    impf.1s: veía
+    impf.2s: veías
+    impf.3s: veía
+    impf.1p: veíamos
+    impf.3p: veían
+saber:
+  yo: sé
+  pret: sup
+  fut: sabr
+  subj: sep
+caber:
+  yo: quepo
+  pret: cup
+  fut: cabr
+oír:
+  yo: oigo
+  forms:
+    pres.2s: oyes
+    pres.3s: oye
+    pres.3p: oyen
+
+# --- irregular yo, preterite, future, imperative ---------------------------------
+tener: {stem: e>ie, yo: tengo, pret: tuv, fut: tendr, imp: {2s: ten}}
+venir: {stem: e>ie, yo: vengo, pret: vin, fut: vendr, imp: {2s: ven}}
+hacer: {yo: hago, pret: hic, fut: har, imp: {2s: haz}, participle: hecho}
+decir: {stem: e>i, yo: digo, pret: dij, fut: dir, imp: {2s: di}, participle: dicho}
+poder: {stem: o>ue, pret: pud, fut: podr, gerund: pudiendo}
+querer: {stem: e>ie, pret: quis, fut: querr}
+poner: {yo: pongo, pret: pus, fut: pondr, imp: {2s: pon}, participle: puesto}
+salir: {yo: salgo, fut: saldr, imp: {2s: sal}}
+valer: {yo: valgo, fut: valdr}
+traer: {yo: traigo, pret: traj}
+caer: {yo: caigo}
+andar: {pret: anduv}
+
+# --- prefixed forms of the verbs above ---------------------------------------------
+mantener: {like: tener}
+obtener: {like: tener}
+contener: {like: tener}
+detener: {like: tener}
+entretener: {like: tener}
+prevenir: {like: venir}
+convenir: {like: venir}
+deshacer: {like: hacer}
+componer: {like: poner}
+proponer: {like: poner}
+suponer: {like: poner}
+oponer: {like: poner}
+atraer: {like: traer}
+distraer: {like: traer}
+predecir: {like: decir, imp: {2s: predice}, fut: predecir}   # prediré is also accepted
+exponer: {like: poner}
+prever: {like: ver}
+devolver: {like: volver}
+envolver: {like: volver}
+sonreír: {like: reír}
+
+# --- stem changes -----------------------------------------------------------------
+# e > ie
+pensar: {stem: e>ie}
+empezar: {stem: e>ie}
+comenzar: {stem: e>ie}
+cerrar: {stem: e>ie}
+despertar: {stem: e>ie}
+sentar: {stem: e>ie}
+calentar: {stem: e>ie}
+recomendar: {stem: e>ie}
+nevar: {stem: e>ie}
+entender: {stem: e>ie}
+perder: {stem: e>ie}
+encender: {stem: e>ie}
+sentir: {stem: e>ie}
+preferir: {stem: e>ie}
+divertir: {stem: e>ie}
+mentir: {stem: e>ie}
+# o > ue
+contar: {stem: o>ue}
+encontrar: {stem: o>ue}
+costar: {stem: o>ue}
+almorzar: {stem: o>ue}
+recordar: {stem: o>ue}
+acostar: {stem: o>ue}
+mostrar: {stem: o>ue}
+probar: {stem: o>ue}
+soñar: {stem: o>ue}
+volar: {stem: o>ue}
+volver: {stem: o>ue, participle: vuelto}
+resolver: {stem: o>ue, participle: resuelto}
+llover: {stem: o>ue}
+doler: {stem: o>ue}
+mover: {stem: o>ue}
+oler: {stem: o>ue}
+dormir: {stem: o>ue}
+morir: {stem: o>ue, participle: muerto}
+# e > i
+pedir: {stem: e>i}
+servir: {stem: e>i}
+repetir: {stem: e>i}
+medir: {stem: e>i}
+vestir: {stem: e>i}
+seguir: {stem: e>i}
+conseguir: {stem: e>i}
+elegir: {stem: e>i}
+corregir: {stem: e>i}
+reír: {stem: e>i, accent: true}
+# u > ue, i > ie
+jugar: {stem: u>ue}
+adquirir: {stem: i>ie}
+
+# --- written accents on a stressed i/u ----------------------------------------------
+enviar: {accent: true}
+criar: {accent: true}
+guiar: {accent: true}
+vaciar: {accent: true}
+variar: {accent: true}
+efectuar: {accent: true}
+situar: {accent: true}
+rehusar: {accent: true}
+esquiar: {accent: true}
+confiar: {accent: true}
+continuar: {accent: true}
+actuar: {accent: true}
+graduar: {accent: true}
+reunir: {accent: true}
+prohibir: {accent: true}
+
+# --- irregular participles only ------------------------------------------------------
+abrir: {participle: abierto}
+cubrir: {participle: cubierto}
+descubrir: {participle: descubierto}
+escribir: {participle: escrito}
+describir: {participle: descrito}
+romper: {participle: roto}

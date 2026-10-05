@@ -1,0 +1,13 @@
+# Unit 8: Planes y clima / Plans and weather. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u08.l01 ¿Qué vas a hacer? (ir a + infinitive). Also new here, rows in core.tsv: fiesta, venir
+# --- u08.l02 ¿Cómo está el clima? (weather). Also new here, row in core.tsv: frío
+calor		noun	m	heat	A1			weather			Hace calor: it's hot. Tengo calor: I'm hot.	
+# --- u08.l03 ¿Qué estás haciendo? (present progressive). Also new here, row in core.tsv: contestar
+# --- supporting (no lesson introduces these; usable from Unit 8 on)
+mes		noun	m	month	A1			time				
+febrero		noun	m	February	A1			time				
+abril		noun	m	April	A1			time				
+conmigo		pron		with me	A1			people				

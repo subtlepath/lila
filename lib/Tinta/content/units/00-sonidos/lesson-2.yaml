@@ -1,0 +1,102 @@
+number: 2
+title: La ñ, la ll y la j
+title_en: Ñ, ll, j and silent h
+level: A1
+new: [niño, año, mañana, llave, calle, pollo, playa, jugo, gente, hotel, chile]
+notes:
+  - kind: pronunciation
+    title: ñ, ll, y and ch
+    text: |
+      - _ñ_ sounds like the "ny" in "canyon": _niño_ `NEE-nyoh`, _año_ `AH-nyoh`, _mañana_ `mah-NYAH-nah`.
+      - _ll_ and _y_ sound the same in Mexico, like the "y" in "yes": _llave_ `YAH-beh`, _calle_ `KAH-yeh`, _pollo_ `POH-yoh`, _playa_ `PLAH-yah`.
+      - _ch_ is as in "church": _chile_ `CHEE-leh`, _leche_ `LEH-cheh`.
+      - _b_ and _v_ are the same soft "b" sound: _llave_ `YAH-beh`.
+
+      Never drop the tilde. Without it, _año_ (year) becomes _ano_, which means "anus". Make the _ñ_ clear when you wish someone _¡Feliz año!_
+  - kind: pronunciation
+    title: j, g and silent h
+    text: |
+      - _j_ is a breathy "h", as in "hot" but a little stronger: _jugo_ `HOO-goh`, _naranja_ `nah-RAHN-hah`.
+      - _g_ before _e_ or _i_ is the same sound: _gente_ `HEHN-teh`. Everywhere else _g_ is hard, as in "go": _gracias_ `GRAH-syahs`, _amigo_ `ah-MEE-goh`.
+      - _h_ is always silent: _hotel_ `oh-TEHL`, _hola_ `OH-lah`.
+
+      So _hola_ (hello) and _ola_ (wave) sound exactly alike.
+  - kind: culture
+    title: On the street
+    text: |
+      A Mexican address gives the street first and the number after it: _calle Juárez 25_. Streets honor national heroes and dates, so almost every town has a _Juárez_, a _Hidalgo_ and a _5 de Mayo_.
+
+      To say how far something is, Mexicans count blocks: _a dos cuadras_ (two blocks away). And fruit juice is always _jugo_ in Mexico, never ~zumo~.
+sentences:
+  - es: "El plátano es para el {niño}."
+    en: "The banana is for the little boy."
+  - es: "La {niña} es de Chicago."
+    en: "The little girl is from Chicago."
+  - es: "Tacos de pollo para los {niños}."
+    en: "Chicken tacos for the kids."
+  - es: "Un {año} en México."
+    en: "A year in Mexico."
+  - es: "El {año} de Ana en México."
+    en: "Ana's year in Mexico."
+  - es: "No es para ahora, es para {mañana|mañana}."
+    en: "It's not for now, it's for tomorrow."
+  - es: "{Mañana|mañana} no, por favor."
+    en: "Not tomorrow, please."
+  - es: "Es la {llave} de la casa."
+    en: "It's the house key."
+    order: true
+  - es: "¿Y la {llave}?"
+    en: "What about the key?"
+  - es: "La {calle} Juárez, por favor."
+    en: "Juárez Street, please."
+  - es: "¿La {calle} Xola? —Sí, aquí."
+    en: "Xola Street? —Yes, right here."
+  - es: "{Pollo} con papas, por favor."
+    en: "Chicken and potatoes, please."
+  - es: "El {pollo} es para mamá."
+    en: "The chicken is for Mom."
+  - es: "Un hotel en la {playa}."
+    en: "A hotel on the beach."
+  - es: "¿La {playa}? —Ahí."
+    en: "The beach? —Right there."
+  - es: "Unos {jugos} de naranja, por favor."
+    en: "Orange juice for everyone, please."
+    order: true
+  - es: "Los {jugos} son para los niños."
+    en: "The juices are for the kids."
+  - es: "Una calle con mucha {gente}."
+    en: "A street with lots of people."
+  - es: "La {gente} es de aquí."
+    en: "The people are local."
+    note: "Gente is singular in Spanish: la gente es, not son."
+    order: true
+  - es: "El {hotel} Juárez, por favor."
+    en: "The Juárez Hotel, please."
+  - es: "Un {hotel} en Cancún."
+    en: "A hotel in Cancún."
+  - es: "El {chile} es verde."
+    en: "The chili is green."
+  - es: "Sin {chile}, por favor."
+    en: "No chili, please."
+dialogue:
+  title: En el hotel
+  title_en: At the hotel
+  lines:
+    - speaker: Recepcionista
+      es: "¿Señor Ortega?"
+      en: "Mr. Ortega?"
+    - speaker: Luis
+      es: "Sí, Luis Ortega."
+      en: "Yes, Luis Ortega."
+    - speaker: Recepcionista
+      es: "Bienvenido, señor Ortega. Su llave."
+      en: "Welcome, Mr. Ortega. Your key."
+    - speaker: Luis
+      es: "Gracias. ¿Y la playa?"
+      en: "Thank you. And the beach?"
+    - speaker: Recepcionista
+      es: "Ahí, en la calle Juárez."
+      en: "Right there, on Juárez Street."
+    - speaker: Luis
+      es: "¡Ah! Muchas gracias."
+      en: "Oh! Thanks a lot."

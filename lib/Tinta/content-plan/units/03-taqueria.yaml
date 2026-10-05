@@ -1,0 +1,168 @@
+# Course plan for Unit 3. Format: content-plan/README.md.
+unit: 3
+dir: units/03-taqueria
+title: "En la taquería"
+title_en: "At the taco stand"
+level: A1
+goals:
+  - "Order tacos, tortas and drinks with quiero and ¿me da...?"
+  - "Say what you like and love with gustar and encantar, and ask how spicy something is."
+  - "Ask for things and for the check politely, count to one hundred, and understand prices in pesos."
+grammar_scope: >-
+  Present tense, including querer and poder (stem changes as vocabulary), dar, traer,
+  pasar, llevar, comer, tomar, costar, pagar; gustar and encantar with me, te, le, nos,
+  les; usted requests ¿Me da...? ¿Me trae...? ¿Me puede...?; numbers to 100. Not yet:
+  hay and tener (Unit 4), ir (Unit 5).
+lexicon: content/lexicon/u03.tsv
+supporting: [nos, les, mí, ti, otro, poco, malo, si, solo, tampoco, rojo, verde, mediano, maíz,
+  horchata, jamaica, aceptar]
+names: [Chuy]
+lessons:
+  - id: u03.l01
+    number: 1
+    title: "¿Qué quieres?"
+    title_en: "What do you want?"
+    level: A1
+    grammar:
+      focus: "Querer (e to ie) with a noun or an infinitive; ordering with quiero and ¿qué quiere?"
+      can_do: "Order food and drinks at a taco stand and say what you want to eat or drink."
+    new: [taquería, refresco, torta, quesadilla, tortilla, carne, queso, grande, chico, querer, comer, tomar]
+    rows_in_core: [grande, chico, comer, tomar]
+    conjugate: ["querer:pres", "comer:pres"]
+    dialogue:
+      title: "La taquería de Chuy"
+      title_en: "Chuy's taco stand"
+      where: "A street taco stand in the Roma, at night."
+      who: "Chuy (taquero), Tom and Sofía."
+      address: "Chuy uses usted with customers (¿Qué va a querer?, a fixed formula); Tom and Sofía use tú with each other."
+      happens: "Chuy asks what they want. Sofía orders tacos al pastor con todo. Tom wants a quesadilla; Sofía tells him to say con queso. Drinks: un refresco grande and an agua de horchata. Tom asks Sofía whether she eats meat; she says she eats everything."
+    notes:
+      - kind: grammar
+        title: "Querer: e to ie"
+        covers: "quiero, quieres, quiere, queremos, quieren. Quiero + noun (Quiero dos tacos) or + infinitive (Quiero comer). ¿Qué quieres? to a friend, ¿Qué quiere? to a customer. Te quiero means I love you."
+      - kind: culture
+        title: "At the taco stand"
+        covers: "Al pastor (spit-roasted pork with pineapple), suadero, bistec; con todo means with onion and cilantro; corn tortillas; you eat standing and pay at the end by saying what you ate. The taquero asks ¿Qué va a querer?"
+      - kind: usage
+        title: "Torta, tortilla, quesadilla"
+        covers: "A torta is a sandwich on a bolillo roll, not a cake. A tortilla is the flatbread, never an omelet. In Mexico City a quesadilla may come without cheese: say con queso."
+    confusables: []
+    cautions:
+      - "'Yo como tacos': como is also the headword of the supporting conjunction como (u07.tsv), so the compiler warns; write [como|comer]."
+      - "No ¿Hay...? and no ¿Tiene...? yet (haber and tener are Unit 4). Ask with ¿Quiere...? or name the item."
+      - "al pastor is a multi-word lemma: inside a clause write [al pastor|al pastor], as Unit 1 does."
+      - "Sizes are chico, mediano (supporting) and grande; Mexico rarely says pequeño for drinks."
+      - "tomar is the everyday Mexican verb for drinking; do not use beber."
+      - "No güero/joven yet (u04.l04): the taquero says usted, or nothing."
+
+  - id: u03.l02
+    number: 2
+    title: "Me encanta el picante"
+    title_en: "I love spicy food"
+    level: A1
+    grammar:
+      focus: "Gustar and encantar (me gusta, me gustan) with me, te, le, nos, les and a mí, a ti."
+      can_do: "Say what you like, love and don't like, ask others, and ask whether a salsa is spicy."
+    new: [gustar, encantar, bueno, rico, dulce, picante, picar, salsa, cebolla, cilantro, aguacate, jitomate]
+    rows_in_core: [bueno, rico, picante, picar, salsa, cebolla]
+    conjugate: ["gustar:pres.3s", "gustar:pres.3p", "encantar:pres.3s"]
+    dialogue:
+      title: "¿Pica?"
+      title_en: "Is it spicy?"
+      where: "The same taco stand, at the salsa bowls."
+      who: "Chuy, Tom and Sofía."
+      address: "Chuy usted; Tom and Sofía tú."
+      happens: "Tom points at the green salsa: ¿Pica? Chuy: Sí, pica mucho; la roja pica [un poco|un poco]. Sofía loves spicy food; Tom likes the aguacate but not raw cebolla. Chuy offers more cilantro. Tom: ¡Está muy rico!"
+    notes:
+      - kind: grammar
+        title: "Gustar: what pleases you"
+        covers: "Me gusta + one thing (el aguacate), me gustan + several (los tacos). Who likes it: me, te, le, nos, les; for emphasis a mí, a ti, a él. Never yo gusto. Encantar works the same way and is stronger."
+      - kind: usage
+        title: "Spicy and tasty"
+        covers: "Picar = to be spicy: ¿Pica? Pica poquito is a warning. Picante = spicy; rico = delicious, with estar (¡Está rico!). Salsa verde and salsa roja; ask before you pour."
+      - kind: culture
+        title: "Food words from Nahuatl"
+        covers: "Aguacate (ahuacatl), jitomate (xitomatl), chile (chilli). In central Mexico tomate is the green tomatillo of salsa verde; a red tomato is a jitomate."
+    confusables: []
+    cautions:
+      - "gustar agrees with the thing liked: 'Me gustan los tacos', 'Me gusta la salsa'. Cloze options are other gustar forms, so the noun must decide."
+      - "'Está rico' (tastes good) uses estar; 'es rico' means rich. Avoid ser + rico."
+      - "jitomate for a red tomato; never write tomate for it."
+      - "bueno has a homograph (bueno#hello), so every 'bueno' warns: mark [bueno|bueno] for the adjective."
+      - "nos, les, mí, ti are supporting rows: use them ('A mí me encanta', 'A ellos les gusta')."
+      - "rojo and verde are supporting rows (u03.tsv) so salsa roja / salsa verde work here."
+      - "picante (spicy) and caliente (hot to the touch, u04.l03) get a confusable set in Unit 4; don't use caliente yet."
+
+  - id: u03.l03
+    number: 3
+    title: "¿Me trae la cuenta?"
+    title_en: "Could I have the check?"
+    level: A1
+    grammar:
+      focus: "Polite requests with usted: ¿Me da...? ¿Me trae...? ¿Me pasa...? ¿Me puede + infinitive?"
+      can_do: "Ask a waiter for things, ask for the rest to go, and ask for the check, politely."
+    new: [mesero, orden, vaso, popote, servilleta, sal, cuenta, dar, traer, pasar, llevar, poder]
+    rows_in_core: [mesero, cuenta, dar, pasar, llevar]
+    conjugate: ["poder:pres", "traer:pres.3s", "dar:pres.3s"]
+    dialogue:
+      title: "En la fonda"
+      title_en: "At the fonda"
+      where: "A small family restaurant at lunchtime."
+      who: "Toño (mesero) and Ana, a regular."
+      address: "usted both ways: service."
+      happens: "Ana orders una orden de tacos de pollo, then ¿Me trae un vaso de agua, sin popote? and ¿Me pasa la sal? She asks for más servilletas. She cannot finish: two tacos para llevar, por favor. At the end: ¿Me trae la cuenta, por favor? Toño: Sí, ahorita (not 'se la traigo': object pronouns are Unit 7)."
+    notes:
+      - kind: grammar
+        title: "Asking politely"
+        covers: "¿Me da...?, ¿Me trae...?, ¿Me pasa...? and ¿Me puede + infinitive? (¿Me puede traer un vaso?) all use the usted form. Add por favor. Quiero is not rude, but ¿me da? sounds friendlier."
+      - kind: usage
+        title: "Traer or llevar?"
+        covers: "Traer = bring (toward the speaker): ¿Me trae la cuenta? Llevar = take (away), carry: para llevar = to go; para comer aquí = for here."
+      - kind: culture
+        title: "Eating at a fonda"
+        covers: "Fondas serve comida corrida, a set lunch. Call the waiter with ¡Joven! or Disculpe (joven comes in Unit 4). Una orden de tacos is a plate of tacos. Popote (straw) is a Nahuatl word; many places now give none."
+    confusables: ["traer / llevar"]
+    cautions:
+      - "¿Me da...? is dar, usted form (da). 'Dame' and 'pásele' are verb + attached pronoun: linked, never targets."
+      - "traer/llevar: English bring/take map imperfectly; each sentence must make only one right (the confusable set offers the partner)."
+      - "sal (salt) is also the tú imperative of salir (u06): mark [sal|sal] if the compiler warns."
+      - "No 'joven' in sentences yet (u04.l04): call the waiter with Disculpe or Perdón."
+      - "una orden (a serving) is feminine."
+      - "lo/la/esto/eso are Unit 7: no 'me lo da' or 'se la traigo' here."
+
+  - id: u03.l04
+    number: 4
+    title: "¿Cuánto es?"
+    title_en: "How much is it?"
+    level: A1
+    grammar:
+      focus: "Numbers 31-100 (treinta y uno to cien) and prices; costar (o to ue) and pagar."
+      can_do: "Ask what something costs, understand prices up to a hundred pesos, pay and leave a tip."
+    new: [cuarenta, cincuenta, sesenta, setenta, ochenta, noventa, cien, peso, costar, pagar, tarjeta, propina]
+    rows_in_core: []
+    conjugate: ["costar:pres.3s", "costar:pres.3p", "pagar:pres"]
+    dialogue:
+      title: "¿Cuánto le doy?"
+      title_en: "What do I owe you?"
+      where: "Chuy's taco stand at the end of the night."
+      who: "Chuy, Tom and Sofía."
+      address: "Chuy usted; Tom and Sofía tú."
+      happens: "They tell Chuy what they ate (cinco de pastor, dos quesadillas, dos refrescos). Chuy adds it up: son ciento veinte pesos (ciento is supporting). Tom asks ¿Puedo pagar con tarjeta? Chuy: No, no aceptamos tarjeta. Sofía pays; Tom leaves the propina."
+    notes:
+      - kind: grammar
+        title: "Numbers 31-100"
+        covers: "treinta y uno to noventa y nueve: y only between the tens and the units. Cien is exactly 100; from 101 it is ciento (ciento veinte). Sesenta (60) and setenta (70) are easy to mix up."
+      - kind: usage
+        title: "Prices"
+        covers: "¿Cuánto cuesta? (one item), ¿Cuánto cuestan? (several), ¿Cuánto es? (the total). Son ochenta pesos. Mexico writes pesos with the $ sign, the same as dollars."
+      - kind: culture
+        title: "Paying and tipping"
+        covers: "Leave 10-15 percent in restaurants. At a taco stand you say what you ate and pay at the end. Many small places take cash only: ¿Aceptan tarjeta?"
+    confusables: ["sesenta / setenta"]
+    cautions:
+      - "No digits and no $ in sentences: 'Son cincuenta pesos.'"
+      - "Compound numbers are several words (treinta y cinco = treinta + y + cinco); targets are single numbers."
+      - "efectivo (cash) is u07.l03: here say 'No aceptamos tarjeta' (aceptar is supporting)."
+      - "costar agrees with the thing: '¿Cuánto cuesta la torta?', '¿Cuánto cuestan los tacos?'"
+      - "pagar takes a direct object: 'pagar la cuenta' (no 'por')."
+      - "cien pesos, ciento veinte pesos; never 'un cien'."

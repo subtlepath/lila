@@ -1,0 +1,191 @@
+title: "Frecuentes A, parte seis"
+sentences:
+  # 251 broma
+  - es: "Es una {broma}, no te enojes."
+    en: "It's a joke, don't get mad."
+    note: "Una broma is a prank or teasing; a joke you tell is often un chiste."
+  # 252 horrible
+  - es: "Esa película es {horrible}."
+    en: "That movie is awful."
+    order: true
+  # 253 peligroso
+  - es: "Es {peligroso} caminar [solo|solo#alone] en la noche."
+    en: "It's dangerous to walk alone at night."
+  # 254 principio
+  - es: "Al {principio} no entendía nada."
+    en: "At first I didn't understand anything."
+    note: "Al principio: at first. Al final: in the end."
+  # 255 cumplir
+  - es: "Hoy {cumplo} treinta años."
+    en: "I turn thirty today."
+    note: "Cumplir años: to have a birthday. Cumplo treinta: I'm turning thirty."
+  - es: "No {cumpliste} tu palabra."
+    en: "You didn't keep your word."
+  # 256 reunirse
+  - es: "Nos {reunimos|reunirse:pres.1p} cada domingo en casa de mi abuela."
+    en: "We get together every Sunday at my grandma's house."
+  # 257 completo
+  - es: "[Escriba|escribir:imp.3s] su nombre {completo}."
+    en: "Write your full name."
+    order: true
+  # 258 animal
+  - es: "¿Te gustan los {animales}?"
+    en: "Do you like animals?"
+    order: true
+  # 259 duda
+  - es: "Si tienes {dudas}, pregúntame."
+    en: "If you have any questions, ask me."
+    note: "Una duda is a question you have about something; a question you ask is una pregunta."
+  # 260 interesante
+  - es: "Es un libro muy {interesante}."
+    en: "It's a very interesting book."
+    order: true
+  # 261 imposible
+  - es: "Es {imposible} llegar a tiempo."
+    en: "It's impossible to get there on time."
+    order: true
+  # 262 equivocarse
+  - es: "Perdón, me {equivoqué}."
+    en: "Sorry, I made a mistake."
+    order: true
+  - es: "Te {equivocas}, no es así."
+    en: "You're wrong, it's not like that."
+  # 263 reconocer
+  - es: "¡No te {reconocí}!"
+    en: "I didn't recognize you!"
+  # 264 de acuerdo
+  - es: "Estoy {de acuerdo} contigo."
+    en: "I agree with you."
+    order: true
+    note: "Estar de acuerdo: to agree (with estar)."
+  # 265 terrible
+  - es: "Tengo un dolor de cabeza {terrible}."
+    en: "I have a terrible headache."
+  # 266 placer
+  - es: "[Fue|ser] un {placer}."
+    en: "It was a pleasure."
+    order: true
+  # 267 director
+  - es: "El {director} de la escuela quiere hablar con tus papás."
+    en: "The school principal wants to talk to your parents."
+  # 268 sufrir
+  - es: "Mi abuela {sufre} mucho con el frío."
+    en: "My grandma really suffers in the cold."
+  # 269 hambre
+  - es: "¿Tienes {hambre}? Hay tacos."
+    en: "Are you hungry? There are tacos."
+    note: "Hambre is feminine (mucha hambre) but takes el: el hambre."
+  # 270 paciente
+  - es: "El doctor tiene muchos {pacientes} hoy."
+    en: "The doctor has a lot of patients today."
+  # 271 revisar
+  - es: "El doctor me {revisó} la garganta."
+    en: "The doctor checked my throat."
+  # 272 construir
+  - es: "Están {construyendo} un edificio enfrente."
+    en: "They're putting up a building across the street."
+  # 273 antiguo
+  - es: "Teotihuacán es una ciudad muy {antigua}."
+    en: "Teotihuacán is a very ancient city."
+    note: "Antiguo is for buildings and things. For people, say grande or mayor."
+  # 274 o sea
+  - es: "Llego a las ocho, {o sea}, en una hora."
+    en: "I'll be there at eight, I mean, in an hour."
+  # 275 contacto
+  - es: "¿Hay un {contacto} para cargar mi celular?"
+    en: "Is there an outlet where I can charge my phone?"
+    note: "In Mexico, el contacto is a wall socket."
+  # 276 consejo
+  - es: "¿Me das un {consejo}?"
+    en: "Can you give me some advice?"
+    order: true
+    note: "Un consejo: a piece of advice. Consejos: advice."
+  # 277 tren
+  - es: "El {tren} sale a las nueve."
+    en: "The train leaves at nine."
+    order: true
+  # 278 cualquiera
+  - es: "{Cualquiera} puede aprender a cocinar."
+    en: "Anyone can learn to cook."
+  # 279 suelo
+  - es: "Se me [cayó|caerse] el pan al {suelo}."
+    en: "I dropped the bread on the floor."
+  # 280 resolver
+  - es: "Tenemos que {resolver} este problema."
+    en: "We have to solve this problem."
+    order: true
+  # 281 equivocado
+  - es: "Perdón, número {equivocado}."
+    en: "Sorry, wrong number."
+  - es: "Estás {equivocada}, Lupe."
+    en: "You're wrong, Lupe."
+  # 282 gobierno
+  - es: "El {gobierno} va a construir un hospital nuevo."
+    en: "The government is going to build a new hospital."
+  # 283 nota
+  - es: "Te dejé una {nota} en la mesa."
+    en: "I left you a note on the table."
+  # 284 prisa
+  - es: "Tengo {prisa}."
+    en: "I'm in a hurry."
+    note: "Tener prisa: to be in a hurry."
+  # 285 oler
+  - es: "¡Qué rico {huele}!"
+    en: "That smells delicious!"
+    note: "Oler is irregular: huelo, hueles, huele."
+  # 286 tema
+  - es: "Ese {tema} no me interesa."
+    en: "I'm not interested in that topic."
+    note: "Tema is masculine: el tema."
+  # 287 mentira
+  - es: "¡Eso es {mentira}!"
+    en: "That's a lie!"
+  # 288 sorpresa
+  - es: "¡Qué {sorpresa}!"
+    en: "What a surprise!"
+  - es: "Le hicimos una fiesta {sorpresa} a Ana."
+    en: "We threw Ana a surprise party."
+  # 289 regla
+  - es: "En mi casa hay una {regla}: nada de celulares en la mesa."
+    en: "There's one rule in my house: no phones at the table."
+  # 290 inteligente
+  - es: "Tu hija es muy {inteligente}."
+    en: "Your daughter is really smart."
+    order: true
+  # 291 silencio
+  - es: "{Silencio}, por favor."
+    en: "Quiet, please."
+  # 292 ventana
+  - es: "¿Puedo abrir la {ventana}?"
+    en: "Can I open the window?"
+    order: true
+  # 293 compartir
+  - es: "¿Quieres {compartir} unos tacos?"
+    en: "Do you want to share some tacos?"
+  # 294 respirar
+  - es: "No puedo {respirar} bien."
+    en: "I can't breathe properly."
+    order: true
+  # 295 fondo
+  - es: "El baño está al {fondo}."
+    en: "The restroom is at the back."
+    order: true
+    note: "Al fondo: at the back, at the end."
+  # 296 matar
+  - es: "Me {mata} el calor."
+    en: "The heat is killing me."
+  # 297 hecho
+  - es: "De {hecho}, ya lo sabía."
+    en: "In fact, I already knew."
+  # 298 salvar
+  - es: "El doctor le {salvó} la vida."
+    en: "The doctor saved his life."
+    order: true
+  # 299 cariño
+  - es: "Ya le agarré {cariño} a esta ciudad."
+    en: "I've grown fond of this city."
+    note: "Agarrarle cariño a algo: to grow fond of it. Cariño is also a way to call someone dear."
+  # 300 ocurrir
+  - es: "El accidente {ocurrió} en la noche."
+    en: "The accident happened at night."
+    note: "In conversation Mexicans say pasar: ¿Qué pasó?"

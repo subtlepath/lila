@@ -1,0 +1,135 @@
+number: 1
+title: Mi familia
+title_en: My family
+level: A1
+new: [familia, hermano, hijo, esposo, novio, abuelo, tío, primo, mayor, menor, casado, tener]
+conjugate: ["tener:pres"]
+reviewer_notes:
+  - "Culture note 'Family in Mexico': a long weekly meal at the grandparents', compadre/comadre, grown children living with their parents until marriage. Are the facts and the tone right?"
+notes:
+  - kind: grammar
+    title: "Tener: to have"
+    text: |
+      _Tener_ (to have) is irregular: the yo form ends in _-go_, and the stem _e_ becomes _ie_ when it is stressed.
+
+      - _yo tengo_ — I have
+      - _tú tienes_ — you have
+      - _él, ella, usted tiene_ — he has, she has, you have
+      - _nosotros tenemos_ — we have
+      - _ellos, ellas, ustedes tienen_ — they have, you all have
+
+      Spanish gives your age with _tener_ + _años_, never with _ser_: _Tengo veinte años_ (I'm twenty), not ~soy veinte~. Ask _¿Cuántos años tienes?_, or _¿Cuántos años tiene?_ to someone you call usted.
+  - kind: usage
+    title: One word for mixed groups
+    text: |
+      Family words have a masculine and a feminine form: _hermano_, _hermana_; _tío_, _tía_. For a group of men and women together, Spanish uses the masculine plural:
+
+      - _hermanos_ — brothers, or brothers and sisters
+      - _hijos_ — sons, or children
+      - _papás_ — parents (mom and dad)
+      - _abuelos_ — grandparents
+      - _tíos_ — uncles, or aunts and uncles
+      - _primos_ — cousins
+
+      So _¿Tienes hermanos?_ asks about brothers and sisters, and _Tengo dos hijos_ can mean a son and a daughter.
+  - kind: culture
+    title: Family in Mexico
+    text: |
+      Family is the center of social life in Mexico. Many families meet every week for a long afternoon meal at the grandparents' house, and the meal can last until evening.
+
+      Godparents matter too. The parents and the godparents of a child call each other _compadre_ and _comadre_, and the bond lasts for life.
+
+      Say _mis papás_ for your parents. _Mis padres_ is correct but sounds formal. A grown-up _hijo_ or _hija_ often lives with the parents until marriage, and that is normal, not odd.
+sentences:
+  - es: "Mi {familia} es muy grande."
+    en: "My family is really big."
+    order: true
+  - es: "¿Cómo está tu {familia}?"
+    en: "How's your family?"
+  - es: "Tengo un {hermano} y una hermana."
+    en: "I have a brother and a sister."
+  - es: "¿Tienes {hermanos}?"
+    en: "Do you have any brothers or sisters?"
+    note: "Hermanos covers brothers and sisters together."
+  - es: "Tengo dos {hijos}: un niño y una niña."
+    en: "I have two kids, a boy and a girl."
+  - es: "Su {hija} tiene cinco años."
+    en: "Her daughter is five."
+  - es: "Mi {esposo} es de Monterrey."
+    en: "My husband is from Monterrey."
+  - es: "Mi {esposa} trabaja en una escuela."
+    en: "My wife works at a school."
+  - es: "¿Tienes {novia}?"
+    en: "Do you have a girlfriend?"
+  - es: "Mi {novio} es estudiante."
+    en: "My boyfriend is a student."
+  - es: "Mis {abuelos} son de Oaxaca."
+    en: "My grandparents are from Oaxaca."
+    order: true
+  - es: "Mi {abuela} tiene ochenta años."
+    en: "My grandma is eighty."
+  - es: "Mi {tío} es maestro."
+    en: "My uncle is a teacher."
+  - es: "Mi {tía} toma mucho café."
+    en: "My aunt drinks a lot of coffee."
+  - es: "¿Tienes {primos} en México?"
+    en: "Do you have cousins in Mexico?"
+  - es: "Mi {prima} estudia en Puebla."
+    en: "My cousin studies in Puebla."
+  - es: "Mi hermana {mayor} tiene treinta años."
+    en: "My older sister is thirty."
+    note: "Mayor and menor go after the noun."
+  - es: "Mis abuelos ya son {mayores}."
+    en: "My grandparents are elderly now."
+    reviewer_notes: "Is 'ya son mayores' a natural, polite way to say they are elderly now?"
+    note: "For older people, mayor is the polite word."
+  - es: "Memo es el hermano {menor} de Sofía."
+    en: "Memo is Sofía's younger brother."
+  - es: "Soy el {menor} de la familia."
+    en: "I'm the youngest in the family."
+  - es: "¿Estás {casado}?"
+    en: "Are you married?"
+    reviewer_notes: "The plan treats estar casado as the commoner Mexican form and ser casado as also heard. Do you agree?"
+    note: "Estar casado is the everyday form; ser casado is also heard."
+  - es: "No estoy {casada}, soy soltera."
+    en: "I'm not married, I'm single."
+  - es: "Y tú, ¿cuántos años {tienes}?"
+    en: "And you, how old are you?"
+    order: true
+  - es: "Mi abuelo {tiene} noventa años."
+    en: "My grandpa is ninety."
+  - es: "Nosotros {tenemos} tres hijos."
+    en: "We have three children."
+  - es: "Mis tíos {tienen} una fonda en Puebla."
+    en: "My aunt and uncle have a fonda in Puebla."
+    reviewer_notes: "Tíos for an aunt and an uncle together: natural here?"
+    note: "Tíos: uncles, or an aunt and an uncle."
+dialogue:
+  title: La comida del domingo
+  title_en: Sunday lunch
+  lines:
+    - speaker: Sofía
+      es: "Tom, él es Memo, mi hermano menor."
+      en: "Tom, this is Memo, my little brother."
+    - speaker: Memo
+      es: "Mucho gusto, Tom. ¿Tienes hermanos?"
+      en: "Nice to meet you, Tom. Do you have any brothers or sisters?"
+    - speaker: Tom
+      es: "Sí, una hermana mayor. También tengo dos primos en Chicago."
+      en: "Yes, an older sister. I also have two cousins in Chicago."
+    - speaker: Sofía
+      es: "Ellos son mis abuelos. Y hoy mi tío también come con nosotros."
+      en: "These are my grandparents. And my uncle is eating with us today too."
+    - speaker: Memo
+      es: "Y tú, Tom, ¿estás casado?"
+      en: "And what about you, Tom? Are you married?"
+    - speaker: Tom
+      es: "No, pero tengo novia en Chicago."
+      en: "No, but I have a girlfriend in Chicago."
+    - speaker: Memo
+      es: "¿Y cuántos años tienes?"
+      en: "And how old are you?"
+    - speaker: Sofía
+      es: "¡Ay, Memo, ya!"
+      en: "Oh, Memo, that's enough!"
+      reviewer_notes: "'¡Ya!' as 'that's enough' between siblings: natural?"

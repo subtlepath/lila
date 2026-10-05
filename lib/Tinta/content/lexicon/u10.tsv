@@ -1,0 +1,42 @@
+# Unit 10: Antes / Back then. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn
+# --- u10.l01 Cuando era niño (imperfect)
+juguete		noun	m	toy	A2			things				
+pelota		noun	f	ball	A2			things				
+muñeca		noun	f	doll; wrist	A2			things				
+bicicleta		noun	f	bicycle; bike	A2			transport			Informal: la bici.	
+caricatura		noun	f	cartoon	A2		x	things		dibujos animados	Las caricaturas: cartoons on TV.	
+árbol		noun	m	tree	A2			places				
+pueblo		noun	m	town; village	A2			places				
+rancho		noun	m	ranch; small farm; countryside	A2		x	places				
+travieso		adj		naughty; mischievous	A2			describing				malo
+crecer		verb		to grow; to grow up	A2			people			Crecí en Puebla: I grew up in Puebla.	
+acordarse		verb		to remember	A2			grammar			¿Te acuerdas?: Do you remember?	
+extrañar		verb		to miss (someone, something)	A2			feelings		echar de menos	Te extraño: I miss you.	
+# --- u10.l02 En la secundaria (imperfect: habits, description). Also new here, row in core.tsv: vida
+primaria		noun	f	elementary school	A2			school				
+secundaria		noun	f	middle school (grades 7 to 9)	A2			school				
+prepa		noun	f	high school	A2		x	school			Short for la preparatoria.	
+universidad		noun	f	university; college	A2			school				
+clase		noun	f	class; lesson	A2			school				
+examen		noun	m	exam; test	A2			school				
+enseñar		verb		to teach; to show	A2			school				
+difícil		adj		difficult; hard	A2			describing				
+fácil		adj		easy	A2			describing				
+barrio		noun	m	neighborhood	A2			city				
+cambiar		verb		to change	A2			things			(Yo) cambio: I change. El cambio: change.	
+# --- u10.l03 Cuando tembló (preterite and imperfect together)
+temblor		noun	m	earthquake; tremor	A2			weather			More common in speech than terremoto.	
+temblar		verb		to shake; to tremble	A2			weather			¡Está temblando!: There's an earthquake!	
+alerta		noun	f	alert; alarm	A2			weather			La alerta sísmica: the earthquake siren.	
+simulacro		noun	m	drill (emergency practice)	A2			weather				
+sonar		verb		to ring; to sound; to go off	A2			things				
+mientras		conj		while	A2			grammar				cuando
+escalera		noun	f	stairs; staircase; ladder	A2			home			Often plural: las escaleras.	
+caerse		verb		to fall (down)	A2			health				
+romperse		verb		to break	A2			things			Se rompió: it broke.	
+gritar		verb		to shout; to scream	A2			people				
+empujar		verb		to push	A2			people				
+asustado		adj		scared; frightened	A2			feelings				

@@ -1,0 +1,41 @@
+title: Un día en Teotihuacán
+title_en: A day at Teotihuacán
+level: A2
+kind: reading
+reviewer_notes: "I left out climbing the Pyramid of the Sun because I believe it is closed to visitors. Please confirm. Is one hour's drive from the city realistic?"
+lesson: u09.l02
+lines:
+  - es: "El sábado pasado, Ana, Tom y Sofía [fueron|ir] a Teotihuacán."
+    en: "Last Saturday, Ana, Tom and Sofía went to Teotihuacán."
+  - es: "Sofía manejó una hora, y llegaron a las nueve de la [mañana|mañana#morning]."
+    en: "Sofía drove for an hour, and they got there at nine in the morning."
+  - es: "Primero vieron la pirámide del Sol."
+    en: "First they saw the Pyramid of the Sun."
+    paragraph: true
+  - es: "¡Es muy grande!"
+    en: "It's huge!"
+  - es: "Caminaron mucho, y hizo mucho calor. Tom no trajo agua."
+    en: "They walked a lot, and it was very hot. Tom didn't bring any water."
+  - es: "“¡Qué calor!”, dijo Tom."
+    en: "“It's so hot!” said Tom."
+  - es: "Luego comieron quesadillas en una fonda."
+    en: "Then they had quesadillas at a fonda."
+    paragraph: true
+  - es: "Ana tomó muchas fotos."
+    en: "Ana took lots of pictures."
+  - es: "En la [tarde|tarde] empezó a llover, y regresaron a la ciudad."
+    en: "In the afternoon it started to rain, and they went back to the city."
+  - es: "Para Tom, [fue|ser] un día increíble."
+    en: "For Tom, it was an amazing day."
+    paragraph: true
+questions:
+  - q: "¿Quién manejó?"
+    options: ["Tom", "Sofía", "Ana"]
+    answer: 1
+  - q: "¿Qué no trajo Tom?"
+    options: ["Su pasaporte", "Agua", "Su maleta"]
+    answer: 1
+  - q: "Why did they go back to the city?"
+    lang: en
+    options: ["Tom was tired", "Ana lost her phone", "It started to rain"]
+    answer: 2

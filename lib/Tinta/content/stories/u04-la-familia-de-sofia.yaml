@@ -1,0 +1,46 @@
+title: La familia de Sofía
+title_en: Sofía's family
+level: A1
+kind: reading
+lesson: u04.l02
+lines:
+  - es: "Sofía tiene una familia grande."
+    en: "Sofía has a big family."
+  - es: "Vive con sus papás, sus abuelos y su hermano menor, Memo."
+    en: "She lives with her parents, her grandparents and her younger brother, Memo."
+  - es: "Memo tiene veintidós años y es estudiante."
+    en: "Memo is twenty-two and a student."
+  - es: "La casa de la familia está en Coyoacán."
+    en: "The family's house is in Coyoacán."
+    paragraph: true
+  - es: "Tiene tres recámaras, una sala muy grande y dos baños."
+    en: "It has three bedrooms, a very big living room and two bathrooms."
+  - es: "La recámara de los abuelos está abajo, y los cuartos de Sofía y Memo están arriba."
+    en: "The grandparents' bedroom is downstairs, and Sofía's and Memo's rooms are upstairs."
+  - es: "El perro de la familia vive en la azotea."
+    en: "The family dog lives on the roof."
+  - es: "Los abuelos de Sofía son de Oaxaca."
+    en: "Sofía's grandparents are from Oaxaca."
+    paragraph: true
+  - es: "Su abuelo tiene ochenta y dos años, y su abuela tiene setenta y nueve."
+    en: "Her grandfather is eighty-two, and her grandmother is seventy-nine."
+  - es: "Sus tíos y sus primos viven en Puebla, pero hablan con los abuelos todos los días."
+    en: "Her aunts, uncles and cousins live in Puebla, but they talk to the grandparents every day."
+    reviewer_notes: "Sus tíos translated 'her aunts, uncles' (mixed group). OK?"
+  - es: "Para Sofía, la familia es todo."
+    en: "For Sofía, family is everything."
+    paragraph: true
+questions:
+  - q: "¿Con quién vive Sofía?"
+    options: ["Con su familia", "Con dos amigas", "Con su novio"]
+    answer: 0
+  - q: "¿Cuántos años tiene Memo?"
+    options: ["Veintidós", "Ochenta y dos", "Doce"]
+    answer: 0
+  - q: "¿De dónde son los abuelos de Sofía?"
+    options: ["De Oaxaca", "De Puebla", "De Coyoacán"]
+    answer: 0
+  - q: "Where is the grandparents' bedroom?"
+    lang: en
+    options: ["Downstairs", "Upstairs", "On the roof"]
+    answer: 0

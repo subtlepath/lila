@@ -1,0 +1,535 @@
+# Dictionary-only headwords s-z: lookup, respelling and verb tables, no items
+# (docs/content-style.md section 6). TAB-separated. Verbs the conjugator cannot
+# infer are declared in content/verbs/irregular/dictionary-s-z.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+# --- s
+sabiduría		noun	f	wisdom	B2			pl=-		
+sábila		noun	f	aloe vera	B1		x			
+sabio		adj		wise	B1					
+sacacorchos		noun	m	corkscrew	B1					
+sacapuntas		noun	m	pencil sharpener	A2					
+sacar de onda		expr		to throw off; to weird out	B1	informal	x		Me sacó de onda: it threw me off.	
+sacerdote		noun	m	priest	B1				Everyday word for a Catholic priest: el padre.	
+saco		noun	m	jacket (of a suit); blazer; sack	A2		x		A casual or winter jacket is a chamarra.	
+sacrificio		noun	m	sacrifice	B1					
+sacudir		verb		to shake; to dust	B1				Sacudir los muebles: to dust the furniture.	
+sagrado		adj		sacred; holy	B1					
+salario		noun	m	salary; wage	B1				Salario mínimo: minimum wage.	
+salchichonería		noun	f	deli (cold cuts and cheese)	B1		x			
+salero		noun	m	saltshaker	B1					
+salirse		verb		to leak; to come out; to leave (a group)	B1				Se sale el agua: the water is leaking. Salirse con la suya: to get your way.	
+salmón		noun	m	salmon	A2					
+salpicar		verb		to splash; to spatter	B2					
+salpullido		noun	m	rash (on the skin)	B1				Also spelled sarpullido.	
+saltar		verb		to jump; to skip (a step)	A2					
+salto		noun	m	jump; leap	B1					
+saludable		adj		healthy (food, habits)	A2				A healthy person is sano.	
+saludo		noun	m	greeting; (saludos) regards	A2				Saludos a tu mamá: say hi to your mom.	
+salvaje		adj		wild; savage	B1					
+salvavidas		noun	m	life jacket; life preserver; lifeguard	B1					
+salvo		prep		except; but	B2				Salvo que: unless. Todos, salvo Ana: everyone except Ana.	
+sanar		verb		to heal; to get well	B1					
+sandalia		noun	f	sandal	A2					
+sándwich		noun	m	sandwich (on sliced bread)	A2		x	pl=sándwiches	On a bolillo or telera roll it is a torta.	
+sangrar		verb		to bleed	B1					
+sangrita		noun	f	spicy orange and chile chaser for tequila	B1		x			
+sangrón		adj		annoying; stuck-up (person)	B1	informal	x		Neutral: pesado, antipático.	
+sanitario		noun	m	toilet; (sanitarios) restrooms	A2				On signs: Sanitarios.	
+santo		noun	mf	saint; saint's day	B1			apoc=san	San before most male names (San Juan), but Santo Tomás, Santo Domingo.	
+sapo		noun	m	toad	B1					
+sarampión		noun	m	measles	B1			pl=-		
+sarape		noun	m	sarape (woven blanket worn as a shawl)	B1		x			
+sardina		noun	f	sardine	A2					
+sastre		noun	mf	tailor	B1					
+satisfacer		verb		to satisfy	B2				Conjugates like hacer: satisfago, satisfice, satisfecho.	
+satisfecho		adj		satisfied; full (after a meal)	B1				¿Gusta más? —No, gracias, estoy satisfecho: I'm full.	
+sazón		noun	f	seasoning; flavor (of someone's cooking)	B1				Tu mamá tiene muy buen sazón: your mom is a great cook. Many Mexicans say el sazón.	
+sazonar		verb		to season (food)	B1					
+secadora		noun	f	dryer; hair dryer	A2					
+secar		verb		to dry; (secarse) to dry off	A2					
+sección		noun	f	section; department (of a store)	B1					
+secretaría		noun	f	government ministry; secretary's office	B2		x		Secretaría de Salud: Ministry of Health. Secretaria (no accent): secretary.	
+secuestrar		verb		to kidnap; to hijack	B1					
+secuestro		noun	m	kidnapping; hijacking	B1					
+seda		noun	f	silk	B1					
+seguidor		noun	mf	follower; fan	B1					
+segundo	segundo#time	noun	m	second (of time)	A2				Un segundo: just a second.	
+selección		noun	f	selection; national team	B1				La Selección, also el Tri: Mexico's national soccer team.	
+sellar		verb		to stamp; to seal	B1					
+sello		noun	m	stamp; seal	B1				An official stamp on a document. In Spain also a postage stamp; in Mexico that is a timbre or estampilla.	
+selva		noun	f	jungle; rainforest	B1					
+Semana Santa		noun	f	Holy Week; Easter break	A2			pl=-	Schools close for about two weeks: Semana Santa and the week after Easter, Pascua.	
+sembrar		verb		to plant; to sow	B1					
+semestre		noun	m	semester; six months	A2					
+semilla		noun	f	seed	B1					
+señalar		verb		to point (at); to point out	B1					
+señas		noun	fpl	gestures; signs	B1				Hacer señas: to gesture. Lengua de señas: sign language.	
+sensación		noun	f	feeling; sensation	B1					
+sensato		adj		sensible; reasonable	B2				Sensible means sensitive.	
+sensible		adj		sensitive	B1				False friend: sensible (reasonable) is sensato.	
+sentar		verb		to seat; to suit; to agree with (food)	B1				Me sentó mal la comida: the food disagreed with me. To sit down: sentarse.	
+sentarse		verb		to sit down	A2				Siéntese, por favor: please sit down. Sentado: sitting.	
+sentido		noun	m	sense; meaning; direction (of traffic)	B1				Un solo sentido: one-way. Sentido del humor: sense of humor.	
+sentimiento		noun	m	feeling	B1					
+separar		verb		to separate; (separarse) to split up	B1					
+séptimo		adj		seventh	A2					
+sequía		noun	f	drought	B2					
+ser	ser#being	noun	m	being (ser humano: human being)	B1					
+serenata		noun	f	serenade	B1				Llevar serenata: to bring musicians, often mariachis, to sing to someone.	
+serpiente		noun	f	snake	B1				Everyday Mexican word: víbora.	
+servicio social		noun	m	social service (required of students)	B1		x	pl=-	Hours of public or community work that university students must do to graduate.	
+servidor		noun	m	server (computer); servant	B1				Su servidor: yours truly, a polite way to say I or me.	
+servirse		verb		to help oneself (to food or drink)	A2				Sírvete: help yourself. Sírvase: help yourself (formal).	
+sesión		noun	f	session; meeting	B1					
+seta		noun	f	mushroom (Spain)	B1				In Mexico: hongo; button mushrooms are champiñones.	
+sexo		noun	m	sex	B1					
+sexto		adj		sixth	A2					
+short		noun	m	shorts	A2		x	pl=shorts	Usually singular: un short, el short.	SHOHRT
+sidra		noun	f	cider	B1				Popular for toasts at Christmas and New Year.	
+sierra		noun	f	mountain range; saw	B1					
+siesta		noun	f	nap	A2				Echarse una siesta: to take a nap.	
+significado		noun	m	meaning	A2					
+signo		noun	m	sign; symbol; star sign	B1				¿De qué signo eres?: what's your star sign?	
+sílaba		noun	f	syllable	A2					
+silbar		verb		to whistle	B1					
+silencioso		adj		quiet; silent	B1					
+silla de ruedas		noun	f	wheelchair	B1			pl=sillas de ruedas		
+símbolo		noun	m	symbol	B1					
+similar		adj		similar	B1					
+simón		interj		yeah!; sure!	B1	informal	x		Slangy yes, with friends only.	
+simpatía		noun	f	friendliness; liking; charm	B1				False friend: sympathy for a loss is el pésame.	
+simple		adj		simple; plain; mere	B1				Mexico often says sencillo for easy or plain.	
+sin querer		expr		by accident; without meaning to	A2				Perdón, fue sin querer: sorry, it was an accident.	
+sincero		adj		sincere; honest	B1					
+sincronizada		noun	f	ham and cheese between flour tortillas	B1		x			
+sindicato		noun	m	labor union	B2					
+singular		adj		singular; unique	B1					
+sinónimo		noun	m	synonym	B1					
+síntoma		noun	m	symptom	B1				Masculine: los síntomas.	
+sinvergüenza		noun	mf	scoundrel; shameless person	B1					
+sirena		noun	f	siren; mermaid	B1					
+sistema		noun	m	system	B1				Masculine: el sistema.	
+sobar		verb		to rub; to massage (a sore spot)	B1		x		Sóbale tantito: rub it a little. A sobador is a folk healer who massages.	
+soborno		noun	m	bribe	B2				Colloquial Mexico: una mordida.	
+sobrar		verb		to be left over; to be too many	B1				Sobró comida: there was food left over.	
+sobras		noun	fpl	leftovers	A2					
+sobre	sobre#envelope	noun	m	envelope	A2					
+sobre todo		expr		above all; especially	A2					
+sobrecargo		noun	mf	flight attendant	B1		x	f=sobrecargo	Also aeromozo, aeromoza.	
+sobremesa		noun	f	chatting at the table after a meal	B1				Quedarse de sobremesa: to stay at the table talking after eating.	
+sobrepeso		noun	m	overweight; excess weight	B1			pl=-		
+sobres		interj		OK!; deal!; let's do it!	B2	informal	x		Answering a plan: ¿Vamos al cine? —¡Sobres!	
+sobrevivir		verb		to survive	B1					
+sobrio		adj		sober	B1					
+sociedad		noun	f	society; company (business)	B1					
+socio		noun	mf	partner (business); member	B1					
+socorro		interj		help!	B1					
+sofá		noun	m	sofa; couch	A2					
+soldado		noun	mf	soldier	B1			f=soldado		
+soledad		noun	f	loneliness; solitude	B1			pl=-		
+soler		verb		to usually (do); to tend to	B1				Suelo levantarme temprano: I usually get up early.	
+solicitar		verb		to apply for; to request	B1					
+solicitud		noun	f	application (form); request	B1					
+solitario		adj		lonely; solitary	B1					
+soltar		verb		to let go (of); to release	B1					
+solucionar		verb		to solve; to fix	B1					
+soñar		verb		to dream (soñar con: to dream about)	A2					
+sonarse		verb		to blow one's nose	B1				Suénate la nariz: blow your nose.	
+sonido		noun	m	sound	A2					
+soplar		verb		to blow	B1					
+sorbo		noun	m	sip	B1					
+sordo		adj		deaf	B1					
+sorprender		verb		to surprise; (sorprenderse) to be surprised	B1					
+sorteo		noun	m	draw; raffle	B1					
+sospechar		verb		to suspect	B1					
+sospechoso		adj		suspicious; (noun) suspect	B1					
+sostén		noun	m	bra	B1				Also brasier.	
+sostener		verb		to hold (up); to support	B1					
+sótano		noun	m	basement	B1					
+soya		noun	f	soy; soybean	B1		x	pl=-		
+suavizante		noun	m	fabric softener	B1					
+subjuntivo		noun	m	subjunctive	B1			pl=-		
+subrayar		verb		to underline	B1					
+subtítulo		noun	m	subtitle	B1					
+suceder		verb		to happen	B1				Everyday Mexico: pasar. ¿Qué pasó?	
+suceso		noun	m	event; incident	B1				False friend: success is éxito.	
+suciedad		noun	f	dirt; filth	B1					
+sucursal		noun	f	branch (of a bank or store)	B1					
+sudadera		noun	f	sweatshirt; hoodie	A2					
+sudar		verb		to sweat	B1					
+sudor		noun	m	sweat	B1					
+suelto		adj		loose; (dinero suelto) small change	B1				For small change Mexico more often says cambio.	
+suero		noun	m	IV drip; rehydration drink; serum	B1		x		Suero oral: oral rehydration drink, sold in pharmacies.	
+sugerencia		noun	f	suggestion	B1					
+sugerir		verb		to suggest	B1					
+suicidio		noun	m	suicide	B2					
+sujetador		noun	m	bra (Spain)	B1				In Mexico: brasier or sostén.	
+sujetar		verb		to hold (on to); to fasten	B1					
+sujeto		noun	m	subject (grammar); individual	B2					
+sumar		verb		to add (up)	B1					
+súper	súper#very	adv		really; super (súper bien)	A2	informal			Está súper rico: it's really tasty.	
+superar		verb		to overcome; to get over; to exceed	B1					
+superficie		noun	f	surface; area	B1					
+superior		adj		upper; higher; superior	B1			f=superior		
+supervisor		noun	mf	supervisor	B1					
+suplicar		verb		to beg; to plead	B1					
+supuesto		adj		supposed; alleged	B1				Por supuesto: of course.	
+sureste		noun	m	southeast	B1			pl=-	El sureste: the states of the Yucatán Peninsula, Tabasco and Chiapas.	
+surgir		verb		to arise; to come up	B1					
+suroeste		noun	m	southwest	B1			pl=-		
+surtir		verb		to fill (a prescription); to stock	B1		x		Surtir una receta: to fill a prescription.	
+sushi		noun	m	sushi	A2			pl=-		
+suspender		verb		to suspend; to cancel; to call off	B1				To fail an exam in Mexico is reprobar.	
+suspirar		verb		to sigh	B1					
+sustantivo		noun	m	noun	B1					
+sustituir		verb		to replace; to substitute	B1					
+susurrar		verb		to whisper	B1					
+# --- t
+tabaco		noun	m	tobacco	B1					
+tabique		noun	m	brick; partition wall	B1		x		The red clay brick of Mexican houses. Also ladrillo.	
+tabla		noun	f	board; plank; table (chart)	B1				Tabla de picar: cutting board.	
+tableta		noun	f	tablet (pill or computer)	A2					
+tacaño		adj		stingy; cheap	B1					
+tachar		verb		to cross out	B1					
+taco	taco#swearword	noun	m	swear word (Spain)	B1				Decir tacos: to swear. In Mexico: groserías or malas palabras.	
+tacón		noun	m	heel (of a shoe)	A2				Zapatos de tacón: high heels.	
+tal		det		such; such a	A2			pl=tales	Un tal Juan: someone called Juan. Tal vez: maybe.	
+talacha		noun	f	grunt work; odd jobs; tire repair	B1	informal	x		Hacer talacha: to do the boring jobs. A talachero fixes tires by the road.	
+taladro		noun	m	drill (tool)	B1					
+talento		noun	m	talent	B1					
+tallar		verb		to scrub; to rub; to carve	B1		x		Tállate bien las manos: scrub your hands well.	
+talón		noun	m	heel (of the foot)	B1					
+tamarindo		noun	m	tamarind	A2				Agua de tamarindo: a sweet and sour drink.	
+tambor		noun	m	drum	B1					
+tanque		noun	m	tank	B1				El tanque de gas: the gas cylinder for the stove and water heater.	
+tapa		noun	f	lid; cap; cover	A2					
+tapa	tapa#snack	noun	f	tapa; small bar snack (Spain)	A2				In Mexico: botana.	
+tapar		verb		to cover; to block; (taparse) to get clogged	B1				Se tapó el baño: the toilet is clogged.	
+tapatío		adj		from Guadalajara	B1		x			
+tapón		noun	m	cap; cork; plug; earplug	B1					
+taquero		noun	mf	taco cook; taco vendor	A2		x			
+tarado		adj		stupid; idiot	B1	informal			An insult. Neutral: tonto.	
+tardarse		verb		to take (time); to be long	A2		x		¿Cuánto te tardas?: how long will you be? Mexico usually adds se.	
+tarifa		noun	f	rate; fare; fee	B1					
+tarja		noun	f	kitchen sink	B1		x		Also fregadero.	
+tarta		noun	f	cake; tart (Spain)	A2				In Mexico: pastel; a fruit or cream pie is a pay.	
+tasa		noun	f	rate (tasa de interés: interest rate)	B2					
+tatemar		verb		to roast; to char (chiles, tomatoes)	B2		x		From Nahuatl. On a comal or right over the flame.	
+tatuaje		noun	m	tattoo	B1					
+tazón		noun	m	bowl	A2					
+tecla		noun	f	key (on a keyboard)	B1					
+teclado		noun	m	keyboard	A2					
+técnico		noun	mf	technician; repairman; (adj) technical	B1					
+tecnología		noun	f	technology	B1					
+tecolote		noun	m	owl	B1		x		From Nahuatl. Elsewhere: búho.	
+tejer		verb		to knit; to weave	B1					
+tejocote		noun	m	tejocote (small orange hawthorn fruit)	B2		x		From Nahuatl. Simmered in Christmas ponche.	
+tela		noun	f	fabric; cloth	A2					
+telaraña		noun	f	spiderweb; cobweb	B1					
+telediario		noun	m	TV news (Spain)	B1				In Mexico: el noticiero.	
+telera		noun	f	flat bread roll for tortas	B1		x			
+televisor		noun	m	TV set	A2					
+temer		verb		to fear; to be afraid	B1				Everyday: tener miedo. Me temo que no: I'm afraid not.	
+templo		noun	m	temple; church	B1					
+tendedero		noun	m	clothesline	B1					
+tender		verb		to hang out (washing); to make (the bed)	B1				Tender la ropa: to hang the washing out. Tender la cama: to make the bed.	
+teñir		verb		to dye	B1				Teñirse el pelo: to dye your hair.	
+tenso		adj		tense	B1					
+tentación		noun	f	temptation	B1					
+teoría		noun	f	theory	B1					
+tepache		noun	m	tepache (fermented pineapple drink)	B1		x		From Nahuatl. Sold cold at markets and street stands.	
+terapia		noun	f	therapy	B1					
+terco		adj		stubborn	B1					
+terminarse		verb		to run out; to be over	A2				Se terminó la leche: we're out of milk. Also acabarse.	
+término		noun	m	term; end; doneness (of meat)	B1				¿En qué término?: how would you like it cooked? Término medio: medium.	
+termo		noun	m	thermos; travel mug	B1					
+termómetro		noun	m	thermometer	A2					
+ternura		noun	f	tenderness; affection	B1			pl=-	¡Qué ternura!: how sweet!	
+terraza		noun	f	terrace; balcony; rooftop bar	A2					
+terremoto		noun	m	earthquake	B1				Mexicans more often say sismo or temblor.	
+terreno		noun	m	plot of land; lot; ground	B1					
+tesis		noun	f	thesis	B1				Hacer la tesis: to write your thesis, often needed to titularse.	
+tesoro		noun	m	treasure; darling	B1					
+testigo		noun	mf	witness	B1			f=testigo		
+tetera		noun	f	kettle; teapot	B1					
+texto		noun	m	text	A2					
+tibio		adj		lukewarm; warm	A2					
+tiburón		noun	m	shark	B1					
+tierno		adj		tender; cute; sweet	B1					
+tigre		noun	m	tiger	A2					
+tijeras		noun	fpl	scissors	A2				Unas tijeras: a pair of scissors.	
+tilde		noun	f	written accent; tilde (ñ)	B1				Everyday Mexico: acento. ¿Lleva acento?: does it take an accent?	
+tiliche		noun	m	piece of junk; (tiliches) stuff	B1	informal	x		Junta tus tiliches: get your stuff together.	
+tímido		adj		shy	A2					
+tina		noun	f	bathtub; tub	A2		x			
+tinga		noun	f	tinga (shredded meat in chipotle tomato sauce)	B1		x		Tinga de pollo: served on tostadas with cream and lettuce.	
+tinta		noun	f	ink	B1					
+tinto		adj		red (wine)	A2				Vino tinto: red wine.	
+tintorería		noun	f	dry cleaner's	B1					
+tío	tío#guy	noun	mf	guy; mate (Spain)	B1	informal			Spain only. In Mexico tío is only uncle; for a guy say cuate or güey.	
+tirantes		noun	mpl	suspenders; straps	B1					
+tirar los perros		expr		to hit on; to flirt with	B1	informal	x		Te está tirando los perros: they're hitting on you.	
+tirarse		verb		to throw oneself; to jump; to lie down	B1				Me tiré a la alberca: I jumped into the pool.	
+tirita		noun	f	adhesive bandage; Band-Aid (Spain)	B1				In Mexico: curita.	
+tiro		noun	m	shot; throw	B1					
+titularse		verb		to graduate (get one's degree)	B1		x		To get the degree once the courses are done, by thesis, exam or another option.	
+título		noun	m	title; degree; diploma	B1				Sacar el título: to get your degree.	
+tlacoyo		noun	m	tlacoyo (oval masa cake stuffed with beans)	B1		x		From Nahuatl. Topped with nopales, cheese and salsa.	
+tlacuache		noun	m	opossum	B1		x		From Nahuatl.	
+tlayuda		noun	f	tlayuda (large crisp Oaxacan tortilla)	B1		x		Spread with asiento and beans, then topped with cheese and meat.	
+todo derecho		expr		straight ahead	A2				Siga todo derecho: keep going straight.	
+tolerar		verb		to tolerate; to stand	B1					
+tomar en cuenta		expr		to take into account	B1					
+tomate		noun	m	green tomato; tomatillo	A2		x		In central Mexico tomate is the green tomatillo and a red tomato is a jitomate; in the north tomate is the red one.	
+tono		noun	m	tone; ringtone; shade (of a color)	B1					
+tontería		noun	f	nonsense; silly thing	B1					
+toparse		verb		to run into (toparse con)	B1				Me topé con Lupe en el metro: I ran into Lupe on the metro.	
+tóper		noun	m	plastic food container	B1		x	pl=tópers	From the brand Tupperware.	
+torcer		verb		to twist; (torcerse) to sprain	B1				Me torcí el tobillo: I sprained my ankle.	
+torneo		noun	m	tournament	B1					
+tornillo		noun	m	screw	B1					
+toro		noun	m	bull	A2					
+torpe		adj		clumsy	B1					
+torre		noun	f	tower	A2					
+tortería		noun	f	torta shop	A2		x			
+tortilla española		noun	f	Spanish potato omelette	A2			pl=tortillas españolas	In Spain tortilla alone means this; in Mexico a tortilla is the flat corn or flour bread.	
+tortillero		noun	m	tortilla warmer (cloth or basket)	B1		x			
+tortuga		noun	f	turtle; tortoise	A2					
+toser		verb		to cough	B1					
+tostada	tostada#toast	noun	f	toast (Spain)	A2				In Mexico a tostada is a crisp fried tortilla; toast is pan tostado.	
+tostador		noun	m	toaster	A2					
+tostar		verb		to toast; to roast (coffee)	B1					
+total		adj		total; whole	A2				En total: in all. Total, que...: anyway, in the end...	
+totopo		noun	m	tortilla chip	A2		x		Usually plural: totopos con frijoles.	
+tóxico		adj		toxic	B1					
+trabajador		noun	mf	worker; (adj) hardworking	A2					
+trabarse		verb		to get stuck; to jam	B1				Se trabó la puerta: the door is stuck.	
+tradicional		adj		traditional	A2					
+traductor		noun	mf	translator	B1					
+tragedia		noun	f	tragedy	B1					
+tragón		adj		greedy (about food)	B1	informal	x		¡Qué tragón!: what a pig!	
+traición		noun	f	betrayal; treason	B1					
+traicionar		verb		to betray	B1					
+tráiler		noun	m	semi truck; tractor-trailer	B1		x		A trailer towed by a car is a remolque.	
+traje		noun	m	suit; costume; outfit	A2					
+traje de baño		noun	m	swimsuit	A2			pl=trajes de baño		
+trajinera		noun	f	painted flat-bottomed boat (Xochimilco)	B1		x			
+tramitar		verb		to process; to apply for (papers)	B1				Tramitar el pasaporte: to apply for a passport.	
+trámite		noun	m	official procedure; paperwork	B1				Hacer un trámite: to do some official paperwork.	
+trampa		noun	f	trap; cheating	B1				Hacer trampa: to cheat.	
+tranquilidad		noun	f	calm; peace of mind	B1			pl=-		
+tranquilizarse		verb		to calm down	B1				¡Tranquilízate!: calm down!	
+transa		noun	f	scam; swindle	B1	informal	x		Ser transa: to be a crook.	
+transbordo		noun	m	transfer (between lines)	B1				Hacer transbordo: to change trains or buses.	
+transmitir		verb		to broadcast; to transmit	B1					
+transporte		noun	m	transportation	A2				Transporte público: public transportation.	
+trapeador		noun	m	mop	A2		x			
+tras		prep		after; behind	B2				Día tras día: day after day. Everyday: después de, detrás de.	
+trasero		noun	m	bottom; butt; (adj) back, rear	B1					
+trasladar		verb		to move; to transfer	B2					
+trasnochar		verb		to stay up late	B1					
+tratamiento		noun	m	treatment	B1					
+tratarse		verb		to be about (tratarse de)	B1				¿De qué se trata?: what's it about? Se trata de...: it's about...	
+trato		noun	m	deal; treatment	B1				¡Trato hecho!: it's a deal!	
+trayecto		noun	m	trip; route (from A to B)	B1				En el trayecto: on the way.	
+tremendo		adj		tremendous; huge; (child) naughty	B1					
+trenza		noun	f	braid	B1					
+trepar		verb		to climb	B1					
+triángulo		noun	m	triangle	B1					
+trigo		noun	m	wheat	B1					
+trimestre		noun	m	quarter (three months); term	B1					
+tripa		noun	f	gut; tripe	B1				Tacos de tripa: tripe tacos, often fried crisp.	
+trolebús		noun	m	trolleybus	B1					
+trompeta		noun	f	trumpet	B1					
+trompo		noun	m	spinning top; vertical spit (al pastor)	B1		x		Tacos al pastor are sliced from a trompo.	
+tronar		verb		to thunder; to burst; to crack	B1					
+tronar	tronar#fail	verb		to fail (a class); to break up (a couple)	B1	informal	x		Troné química: I failed chemistry. Ya tronaron: they broke up.	
+tronco		noun	m	trunk; log	B1					
+tropezar		verb		to trip; to stumble	B1					
+tropical		adj		tropical	B1					
+trozo		noun	m	piece; chunk	B1				Mexico more often says pedazo.	
+trucha		noun	f	trout	B1					
+trucha	trucha#alert	adj		sharp; alert	B1	informal	x		¡Ponte trucha!: look out!; stay sharp!	
+truco		noun	m	trick	B1					
+trueno		noun	m	thunder; thunderclap	B1					
+trusa		noun	f	briefs (underwear)	B1		x			
+tubería		noun	f	pipes; plumbing	B1					
+tubo		noun	m	tube; pipe; hair roller	B1					
+tucán		noun	m	toucan	B1					
+tuerca		noun	f	nut (for a bolt)	B2					
+tumba		noun	f	grave; tomb	B1					
+tumbar		verb		to knock down; to knock over	B1					
+túnel		noun	m	tunnel	B1					
+turismo		noun	m	tourism	B1			pl=-		
+turnarse		verb		to take turns	B1					
+tutear		verb		to address as tú	B1				¿Nos tuteamos?: shall we use tú? Opposite: hablar de usted.	
+# --- u
+u		conj		or (before o- or ho-)	A2				Siete u ocho: seven or eight.	
+ubicar		verb		to locate; to find; to know (a place, a person)	B1		x		¿Ubicas la farmacia?: do you know where the pharmacy is? Ubicarse: to be located.	
+uf		interj		phew!; ugh!	A2					
+újule		interj		oh boy!; yikes!	B1	informal	x		¡Újule, ya es bien tarde!	
+un buen		expr		a lot (un buen de)	B1	informal	x		Había un buen de gente: there were loads of people.	
+un montón		expr		a lot; loads (un montón de)	A2					
+unidad		noun	f	unit; unity	B1					
+unidad habitacional		noun	f	housing complex	B1		x	pl=unidades habitacionales	Blocks of apartments around shared courtyards and parking.	
+unido		adj		united; close (family, friends)	B1				Una familia muy unida: a close family.	
+unión libre		noun	f	common-law marriage	B1		x	pl=-	Vivir en unión libre: to live together without marrying.	
+unir		verb		to join; to unite; (unirse a) to join	B1					
+universitario		adj		university; (noun) university student	B1					
+universo		noun	m	universe	B1					
+uno que otro		expr		the odd one; a few	B1		x		Uno que otro coche: a car here and there.	
+untar		verb		to spread (butter, cream)	B1					
+ups		interj		oops!	A2					
+urgir		verb		to be urgent	B1		x		Me urge: I need it urgently. Works like gustar.	
+usado		adj		used; second-hand; worn	A2					
+uso		noun	m	use	B1					
+usuario		noun	mf	user	B1					
+útiles		noun	mpl	school supplies	A2				La lista de útiles: the school supply list.	
+utilizar		verb		to use	B1				Everyday: usar.	
+uy		interj		oh!; whoa!; ouch!	A2					OOY
+# --- v
+va	va#ok	interj		OK; deal	B1	informal	x		¿Nos vemos a las seis, va? —Va.	
+vacante		noun	f	vacancy; job opening	B1					
+vaciar		verb		to empty	B1					
+vacilar		verb		to joke around; to tease	B1	informal	x		Nomás te estoy vacilando: I'm just kidding. In writing it can also mean to hesitate.	
+vacunar		verb		to vaccinate	B1					
+vago		adj		lazy; vague; (noun) bum	B1				For lazy Mexico usually says flojo.	
+vainilla		noun	f	vanilla	A2					
+vajilla		noun	f	dishes; dinnerware	B1					
+vale		noun	m	voucher; IOU	B1		x		Vales de despensa: grocery vouchers, a common job benefit.	
+vale	vale#ok	interj		OK; all right (Spain)	B1				Spain only. In Mexico: sale, va or está bien.	
+valer la pena		expr		to be worth it	B1				Vale la pena: it's worth it.	
+valer madre		expr		to not matter at all; to be ruined	B2	vulgar	x		Me vale madre: I don't give a damn. Ya valió madre: it's ruined.	
+valiente		adj		brave	A2					
+valioso		adj		valuable	B1					
+valle		noun	m	valley	B1					
+valor		noun	m	value; courage; (valores) values	B1					
+valorar		verb		to value; to appreciate	B1					
+vanidoso		adj		vain	B1					
+vapor		noun	m	steam	B1				Al vapor: steamed.	
+vaquero		noun	mf	cowboy	B1				Jeans in Mexico are pantalones de mezclilla.	
+vaqueros		noun	mpl	jeans (Spain)	A2				In Mexico: jeans or pantalón de mezclilla.	
+variar		verb		to vary	B1				Para variar: for a change.	
+varicela		noun	f	chickenpox	B1			pl=-		
+variedad		noun	f	variety	B1					
+varón		noun	m	male; boy	B1				¿Fue niña o varón?: was it a girl or a boy?	
+váter		noun	m	toilet (Spain)	B1				In Mexico: el baño, el escusado or el inodoro.	
+vato		noun	m	guy; dude	B2	informal	x		Slang, especially in the north and on the border.	
+vecindad		noun	f	tenement (homes around a shared patio)	B1		x		The setting of El Chavo del Ocho.	
+vehículo		noun	m	vehicle	B1					
+vejez		noun	f	old age	B1			pl=-		
+vela		noun	f	candle; sail	A2					
+velador		noun	m	night watchman	B1		x			
+veladora		noun	f	votive candle (in a glass)	B1		x			
+velocidad		noun	f	speed	B1					
+velorio		noun	m	wake (before a funeral)	B1					
+vena		noun	f	vein	B1					
+venado		noun	m	deer	A2					
+vencer		verb		to beat; to defeat; (vencerse) to expire	B1				Ya se venció tu licencia: your license has expired.	
+vencido		adj		expired; overdue; defeated	B1					
+venda		noun	f	bandage	B1					
+vendar		verb		to bandage	B1					
+veneno		noun	m	poison; venom	B1					
+venezolano		adj		Venezuelan	A2					
+venga		interj		come on!; OK (Spain)	B1				Spain only. In Mexico: ándale, órale or sale.	
+vengarse		verb		to take revenge	B1					
+ventaja		noun	f	advantage; lead	B1					
+ventilador		noun	m	(electric) fan	A2					
+veracruzano		adj		from Veracruz	B1		x			
+verbo		noun	m	verb	A2					
+verdulería		noun	f	greengrocer's	A2					
+verga		noun	f	dick	B2	vulgar	x		Very common in crude slang (a la verga, vale verga); never in polite company.	
+verificación		noun	f	check; vehicle emissions test	B1		x		Mexico City cars must pass la verificación twice a year.	
+verificar		verb		to check; to verify	B1					
+verse		verb		to look (appear); to see each other	A2				Te ves muy bien: you look great. Nos vemos: see you.	
+versión		noun	f	version	B1					
+vestir		verb		to dress (someone); to wear	B1				Dressing yourself is vestirse.	
+veterinario		noun	mf	vet; veterinarian	A2					
+vía		noun	f	way; route; (railway) track; lane	B1				Vía rápida: expressway. Por vía oral: by mouth.	
+viajero		noun	mf	traveler	A2					
+vicio		noun	m	vice; bad habit	B1					
+víctima		noun	f	victim	B1				Always feminine: la víctima, even for a man.	
+videojuego		noun	m	video game	A2					
+vidrio		noun	m	glass (material); windowpane	A2				A drinking glass is a vaso.	
+vieja		noun	f	woman; wife; (mi vieja) my wife or mom	B1	informal	x		Can sound sexist or rude. Neutral: mujer, esposa.	
+viene viene		noun	m	informal parking attendant	B1	informal	x	pl=-	Waves cars into a spot shouting ¡viene, viene! and watches them for a tip.	
+vigente		adj		valid; current (document, law)	B1				Pasaporte vigente: valid passport.	
+vigilante		noun	mf	security guard	B1					
+vigilar		verb		to watch; to keep an eye on; to guard	B1					
+vinagre		noun	m	vinegar	A2					
+vino		noun	m	wine	A2				Vino tinto: red wine. Vino blanco: white wine.	
+violencia		noun	f	violence	B1			pl=-		
+violento		adj		violent; awkward	B1					
+violín		noun	m	violin	A2					
+virgen		noun	f	virgin; the Virgin Mary	B1				La Virgen de Guadalupe, Mexico's patron saint.	
+visa		noun	f	visa	A2		x			
+visita		noun	f	visit; visitor; guests	A2				Tenemos visita: we have guests.	
+víspera		noun	f	eve; day before	B1				En vísperas de Navidad: just before Christmas.	
+vista		noun	f	view; sight; eyesight	A2				Con vista al mar: with a sea view.	
+vistazo		noun	m	look; glance	B1				Echar un vistazo: to take a quick look.	
+vitamina		noun	f	vitamin	A2					
+viudo		noun	mf	widower (viuda: widow)	B1					
+vivero		noun	m	plant nursery	B1					
+vivienda		noun	f	housing; home	B1					
+vivo		adj		alive; lively; bright (color); sharp	A2				En vivo: live (a show).	
+vocabulario		noun	m	vocabulary	A2					
+vocal		noun	f	vowel	A2					
+vocho		noun	m	VW Beetle	B1	informal	x		Also vochito. Once the classic Mexico City taxi.	
+volado		noun	m	coin toss	B1		x		Echar un volado: to toss a coin. ¿Águila o sol?: heads or tails?	
+volante		noun	m	steering wheel; flyer (leaflet)	B1					
+volar		verb		to fly	A2					
+volcar		verb		to overturn; to tip over	B1				Se volcó un tráiler en la autopista: a semi overturned on the highway.	
+voleibol		noun	m	volleyball	A2			pl=-		
+volumen		noun	m	volume	B1			pl=volúmenes		
+voluntad		noun	f	will; willpower	B1					
+voluntario		noun	mf	volunteer; (adj) voluntary	B1					
+volverse		verb		to become; to turn around	B1				Se volvió loco: he went crazy.	
+vómito		noun	m	vomit	B1					
+vosotros		pron		you (plural, Spain)	B1			fpl=vosotras	Spain only. In Mexico: ustedes, formal or not.	
+votar		verb		to vote	B1					
+voto		noun	m	vote	B1					
+vuestro		det		your (plural, Spain)	B1			f=vuestra; mpl=vuestros; fpl=vuestras	Spain only. In Mexico: su or de ustedes.	
+vulcanizadora		noun	f	tire repair shop	B1		x		Look for the sign or a painted tire by the roadside.	
+vulgar		adj		vulgar; crude; common	B1					
+# --- w
+web		noun	f	web; website	A2			pl=-	Página web: website.	
+wey		noun	mf	dude; guy	A2	informal	x		Common spelling of güey in messages. Rude to anyone but close friends.	
+whisky		noun	m	whisky	B1			pl=-		
+# --- x
+xenofobia		noun	f	xenophobia	B2			pl=-		
+xilófono		noun	m	xylophone	B1					
+xoconostle		noun	m	xoconostle (sour prickly pear)	B2		x		From Nahuatl. Used in salsas and mole de olla.	
+xocoyote		noun	mf	youngest child (of a family)	B2		x	f=xocoyota	From Nahuatl.	
+xoloitzcuintle		noun	m	Mexican hairless dog	B1		x		Usually xolo for short.	
+# --- y
+ya que		expr		since; because	B1				Ya que estás aquí, ayúdame: since you're here, help me.	
+yate		noun	m	yacht	B1					
+yegua		noun	f	mare	B1					
+yema		noun	f	yolk; fingertip	B1					
+yerno		noun	m	son-in-law	B1				Daughter-in-law: nuera.	
+yeso		noun	m	plaster; (plaster) cast	B1					
+yoga		noun	m	yoga	A2			pl=-		
+yogur		noun	m	yogurt	A2				Usually spelled yogurt on Mexican packaging.	
+yonque		noun	m	junkyard (for car parts)	B1		x		From English junk.	
+yuca		noun	f	cassava; yucca	B1					
+yucateco		adj		from Yucatán	B1		x			
+# --- z
+zacate		noun	m	grass; lawn; scrubbing pad	B1		x		From Nahuatl. Zacate para trastes: a dish scrubber.	
+zafo		interj		count me out!; not me!	B1	informal	x		Said to get out of a chore or a dare.	
+zaguán		noun	m	entrance passage (of a house)	B2					
+zanate		noun	m	grackle (black bird)	B2		x		From Nahuatl. The noisy black bird of every plaza.	
+zancudo		noun	m	mosquito	A2		x		Also mosco or mosquito.	
+zanja		noun	f	ditch; trench	B2					
+zapatería		noun	f	shoe store	A2					
+zapatero		noun	mf	shoemaker; shoe repairer	B1					
+zapatilla		noun	f	women's dress shoe; pump	A2		x		Sneakers are tenis in Mexico.	
+zapatilla	zapatilla#sneaker	noun	f	sneaker; slipper (Spain)	A2				In Mexico a zapatilla is a woman's dress shoe; sneakers are tenis, slippers pantuflas.	
+zapote		noun	m	sapote (fruit)	B1		x		From Nahuatl. Zapote negro tastes like chocolate pudding.	
+zarzamora		noun	f	blackberry	A2					
+zócalo		noun	m	main square (of a Mexican town)	A2		x		El Zócalo, capitalized, is Mexico City's.	
+zona		noun	f	zone; area	A2					
+zopilote		noun	m	vulture	B1		x		From Nahuatl.	
+zorrillo		noun	m	skunk	B1		x			
+zorro		noun	m	fox	B1				The feminine zorra is also a crude insult for a woman.	
+zumo		noun	m	juice (Spain)	A2				In Mexico: el jugo.	
+zurdo		adj		left-handed	B1					

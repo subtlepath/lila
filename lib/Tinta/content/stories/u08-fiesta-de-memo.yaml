@@ -1,0 +1,43 @@
+title: La fiesta de Memo
+title_en: Memo's party
+level: A1
+kind: reading
+reviewer_notes: "Las mañanitas sung to a teenager at nine, at a party with dancing; a doce translated as at midnight. Typical? (mañanitas is a new supporting row: noun fpl, neutral, MX.)"
+lesson: u08.l03
+lines:
+  - es: "Hoy es el cumpleaños de Memo, el hermano de Sofía."
+    en: "It's Memo's birthday today. He's Sofía's brother."
+  - es: "Hay una fiesta en su casa, y Tom llega a las siete con unos refrescos."
+    en: "There's a party at their house, and Tom arrives at seven with some sodas."
+  - es: "En la sala, todos están bailando."
+    en: "In the living room, everyone is dancing."
+    paragraph: true
+  - es: "Los abuelos de Memo están platicando en la cocina."
+    en: "Memo's grandparents are chatting in the kitchen."
+  - es: "Memo está jugando futbol con sus primos en la azotea."
+    en: "Memo is playing soccer with his cousins on the roof."
+  - es: "¿Y Tom? Tom no sabe bailar, pero está aprendiendo."
+    en: "And Tom? Tom can't dance, but he's learning."
+  - es: "A las nueve, todos le cantan las mañanitas a Memo."
+    en: "At nine, everyone sings Las mañanitas to Memo."
+    paragraph: true
+  - es: "Memo está muy contento."
+    en: "Memo is very happy."
+  - es: "A las doce, Tom se va a su casa."
+    en: "At midnight, Tom goes home."
+  - es: "Está cansado, pero dice: “¡Qué fiesta!”"
+    en: "He's tired, but he says, “What a party!”"
+questions:
+  - q: "¿De quién es el cumpleaños?"
+    options: ["De Memo", "De Sofía", "De Tom"]
+    answer: 0
+  - q: "¿Qué está haciendo Memo?"
+    options: ["Está bailando", "Está jugando futbol", "Está cocinando"]
+    answer: 1
+  - q: "What is Tom doing at the party?"
+    lang: en
+    options: ["Learning to dance", "Cooking in the kitchen", "Playing soccer on the roof"]
+    answer: 0
+  - q: "¿A qué hora se va Tom?"
+    options: ["A las siete", "A las nueve", "A las doce"]
+    answer: 2

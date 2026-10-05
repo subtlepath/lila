@@ -1,0 +1,584 @@
+# Dictionary-only headwords p-r: lookup rows with no items or examples (docs/content-style.md section 6).
+# TAB-separated. Verbs the conjugator cannot infer are declared in content/verbs/irregular/dictionary-p-r.yaml.
+lemma	key	pos	gender	gloss	level	register	mx	forms	note	pron
+# --- p
+pachanga		noun	f	party; bash	B1	informal	x			
+pacífico		adj		peaceful; calm	B1					
+padecer		verb		to suffer (from an illness)	B2				Padece diabetes: he has diabetes.	
+padrastro		noun	m	stepfather; hangnail	B1					
+padre		noun	m	father; priest (Father)	A2				Mexicans usually say mis papás for my parents. As an informal adjective, padre means cool.	
+pago		noun	m	payment	A2					
+paisaje		noun	m	landscape; scenery	B1					
+paisano		noun	mf	fellow countryman; Mexican emigrant	B2		x		Mexico: los paisanos are Mexicans living in the US, especially when they come home to visit.	
+paja		noun	f	straw (dried grass)	B1				A drinking straw is a popote.	
+pajita		noun	f	drinking straw (in Spain)	A2				In Mexico: el popote.	
+pala		noun	f	shovel; spade	B1					
+palacio		noun	m	palace	B1				Palacio municipal: town hall. Palacio Nacional: the seat of the president in Mexico City.	
+palanca		noun	f	lever; connections, pull	B1		x		Tener palanca: to know people who can pull strings for you.	
+palanqueta		noun	f	nut brittle	B1		x		Peanuts or pumpkin seeds set in piloncillo.	
+paletería		noun	f	ice-pop shop	A2		x		Sells paletas and ice cream.	
+pálido		adj		pale	B1					
+palillo		noun	m	toothpick	B1				Palillos chinos: chopsticks.	
+paliza		noun	f	beating; thrashing	B1					
+palma		noun	f	palm (of the hand); palm tree	B1					
+palmera		noun	f	palm tree	B1					
+palo		noun	m	stick; pole	B1					
+paloma		noun	f	pigeon; dove; check mark	B1		x		Mexico: a paloma is also the tick that marks a right answer, and a drink of tequila with grapefruit soda.	
+pambazo		noun	m	chile-dipped stuffed roll	B1		x		A bread roll dipped in guajillo sauce, filled with potato and chorizo and fried.	
+pan de muerto		noun	m	Day of the Dead sweet bread	A2		x	pl=-		
+pan dulce		noun	m	Mexican sweet bread; pastries	A2		x	pl=-	Conchas, orejas and cuernos are kinds of pan dulce.	
+panadero		noun	mf	baker	A2					
+pañal		noun	m	diaper	A2					
+pandemia		noun	f	pandemic	B1					
+pandilla		noun	f	gang	B1					
+panela		noun	f	panela (mild fresh cheese)	B1		x		Queso panela. In other countries panela is unrefined cane sugar.	
+pánico		noun	m	panic	B1			pl=-		
+panqué		noun	m	pound cake; loaf cake	B1		x			
+pantaletas		noun	fpl	panties (women's underwear)	B1		x			
+pantano		noun	m	swamp; marsh	B2					
+pantimedias		noun	fpl	pantyhose; tights	B1		x			
+pantorrilla		noun	f	calf (of the leg)	B1					
+pants		noun	mpl	sweatpants; tracksuit	A2		x		From English, but it only means sweatpants or a tracksuit.	
+pantufla		noun	f	slipper	A2					
+pañuelo		noun	m	handkerchief; headscarf	A2				A paper tissue is a pañuelo desechable, or un kleenex.	
+pápalo		noun	m	papalo (pungent herb for tacos)	B2		x		From Nahuatl. Also papaloquelite.	
+papas a la francesa		noun	fpl	French fries	A2		x		Also papas fritas.	
+papel de baño		noun	m	toilet paper	A2		x	pl=-	Also papel higiénico.	
+papeleo		noun	m	paperwork; red tape	B1			pl=-		
+para que		conj		so that	A2				Takes the subjunctive: para que entiendas.	
+para siempre		expr		forever	A2					
+parabrisas		noun	m	windshield	B1					
+paracaídas		noun	m	parachute	B2					
+paraíso		noun	m	paradise	B1					
+parar		verb		to stop	A2				Pararse means to stand up in Mexico: ¡Párate!	
+parche		noun	m	patch	B1					
+parcial		adj		partial; (noun) midterm exam	B1		x		Mexico: un parcial is a midterm exam at school or university.	
+parecerse		verb		to look like; to resemble	A2				Te pareces a tu mamá: you look like your mom.	
+pariente		noun	mf	relative (family member)	B1				False friend: parents are papás or padres.	
+parir		verb		to give birth	B2					
+paro		noun	m	strike; stoppage	B1				Paro cardiaco: cardiac arrest.	
+paro	paro#favor	noun	m	favor; a hand	B1	informal	x		Hazme un paro: do me a favor.	
+parpadear		verb		to blink	B2					
+párpado		noun	m	eyelid	B1					
+parquímetro		noun	m	parking meter	B1					
+párrafo		noun	m	paragraph	B1					
+parranda		noun	f	partying; night out	B1	informal			Irse de parranda: to go out partying.	
+parrilla		noun	f	grill; barbecue	B1					
+parroquia		noun	f	parish church; parish	B2					
+partir		verb		to cut; to split; to leave	B1				A partir de hoy: from today on.	
+parto		noun	m	childbirth; labor	B1					
+pasa		noun	f	raisin	B1				Often in the diminutive: pasitas.	
+pásale		interj		come in!; go ahead!	A2		x		Pásele is more polite: shopkeepers say it to customers.	
+pasarla bien		expr		to have a good time	A2		x		¿Cómo la pasaste?: how was it? Also pasársela bien.	
+pasarse		verb		to go too far; to miss (a stop)	B1				¡No te pases!: don't push it! Me pasé de la parada: I missed my stop.	
+pasatiempo		noun	m	hobby; pastime	B1					
+paseo		noun	m	walk; outing; ride	A2				Dar un paseo: to go for a walk.	
+pasillo		noun	m	hallway; aisle	A2					
+pasión		noun	f	passion	B1					
+paso		noun	m	step; pace; way through	A2				Paso a paso: step by step. De paso: on the way.	
+pasta de dientes		noun	f	toothpaste	A2			pl=-		
+pastelería		noun	f	cake shop	A2					
+pastor		noun	mf	shepherd; pastor; (al pastor) marinated pork	B1		x		Tacos al pastor: spit-roasted marinated pork, a Mexico City classic.	
+pata		noun	f	leg (of an animal or furniture); paw	B1				Meter la pata: to put your foot in it.	
+patada		noun	f	kick	B1					
+patata		noun	f	potato (in Spain)	A2				In Mexico: la papa.	
+patear		verb		to kick	B1					
+patín		noun	m	skate	B1					
+patinar		verb		to skate; to skid	B1					
+patineta		noun	f	skateboard	B1		x			
+pato		noun	m	duck	A2					
+patria		noun	f	homeland	B2					
+patrón		noun	mf	boss; employer; pattern	B1					
+patrulla		noun	f	police car; patrol	B1		x		Mexico: la patrulla is the police car.	
+pausa		noun	f	pause; break	B1					
+pavo		noun	m	turkey	A2				Also guajolote, from Nahuatl.	
+pay		noun	m	pie (sweet)	A2		x	pl=pays	From English pie. Pay de queso: cheesecake.	
+payaso		noun	mf	clown	A2					
+peaje		noun	m	toll	B1				Mexico usually says cuota or caseta: la autopista de cuota.	
+peatón		noun	mf	pedestrian	B1					
+peca		noun	f	freckle	B1					
+pecado		noun	m	sin	B1					
+pechuga		noun	f	breast (of chicken or turkey)	A2					
+peda		noun	f	booze-up; drinking party	B2	vulgar	x		From pedo. Andar de peda: to be out drinking.	
+pediatra		noun	mf	pediatrician	B1					
+pedido		noun	m	order (purchase)	B1				Hacer un pedido: to place an order.	
+pedo		noun	m	fart; trouble, fuss; drunk	B2	vulgar	x		Rude. ¿Qué pedo?: what's up? No hay pedo: no problem. Estar pedo: to be drunk.	
+pegajoso		adj		sticky; catchy (song)	B1					
+pegamento		noun	m	glue	B1				Mexico also says resistol.	
+pegatina		noun	f	sticker (in Spain)	A2				In Mexico: una calcomanía or una estampa.	
+peinado		noun	m	hairstyle	B1					
+peine		noun	m	comb	A2					
+pelado		adj		crude, rude (person)	B2	informal	x		Mexico: ¡qué pelado! = how crude! Also the participle of pelar: peeled.	
+pelar		verb		to peel	A2				Mexico, informal: no me pela = he ignores me.	
+pelea		noun	f	fight	A2					
+pelirrojo		adj		red-haired	B1					
+pelón		adj		bald; shaven-headed	B1		x		Informal: está pelón = it's tough, it's unlikely.	
+peluca		noun	f	wig	B1					
+peluche		noun	m	stuffed animal; soft toy	B1					
+peludo		adj		hairy; furry	B1					
+peluquería		noun	f	hair salon; barbershop	A2				Mexico also says estética for a beauty salon.	
+peluquero		noun	mf	hairdresser; barber	A2					
+pendejo		adj		stupid; (noun) idiot, jerk	B2	vulgar	x		Very offensive. Pendejada: something stupid. Hacerse pendejo: to play dumb.	
+pendiente		adj		pending; on the lookout	B1		x		Estar al pendiente: to keep an eye on something. Mexico: un pendiente is an errand or worry (tengo unos pendientes). Earrings are aretes.	
+pene		noun	m	penis	B2					
+pensamiento		noun	m	thought	B1					
+pensativo		adj		thoughtful; pensive	B1					
+pensión		noun	f	pension; boarding house	B1					
+pepenar		verb		to pick up; to scavenge	B2		x		From Nahuatl. Pepenador: someone who collects recyclables from trash.	
+pepinillo		noun	m	pickle; gherkin	A2					
+pepita		noun	f	pumpkin seed; seed	A2		x			
+pera		noun	f	pear	A2					
+perdedor		noun	mf	loser	B1					
+perderse		verb		to get lost; to miss (an event)	A2				Me perdí: I got lost. Te perdiste la fiesta: you missed the party.	
+pérdida		noun	f	loss	B1				Una pérdida de tiempo: a waste of time.	
+perejil		noun	m	parsley	A2			pl=-		
+pereza		noun	f	laziness	B1			pl=-	Mexico more often says flojera: me da flojera.	
+perezoso		adj		lazy; (noun) sloth	B1				Mexico usually says flojo for lazy.	
+perfil		noun	m	profile	B1					
+perfume		noun	m	perfume	A2					
+perico		noun	m	parakeet; parrot	B1					
+periférico		noun	m	ring road; beltway	B1		x		In Mexico City and Guadalajara, el Periférico is the big ring road.	
+perilla		noun	f	knob; doorknob; goatee	B1		x			
+periodista		noun	mf	journalist	A2					
+periodo		noun	m	period (of time); period (menstrual)	B1				Also spelled período.	
+perjudicar		verb		to harm; to damage	B2					
+perla		noun	f	pearl	B1					
+permanecer		verb		to remain; to stay	B1	formal			Everyday word: quedarse.	
+permanente		adj		permanent; (noun) perm (hair)	B1					
+perseguir		verb		to chase; to pursue	B1					
+persiana		noun	f	blind (window)	B1					
+personaje		noun	m	character (in a story)	B1				A person's character is carácter.	
+personal		adj		personal; (noun) staff	B1				El personal: the staff.	
+personalidad		noun	f	personality	B1					
+pertenecer		verb		to belong	B1					
+peruano		adj		Peruvian	A2					
+pesa		noun	f	weight (for exercise)	B1				Hacer pesas: to lift weights.	
+pesadilla		noun	f	nightmare	B1					
+pésame		noun	m	condolences	B1			pl=-	Mi más sentido pésame: my deepest condolences.	
+pesar		verb		to weigh	A2				A pesar de: despite.	
+pesca		noun	f	fishing	B1			pl=-		
+pescadería		noun	f	fish shop; fish counter	B1					
+pescador		noun	mf	fisherman; fisher	B1					
+pescar		verb		to fish; to catch	A2					
+pesimista		adj		pessimistic	B1					
+pésimo		adj		terrible; awful	B1					
+pestaña		noun	f	eyelash; tab	B1					
+petaca		noun	f	suitcase	B2		x		From Nahuatl. Maleta is the everyday word. Petacas (informal): buttocks.	
+petate		noun	m	woven palm mat	B2		x		From Nahuatl.	
+petatearse		verb		to kick the bucket; to die	B2	informal	x		Literally to be rolled up in your petate. Se petateó: he kicked the bucket.	
+petición		noun	f	request; petition	B2					
+petróleo		noun	m	oil (crude); petroleum	B1			pl=-		
+pezón		noun	m	nipple	B2					
+piano		noun	m	piano	A2					
+picadillo		noun	m	ground-beef hash	B1		x		Ground beef cooked with potato, carrot and tomato.	
+picadura		noun	f	bite (insect); sting	B1				Mexico often says piquete.	
+pico		noun	m	beak; peak; pickaxe	B1				Y pico: and a bit (las tres y pico: just after three).	
+pico de gallo		noun	m	fresh chopped tomato salsa	A2		x	pl=-	Tomato, onion, chile and cilantro. Also salsa mexicana.	
+pieza		noun	f	piece; part	B1					
+píldora		noun	f	pill; the pill (contraceptive)	B1				Everyday word: pastilla.	
+piloncillo		noun	m	unrefined cane sugar (cone)	B1		x		Sold in cones; used in café de olla.	
+piloto		noun	mf	pilot; racing driver	A2			f=piloto		
+pimiento		noun	m	bell pepper	A2				Mexico usually says chile morrón.	
+pingüino		noun	m	penguin	A2					
+pino		noun	m	pine	B1					
+pinole		noun	m	sweetened toasted corn flour	B2		x	pl=-	From Nahuatl. Eaten dry or stirred into water or milk.	
+pinta		noun	f	look; appearance; skipping school	B1		x		Mexico: irse de pinta = to skip school. Tiene buena pinta: it looks good.	
+pintor		noun	mf	painter	A2					
+pinza		noun	f	clothespin; (pinzas) tweezers, pliers	B1					
+piojo		noun	m	louse	B1					
+pipa		noun	f	water tanker truck; pipe (for smoking)	B1		x		Mexico: when the water is cut off, you order una pipa.	
+pipí		noun	m	pee	A2	informal		pl=-	Hacer pipí: to pee (said to children).	
+pipián		noun	m	pumpkin-seed sauce	B1		x		A mole-like sauce of ground pumpkin seeds, green or red.	
+piquete		noun	m	insect bite; jab; shot (of liquor)	B1		x		Un café con piquete: coffee with a shot of liquor.	
+pirata		noun	mf	pirate; (adj) bootleg, knockoff	B1		x		Mexico: una película pirata = a bootleg copy.	
+pisar		verb		to step on; to tread	B1					
+piscina		noun	f	swimming pool (in Spain)	A2				In Mexico: la alberca.	
+pista		noun	f	track; runway; clue; dance floor	B1					
+pistache		noun	m	pistachio	B1		x		Standard: pistacho.	
+pistear		verb		to drink (alcohol)	B2	informal	x		Vamos a pistear: let's go for drinks.	
+pistola		noun	f	pistol; gun	B1					
+pitar		verb		to blow a whistle; to honk	B1					
+pitaya		noun	f	pitaya (cactus fruit); dragon fruit	B1		x			
+pizarrón		noun	m	blackboard; whiteboard	A2		x		Standard: pizarra.	
+pizca		noun	f	pinch (of salt); bit	B1					
+plaga		noun	f	pest; plague	B2					
+plancha		noun	f	iron (for clothes); griddle	A2					
+planeta		noun	m	planet	A2				Masculine despite the -a: el planeta.	
+plano		adj		flat; (noun) street map; floor plan	B1					
+plantar		verb		to plant	B1				Dejar plantado: to stand someone up.	
+plantear		verb		to raise (an issue); to set out	B2					
+plástico		noun	m	plastic	A2					
+plátano macho		noun	m	plantain	A2		x	pl=plátanos machos		
+plática		noun	f	chat; talk (lecture)	A2		x		From platicar. Una plática can be a chat or an informal talk.	
+platillo		noun	m	dish (food); saucer	A2		x		Mexico: platillo típico = traditional dish.	
+platón		noun	m	serving dish; platter	B1		x			
+plaza comercial		noun	f	shopping mall	A2		x	pl=plazas comerciales	Also centro comercial.	
+plazo		noun	m	term; deadline; installment	B1				A plazos: in installments.	
+pleito		noun	m	fight; quarrel	B1		x		Mexico: the everyday word for an argument. Also a lawsuit.	
+plumón		noun	m	marker (pen)	A2		x			
+población		noun	f	population; town	B1					
+pobreza		noun	f	poverty	B1			pl=-		
+pocho		adj		Americanized (Mexican)	B2	informal	x		Said of Mexican Americans or Mexicans who mix in English; can be pejorative.	
+poco a poco		expr		little by little	A2					
+poder	poder#power	noun	m	power	B1				Also the verb poder (can).	
+poderoso		adj		powerful	B1					
+poema		noun	m	poem	A2				Masculine: el poema.	
+poesía		noun	f	poetry; poem	A2					
+poeta		noun	mf	poet	B1				A woman poet is la poeta or la poetisa.	
+polilla		noun	f	moth	B1					
+política		noun	f	politics; policy	B1					
+político		adj		political; (noun) politician	B1					
+pollero		noun	mf	people smuggler	B2		x		Also coyote. Literally a chicken seller.	
+polvorón		noun	m	shortbread cookie	B1		x			
+pomada		noun	f	ointment; cream	B1					
+pompas		noun	fpl	bottom; butt	B1	informal	x		Child-friendly and joking. Also pompis.	
+ponchar		verb		to puncture; to strike out (baseball)	B1		x		Se ponchó la llanta: the tire went flat.	
+ponche		noun	m	fruit punch	A2		x		Ponche navideño: hot Christmas punch with guava, tejocote and cinnamon.	
+poner atención		expr		to pay attention	A2		x		Also prestar atención.	
+ponerse de acuerdo		expr		to agree; to come to an agreement	A2					
+ponerse las pilas		expr		to get your act together	B1	informal			Literally to put your batteries in. ¡Ponte las pilas!	
+popis		adj		posh; fancy	B2	informal	x		Teasing: una fiesta muy popis.	
+popular		adj		popular	A2					
+por adelantado		expr		in advance	B1					
+por ahí		expr		around there; that way	A2				Por ahí de las tres: around three o'clock.	
+por casualidad		expr		by chance	B1					
+por ciento		expr		percent	A2					
+por completo		expr		completely	B1					
+por desgracia		expr		unfortunately	B1					
+por eso		expr		that's why; so	A1					
+por lo general		expr		generally; usually	B1					
+por lo menos		expr		at least	A2				Also al menos.	
+por lo pronto		expr		for now; for the time being	B1					
+por lo tanto		expr		therefore	B1					
+por mientras		expr		meanwhile; for now	B1		x		Colloquial Mexican; standard: mientras tanto.	
+por poco		expr		almost; nearly	B1				Por poco me caigo: I almost fell.	
+por separado		expr		separately	B1					
+por si acaso		expr		just in case	A2					
+por suerte		expr		luckily	A2					
+por todos lados		expr		everywhere	A2					
+porcentaje		noun	m	percentage	B1					
+porfa		interj		please	A2	informal			Short for por favor.	
+porquería		noun	f	junk; filth; rubbish	B1				¡Qué porquería!: how disgusting!	
+porra		noun	f	cheering fans; cheer	B1		x		Mexico: la porra is a team's supporters or their chant. Also a club (truncheon).	
+portátil		adj		portable	B1				A laptop is una laptop in Mexico.	
+portero		noun	mf	goalkeeper; doorman	B1					
+portugués		adj		Portuguese	A2					
+poseer		verb		to own; to possess	B2	formal			Everyday word: tener.	
+posibilidad		noun	f	possibility	B1					
+posición		noun	f	position	B1					
+positivo		adj		positive	B1					
+posponer		verb		to postpone	B1					
+postal		noun	f	postcard	A2					
+poste		noun	m	post; pole (lamp, power)	B1					
+póster		noun	m	poster	A2					
+potable		adj		drinking (water); drinkable	B1				Agua potable: drinking water. In Mexico, drink agua purificada.	
+pozo		noun	m	well (water)	B1					
+práctica		noun	f	practice; (prácticas) internship	B1				Hacer prácticas: to do an internship.	
+práctico		adj		practical; handy	B1					
+precaución		noun	f	caution; precaution	B1				On signs: ¡Precaución!: caution.	
+precioso		adj		beautiful; lovely; precious	A2					
+preciso		adj		precise; exact; necessary	B1					
+predecir		verb		to predict	B2					
+predial		noun	m	property tax	B2		x		Paid every year to the municipality.	
+preferido		adj		favorite	A2				Also favorito.	
+pregunta		noun	f	question	A1				Hacer una pregunta: to ask a question.	
+preguntarse		verb		to wonder	B1				Me pregunto si...: I wonder if...	
+prejuicio		noun	m	prejudice	B1					
+prenda		noun	f	garment; item of clothing	B1					
+prensa		noun	f	press (newspapers)	B1					
+preocupación		noun	f	worry; concern	B1					
+preparatoria		noun	f	senior high school	A2		x		Usually shortened to prepa. Secundaria is junior high.	
+prepotente		adj		arrogant; overbearing	B2		x		Mexico: someone who abuses their power or position.	
+presa		noun	f	dam; prey	B2					
+presencia		noun	f	presence	B1					
+presentación		noun	f	presentation; introduction	B1					
+presentarse		verb		to introduce yourself; to show up	A2				Se presentó tarde: he showed up late.	
+presente		adj		present; (noun) the present	A2					
+preservativo		noun	m	condom	B2				False friend: a preservative is a conservador.	
+presionar		verb		to pressure; to press	B1					
+preso		noun	mf	prisoner	B1					
+prestación		noun	f	benefit (job)	B2		x		Mexico: las prestaciones de ley are the benefits employers must give, such as aguinaldo and social security.	
+préstamo		noun	m	loan	B1					
+presumido		adj		vain; show-off	B1					
+presumir		verb		to show off; to brag	B1				¡No presumas!: stop showing off! It rarely means to presume.	
+presupuesto		noun	m	budget; estimate (quote)	B1					
+pretender		verb		to intend; to try to	B2				False friend: to pretend is fingir.	
+pretexto		noun	m	excuse; pretext	B1					
+prevenir		verb		to prevent; to warn	B1					
+prieto		adj		dark-skinned; very dark	B2	informal	x		Can be offensive; moreno is the polite word.	
+primero que nada		expr		first of all	B1					
+princesa		noun	f	princess	A2					
+principal		adj		main; principal	B1					
+príncipe		noun	m	prince	A2					
+principiante		noun	mf	beginner	B1					
+prioridad		noun	f	priority	B1					
+prisión		noun	f	prison	B1				Everyday word: cárcel.	
+privilegio		noun	m	privilege	B1					
+probable		adj		likely; probable	B1					
+probador		noun	m	fitting room	A2					
+proceso		noun	m	process; trial	B1					
+procurar		verb		to try to; to make sure	B2					
+producir		verb		to produce	B1					
+producto		noun	m	product	A2					
+profe		noun	mf	teacher	A2	informal			Short for profesor or profesora.	
+profesión		noun	f	profession	A2					
+profesional		adj		professional	B1					
+profundo		adj		deep	B1					
+programar		verb		to program; to schedule	B1					
+progreso		noun	m	progress	B1					
+prohibir		verb		to forbid; to ban	B1				Prohibido estacionarse: no parking.	
+promedio		noun	m	average; grade-point average	B1				En promedio: on average.	
+promoción		noun	f	promotion; special offer	B1					
+pronóstico		noun	m	forecast	B1				El pronóstico del tiempo: the weather forecast.	
+pronunciación		noun	f	pronunciation	A2					
+pronunciar		verb		to pronounce	A2					
+propiedad		noun	f	property	B1					
+propietario		noun	mf	owner	B1				Everyday word: dueño.	
+proponer		verb		to propose; to suggest	B1					
+proporcionar		verb		to provide	B2	formal			Everyday word: dar.	
+propósito		noun	m	purpose; aim	B1				A propósito: on purpose; by the way.	
+propuesta		noun	f	proposal; offer	B1					
+protección		noun	f	protection	B1					
+protesta		noun	f	protest	B1					
+protestar		verb		to protest; to complain	B1					
+provincia		noun	f	province; (Mexico) outside the capital	B2		x		Mexico City usage: la provincia is the rest of the country.	
+provocar		verb		to cause; to provoke	B1					
+prudente		adj		sensible; careful	B1					
+prueba		noun	f	test; proof; quiz	A2					
+psicólogo		noun	mf	psychologist	B1				The p is usually silent.	see-KOH-loh-goh
+psiquiatra		noun	mf	psychiatrist	B2				The p is usually silent.	see-KYAH-trah
+publicar		verb		to publish; to post (online)	B1					
+publicidad		noun	f	advertising; publicity	B1			pl=-		
+pudrirse		verb		to rot; to go bad	B2				Participle: podrido (rotten).	
+puertorriqueño		adj		Puerto Rican	A2					
+puesto que		conj		since; because	B2	formal			Everyday: porque, como.	
+pulga		noun	f	flea	B1					
+pulgada		noun	f	inch	B1					
+pulgar		noun	m	thumb	B1					
+pulmón		noun	m	lung	B1					
+pulmonía		noun	f	pneumonia	B1					
+pulpo		noun	m	octopus	A2					
+pulquería		noun	f	pulque bar	B2		x			
+pulsera		noun	f	bracelet	A2					
+pulso		noun	m	pulse	B1					
+puñado		noun	m	handful	B1					
+puñetazo		noun	m	punch (with the fist)	B1					
+puño		noun	m	fist; cuff	B1					
+punta		noun	f	tip; point; end	B1					
+pupitre		noun	m	school desk	A2					
+puré		noun	m	purée; (puré de papa) mashed potatoes	A2					
+puto		adj		damn; fucking (intensifier)	B2	vulgar			Very offensive. As a noun it is a homophobic slur; puta means whore. ¡Puta madre!: damn it!	
+# --- q
+qué rollo		expr		what's up?; what's going on?	B1	informal	x		¿Qué rollo con...?: what's the deal with...?	
+quebrar		verb		to break; to go bankrupt	B1		x		Mexico uses quebrar more than Spain does: se quebró el vaso.	
+quedito		adv		quietly; softly	B1		x		Habla quedito: speak softly.	
+quehacer		noun	m	chore; housework	A2		x		Hacer el quehacer: to do the housework. Often plural: los quehaceres.	
+queja		noun	f	complaint	B1					
+quelite		noun	m	wild greens	B2		x		From Nahuatl. Edible wild leaves such as quintonil and verdolagas.	
+quemadura		noun	f	burn	B1				Quemadura de sol: sunburn.	
+quemar		verb		to burn	A2				Quemarse: to get burned.	
+querido		adj		dear; beloved	A2				In letters: Querida Ana.	
+quesillo		noun	m	Oaxaca string cheese	B1		x		Also queso Oaxaca.	
+quiebra		noun	f	bankruptcy	B2				Ir a la quiebra: to go bankrupt.	
+quién sabe		expr		who knows	A2					
+quihubo		interj		hi!; what's up?	B1	informal	x		From ¿qué hubo? Also spelled quiubo; quihúbole is more emphatic.	KYOO-boh
+quijada		noun	f	jaw	B1					
+química		noun	f	chemistry	B1			pl=-		
+químico		adj		chemical; (noun) chemist	B1					
+quinceañera		noun	f	girl celebrating her fifteenth birthday	A2		x		The party is la fiesta de quince años, or los XV. In the US the party itself is called a quinceañera.	
+quinto		adj		fifth	A2				Mexico: no tengo ni un quinto = I'm flat broke.	
+quiosco		noun	m	kiosk; bandstand	B1				In a Mexican plaza, the quiosco is the bandstand in the middle. Also spelled kiosco.	
+quirófano		noun	m	operating room	B2					
+quisquilloso		adj		fussy; touchy	B2					
+quitarse		verb		to take off (clothes); to move away	A2				¡Quítate!: move! Quítate los zapatos: take your shoes off.	
+quizá		adv		maybe; perhaps	A2				Same as quizás.	
+# --- r
+rábano		noun	m	radish	A2					
+rabia		noun	f	rage; rabies	B1			pl=-	Me da rabia: it makes me furious.	
+racha		noun	f	streak; spell (of luck)	B2				Una buena racha: a lucky streak.	
+ración		noun	f	portion; serving	B1				Restaurants in Mexico say una orden: una orden de tacos.	
+radio		noun	m	radio	A2				Mexico: el radio. Elsewhere: la radio.	
+radiografía		noun	f	X-ray	B1					
+raite		noun	m	ride; lift (in a car)	B1	informal	x		From English ride, mostly in the north. Central Mexico says aventón.	
+raíz		noun	f	root	B1					
+rajarse		verb		to back out; to chicken out	B1	informal	x		¡No te rajes!: don't back out now!	
+rajas		noun	fpl	strips of roasted chile	B1		x		Rajas con crema: poblano strips in cream.	
+rallar		verb		to grate	B1				Queso rallado: grated cheese.	
+rama		noun	f	branch	B1					
+ramo		noun	m	bunch (of flowers); bouquet	B1					
+rampa		noun	f	ramp	B1					
+rana		noun	f	frog	A2					
+rango		noun	m	rank; range	B2					
+raqueta		noun	f	racket	B1					
+rara vez		expr		rarely; seldom	B1					
+rascacielos		noun	m	skyscraper	B1					
+rascar		verb		to scratch (an itch)	B1					
+rasguño		noun	m	scratch	B1					
+raspado		noun	m	shaved ice (with syrup)	A2		x			
+rastrillo		noun	m	razor; rake	A2		x		Mexico: a rastrillo is a shaving razor. It also means rake.	
+rastro		noun	m	trace; slaughterhouse	B2		x		Mexico: el rastro is the municipal slaughterhouse.	
+rata		noun	f	rat	A2					
+ratero		noun	mf	thief; pickpocket	B1		x			
+raya		noun	f	line; stripe; part (in hair)	B1				A rayas: striped.	
+rayar		verb		to scratch (a surface); to scribble on	B1					
+rayo		noun	m	ray; lightning bolt	B1				Rayos X: X-rays.	
+rayos		interj		darn!; shoot!	B1					
+raza		noun	f	race; breed; (informal) people	B1		x		Mexico, informal: la raza = the people, the folks. Perro de raza: purebred dog.	
+razonable		adj		reasonable	B1					
+reacción		noun	f	reaction	B1					
+reaccionar		verb		to react	B1					
+real		adj		real; royal	B1					
+realizar		verb		to carry out; to do	B1	formal			False friend: to realize is darse cuenta.	
+rebaja		noun	f	discount; (rebajas) sales	B1					
+rebanada		noun	f	slice	A2					
+rebasar		verb		to overtake; to pass (a car); to exceed	B1		x		Prohibido rebasar: no passing.	
+rebelde		adj		rebellious; (noun) rebel	B1					
+rebozo		noun	m	rebozo (traditional shawl)	B1		x		A long woven shawl, also used to carry babies.	
+recargar		verb		to recharge; to top up	B1		x		Recargarse: to lean against something.	
+recaudería		noun	f	greengrocer's	B1		x		A small shop for fruit, vegetables and chiles.	
+recepcionista		noun	mf	receptionist	A2					
+recetar		verb		to prescribe	B1					
+rechazar		verb		to reject; to turn down	B1					
+reciclar		verb		to recycle	B1					
+reciente		adj		recent	B1					
+recipiente		noun	m	container; bowl	B1					
+reclamar		verb		to complain; to claim	B1					
+recogedor		noun	m	dustpan	B1					
+recomendación		noun	f	recommendation	B1					
+recompensa		noun	f	reward	B1					
+recorrer		verb		to travel through; to tour	B1				Mexico: ¿te recorres? = could you move over?	
+recorrido		noun	m	tour; route; trip	B1					
+recortar		verb		to cut out; to trim; to cut back	B1					
+recostarse		verb		to lie down; to lean back	B1					
+recto		adj		straight	B1				Mexico says todo derecho for straight ahead.	
+recuerdo		noun	m	memory; souvenir	A2				Recuerdos a tu mamá: regards to your mom.	
+recuperarse		verb		to recover; to get better	B1				¡Recupérate pronto!: get well soon!	
+recurso		noun	m	resource	B1				Recursos humanos: human resources.	
+red		noun	f	net; network	B1				Las redes sociales: social media.	
+redondo		adj		round	A2					
+reducir		verb		to reduce	B1					
+reembolso		noun	m	refund	B1					
+reemplazar		verb		to replace	B1					
+refacción		noun	f	spare part	B1		x		Standard: repuesto.	
+refaccionaria		noun	f	auto parts store	B1		x			
+referirse		verb		to refer (to); to mean	B1				¿A qué te refieres?: what do you mean?	
+reflejo		noun	m	reflection; reflex	B1					
+refrán		noun	m	saying; proverb	B1					
+refugio		noun	m	shelter; refuge	B1					
+regalo		noun	m	gift; present	A1					
+regatear		verb		to haggle	B1				Fine in markets, not in shops with fixed prices.	
+región		noun	f	region	B1					
+registrar		verb		to register; to search (a person, place)	B1					
+registro		noun	m	registration; record; register	B1				Registro civil: registry office.	
+regresarse		verb		to go back; to come back	A2		x		Mexico: me regresé a la casa. Standard: volver, regresar.	
+regreso		noun	m	return; way back	A2				De regreso: on the way back.	
+regular		adj		so-so; regular	A2				¿Cómo estás? Regular: so-so, not great.	
+reina		noun	f	queen	A2					
+reja		noun	f	railing; bars; gate	B1					
+relajo		noun	m	fuss; commotion; horsing around	B1	informal	x		Echar relajo: to fool around.	
+relámpago		noun	m	lightning (flash)	B1					
+religión		noun	f	religion	B1					
+rellenar		verb		to fill in (a form); to refill; to stuff	B1					
+relleno		adj		stuffed; (noun) filling	A2				Chiles rellenos: stuffed chiles.	
+remedio		noun	m	remedy; cure; way out	B1				No hay remedio: there is nothing to be done.	
+remitente		noun	mf	sender (of a letter)	B1					
+remojar		verb		to soak	B1					
+remordimiento		noun	m	remorse	B2					
+remoto		adj		remote	B1				Control remoto: remote control (often just el control).	
+rencor		noun	m	resentment; grudge	B2					
+rendirse		verb		to give up; to surrender	B1				¡No te rindas!: don't give up!	
+renglón		noun	m	line (of text)	A2					
+renovar		verb		to renew; to renovate	B1				Renovar el pasaporte: to renew your passport.	
+renta		noun	f	rent	A2		x		Standard: alquiler. Pagar la renta: to pay the rent.	
+renuncia		noun	f	resignation	B1					
+reparar		verb		to repair; to fix	B1				Everyday word: arreglar.	
+repartidor		noun	mf	delivery person	A2					
+repartir		verb		to hand out; to share out; to deliver	B1					
+repasar		verb		to review; to go over	B1					
+repisa		noun	f	shelf	B1					
+repollo		noun	m	cabbage	A2				Mexico usually says col.	
+reportero		noun	mf	reporter	B1					
+representar		verb		to represent; to perform	B1					
+reprobar		verb		to fail (a test, a class)	A2		x		Standard: suspender. Reprobé matemáticas: I failed math.	
+república		noun	f	republic	B1					
+repuesto		noun	m	spare part; refill	B1				De repuesto: spare. Car parts are usually refacciones in Mexico.	
+repugnante		adj		disgusting; revolting	B1					
+reputación		noun	f	reputation	B1					
+requerir		verb		to require	B2	formal			Everyday word: necesitar.	
+requesón		noun	m	ricotta-style cheese	B1					
+requisito		noun	m	requirement	B1					
+resaca		noun	f	hangover; undertow	B1				Mexico calls a hangover la cruda.	
+resbalar		verb		to slip; to slide	B1					
+resbaloso		adj		slippery	B1		x		Standard: resbaladizo.	
+rescatar		verb		to rescue	B1					
+resfriado		noun	m	cold (illness)	A2				Mexico more often says gripa.	
+resfriarse		verb		to catch a cold	B1				Mexico more often says me dio gripa.	
+resistir		verb		to resist; to bear	B1					
+resistol		noun	m	glue	A2		x	pl=-	From a brand name: white school glue.	
+respaldo		noun	m	backrest; backup; support	B1					
+respetar		verb		to respect	A2					
+responsabilidad		noun	f	responsibility	B1					
+restar		verb		to subtract	A2					
+resultar		verb		to turn out	B1				Resultó que...: it turned out that...	
+resumen		noun	m	summary	B1				En resumen: in short.	
+retén		noun	m	checkpoint (police or army)	B2		x			
+retirar		verb		to withdraw (money); to remove	B1				Retirar dinero del cajero: to take cash out of an ATM.	
+reto		noun	m	challenge	B1					
+retorno		noun	m	return; U-turn lane	B1		x		Mexico: on avenues, a retorno is the slot for a U-turn.	
+retraso		noun	m	delay	B1					
+retrato		noun	m	portrait	B1					
+retrovisor		noun	m	rear-view mirror	B1					
+reunir		verb		to gather; to collect; to meet (requirements)	B1				Reunir los requisitos: to meet the requirements. Getting together is reunirse.	
+revelar		verb		to reveal; to develop (photos)	B1					
+reventar		verb		to burst; to pop	B1					
+reventón		noun	m	party; blowout	B1	informal	x			
+reversa		noun	f	reverse (gear)	B1		x		Echarse en reversa: to back up; to back out.	
+revés		noun	m	back; setback; backhand	B1				Al revés: inside out, upside down, the other way round.	
+revolver		verb		to stir; to mix up; to mess up	B1				Not revólver (a revolver).	
+revuelto		adj		scrambled; mixed up	A2				Huevos revueltos: scrambled eggs.	
+rey		noun	m	king	A2				Día de Reyes (the Three Kings): children get presents and families share a rosca.	
+rezar		verb		to pray	B1					
+ridículo		adj		ridiculous	B1				Hacer el ridículo: to make a fool of yourself.	
+riesgo		noun	m	risk	B1					
+rifa		noun	f	raffle	B1					
+rifar		verb		to raffle	B1					
+rifarse		verb		to go all out; to pull it off	B2	informal	x		¡Te rifaste!: you nailed it!	
+rímel		noun	m	mascara	B1			pl=-		
+rincón		noun	m	corner (inside)	B1				A street corner is una esquina.	
+riñón		noun	m	kidney	B1					
+riqueza		noun	f	wealth; richness	B1					
+ritmo		noun	m	rhythm; pace	B1					
+rival		noun	mf	rival; opponent	B1					
+rizado		adj		curly	B1				Mexico usually says chino: pelo chino.	
+roble		noun	m	oak	B1					
+robo		noun	m	robbery; theft; rip-off	B1				¡Es un robo!: it's a rip-off!	
+roca		noun	f	rock	B1					
+rodear		verb		to surround; to go around	B1					
+rodillo		noun	m	rolling pin; paint roller	B1					
+rogar		verb		to beg; to plead	B1					
+rola		noun	f	song	B1	informal	x		Slang: ¡qué buena rola!	
+romántico		adj		romantic	A2					
+romeritos		noun	mpl	romeritos (Christmas greens in mole)	B2		x		Seepweed sprigs in mole with dried-shrimp patties, a Christmas dish.	
+rompecabezas		noun	m	jigsaw puzzle; puzzle	A2					
+rompevientos		noun	m	windbreaker	B1		x			
+rompope		noun	m	Mexican eggnog	B1		x	pl=-	A sweet egg-and-milk liqueur.	
+ron		noun	m	rum	A2					
+roncar		verb		to snore	B1					
+roncha		noun	f	welt; bump (on the skin)	B1					
+ronco		adj		hoarse	B1					
+ronda		noun	f	round; patrol	B1				Una ronda de tequilas: a round of tequila.	
+ropero		noun	m	wardrobe	B1				Mexico mostly says clóset.	
+rosticería		noun	f	rotisserie chicken shop	B1		x			
+rostro		noun	m	face	B1	formal			Everyday word: cara.	
+rotulador		noun	m	marker pen (in Spain)	A2				In Mexico: el plumón.	
+rubio		adj		blond	A2				Mexico usually says güero.	
+ruco		adj		old (person)	B2	informal	x		Teasing: ya estás ruco. Ruca: old woman, and slang for girlfriend.	
+rudo		adj		rough; tough	B1					
+rueda		noun	f	wheel	A2				A tire is a llanta.	
+ruidoso		adj		noisy	B1					
+ruina		noun	f	ruin	B1				Las ruinas: an archaeological site.	
+rumbo		noun	m	direction; course	B1				Rumbo a: heading for.	
+rumor		noun	m	rumor	B1					
+rural		adj		rural	B1					
+ruso		adj		Russian	A2					
+rutina		noun	f	routine	B1					

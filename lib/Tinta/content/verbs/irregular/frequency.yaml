@@ -1,0 +1,11 @@
+# Verbs of the frequency deck (content/lexicon/frequency.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (morir, poner,
+# conseguir, recordar, mentir, oler, reír, servir...) are not repeated.
+
+colgar: {stem: o>ue}        # cuelgo, cuelga; colgué
+regar: {stem: e>ie}         # riego, riega; regué
+atender: {stem: e>ie}       # atiendo, atiende
+aventar: {stem: e>ie}       # Mexican: aviento, avienta (not on verb_patterns.tsv)
+despedir: {stem: e>i}       # despedirse: me despido, se despidió
+descomponer: {like: poner}  # descomponerse: se descompuso

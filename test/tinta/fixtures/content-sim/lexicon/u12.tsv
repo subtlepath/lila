@@ -1,0 +1,12 @@
+# Unit 12: Así se habla en México / How Mexico talks. Lexicon rows for the lessons planned in content-plan/units/.
+# TAB-separated; columns as in docs/content-style.md section 6. Sections follow the lessons;
+# rows under 'supporting' are not introduced by any lesson (no vocabulary items).
+lemma	key	pos	gender	gloss	level	register	mx	topic	forms	alt	note	syn	link
+# --- u12.l01 Entre cuates (colloquial register)
+# --- u12.l02 Un ratito (diminutives, courtesy)
+a sus órdenes		expr		at your service	A2		x	courtesy				
+# --- u12.l03 Palabras del náhuatl (Nahuatl loans). Also new here, row in core.tsv: mole
+# --- supporting (no lesson introduces these; rosca and náhuatl from u12.l03, sale and aguas from u12.l01)
+# --- names
+Candelaria		propn		Candlemas (2 February)	A2							
+Tomás		propn		Tomás (name); Thomas	A2							

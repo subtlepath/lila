@@ -1,0 +1,19 @@
+# Dictionary-only verbs a-c (content/lexicon/dictionary-a-c.tsv) that the
+# conjugator cannot infer. Same keys as content/verbs/irregular.yaml (see its
+# header). Verbs already declared there or in another fragment (acordar, actuar,
+# adquirir, almorzar, andar, atraer, caber, calentar, componer, contar,
+# contener, convenir, corregir, criar, cubrir...) are not repeated.
+
+acertar: {stem: e>ie}       # acierto, acierta
+advertir: {stem: e>ie}      # advierto; advirtió
+apostar: {stem: o>ue}       # apuesto, apuesta
+apretar: {stem: e>ie}       # aprieto, aprieta
+aprobar: {stem: o>ue}       # apruebo, aprueba
+arrepentir: {stem: e>ie}    # arrepentirse: me arrepiento; se arrepintió
+atravesar: {stem: e>ie}     # atravieso, atraviesa
+cocer: {stem: o>ue, yo: cuezo, forms: {subj.1p: cozamos}}   # cuezo, cuece; cozamos
+competir: {stem: e>i}       # compito; compitió
+comprobar: {stem: o>ue}     # compruebo, comprueba
+confesar: {stem: e>ie}      # confieso, confiesa
+consentir: {stem: e>ie}     # consiento; consintió
+convertir: {stem: e>ie}     # convierto; convirtió
