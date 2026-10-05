@@ -14,7 +14,7 @@
 
 #include "I18n.h"
 #include "RecentBooksStore.h"
-#include "components/HeaderBackTapTarget.h"
+#include "components/HeaderTapTargets.h"
 #include "components/UIScale.h"
 #include "components/UITheme.h"
 #include "components/UIThemeTokens.h"
@@ -33,6 +33,16 @@ constexpr int bookmarkStatusIconWidth = 16;
 constexpr int bookmarkStatusIconHeight = 14;
 constexpr int bookmarkStatusIconGap = 4;
 constexpr int bookmarkStatusIconTopCrop = 2;
+
+// Height of the font's capitals (its bold 'H'), for centring text optically.
+int capHeight(const GfxRenderer& renderer, const int fontId) {
+  const auto& fonts = renderer.getFontMap();
+  const auto font = fonts.find(fontId);
+  if (font != fonts.end()) {
+    if (const EpdGlyph* glyph = font->second.getGlyph('H', EpdFontFamily::BOLD)) return glyph->height;
+  }
+  return renderer.getFontAscenderSize(fontId) * 3 / 4;
+}
 
 void drawBookmarkStatusIcon(const GfxRenderer& renderer, const int x, const int y) {
   constexpr int bytesPerRow = bookmarkStatusIconWidth / 8;
@@ -310,6 +320,24 @@ void BaseTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
 // looks like it overhangs the content columns.
 int BaseTheme::headerStatusInset() { return UITheme::getInstance().getMetrics().headerSidePadding + 4; }
 
+int BaseTheme::headerBatteryWidth(const freeink::ui::DrawTarget& target, const freeink::ui::HeaderProps& props) {
+  const auto& status = props.status;
+  // Mirrors header()'s battery reserve (+2: the glyph's terminal nub).
+  int width = status.battery.glyphWidth + 2;
+  if (status.battery.label) {
+    width += status.battery.gap +
+             target.measureText(status.battery.text.font, status.battery.label, status.battery.text).width;
+  }
+  return width;
+}
+
+int BaseTheme::headerBatteryLeft(const freeink::ui::DrawTarget& target, const freeink::ui::HeaderProps& props,
+                                 const int rectRight) {
+  const auto& status = props.status;
+  const int inset = status.edgeInset >= 0 ? status.edgeInset : (props.sidePadding < 0 ? 6 : props.sidePadding);
+  return rectRight - inset - headerBatteryWidth(target, props);
+}
+
 void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::HeaderProps& props) {
   const ThemeMetrics& metrics = UITheme::getInstance().getMetrics();
   auto& status = props.status;
@@ -352,13 +380,34 @@ void BaseTheme::applyHeaderStatus(const GfxRenderer& renderer, freeink::ui::Head
   const int titleFontId = uiScaleSpec().titleFontId;
   const int16_t opticalDrop =
       static_cast<int16_t>((renderer.getLineHeight(titleFontId) - renderer.getTextHeight(titleFontId)) / 2);
-  props.leadingSize = headerButtonSize;
-  props.trailingSize = headerButtonSize;
-  props.actionOffsetY = static_cast<int16_t>(strip + (bandHeight - strip - headerButtonSize) / 2 - 4 + opticalDrop);
-  // Shift the title's band-centered box down by half the strip: its center
-  // lands on the below-strip region's midline with the buttons.
-  props.titleOffsetY = static_cast<int16_t>(strip / 2);
-  status.stripHeight = strip;
+  if (strip >= bandHeight) {
+    // Single-line band (Lyra): status shares the title's line. Everything
+    // centres on the midline of the band above its rule: the title's
+    // capitals, the button icons, the battery glyph and the clock.
+    const auto midline = static_cast<int16_t>((bandHeight - metrics.headerUnderlineSize) / 2);
+    const int16_t buttonSize = std::min<int16_t>(headerButtonSize, static_cast<int16_t>(bandHeight - 8));
+    props.leadingSize = buttonSize;
+    props.trailingSize = buttonSize;
+    // header() places a button at y + 4 + actionOffsetY; its icon centres in it.
+    props.actionOffsetY = static_cast<int16_t>(midline - buttonSize / 2 - 4);
+    // header() centres the title's line box; lift it so the capitals centre.
+    const int lineHeight = renderer.getLineHeight(titleFontId);
+    const int capsCentre = renderer.getFontAscenderSize(titleFontId) - capHeight(renderer, titleFontId) / 2;
+    props.titleOffsetY = static_cast<int16_t>(midline - ((bandHeight - lineHeight) / 2 + capsCentre));
+    // The status strip is the band above the rule, so the battery and clock
+    // centre on the same midline.
+    status.stripHeight = static_cast<int16_t>(bandHeight - metrics.headerUnderlineSize);
+    // A right label (a version number) keeps clear of the battery.
+    props.rightReserve = static_cast<int16_t>(props.rightReserve + 8);
+  } else {
+    props.leadingSize = headerButtonSize;
+    props.trailingSize = headerButtonSize;
+    props.actionOffsetY = static_cast<int16_t>(strip + (bandHeight - strip - headerButtonSize) / 2 - 4 + opticalDrop);
+    // Shift the title's band-centered box down by half the strip: its center
+    // lands on the below-strip region's midline with the buttons.
+    props.titleOffsetY = static_cast<int16_t>(strip / 2);
+    status.stripHeight = strip;
+  }
   status.clockCentered = metrics.headerClockCentered;
 
   // Header clock, opposite the battery, on every screen that draws this band
@@ -400,6 +449,20 @@ void BaseTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* t
   // Battery + clock chrome and their title reserves live in the FreeInkUI
   // header component; this only fills the values from settings and metrics.
   applyHeaderStatus(renderer, props);
+  // On a single-line band header() would sit the secondary text on the
+  // title's baseline, beside a battery label centred on the band; it is drawn
+  // here instead, centred like that label.
+  const ThemeMetrics& metrics = UITheme::getInstance().getMetrics();
+  constexpr int16_t sideLabelGap = 12;
+  const char* sideLabel = nullptr;
+  int16_t sideLabelWidth = 0;
+  if (subtitle && metrics.batteryBarHeight >= metrics.headerHeight && props.status.showBattery &&
+      !props.status.batteryLeft) {
+    sideLabel = subtitle;
+    sideLabelWidth = ui.target.measureText(props.status.battery.text.font, subtitle, props.status.battery.text).width;
+    props.rightLabel = nullptr;
+    props.rightReserve = static_cast<int16_t>(props.rightReserve + sideLabelWidth + sideLabelGap);
+  }
   if (rect.height < UITheme::getInstance().getMetrics().headerHeight) {
     // Short bands (home) are not split into strip + content row: the title
     // centers on the band, clear of the band's bottom edge.
@@ -416,9 +479,9 @@ void BaseTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* t
   if (showBackButton) {
     props.leadingIcon = fui::bitmapFromIcon(icon_header_back_32);
     props.leadingAction = 1;  // any non-NO_ACTION id: paints the button, routing is via HeaderBackTapTarget
-    HeaderBackTapTarget::set(band.x + 4, band.y + 4 + props.actionOffsetY, backBtnSize, backBtnSize);
+    HeaderBackTapTarget.set(band.x + 4, band.y + 4 + props.actionOffsetY, backBtnSize, backBtnSize);
   } else {
-    HeaderBackTapTarget::clear();
+    HeaderBackTapTarget.clear();
   }
   props.borderEdges = fui::EdgeBottom;
   props.titleText = tokens.titleText;
@@ -433,6 +496,12 @@ void BaseTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* t
     props.styles.normal.borderWidth = tokens.headerUnderline;
   }
   fui::header(ui.frame, band, props);
+  if (sideLabel) {
+    const auto right = static_cast<int16_t>(headerBatteryLeft(ui.target, props, band.right()) - sideLabelGap);
+    ui.target.text(
+        fui::Rect{static_cast<int16_t>(right - sideLabelWidth), band.y, sideLabelWidth, props.status.stripHeight},
+        sideLabel, props.status.battery.text);
+  }
 }
 
 void BaseTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char* label, const char* rightLabel) const {

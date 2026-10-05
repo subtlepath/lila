@@ -3,10 +3,7 @@
 #include <Arduino.h>
 #include <Imu.h>
 
-// TODO: Move enums into new header and share with CrossPointSettings.h
-namespace CrossPointOrientation {
-enum Value : uint8_t { PORTRAIT = 0, LANDSCAPE_CW = 1, INVERTED = 2, LANDSCAPE_CCW = 3 };
-}
+#include "HeldOrientation.h"
 
 namespace CrossPointTiltPageTurn {
 enum Value : uint8_t { TILT_OFF = 0, TILT_NORMAL = 1, TILT_INVERTED = 2 };
@@ -17,7 +14,11 @@ extern HalTiltSensor halTiltSensor;  // Singleton
 
 class HalTiltSensor {
   bool _available = false;
-  mutable Imu _sdkImu;
+  // The IMU's mounting against the glass is known, so the page can turn as held (X3, X4 Classic).
+  bool _holdKnown = false;
+  bool _followingHold = false;
+  HeldOrientation _hold;
+  Imu _sdkImu;
 
   // Tilt gesture state machine
   bool _tiltForwardEvent = false;  // Consumed by wasTiltedForward()
@@ -36,9 +37,9 @@ class HalTiltSensor {
   static constexpr unsigned long POLL_INTERVAL_MS = 50;    // 20 Hz polling
   static constexpr unsigned long WAKE_STABILIZE_MS = 300;  // Ignore readings after wake
 
-  mutable unsigned long _lastPollMs = 0;
+  unsigned long _lastPollMs = 0;
 
-  bool readGyro(float& gx, float& gy, float& gz) const;
+  void updateTilt(const Imu::Sample& sample, uint8_t mode, uint8_t orientation, unsigned long now);
 
  public:
   // Call after BoardConfig has selected the active device.
@@ -53,8 +54,18 @@ class HalTiltSensor {
   // True if an IMU is present on this device
   bool isAvailable() const { return _available; }
 
-  // Poll the accelerometer and update tilt gesture state.
-  void update(const uint8_t mode, const uint8_t orientation, const bool inReader);
+  // True where the reading page can turn as the device is held.
+  bool canTellHold() const { return _available && _holdKnown; }
+
+  // Poll the IMU and update tilt gesture and hold state. The hold is followed
+  // only while reading, when followHold is set and the board can tell it.
+  void update(uint8_t mode, uint8_t orientation, bool inReader, bool followHold);
+
+  // Once per settled change in how the device is held: the orientation to turn to.
+  bool takeHeldTurn(uint8_t& orientation) { return _hold.takeTurn(orientation); }
+
+  // Report the next hold to settle even if unchanged (a reader has just opened).
+  void resyncHold() { _hold.reset(); }
 
   // Returns true once per tilt-forward gesture (next page direction).
   // Consumed on read — subsequent calls return false until next gesture.

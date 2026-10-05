@@ -202,6 +202,9 @@ TEST(BookSearchMatch, NoteMarkersAndPageBreaksDoNotSplitPhrases) {
   EXPECT_EQ(countHits("<p>the end<a epub:type=\"noteref\" href=\"#n1\">12</a> of it</p>", "end of it"), 1u);
   EXPECT_EQ(countHits("<p>the end <span epub:type=\"pagebreak\" title=\"12\">12</span>of it</p>", "end of it"), 1u);
   EXPECT_EQ(countHits("<p><ruby>漢<rt>kan</rt>字<rt>ji</rt></ruby></p>", "漢字"), 1u);
+  EXPECT_EQ(countHits("<p>the end<sup><a href=\"notes.xhtml#n1\">12</a></sup> of it</p>", "end of it"), 1u);
+  EXPECT_EQ(countHits("<p>the end<a href=\"#n1\"><sup>12</sup></a> of it</p>", "end of it"), 1u);
+  EXPECT_EQ(countHits("<p>10<sup>59</sup> kalpas</p>", "1059"), 1u);
 }
 
 TEST(BookSearchMatch, CountsFromTheBodyLikeTheParser) {

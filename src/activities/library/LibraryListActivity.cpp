@@ -27,7 +27,7 @@
 #include "components/UIScale.h"
 #include "components/UITheme.h"
 #include "components/UiAppHelpers.h"
-#include "components/icons/headerIcons.h"
+#include "components/icons/headerMenu32.h"
 #include "components/icons/search32.h"
 #include "fontIds.h"
 #include "util/BookCacheUtils.h"
@@ -72,6 +72,28 @@ const char* tabLabelFor(const int tab) {
   return tr(STR_LIBRARY_TAB_RECENT);
 }
 
+// Home sets its type a step under the theme's: the body slot draws names in
+// the 20px strike and the small slot details in the 17px one. The slots are
+// rebound only while Home builds its screen (FreeInkUI draws as it builds), so
+// the shared theme tokens keep deriving from the theme's own body font.
+class HomeTypeScale {
+ public:
+  explicit HomeTypeScale(fui::GfxRendererTarget& target) : target(target) {
+    target.setFont(fui::GfxRendererTarget::FONT_BODY, UI_10_FONT_ID);
+    target.setFont(fui::GfxRendererTarget::FONT_SMALL, SMALL_FONT_ID);
+  }
+  ~HomeTypeScale() {
+    const auto spec = uiScaleSpec();
+    target.setFont(fui::GfxRendererTarget::FONT_BODY, spec.bodyFontId);
+    target.setFont(fui::GfxRendererTarget::FONT_SMALL, spec.smallFontId);
+  }
+  HomeTypeScale(const HomeTypeScale&) = delete;
+  HomeTypeScale& operator=(const HomeTypeScale&) = delete;
+
+ private:
+  fui::GfxRendererTarget& target;
+};
+
 std::string fileNameOf(const std::string& path) {
   const size_t slash = path.find_last_of('/');
   return slash == std::string::npos ? path : path.substr(slash + 1);
@@ -96,11 +118,7 @@ LibraryListActivity::LibraryListActivity(GfxRenderer& renderer, MappedInputManag
                                          const bool cleanInitialRefresh)
     : UiTabListActivity("Library", renderer, mappedInput, true),
       heroCover(renderer),
-      cleanInitialRefresh(cleanInitialRefresh) {
-  // Three short tab labels: a full-slot pill would stretch across a third of
-  // the screen, so cap it at the label plus padding (slots stay put).
-  tabPillMaxPad = 16;
-}
+      cleanInitialRefresh(cleanInitialRefresh) {}
 
 void LibraryListActivity::onEnter() {
   // One lock across the base lifecycle AND the data phase: the base onEnter
@@ -113,6 +131,7 @@ void LibraryListActivity::onEnter() {
   app.on(ACTION_SEARCH, &LibraryListActivity::searchActionTrampoline, this);
   app.on(ACTION_MENU, &LibraryListActivity::menuActionTrampoline, this);
   app.on(ACTION_HERO, &LibraryListActivity::heroActionTrampoline, this);
+  app.on(ACTION_SORT, &LibraryListActivity::sortActionTrampoline, this);
 
   // Recent is backed by the resident store. Prune before opening the index so
   // its persistence write never overlaps the long-lived index reader.
@@ -220,7 +239,7 @@ void LibraryListActivity::loadHero() {
   if (heroProgress >= 100) {
     snprintf(heroProgressText, sizeof(heroProgressText), "%s", tr(STR_BOOK_FINISHED));
   } else if (heroProgress >= 0) {
-    snprintf(heroProgressText, sizeof(heroProgressText), "%d%%", heroProgress);
+    snprintf(heroProgressText, sizeof(heroProgressText), tr(STR_LIBRARY_PERCENT_READ), heroProgress);
   }
 }
 
@@ -262,63 +281,90 @@ void LibraryListActivity::openHero() {
 void LibraryListActivity::buildHero(UiScreen& screen) {
   const auto& theme = screen.theme();
   const auto& metrics = UITheme::getInstance().getMetrics();
-  // Card padding puts the cover (or, without one, the title) on the header's
-  // text column, like every row below it.
-  const auto inset = static_cast<int16_t>(metrics.listInset);
-  const auto padX = static_cast<int16_t>(std::max<int>(theme.spaceMd, metrics.headerSidePadding - metrics.listInset));
-  const int16_t padY = theme.spaceMd;
+  auto& target = screen.target();
   const auto coverH = static_cast<int16_t>(heroCoverHeight);
   const auto coverW = static_cast<int16_t>(heroCoverReady ? heroCoverHeight * 2 / 3 : 0);
+  const auto column = static_cast<int16_t>(metrics.headerSidePadding);
+  const auto coverGap = static_cast<int16_t>(theme.spaceLg + theme.spaceSm);
 
-  screen.spacer(theme.spaceSm);
-  const fui::Rect band = screen.takeTop(static_cast<int16_t>(coverH + 2 * padY), theme.spaceSm);
-  const fui::Rect rect{static_cast<int16_t>(band.x + inset), band.y, static_cast<int16_t>(band.width - 2 * inset),
-                       band.height};
+  fui::TextStyle titleStyle = theme.bodyText;
+  titleStyle.bold = true;
+  titleStyle.maxLines = 2;
+  const fui::TextStyle& smallStyle = theme.smallText;
+  const int16_t smallH = target.lineHeight(smallStyle.font);
 
-  heroCard.title = heroTitle.c_str();
-  heroCard.author = heroAuthor.empty() ? nullptr : heroAuthor.c_str();
-  heroCard.meta = nullptr;
-  heroCard.progress = std::max(0, heroProgress);
-  heroCard.progressMax = heroProgress >= 0 ? 100 : 0;
-  heroCard.progressLabel = heroProgress >= 0 ? heroProgressText : nullptr;
-  heroCard.action = fui::NO_ACTION;
-  heroCard.state = heroFocused ? fui::StateSelected : fui::StateNormal;
-  // Covers are never inverted: focus is a frame around the card, on paper.
-  fui::BoxStyle plain;
-  plain.background = fui::Paint::solid(fui::Color::White);
-  plain.foreground = fui::Paint::solid(fui::Color::Black);
-  plain.radius = theme.listRowRadius;
-  fui::BoxStyle framed = plain;
-  framed.border = fui::Paint::solid(fui::Color::Black);
-  framed.borderWidth = 3;
-  heroCard.styles = fui::StyleSet{};
-  heroCard.styles.explicitlySet = true;
-  heroCard.styles.normal = plain;
-  heroCard.styles.disabled = plain;
-  heroCard.styles.selected = framed;
-  heroCard.styles.focused = framed;
-  heroCard.styles.active = framed;
-  heroCard.selectionIndicator = fui::BookCardSelectionIndicator::Card;
-  heroCard.titleText = theme.bodyText;
-  heroCard.titleText.bold = true;
-  heroCard.titleText.maxLines = 2;
-  heroCard.authorText = theme.smallText;
-  heroCard.progressText = theme.smallText;
-  heroCard.progressHeight = 6;
-  heroCard.padding = fui::Insets{padY, padX, padY, padX};
-  heroCard.coverSize = fui::Size{coverW, coverH};
-  heroCard.gap = coverW > 0 ? static_cast<int16_t>(theme.spaceLg + theme.spaceSm) : 0;
-  heroCard.centerTextOnCover = true;
-  heroCard.coverPainterUserData = this;
-  heroCard.coverPainter = [](fui::DrawTarget&, fui::Rect cover, const fui::BookCardProps&, void* user) {
-    auto& self = *static_cast<LibraryListActivity*>(user);
-    // Text-only hero: nothing to paint in the zero-width slot.
-    if (cover.width <= 0) return true;
-    return self.heroCover.paint(cover, 0, self.heroCoverPath);
-  };
-  heroCover.prepare();
-  fui::bookCard(screen.frame(), rect, heroCard);
-  screen.frame().hit(rect, ACTION_HERO, 0, fui::InputTouch | fui::InputLongPress, heroCard.state);
+  // Title, author and progress centre on the cover, or stand alone on the
+  // text column when the book has none.
+  const fui::Rect content = screen.body();
+  const auto textX = static_cast<int16_t>(content.x + column + (coverW > 0 ? coverW + coverGap : 0));
+  const auto textW = static_cast<int16_t>(content.right() - column - textX);
+  const int16_t titleH = fui::measureWrappedText(target, heroTitle.c_str(), titleStyle, textW).height;
+  const bool hasAuthor = !heroAuthor.empty();
+  const bool hasProgress = heroProgressText[0] != '\0';
+  const auto blockH =
+      static_cast<int16_t>(titleH + (hasAuthor ? smallH : 0) + (hasProgress ? theme.spaceMd + smallH : 0));
+
+  screen.spacer(theme.spaceLg);
+  const fui::Rect band = screen.takeTop(std::max<int16_t>(coverW > 0 ? coverH : 0, blockH), theme.spaceLg);
+  if (coverW > 0) {
+    heroCover.prepare();
+    heroCover.paint(fui::Rect{static_cast<int16_t>(band.x + column), band.y, coverW, coverH}, 0, heroCoverPath);
+  }
+  auto y = static_cast<int16_t>(band.y + (band.height - blockH) / 2);
+  target.text(fui::Rect{textX, y, textW, titleH}, heroTitle.c_str(), titleStyle);
+  y = static_cast<int16_t>(y + titleH);
+  if (hasAuthor) {
+    target.text(fui::Rect{textX, y, textW, smallH}, heroAuthor.c_str(), smallStyle);
+    y = static_cast<int16_t>(y + smallH);
+  }
+  if (hasProgress) {
+    target.text(fui::Rect{textX, static_cast<int16_t>(y + theme.spaceMd), textW, smallH}, heroProgressText, smallStyle);
+  }
+  screen.frame().hit(band, ACTION_HERO, 0, fui::InputTouch | fui::InputLongPress);
+
+  // On touch boards nothing holds focus, so Continue Reading stays the solid
+  // primary button.
+  buildBarRow(screen, ACTION_HERO, heroFocused || mappedInput.hasTouch(), tr(STR_CONTINUE_READING), nullptr);
+}
+
+void LibraryListActivity::buildSortRow(UiScreen& screen) {
+  snprintf(sortValueText, sizeof(sortValueText), "%s %s", tabLabelFor(activeTabIndex),
+           isDescending(sortOrder) ? "\xE2\x86\x93" : "\xE2\x86\x91");
+  buildBarRow(screen, ACTION_SORT, tabsFocused() && !mappedInput.hasTouch(), tr(STR_LIBRARY_SORT_BY), sortValueText);
+}
+
+void LibraryListActivity::buildBarRow(UiScreen& screen, const fui::ActionId action, const bool focused,
+                                      const char* label, const char* value) {
+  const auto& theme = screen.theme();
+  const auto& metrics = UITheme::getInstance().getMetrics();
+  auto& target = screen.target();
+  const auto rowH = static_cast<int16_t>(std::max<int>(metrics.listRowHeight, theme.minTouchSize));
+  const fui::Rect row = screen.takeTop(rowH);
+  const auto inset = static_cast<int16_t>(metrics.listInset);
+  const fui::Rect bar{static_cast<int16_t>(row.x + inset), row.y, static_cast<int16_t>(row.width - 2 * inset),
+                      row.height};
+  screen.frame().hit(bar, action, 0, fui::InputTouch | fui::InputLongPress);
+  // A tap flashes the bar like any list row.
+  const fui::State state = screen.frame().stateFor(action, 0, focused ? fui::StateSelected : fui::StateNormal);
+  const bool inverted = fui::hasState(state, fui::StateSelected) || fui::hasState(state, fui::StateActive);
+  if (inverted) target.fill(bar, fui::Paint::solid(fui::Color::Black));
+
+  const auto column = static_cast<int16_t>(metrics.headerSidePadding);
+  const fui::Rect text{static_cast<int16_t>(row.x + column), row.y, static_cast<int16_t>(row.width - 2 * column),
+                       row.height};
+  const fui::Color ink = inverted ? fui::Color::White : fui::Color::Black;
+  fui::TextStyle labelStyle = theme.bodyText;
+  labelStyle.color = ink;
+  fui::TextStyle valueStyle = theme.smallText;
+  valueStyle.color = ink;
+  valueStyle.align = fui::TextAlign::Right;
+  int16_t labelW = text.width;
+  if (value) {
+    const int16_t valueW = target.measureText(valueStyle.font, value, valueStyle).width;
+    target.text(text, value, valueStyle);
+    labelW = static_cast<int16_t>(labelW - valueW - theme.spaceMd);
+  }
+  target.text(fui::Rect{text.x, text.y, labelW, text.height}, label, labelStyle);
 }
 
 // --- shelf memory -------------------------------------------------------------
@@ -689,12 +735,12 @@ void LibraryListActivity::openSearch() {
       nav.selected = 0;
       heroFocused = heroShown();
     } else if (filteredCount == 0 && !degraded) {
-      // Up from the tab bar reopens Search even with no results.
+      // Up from Sort By reopens Search even with no results.
       nav.selected = 0;
       heroFocused = false;
     } else {
       // A non-empty result belongs to the list: land on
-      // its first surviving row, not on the strip.
+      // its first surviving row, not on Sort By.
       nav.selected = 1;
       heroFocused = false;
     }
@@ -740,11 +786,6 @@ int LibraryListActivity::tabCount() const { return TAB_SLOTS; }
 int LibraryListActivity::activeTab() const { return activeTabIndex; }
 
 const char* LibraryListActivity::tabLabel(const int index) const { return tabLabelFor(index); }
-
-fui::TabIndicator LibraryListActivity::tabIndicator(const int index) const {
-  if (index != activeTab()) return fui::TabIndicator::None;
-  return isDescending(sortOrder) ? fui::TabIndicator::Down : fui::TabIndicator::Up;
-}
 
 // --- rows --------------------------------------------------------------------------
 
@@ -925,7 +966,7 @@ void LibraryListActivity::handleBackAction() {
   } else if (!heroFocused && heroShown()) {
     focusHero();
   } else if (rowsFocused() && !degraded) {
-    // Keep the current list and viewport while returning focus to the tabs.
+    // Keep the current list and viewport while returning focus to Sort By.
     nav.selected = 0;
     requestUpdate();
   } else {
@@ -939,6 +980,17 @@ void LibraryListActivity::searchActionTrampoline(const fui::ActionEvent&, void* 
 
 void LibraryListActivity::menuActionTrampoline(const fui::ActionEvent&, void* user) {
   static_cast<LibraryListActivity*>(user)->openMenu();
+}
+
+void LibraryListActivity::sortActionTrampoline(const fui::ActionEvent& event, void* user) {
+  auto& self = *static_cast<LibraryListActivity*>(user);
+  self.app.clearTapFlash();
+  self.heroFocused = false;
+  if (event.longPress) {
+    self.toggleSortDirection();
+  } else {
+    self.stepTab(1);
+  }
 }
 
 void LibraryListActivity::heroActionTrampoline(const fui::ActionEvent& event, void* user) {
@@ -1081,7 +1133,8 @@ bool LibraryListActivity::handleButtons() {
   return false;
 }
 
-// Hero -> strip -> rows. Previous from the top of that walk opens Search.
+// Continue Reading -> Sort By -> rows. Previous from the top of that walk opens
+// Search.
 void LibraryListActivity::navigateButtons() {
   const int count = listCount();
   auto& nav = activeNav();
@@ -1127,8 +1180,8 @@ void LibraryListActivity::navigateButtons() {
       }
     }
   });
-  // A held button steps tabs while the strip has focus (the base behaviour
-  // Settings keeps) and page-jumps once the selection is down in the rows,
+  // A held button steps the order while Sort By has focus (the base behaviour
+  // Settings keeps for its tabs) and page-jumps once the selection is down in the rows,
   // where fast travel through a long shelf is what a hold means.
   buttonNavigator.onNextContinuous([this, count, &nav] {
     if (heroFocused) return;
@@ -1167,7 +1220,8 @@ void LibraryListActivity::buildRows(UiScreen& screen) {
   props.subtitleText = screen.theme().smallText;
   props.valueText = screen.theme().smallText;
   props.rowPaddingY = static_cast<int16_t>(screen.theme().spaceSm + screen.theme().spaceXs);
-  props.headerText = screen.theme().smallText;
+  // Initials and author groups in body bold: the 17px strike has no bold.
+  props.headerText = screen.theme().bodyText;
   props.headerText.bold = true;
   props.headerUnderline = false;
   applyListControlStyle(props, screen.theme());
@@ -1282,7 +1336,6 @@ void LibraryListActivity::buildHeader(UiScreen& screen) {
   fui::HeaderProps header;
   header.title = headerTitle();
   header.titleText = theme.titleText;
-  header.titleText.font = fui::GfxRendererTarget::FONT_BODY;
   header.titleText.align = theme.headerTitleAlign;
   header.sidePadding = theme.headerSidePadding;
   header.minTouchSize = theme.minTouchSize;
@@ -1296,33 +1349,39 @@ void LibraryListActivity::buildHeader(UiScreen& screen) {
   // Same battery/clock band as every GUI.drawHeader screen; the header
   // heights are unified across themes, so the buttons derive from the band.
   GUI.applyHeaderStatus(renderer, header);
-  // Home is the root: no back arrow. The shelf's two doors sit together on the
-  // right, menu outermost; button boards reach them from the top of the shelf.
-  header.trailingIcon = fui::bitmapFromIcon(icon_header_menu_32);
-  header.trailingAction = ACTION_MENU;
-  if (!degraded) {
-    header.trailingAdjacentIcon = fui::bitmapFromIcon(icon_search_32);
-    header.trailingAdjacentAction = ACTION_SEARCH;
+  // Home is the root: no back arrow. Touch boards get the shelf's two doors on
+  // the right, menu outermost; button boards reach them from the top of the
+  // shelf (Back and Previous), so their band stays plain.
+  if (mappedInput.hasTouch()) {
+    header.trailingIcon = fui::bitmapFromIcon(icon_header_menu_32);
+    header.trailingAction = ACTION_MENU;
+    if (!degraded) {
+      header.trailingAdjacentIcon = fui::bitmapFromIcon(icon_search_32);
+      header.trailingAdjacentAction = ACTION_SEARCH;
+    }
   }
   const auto frameRect = screen.frame().screen();
   // Header and tabs share a screen-relative boundary, independent of bezel insets.
-  fui::header(screen.frame(),
-              fui::Rect{frameRect.x, static_cast<int16_t>(metrics.topPadding), frameRect.width,
-                        static_cast<int16_t>(metrics.headerHeight)},
-              header);
+  headerWithActions(screen.frame(),
+                    fui::Rect{frameRect.x, static_cast<int16_t>(metrics.topPadding), frameRect.width,
+                              static_cast<int16_t>(metrics.headerHeight)},
+                    header);
 }
 
 void LibraryListActivity::buildScreen(UiScreen& screen) {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  // The position readout owns the line above the hints; rows must not overlap
-  // it.
-  const int16_t readoutReserved = static_cast<int16_t>(renderer.getLineHeight(SMALL_FONT_ID) + metrics.verticalSpacing);
+  const HomeTypeScale typeScale(uiTarget);
   buildHeader(screen);
   screen.setContentMarginFromScreen(fui::Insets{static_cast<int16_t>(metrics.topPadding + metrics.headerHeight), 0,
-                                                static_cast<int16_t>(metrics.buttonHintsHeight + readoutReserved), 0});
+                                                static_cast<int16_t>(metrics.buttonHintsHeight), 0});
 
-  if (heroShown()) buildHero(screen);
-  if (!degraded) buildTabBar(screen);
+  if (heroShown()) {
+    buildHero(screen);
+  } else {
+    screen.spacer(screen.theme().spaceSm);
+  }
+  if (!degraded) buildSortRow(screen);
+  screen.spacer(screen.theme().spaceSm);
   if (bookRowCount() == 0) {
     const char* message = tr(STR_LIBRARY_NO_RESULTS);
     if (filterFailed) {
@@ -1336,57 +1395,9 @@ void LibraryListActivity::buildScreen(UiScreen& screen) {
   buildRows(screen);
 }
 
-// "12/69 books" at the bottom right while a book is selected: which one, out
-// of how many. "69 books" otherwise.
-//
-// NOT a page count. How many rows fit varies with the view (author headings
-// consume band height), so a page total grows and shrinks as you scroll. The
-// book position is stable by construction, and it answers the question the
-// reader actually has: how far in am I, and how much is left.
-void LibraryListActivity::drawPositionReadout() const {
-  const int count = listCount();
-  if (count <= 0) return;
-
-  char buf[32];
-  if (rowsFocused()) {
-    const char* positionFormat = groupsCollapsed ? tr(STR_LIBRARY_GROUP_POSITION) : tr(STR_LIBRARY_POSITION);
-    snprintf(buf, sizeof(buf), positionFormat, selectedEntry() + 1, count);
-  } else {
-    snprintf(buf, sizeof(buf), tr(STR_LIBRARY_COUNT), count);
-  }
-  const auto& metrics = UITheme::getInstance().getMetrics();
-  const int width = renderer.getTextWidth(SMALL_FONT_ID, buf);
-  // On the header's text column, like the rows above it.
-  const int x = renderer.getScreenWidth() - width - metrics.headerSidePadding;
-  const int y = renderer.getScreenHeight() - metrics.buttonHintsHeight - renderer.getLineHeight(SMALL_FONT_ID);
-  renderer.drawText(SMALL_FONT_ID, x, y, buf, true);
-}
-
 const char* LibraryListActivity::headerTitle() const {
   if (!headerSearchTitle.empty()) return headerSearchTitle.c_str();
-  return degraded ? tr(STR_LIBRARY_TITLE_UNSORTED) : tr(STR_LIBRARY);
-}
-
-void LibraryListActivity::drawHoldHelp() const {
-  if (mappedInput.hasTouch() || groupsCollapsed) return;
-  const char* help = nullptr;
-  if (heroFocused)
-    help = tr(STR_LIBRARY_HOLD_OPTIONS);
-  else if (tabsFocused() && !degraded)
-    help = tr(STR_LIBRARY_HOLD_SORT);
-  else if (rowsFocused() && isRecentSort(sortOrder) && listCount() > 0)
-    help = tr(STR_LIBRARY_HOLD_OPTIONS);  // recent rows: hold opens the row menu
-  else if (rowsFocused() && deleteEligible() && listCount() > 0)
-    help = tr(STR_HOLD_OPEN_TO_DELETE);
-  else if (rowsFocused() && groupable())
-    help = tr(STR_LIBRARY_HOLD_GROUPS);
-  if (!help) return;
-
-  const auto& metrics = UITheme::getInstance().getMetrics();
-  const int lineHeight = renderer.getLineHeight(SMALL_FONT_ID);
-  const int y = renderer.getScreenHeight() - metrics.buttonHintsHeight - lineHeight;
-  const int x = metrics.headerSidePadding;
-  GUI.drawHelpText(renderer, Rect{x, y, renderer.getScreenWidth() / 2 - x, lineHeight}, help);
+  return degraded ? tr(STR_LIBRARY_TITLE_UNSORTED) : tr(STR_CROSSPOINT);
 }
 
 // OptionPopup is a self-contained modal: it owns the whole frame (hints
@@ -1399,13 +1410,10 @@ void LibraryListActivity::render(RenderLock&& lock) {
   firstRenderDone = true;
 }
 
-// Hints say where each button goes. At the top of the shelf (the hero, or the
-// strip when there is no current book) Back opens the menu and Previous opens
-// Search; further down, Back climbs back to the top.
+// Hints say where each button goes. At the top of the shelf (Continue Reading,
+// or Sort By when there is no current book) Back opens the menu and Previous
+// opens Search; further down, Back climbs back to the top.
 void LibraryListActivity::drawFooter() {
-  drawPositionReadout();
-  drawHoldHelp();
-
   const bool atTop = heroFocused || (tabsFocused() && !heroShown());
   const bool backOpensMenu = atTop && query.empty() && !groupsCollapsed;
   const char* backLabel = backOpensMenu ? tr(STR_HOME_MENU) : tr(STR_BACK);
@@ -1414,7 +1422,7 @@ void LibraryListActivity::drawFooter() {
   if (heroFocused) {
     confirmLabel = tr(STR_RESUME);
   } else if (tabsFocused()) {
-    // On the tabs, Confirm steps to the next one: name it, as Settings does.
+    // On Sort By, Confirm steps to the next order: name it, as Settings does.
     confirmLabel = tabLabelFor((activeTabIndex + 1) % TAB_SLOTS);
   }
   if (atTop && !degraded) previousLabel = tr(STR_SEARCH);

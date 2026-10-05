@@ -23,6 +23,8 @@ namespace fui = freeink::ui;
 namespace {
 constexpr StrId ORIENTATION_LABELS[] = {StrId::STR_PORTRAIT, StrId::STR_LANDSCAPE_CW, StrId::STR_INVERTED,
                                         StrId::STR_LANDSCAPE_CCW};
+constexpr StrId ROTATION_MODE_LABELS[] = {StrId::STR_ROTATION_AUTO, StrId::STR_ROTATION_LOCKED};
+static_assert(std::size(ROTATION_MODE_LABELS) == CrossPointSettings::ROTATION_MODE_COUNT, "rotation mode labels");
 // Pages per minute; index 0 is Off. Mirrors PAGE_TURN_RATES in EpubReaderActivity.
 constexpr const char* PAGE_TURN_RATES[] = {nullptr, "1", "3", "6", "12"};
 }  // namespace
@@ -54,6 +56,7 @@ void EpubReaderMenuActivity::buildMenuItems(std::vector<MenuItem>& items, const 
       if (context.hasFootnotes) items.push_back({MenuAction::FOOTNOTES, StrId::STR_FOOTNOTES});
       // Reading the page.
       items.push_back({MenuAction::TEXT_SETTINGS, StrId::STR_TOOL_TEXT, true});
+      items.push_back({MenuAction::SPEED_READING, StrId::STR_SPEED_READING});
       items.push_back({MenuAction::DICTIONARY, StrId::STR_LOOKUP});
       if (Frontlight.present()) items.push_back({MenuAction::FRONTLIGHT, StrId::STR_LIGHT});
       // Marking it.
@@ -62,7 +65,11 @@ void EpubReaderMenuActivity::buildMenuItems(std::vector<MenuItem>& items, const 
       items.push_back({MenuAction::MORE_OPTIONS, StrId::STR_MORE_OPTIONS, true});
       break;
     case MenuPage::More:
-      items.push_back({MenuAction::ROTATE_SCREEN, StrId::STR_ORIENTATION});
+      if (halTiltSensor.canTellHold()) {
+        items.push_back({MenuAction::ROTATION_MODE, StrId::STR_ROTATION});
+      } else {
+        items.push_back({MenuAction::ROTATE_SCREEN, StrId::STR_ORIENTATION});
+      }
       items.push_back({MenuAction::AUTO_PAGE_TURN, StrId::STR_AUTO_PAGE_TURN});
       items.push_back({MenuAction::NIGHT_MODE, StrId::STR_NIGHT_MODE});
       if (context.canSync) items.push_back({MenuAction::SYNC, StrId::STR_SYNC_PROGRESS, true});
@@ -95,6 +102,8 @@ fui::BitmapRef EpubReaderMenuActivity::iconFor(const MenuAction action, const Me
       return fui::bitmapFromIcon(icon_menu_footnotes_24);
     case MenuAction::TEXT_SETTINGS:
       return fui::bitmapFromIcon(icon_reader_text_24);
+    case MenuAction::SPEED_READING:
+      return fui::bitmapFromIcon(icon_menu_speed_reading_24);
     case MenuAction::DICTIONARY:
       return fui::bitmapFromIcon(icon_menu_lookup_24);
     case MenuAction::FRONTLIGHT:
@@ -106,6 +115,7 @@ fui::BitmapRef EpubReaderMenuActivity::iconFor(const MenuAction action, const Me
     case MenuAction::MORE_OPTIONS:
       return fui::bitmapFromIcon(icon_reader_more_24);
     case MenuAction::ROTATE_SCREEN:
+    case MenuAction::ROTATION_MODE:
       return fui::bitmapFromIcon(icon_menu_orientation_24);
     case MenuAction::AUTO_PAGE_TURN:
       return fui::bitmapFromIcon(icon_menu_auto_turn_24);
@@ -196,6 +206,10 @@ void EpubReaderMenuActivity::refreshRowValue(const size_t row) {
       snprintf(value, VALUE_LEN, "%s",
                I18N.get(ORIENTATION_LABELS[pendingOrientation % std::size(ORIENTATION_LABELS)]));
       break;
+    case MenuAction::ROTATION_MODE:
+      snprintf(value, VALUE_LEN, "%s",
+               I18N.get(ROTATION_MODE_LABELS[SETTINGS.rotationMode % std::size(ROTATION_MODE_LABELS)]));
+      break;
     case MenuAction::AUTO_PAGE_TURN:
       if (selectedPageTurnOption == 0) {
         snprintf(value, VALUE_LEN, "%s", tr(STR_STATE_OFF));
@@ -267,6 +281,14 @@ void EpubReaderMenuActivity::activateIndex(const int index) {
     }
     case MenuAction::NIGHT_MODE:
       SETTINGS.screenInverted = SETTINGS.screenInverted == 0 ? 1 : 0;
+      SETTINGS.saveToFile();
+      requestUpdate();
+      return;
+    case MenuAction::ROTATION_MODE:
+      // Locked keeps the orientation the page has now; Auto follows the hold again.
+      SETTINGS.rotationMode = SETTINGS.rotationMode == CrossPointSettings::ROTATION_AUTO
+                                  ? CrossPointSettings::ROTATION_LOCKED
+                                  : CrossPointSettings::ROTATION_AUTO;
       SETTINGS.saveToFile();
       requestUpdate();
       return;

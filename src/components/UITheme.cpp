@@ -16,6 +16,12 @@
 #include "components/themes/lyra/LyraTheme.h"
 #include "components/themes/roundedraff/RoundedRaffTheme.h"
 
+namespace {
+// Header band on touch boards when status shares the title's line: a 48px
+// button plus 4px above and below.
+constexpr int touchHeaderHeight = 56;
+}  // namespace
+
 UITheme UITheme::instance;
 
 UITheme::UITheme() {
@@ -69,6 +75,13 @@ const ThemeMetrics& UITheme::getMetrics() const {
     adjustedMetrics = *currentMetrics;
     if (touch) {
       adjustedMetrics.buttonHintsHeight = 0;
+      // A single-line band (Lyra) is the touch boards' row of header buttons:
+      // give it room for full-size targets.
+      if (adjustedMetrics.batteryBarHeight >= adjustedMetrics.headerHeight) {
+        adjustedMetrics.headerHeight = touchHeaderHeight;
+        adjustedMetrics.batteryBarHeight = touchHeaderHeight;
+        adjustedMetrics.homeTopPadding = adjustedMetrics.topPadding + touchHeaderHeight;
+      }
     }
     metricsForTouch = touch;
     metricsValid = true;

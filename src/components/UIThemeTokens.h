@@ -18,6 +18,9 @@ inline freeink::ui::ThemeTokens uiThemeTokens(const freeink::ui::GfxRendererTarg
   // grows individual rows for wrapping, subtitles and icons.
   if (!BoardConfig::hasTouch()) tokens.listMinRowHeight = static_cast<int16_t>(metrics.listRowHeight);
   tokens.listRowGap = static_cast<int16_t>(metrics.listRowGap);
+  // Touch rows keep the theme's gap too: the SDK's default 6px suits cards,
+  // not rows that sit flush like the button boards' (Lyra, Classic).
+  tokens.listTouchRowGap = static_cast<int16_t>(metrics.listRowGap);
   tokens.listRowRadius = static_cast<uint8_t>(metrics.listRowRadius);
   tokens.listInset = static_cast<int16_t>(metrics.listInset);
   tokens.listSidePadding = static_cast<int16_t>(metrics.listSidePadding);

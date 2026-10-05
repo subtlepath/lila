@@ -300,6 +300,11 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
             StrId::STR_ORIENTATION, &CrossPointSettings::orientation,
             {StrId::STR_PORTRAIT, StrId::STR_LANDSCAPE_CW, StrId::STR_ORIENTATION_INVERTED, StrId::STR_LANDSCAPE_CCW},
             "orientation", StrId::STR_CAT_READER),
+        // Erased below unless the board can tell how it is held (X3); there it
+        // replaces the four-way choice above on the device.
+        SettingInfo::Enum(StrId::STR_ROTATION, &CrossPointSettings::rotationMode,
+                          {StrId::STR_ROTATION_AUTO, StrId::STR_ROTATION_LOCKED}, "rotationMode",
+                          StrId::STR_CAT_READER),
         SettingInfo::Toggle(StrId::STR_EXTRA_SPACING, &CrossPointSettings::extraParagraphSpacing,
                             "extraParagraphSpacing", StrId::STR_CAT_READER)
             .withTextSettings(),
@@ -494,6 +499,7 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
     if (!BoardConfig::isX4Pro()) eraseEntry(StrId::STR_DBL_CLICK_PWR_LIGHT);
     // Tilt page turn needs the QMI8658 IMU (X3).
     if (!halTiltSensor.isAvailable()) eraseEntry(StrId::STR_TILT_PAGE_TURN);
+    if (!halTiltSensor.canTellHold()) eraseEntry(StrId::STR_ROTATION);
     return v;
   }();
 

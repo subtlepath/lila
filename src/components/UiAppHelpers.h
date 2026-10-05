@@ -4,9 +4,11 @@
 #include <FreeInkUIIcon.h>
 #include <I18n.h>
 
+#include <algorithm>
 #include <atomic>
 
 #include "MappedInputManager.h"
+#include "components/HeaderTapTargets.h"
 #include "components/UIScale.h"
 #include "components/UITheme.h"
 #include "components/UIThemeTokens.h"
@@ -74,6 +76,53 @@ inline void applyListControlStyle(freeink::ui::ListProps& props, const freeink::
   props.toggleKnobInset = 4;
   props.toggleRadius = rounded ? 11 : 0;
   props.toggleKnobRadius = rounded ? 7 : 0;
+}
+
+// fui::header() with trailing buttons and the battery sharing one line. The
+// SDK pins the battery to the band's right edge, above the buttons; on a
+// single-line band (Lyra) the buttons keep the edge instead, where a thumb
+// finds them, and the battery sits just left of them. The buttons' span is
+// recorded in HeaderActionTapTarget so the status-band tap that opens the
+// light panel leaves them alone.
+template <size_t MaxInteractions>
+inline void headerWithActions(freeink::ui::Frame<MaxInteractions>& frame, const freeink::ui::Rect rect,
+                              freeink::ui::HeaderProps props) {
+  namespace fui = freeink::ui;
+  // header() anchors the trailing buttons this far in from the rect's right.
+  constexpr int16_t anchorInset = 12;
+  constexpr int16_t batteryGap = 8;
+  const bool hasTrailing = props.trailingAction != fui::NO_ACTION && (props.trailingIcon || props.trailingLabel);
+  if (!hasTrailing) {
+    HeaderActionTapTarget.clear();
+    fui::header(frame, rect, props);
+    return;
+  }
+
+  const int16_t buttonSize = props.trailingSize > 0 ? props.trailingSize : static_cast<int16_t>(rect.height - 8);
+  const bool adjacent = props.trailingAdjacentIcon && props.trailingAdjacentAction != fui::NO_ACTION;
+  const auto buttonsW = static_cast<int16_t>(buttonSize + (adjacent ? buttonSize + 4 : 0));
+  const auto anchor = static_cast<int16_t>(rect.right() - anchorInset);
+  const ThemeMetrics& metrics = UITheme::getInstance().getMetrics();
+  const bool sharedLine = props.status.showBattery && !props.status.batteryLeft &&
+                          metrics.batteryBarHeight >= metrics.headerHeight && !props.trailingLabel;
+
+  if (!sharedLine) {
+    fui::header(frame, rect, props);
+  } else {
+    const auto batteryW = static_cast<int16_t>(BaseTheme::headerBatteryWidth(frame.target(), props));
+    const fui::BatteryIndicatorProps battery = props.status.battery;
+    const int16_t stripHeight = props.status.stripHeight;
+    // The title truncates before the battery as well as the buttons.
+    props.status.showBattery = false;
+    props.rightReserve = static_cast<int16_t>(props.rightReserve + batteryW + batteryGap);
+    fui::header(frame, rect, props);
+    const auto batteryX = static_cast<int16_t>(anchor - buttonsW - batteryGap - batteryW);
+    fui::batteryIndicator(frame, fui::Rect{batteryX, rect.y, batteryW, stripHeight}, battery);
+  }
+
+  // The buttons' column of the band, padded like their touch targets.
+  const int16_t pad = static_cast<int16_t>(std::max(0, (props.minTouchSize - buttonSize) / 2));
+  HeaderActionTapTarget.set(anchor - buttonsW - pad, rect.y, buttonsW + 2 * pad, rect.height);
 }
 
 // Bind the uiScale fonts before FreeInkApp's constructor derives its theme

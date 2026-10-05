@@ -1,20 +1,17 @@
 #include "HalTiltSensor.h"
 
+#include <BoardConfig.h>
 #include <Logging.h>
 
 HalTiltSensor halTiltSensor;  // Singleton instance
 
-bool HalTiltSensor::readGyro(float& gx, float& gy, float& gz) const {
-  Imu::Sample sample;
-  if (!_sdkImu.read(sample)) return false;
-  gx = sample.gx;
-  gy = sample.gy;
-  gz = sample.gz;
-  return true;
-}
-
 void HalTiltSensor::begin() {
   _available = _sdkImu.begin();
+  // Boards whose IMU reports the X3's frame (HeldOrientation's signs). The SDK
+  // profile's imuSwapXY/imuFlip carries any other mount into that frame.
+  _holdKnown = BoardConfig::ACTIVE.board == BoardConfig::Board::XteinkX3 ||
+               BoardConfig::ACTIVE.board == BoardConfig::Board::XteinkX3Uc8279 ||
+               BoardConfig::ACTIVE.board == BoardConfig::Board::XteinkX4Classic;
   if (_available) {
     _initMs = millis();
     _lastPollMs = millis();
@@ -57,27 +54,37 @@ bool HalTiltSensor::deepSleep() {
   }
 
   clearPendingEvents();
+  _hold.reset();
   _inTilt = false;
   _isAwake = false;
   return true;
 }
 
-void HalTiltSensor::update(const uint8_t mode, const uint8_t orientation, const bool inReader) {
+void HalTiltSensor::update(const uint8_t mode, const uint8_t orientation, const bool inReader, const bool followHold) {
   if (!_available) {
     return;
   }
 
-  // State machine: wake up or sleep based on the enabled flag
-  if ((mode != CrossPointTiltPageTurn::TILT_OFF) && !_isAwake) {
+  const bool tilt = mode != CrossPointTiltPageTurn::TILT_OFF;
+  // Outside the reader the UI is portrait, so the hold matters only while reading.
+  const bool hold = followHold && inReader && _holdKnown;
+  if (hold != _followingHold) {
+    _followingHold = hold;
+    _hold.reset();
+  }
+
+  // State machine: awake while either feature needs samples
+  const bool wanted = tilt || hold;
+  if (wanted && !_isAwake) {
     _isAwake = wake();
     return;
-  } else if ((mode == CrossPointTiltPageTurn::TILT_OFF) && _isAwake) {
+  } else if (!wanted && _isAwake) {
     _isAwake = !deepSleep();
     return;
   }
 
   // If disabled, skip the rest of the polling logic and avoid unnecessary I2C traffic in non-reader activities
-  if ((mode == CrossPointTiltPageTurn::TILT_OFF) || !inReader) {
+  if (!wanted || !inReader) {
     return;
   }
 
@@ -92,13 +99,27 @@ void HalTiltSensor::update(const uint8_t mode, const uint8_t orientation, const 
   }
   _lastPollMs = now;
 
-  float gx, gy, gz;
-  if (!readGyro(gx, gy, gz)) {
+  Imu::Sample sample;
+  if (!_sdkImu.read(sample)) {
     return;
   }
 
+  if (hold && _hold.update(sample.ax, sample.ay, sample.az, now)) {
+    _hadActivity = true;
+    LOG_INF("GYR", "Held as orientation %d: a=(%.2f, %.2f, %.2f) g", _hold.current(), sample.ax, sample.ay, sample.az);
+  }
+  if (tilt) {
+    updateTilt(sample, mode, orientation, now);
+  }
+}
+
+void HalTiltSensor::updateTilt(const Imu::Sample& sample, const uint8_t mode, const uint8_t orientation,
+                               const unsigned long now) {
+  const float gx = sample.gx;
+  const float gy = sample.gy;
+
   // Map the gyro axis to left/right tilt based on reader orientation.
-  // On the X3 PCB: X axis = left/right in portrait, Y axis = left/right in landscape.
+  // In the SDK's board frame: X axis = left/right in portrait, Y axis = left/right in landscape.
   float tiltAxis;
   switch (orientation) {
     case CrossPointOrientation::PORTRAIT:

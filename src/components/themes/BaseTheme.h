@@ -11,6 +11,7 @@ class GfxRenderer;
 namespace freeink {
 namespace ui {
 struct HeaderProps;
+class DrawTarget;
 }  // namespace ui
 }  // namespace freeink
 
@@ -246,6 +247,12 @@ class BaseTheme {
   // Edge inset drawHeader uses for the clock/battery status line (detached
   // layouts hug the corner with a legacy 12px inset instead of the padding).
   static int headerStatusInset();
+  // Width of the battery fui::header() draws for these props, its percent
+  // label included.
+  static int headerBatteryWidth(const freeink::ui::DrawTarget& target, const freeink::ui::HeaderProps& props);
+  // Left edge of that battery on a band ending at rectRight.
+  static int headerBatteryLeft(const freeink::ui::DrawTarget& target, const freeink::ui::HeaderProps& props,
+                               int rectRight);
   virtual void drawSubHeader(const GfxRenderer& renderer, Rect rect, const char* label,
                              const char* rightLabel = nullptr) const;
   virtual Rect drawPopup(const GfxRenderer& renderer, const char* message) const;

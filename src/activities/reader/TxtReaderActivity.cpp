@@ -383,6 +383,19 @@ bool TxtReaderActivity::isAtEndOfBook() const { return initialized && currentPag
 
 void TxtReaderActivity::onReturnFromEndOfBook() { currentPage = totalPages > 0 ? totalPages - 1 : 0; }
 
+void TxtReaderActivity::turnToHeld(const uint8_t orientation) {
+  {
+    RenderLock lock(*this);
+    SETTINGS.orientation = orientation;
+    SETTINGS.saveToFile();
+    ReaderUtils::applyOrientation(renderer, orientation);
+    // Paginated again for the new frame; progress.bin's offset keeps the passage.
+    initialized = false;
+    pagesUntilFullRefresh = 1;  // every pixel moves; a fast refresh would ghost
+  }
+  requestUpdate();
+}
+
 // progress.bin: u16 page, u16 reserved, then the u32 byte offset of the passage.
 // The page number is only a fallback (and what the Library reads); the offset
 // survives a re-pagination from a font, margin or orientation change.

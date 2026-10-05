@@ -12,7 +12,6 @@
 #include "activities/UiTabListActivity.h"
 #include "components/HomeCoverCache.h"
 #include "components/OptionPopup.h"
-#include "components/media/book-card.h"
 
 // Home: the bookshelf. The current book sits on top, ready to resume; every
 // indexed book on the card follows, shown by recency, title, or author. The
@@ -27,11 +26,12 @@
 // Only the hero carries a cover: one large enough to recognise at a glance
 // earns its space, a column of postage stamps would not.
 //
-// Buttons walk hero -> sort strip -> rows. The top of that walk is where the
-// shelf's other doors are: Previous opens Search and Back opens the menu
-// (folders, adding books, games, settings). Rows render through fui::list on
-// the UiTabListActivity ring (0 = the sort strip, 1..N = the books); the hero
-// sits outside the ring and owns focus while heroFocused is set.
+// Buttons walk Continue Reading -> Sort By -> rows. The top of that walk is
+// where the shelf's other doors are: Previous opens Search and Back opens the
+// menu (folders, adding books, games, settings). Rows render through fui::list
+// on the UiTabListActivity ring (0 = the Sort By row, 1..N = the books); the
+// hero sits outside the ring and owns focus while heroFocused is set, which
+// shows as the Continue Reading bar.
 //
 // Only the visible window of rows is materialized per render (strings and
 // ListItems for at most one page). The ordinary shelf therefore keeps one page
@@ -55,7 +55,6 @@ class LibraryListActivity final : public UiTabListActivity {
   int tabCount() const override;
   int activeTab() const override;
   const char* tabLabel(int index) const override;
-  freeink::ui::TabIndicator tabIndicator(int index) const override;
   void onTabAction(int index) override;
   void stepTab(int direction) override;
   bool tabBarFocused() const override { return tabsFocused(); }
@@ -74,6 +73,7 @@ class LibraryListActivity final : public UiTabListActivity {
   static constexpr freeink::ui::ActionId ACTION_SEARCH = ACTION_TAB_USER;
   static constexpr freeink::ui::ActionId ACTION_MENU = ACTION_SEARCH + 1;
   static constexpr freeink::ui::ActionId ACTION_HERO = ACTION_MENU + 1;
+  static constexpr freeink::ui::ActionId ACTION_SORT = ACTION_HERO + 1;
 
   // Walk the card and write a fresh index. Blocking, with a popup: at ~70 books
   // it is well under a second, and it only runs when the index is missing or the
@@ -113,6 +113,7 @@ class LibraryListActivity final : public UiTabListActivity {
   static void searchActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
   static void menuActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
   static void heroActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
+  static void sortActionTrampoline(const freeink::ui::ActionEvent& event, void* user);
 
   // --- hero (the current book) ------------------------------------------------
   bool hasHero() const { return !RECENT_BOOKS.getBooks().empty(); }
@@ -123,7 +124,13 @@ class LibraryListActivity final : public UiTabListActivity {
   void openHero();
   // Writes the hero thumb at heroCoverHeight; false leaves the hero text-only.
   bool generateHeroCover();
+  // The current book as plain text beside its cover, then the Continue
+  // Reading bar that carries its focus.
   void buildHero(UiScreen& screen);
+  // "Sort By  Recent ↓": one value row where the tabs used to be.
+  void buildSortRow(UiScreen& screen);
+  // A full-width row bar: solid ink when focused, the label on the text column.
+  void buildBarRow(UiScreen& screen, freeink::ui::ActionId action, bool focused, const char* label, const char* value);
 
   // --- shelf memory -----------------------------------------------------------
   // Tab, sort, search, focus and scroll survive leaving Home (RAM only).
@@ -151,8 +158,6 @@ class LibraryListActivity final : public UiTabListActivity {
   static void formatInitialHeading(uint32_t initial, std::string& out);
   void formatAuthorHeading(const std::string& author, std::string& out) const;
   static void formatProgress(int progress, std::string& out);
-  void drawPositionReadout() const;
-  void drawHoldHelp() const;
   const char* headerTitle() const override;
 
   // Ring 0 is the strip; the selected BOOK is ring - 1, with the strip keeping
@@ -241,8 +246,8 @@ class LibraryListActivity final : public UiTabListActivity {
   std::string heroCoverPath;
   char heroProgressText[24] = {};
   HomeCoverCache heroCover;
-  // Screen-lifetime component props keep the render task's stack small.
-  freeink::ui::BookCardProps heroCard;
+  // The Sort By row's value, rebuilt each render ("Recent ↓").
+  char sortValueText[32] = {};
 
   const bool cleanInitialRefresh;
   // Written by the render task; the loop waits for it before generating a cover.

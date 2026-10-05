@@ -73,6 +73,9 @@ void SettingsActivity::rebuildSettingsLists() {
       // Settings merged into "Text Settings"
       // (they stay in the shared list for the web settings API)
       if (setting.inTextSettings) continue;
+      // Where the page turns as held, Rotation (Auto / Locked) replaces the
+      // four-way choice; the orientation itself stays saved and in the web API.
+      if (setting.valuePtr == &CrossPointSettings::orientation && halTiltSensor.canTellHold()) continue;
       readerSettings.push_back(setting);
     } else if (setting.category == StrId::STR_CAT_CONTROLS) {
       if (BoardConfig::hasHomeKey() && setting.valuePtr == &CrossPointSettings::longPressMenuFunction) continue;

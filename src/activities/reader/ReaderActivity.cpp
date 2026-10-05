@@ -47,6 +47,14 @@ void ReaderActivity::applyInitialOrientation() { ReaderUtils::applyOrientation(r
 
 void ReaderActivity::disableFastInitialRefresh() { pagesUntilFullRefresh = 0; }
 
+bool ReaderActivity::followHeldTurn() {
+  uint8_t held;
+  if (!halTiltSensor.takeHeldTurn(held) || held == SETTINGS.orientation) return false;
+  LOG_INF("READER", "Turning to the held orientation %u", static_cast<unsigned>(held));
+  turnToHeld(held);
+  return true;
+}
+
 void ReaderActivity::onEnter() {
   Activity::onEnter();
 
@@ -62,6 +70,8 @@ void ReaderActivity::onEnter() {
 
   sdFontSystem.ensureLoaded(renderer);
   applyInitialOrientation();
+  // Opened in the saved orientation; the hold, once it settles, may differ.
+  halTiltSensor.resyncHold();
 
   if (!loadBook()) {
     finish();
@@ -156,6 +166,7 @@ void ReaderActivity::loop() {
   if (handleEndOfBookMenu()) return;
   if (handleFormatInput()) return;
   if (handleBackNavigation()) return;
+  if (followHeldTurn()) return;
 
   const auto touch = ReaderUtils::detectTouchPageTurn(renderer, mappedInput);
   auto [prevTriggered, nextTriggered, fromTilt] = ReaderUtils::detectPageTurn(mappedInput);

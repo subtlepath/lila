@@ -110,7 +110,7 @@ Upon turning the device on for the first time, you will be placed on the **[Home
 
 Home is your bookshelf. The book you are reading sits at the top with its cover and how far you have read; every book on the SD card follows, with its title, its author and, for books you have opened, the percentage read. The Library indexes up to 4,096 supported books, so you can find a book without remembering its folder.
 
-Below the current book, three tabs sort the shelf. An arrow beside the active tab shows the sort direction:
+Below the current book, **Continue Reading** resumes it and **Sort By** chooses the order of the shelf. An arrow beside the order shows its direction:
 
 - **Recent** puts the books you opened most recently first, then the rest by when they arrived on the card.
 - **Title** groups books by the first letter of the title. Up sorts A-Z and down sorts Z-A. Titles beginning with numbers or punctuation appear under `#`; letters from non-English scripts, including Hebrew, have their own groups.
@@ -118,17 +118,17 @@ Below the current book, three tabs sort the shelf. An arrow beside the active ta
 
 On a button-only device:
 
-- Home opens on the current book. Press **Confirm** to resume it.
-- Use **Up/Down** or **Left/Right** to move from the current book to the tabs and on into the books. Hold a direction to move a page at a time.
-- Press **Up** (or **Left**) on the current book to **Search** by title or author.
-- Press **Back** to clear a search or return to the current book. Press it on the current book to open the **[Home Menu](#34-home-menu)**.
-- On the tabs, press **Confirm** to switch to the next tab, or hold **Confirm** to reverse the sort direction.
-- Hold **Confirm** on the current book, or on a book in the Recent tab, for its options: open, remove from recents, delete, or refresh the library.
+- Home opens on **Continue Reading**. Press **Confirm** to resume the current book.
+- Use **Up/Down** or **Left/Right** to move from Continue Reading to Sort By and on into the books. Hold a direction to move a page at a time.
+- Press **Up** (or **Left**) on Continue Reading to **Search** by title or author.
+- Press **Back** to clear a search or return to Continue Reading. Press it on Continue Reading to open the **[Home Menu](#34-home-menu)**.
+- On Sort By, press **Confirm** to switch to the next order, or hold **Confirm** to reverse its direction.
+- Hold **Confirm** on Continue Reading, or on a book in the Recent order, for its options: open, remove from recents, delete, or refresh the library.
 - In the Title or Author views, hold **Confirm** on a book to collapse the list to its letter or author groups. The matching group remains selected. Press **Confirm** to enter a group, or **Back** to restore the exact book and position you came from.
 
-On a touch device, tap the current book to resume it, and tap tabs and books directly. The Search and Menu icons sit at the top right. Tap the active tab again to reverse its sort direction. Swipe to scroll. Long-press the current book or a book in the Recent tab for its options. In the Title and Author views, long-press a book to collapse the list to its groups.
+On a touch device, tap the current book or Continue Reading to resume it, and tap books directly. The Search and Menu icons sit at the top right. Tap Sort By to switch to the next order, or long-press it to reverse the direction. Swipe to scroll. Long-press the current book or a book in the Recent order for its options. In the Title and Author orders, long-press a book to collapse the list to its groups.
 
-Home remembers the tab, sort, search, selected book and scroll position while the device is on. After you open a book from the Recent tab or from a search, Home returns with that book at the top, ready to resume.
+Home remembers the order, search, selected book and scroll position while the device is on. After you open a book from the Recent order or from a search, Home returns with that book at the top, ready to resume.
 
 The index is created automatically the first time Home opens. To pick up later file changes or updated metadata, use **Settings → System → Rebuild library index**. The **Use book metadata** setting controls whether the index reads titles and authors stored inside books.
 
@@ -323,6 +323,11 @@ The Settings screen allows you to configure the device's behavior. There are a f
   - "Landscape CW" - Landscape, rotated clockwise
   - "Inverted" - Portrait, upside down
   - "Landscape CCW" - Landscape, rotated counter-clockwise
+
+- **Rotation** *(X3 and X4 Classic, in place of Reading Orientation)*: The device's gyroscope tells which way you hold it, so the page turns with you:
+  
+  - "Auto" (default) - The page follows how you hold the device, in any of the four orientations. A turn counts once the device has been still for a moment; lying flat, or held at an angle near a corner, it keeps the orientation it has.
+  - "Locked" - The page keeps the orientation it has now. Turn the device to the way you want to read, then lock it.
 
 - **Extra Paragraph Spacing**: Set how to handle paragraph breaks:
   
@@ -674,7 +679,7 @@ See [docs/dictionary.md](docs/dictionary.md) for supported formats, setup, and w
 
 * **Return to Home:** Press the **Back** button to close the book and return to the **[Home](#31-home-screen)** screen.
 * **Return to Browse Files:** Press and hold the **Back** button to close the book and return to the **[Browse Files](#33-browse-files-screen)** screen.
-* **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**: contents, search, position, text, look-up, light and bookmarks, with everything else under **More Options**.
+* **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**: contents, search, position, text, speed reading, look-up, light and bookmarks, with everything else under **More Options**.
 * **Long-press Confirm (configurable):** Holding **Confirm** runs the function chosen by the **Long-press Menu** setting in **[Controls Settings](#373-controls)** — "Bookmark" (default) drops a bookmark, "KOSync" launches KOReader Sync, "Dictionary" starts a word lookup, "Disabled" does nothing. A short press always opens the Reader Menu.
 
 ### Supported Languages
@@ -699,6 +704,7 @@ Press **Confirm** while reading to open the Reader Menu. Under the book's title 
 - **Go to Position** – Jump to a percentage of the book.
 - **Footnotes** – Follow a footnote on this page *(only shown when the page has footnotes)*.
 - **Text** – Font, size, spacing and alignment; the row shows the current font and size.
+- **Speed Reading** – Read on from this page a few words at a time, flashed in one place (see [Speed Reading](#54-speed-reading) below).
 - **Look Up** – Select a word on the page and show its dictionary definition (see [docs/dictionary.md](docs/dictionary.md)). Requires a dictionary to be selected in **Settings → Reader → Dictionary**.
 - **Light** – Brightness and warmth, opened over the page *(only on devices with a frontlight)*.
 - **Bookmark This Page** / **Remove Bookmark** – Add or remove a bookmark here.
@@ -708,6 +714,7 @@ Press **Confirm** while reading to open the Reader Menu. Under the book's title 
 **More Options** holds the less frequent settings and book actions:
 
 - **Reading Orientation** and **Auto Page Turn** – Pick from a list; the row shows the current choice.
+- **Rotation** *(X3 and X4 Classic, in place of Reading Orientation)* – Switches between **Auto** and **Locked** in place: hold the device the way you want to read, then lock it there.
 - **Night Mode** – A switch: it flips in place and the menu stays open.
 - **Sync Progress** – Push or pull reading progress with a KOReader sync server *(only shown once sync is set up, see [KOReader Sync Quick Setup](#377-koreader-sync-quick-setup))*.
 - **Show Page as QR** – Display the current page's text as a QR code.
@@ -717,7 +724,7 @@ Press **Confirm** while reading to open the Reader Menu. Under the book's title 
 
 Rows follow one rule throughout lila: a switch flips in place, a value opens a short list of choices, and a plain row opens a screen or does what it says.
 
-**Back** always returns to your page, from every level of the menu and from every screen it opens (Contents, Search, Bookmarks, Text, Go to Position, Look Up). Your place is kept, including after a change to the text or the orientation.
+**Back** always returns to your page, from every level of the menu and from every screen it opens (Contents, Search, Speed Reading, Bookmarks, Text, Go to Position, Look Up). Your place is kept, including after a change to the text or the orientation.
 
 ### 5.1 Contents
 
@@ -753,6 +760,19 @@ Choose **Search** in the Reader Menu, type a word or phrase and press **OK**. Th
 Search ignores capitals, accents and punctuation between words: *nirvana* finds *Nirvāṇa*, and *to be or not* finds *To be, or not*. An apostrophe inside a word counts, in either form: *don't* finds *don’t*, *dont* does not. A search finds words that **begin** with what you type, so *vajra* also finds *Vajrasattva*. Phrases are found across italics and other formatting.
 
 Results are kept with the book, so returning to them, or searching for the same thing later, is instant; they stay right after any change to the text size, font or orientation. A search keeps its first 500 results; a longer phrase narrows it down. Search covers EPUB books.
+
+### 5.4 Speed Reading
+
+Choose **Speed Reading** in the Reader Menu to read on from the page you are on with your eyes held still: the words flash, a few at a time, in a band across the screen, set in Times 16 whatever the book's font. Two notches mark the column to rest your eyes on; a single word is placed so the letter the eye recognises it by sits between them. It opens paused, showing the first words and the sentence around them.
+
+- **Confirm** plays and pauses. Paused, the sentence around the words on screen is shown below them, with those words in bold.
+- **Left** goes back to the start of the sentence (again for the one before); **Right** goes on to the next sentence.
+- The **side buttons** set the pace, from 100 to 800 words a minute in steps of 25. The pace is shown at the bottom and kept for next time.
+- **Back** returns to the book on the page showing the words you stopped at.
+
+On a touch screen, tap the middle to play or pause, the left third to go back a sentence and the right third to go on; swipe up or down to change the pace.
+
+Commas, full stops and the ends of paragraphs hold the eye a little longer, as long words do, and each chapter opens with its title. An e-ink screen takes a moment to change, so only the band is ever redrawn while you read, and at paces faster than it can change on its own, words are shown two to four at a time as short phrases that never run past punctuation. Every so often, at the start of a sentence, the band blinks black and back to clear the faint traces fast changes leave. Speed reading covers EPUB books in scripts that put spaces between words.
 
 ## 6. Current Limitations & Roadmap
 

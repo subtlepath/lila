@@ -8,77 +8,9 @@
 
 #include <cstring>
 
+#include "HtmlTextRules.h"
+
 namespace booksearch {
-
-namespace {
-
-// Elements that flow inside a line. Every other element starts or ends a block, which breaks words.
-constexpr const char* INLINE_TAGS[] = {
-    "a",     "abbr", "acronym", "b",      "bdi",   "bdo",  "big",  "cite", "code", "data", "del",  "dfn", "em",
-    "font",  "i",    "ins",     "kbd",    "label", "mark", "nobr", "q",    "rb",   "rtc",  "ruby", "s",   "samp",
-    "small", "span", "strike",  "strong", "sub",   "sup",  "time", "tt",   "u",    "var",  "wbr"};
-
-bool isInline(const char* localName) {
-  for (const char* tag : INLINE_TAGS) {
-    if (strcasecmp(localName, tag) == 0) return true;
-  }
-  return false;
-}
-
-const char* attribute(const XML_Char** atts, const char* name) {
-  for (int i = 0; atts && atts[i]; i += 2) {
-    if (strcmp(atts[i], name) == 0) return atts[i + 1];
-  }
-  return nullptr;
-}
-
-// A whitespace-separated token list (epub:type) contains `token`.
-bool hasToken(const char* list, const char* token) {
-  if (!list) return false;
-  const size_t tokenLength = strlen(token);
-  const char* cursor = list;
-  while (*cursor) {
-    while (*cursor == ' ' || *cursor == '\t' || *cursor == '\n') cursor++;
-    const char* start = cursor;
-    while (*cursor && *cursor != ' ' && *cursor != '\t' && *cursor != '\n') cursor++;
-    const size_t length = static_cast<size_t>(cursor - start);
-    // "z3998:pagebreak"-style prefixed tokens count too.
-    if (length >= tokenLength && strncmp(cursor - tokenLength, token, tokenLength) == 0 &&
-        (length == tokenLength || cursor[-static_cast<ptrdiff_t>(tokenLength) - 1] == ':')) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// An inline style that hides the element ("display: none").
-bool styleHides(const char* style) {
-  if (!style) return false;
-  for (const char* cursor = style; *cursor; cursor++) {
-    if (strncasecmp(cursor, "display", 7) != 0) continue;
-    const char* value = cursor + 7;
-    while (*value == ' ' || *value == '\t') value++;
-    if (*value != ':') continue;
-    value++;
-    while (*value == ' ' || *value == '\t') value++;
-    if (strncasecmp(value, "none", 4) == 0) return true;
-  }
-  return false;
-}
-
-// Content a reader does not see on the page: the hidden attribute and inline display:none (which the
-// layout skips), page-break markers (skipped too), note-reference markers ("1" between two words would
-// break a phrase) and ruby annotations (set above the line, not in it).
-bool hidesText(const char* localName, const XML_Char** atts) {
-  if (strcasecmp(localName, "rt") == 0) return true;
-  if (attribute(atts, "hidden") != nullptr || styleHides(attribute(atts, "style"))) return true;
-  const char* epubType = attribute(atts, "epub:type");
-  if (hasToken(epubType, "pagebreak") || hasToken(epubType, "noteref")) return true;
-  const char* role = attribute(atts, "role");
-  return role && (strcmp(role, "doc-pagebreak") == 0 || strcmp(role, "doc-noteref") == 0);
-}
-
-}  // namespace
 
 uint32_t hashAnchorId(const std::string_view id) {
   uint32_t hash = 2166136261u;
@@ -110,6 +42,7 @@ bool SpineTextScanner::begin(const AnchorTag* anchorTags, const size_t count, co
   nonVisibleDepth = 0;
   visibleOffset = 0;
   hiddenDepth = 0;
+  noteMarkers.reset();
   anchors = anchorTags;
   anchorCount = count;
   tag = initialTag;
@@ -180,7 +113,7 @@ void SpineTextScanner::onStart(const XML_Char* name, const XML_Char** atts) {
   }
   const char* localName = xmlLocalName(name);
   if (anchorCount > 0) {
-    if (const char* id = attribute(atts, "id")) {
+    if (const char* id = findAttribute(atts, "id")) {
       const uint32_t hash = hashAnchorId(id);
       for (size_t i = 0; i < anchorCount; i++) {
         if (anchors[i].idHash == hash) {
@@ -190,21 +123,23 @@ void SpineTextScanner::onStart(const XML_Char* name, const XML_Char** atts) {
       }
     }
   }
-  if (hidesText(localName, atts)) {
+  if (hidesText(localName, atts) || noteMarkers.opens(localName, atts)) {
     hiddenDepth = 1;
     return;
   }
-  if (!isInline(localName)) breakBlock();
+  if (!isInlineElement(localName)) breakBlock();
 }
 
 void SpineTextScanner::onEnd(const XML_Char* name) {
   const bool wasNonVisible = nonVisibleDepth > 0;
   if (nonVisibleDepth > 0) nonVisibleDepth--;
   if (insideBody && !wasNonVisible && !halted) {
+    const char* localName = xmlLocalName(name);
     if (hiddenDepth > 0) {
       hiddenDepth--;
-    } else if (!isInline(xmlLocalName(name))) {
-      breakBlock();
+    } else {
+      noteMarkers.closes(localName);
+      if (!isInlineElement(localName)) breakBlock();
     }
   }
   if (strcmp(name, "body") == 0) insideBody = false;

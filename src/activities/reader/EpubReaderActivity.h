@@ -145,6 +145,10 @@ class EpubReaderActivity final : public ReaderActivity {
   // Underlines the opened match when the page being drawn shows it.
   void drawSearchMark(const Page& page, int marginLeft, int marginTop);
 
+  // Speed reading from the page on screen; back on the page with the last words it showed.
+  void openSpeedReading();
+  void onSpeedReadingClosed(const ActivityResult& result);
+
   uint16_t buildViewportWidth = 0;
   uint16_t buildViewportHeight = 0;
   bool partialRebuildStartFailed = false;
@@ -231,6 +235,7 @@ class EpubReaderActivity final : public ReaderActivity {
   void renderStatusBar() const;
   void applyOrientation(uint8_t orientation);
   void applyInitialOrientation() override;
+  void turnToHeld(uint8_t orientation) override;
   // The orientation the current layout was built for. The control center's
   // orientation tile can move SETTINGS.orientation while this reader sits on
   // the activity stack, and Pop restores it without onEnter(), so the drift has

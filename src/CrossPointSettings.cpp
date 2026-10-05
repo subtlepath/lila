@@ -116,6 +116,8 @@ void CrossPointSettings::toJson(JsonDocument& doc) const {
   if (keyboardLayouts != 0) {
     doc["keyboardLayouts"] = keyboardLayouts;
   }
+  // Above the uint8_t range of the generic loop.
+  doc["speedReadingWpm"] = speedReadingWpm;
 }
 
 bool CrossPointSettings::fromJson(JsonVariantConst doc) {
@@ -265,6 +267,9 @@ bool CrossPointSettings::fromJson(JsonVariantConst doc) {
   // Absent means unconfigured, which is the default.
   if (doc["keyboardLayouts"].is<uint16_t>()) {
     keyboardLayouts = doc["keyboardLayouts"].as<uint16_t>();
+  }
+  if (doc["speedReadingWpm"].is<uint16_t>()) {
+    speedReadingWpm = std::clamp(doc["speedReadingWpm"].as<uint16_t>(), SPEED_READING_MIN_WPM, SPEED_READING_MAX_WPM);
   }
 
   if (needsResave) {

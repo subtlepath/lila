@@ -613,7 +613,8 @@ void loop() {
     return;
   }
 
-  halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
+  halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity(),
+                       SETTINGS.rotationMode == CrossPointSettings::ROTATION_AUTO);
 
   renderer.setFadingFix(SETTINGS.fadingFix);
 

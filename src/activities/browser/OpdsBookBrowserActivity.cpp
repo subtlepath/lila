@@ -18,6 +18,7 @@
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UIScale.h"
 #include "components/UITheme.h"
+#include "components/UiAppHelpers.h"
 #include "components/icons/headerIcons.h"
 #include "components/icons/search32.h"
 #include "fontIds.h"
@@ -268,10 +269,10 @@ void OpdsBookBrowserActivity::screenHeader(UiScreen& screen, const bool withSear
   header.sidePadding = theme.headerSidePadding;
   header.minTouchSize = theme.minTouchSize;
   const auto frameRect = screen.frame().screen();
-  fui::header(screen.frame(),
-              fui::Rect{frameRect.x, static_cast<int16_t>(metrics.topPadding), frameRect.width,
-                        static_cast<int16_t>(metrics.headerHeight)},
-              header);
+  headerWithActions(screen.frame(),
+                    fui::Rect{frameRect.x, static_cast<int16_t>(metrics.topPadding), frameRect.width,
+                              static_cast<int16_t>(metrics.headerHeight)},
+                    header);
   screen.setContentMarginFromScreen(
       fui::Insets{static_cast<int16_t>(metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing), 0,
                   static_cast<int16_t>(metrics.buttonHintsHeight), 0});

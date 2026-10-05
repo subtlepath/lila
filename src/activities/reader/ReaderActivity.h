@@ -33,6 +33,11 @@ class ReaderActivity : public Activity {
 
   virtual void renderBook() = 0;
   virtual void applyInitialOrientation();
+  // Lays the book out for the way the device is now held (Rotation: Auto).
+  // Fixed-layout readers keep their orientation.
+  virtual void turnToHeld(uint8_t orientation) {}
+  // Takes a settled change of hold and turns to it; true when one was taken.
+  bool followHeldTurn();
   virtual void onEndOfBookRendered() {}
 
   bool handleBackNavigation();

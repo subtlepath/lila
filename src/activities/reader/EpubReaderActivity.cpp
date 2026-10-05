@@ -44,6 +44,7 @@
 #include "ReaderUtils.h"
 #include "RecentBooksStore.h"
 #include "SdCardFontSystem.h"
+#include "SpeedReadingActivity.h"
 #include "activities/settings/TextSettingsActivity.h"
 #include "activities/util/FrontlightPanelActivity.h"
 #include "components/UITheme.h"
@@ -507,6 +508,9 @@ void EpubReaderActivity::loop() {
     return;
   }
 
+  // After the overlay: a turn under the toolbar menu waits until it closes.
+  if (followHeldTurn()) return;
+
   switch (mappedInput.homeButtonAction()) {
     case HomeButtonAction::ReaderMenu:
     case HomeButtonAction::Bookmark:
@@ -877,6 +881,10 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
       openSearch(/*showResults=*/false);
       break;
     }
+    case EpubReaderMenuActivity::MenuAction::SPEED_READING: {
+      openSpeedReading();
+      break;
+    }
     case EpubReaderMenuActivity::MenuAction::TEXT_SETTINGS: {
       startActivityForResult(std::make_unique<TextSettingsActivity>(renderer, mappedInput, &sdFontSystem.registry(),
                                                                     TextSettingsActivity::Tab::Family),
@@ -897,6 +905,7 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
     }
     case EpubReaderMenuActivity::MenuAction::NIGHT_MODE:
     case EpubReaderMenuActivity::MenuAction::ROTATE_SCREEN:
+    case EpubReaderMenuActivity::MenuAction::ROTATION_MODE:
     case EpubReaderMenuActivity::MenuAction::AUTO_PAGE_TURN:
     case EpubReaderMenuActivity::MenuAction::MORE_OPTIONS:
     case EpubReaderMenuActivity::MenuAction::TROUBLESHOOTING:
@@ -1085,6 +1094,15 @@ bool EpubReaderActivity::launchKOReaderSync() {
 void EpubReaderActivity::applyInitialOrientation() {
   ReaderActivity::applyInitialOrientation();
   appliedOrientation = SETTINGS.orientation;
+}
+
+void EpubReaderActivity::turnToHeld(const uint8_t orientation) {
+  applyOrientation(orientation);
+  {
+    RenderLock lock(*this);
+    pagesUntilFullRefresh = 1;  // every pixel moves; a fast refresh would ghost
+  }
+  requestUpdate();
 }
 
 void EpubReaderActivity::applyOrientation(const uint8_t orientation) {
@@ -2558,6 +2576,9 @@ std::string EpubReaderActivity::moreRowValue(int row) const {
       return std::to_string(cachedBookmarks.size());
     case MA::ROTATE_SCREEN:
       return I18N.get(kOrient[SETTINGS.orientation % CrossPointSettings::ORIENTATION_COUNT]);
+    case MA::ROTATION_MODE:
+      return I18N.get(SETTINGS.rotationMode == CrossPointSettings::ROTATION_LOCKED ? StrId::STR_ROTATION_LOCKED
+                                                                                   : StrId::STR_ROTATION_AUTO);
     case MA::AUTO_PAGE_TURN:
       if (autoTurnOption == 0 || autoTurnOption >= static_cast<int>(std::size(PAGE_TURN_RATES))) {
         return tr(STR_STATE_OFF);
@@ -2633,6 +2654,17 @@ void EpubReaderActivity::activateMoreRow(int row) {
       discardOverlayPage();
       requestUpdate();
       return;
+    case MA::ROTATION_MODE: {
+      // Locked keeps the orientation the page has now; Auto follows the hold again.
+      SETTINGS.rotationMode = SETTINGS.rotationMode == CrossPointSettings::ROTATION_AUTO
+                                  ? CrossPointSettings::ROTATION_LOCKED
+                                  : CrossPointSettings::ROTATION_AUTO;
+      SETTINGS.saveToFile();
+      RenderLock lock;
+      renderOverlay();
+      pushOverlayRefresh();
+      return;
+    }
     default:
       break;
   }
@@ -2786,6 +2818,55 @@ void EpubReaderActivity::onSearchClosed(const ActivityResult& result) {
   pendingOffsetJump = found->start;
   readingAnchor = found->start;
   readingAnchorSpine = found->spineIndex;
+  section.reset();
+  requestUpdate();
+}
+
+void EpubReaderActivity::openSpeedReading() {
+  // Speed reading starts on the page on screen. The section goes while it runs, as for search: reading on
+  // into the next chapter may unzip it, which needs the inflater's ~40 KB, and the page is rebuilt on return.
+  int spine = 0;
+  std::optional<uint32_t> offset;
+  {
+    RenderLock lock;
+    spine = currentSpineIndex;
+    offset = cachedVisibleTextOffset;
+    const ChapterPosition position = chapterPosition();
+    if (section && position.pageIndex < section->pageCount) offset = readingOffsetForPage(position.pageIndex);
+    if (section) {
+      rememberCurrentContentOffset();
+      cachedSpineIndex = currentSpineIndex;
+      cachedChapterTotalPageCount = section->pageCount;
+      nextPageNumber = section->currentPage;
+    }
+    section.reset();
+  }
+  auto speedReading = makeUniqueNoThrow<SpeedReadingActivity>(renderer, mappedInput, epub, spine, offset.value_or(0));
+  if (!speedReading) {
+    LOG_ERR("ERS", "OOM: speed reading");
+    requestUpdate();
+    return;
+  }
+  startActivityForResult(std::move(speedReading),
+                         [this](const ActivityResult& result) { onSpeedReadingClosed(result); });
+}
+
+void EpubReaderActivity::onSpeedReadingClosed(const ActivityResult& result) {
+  const auto* position = std::get_if<ProgressChangeResult>(&result.data);
+  if (result.isCancelled || !position || !position->hasVisibleTextOffset || position->spineIndex < 0 ||
+      position->spineIndex >= epub->getSpineItemsCount()) {
+    requestUpdate();
+    return;
+  }
+  endSearchSession();
+  RenderLock lock;
+  clearDeferredReposition();
+  currentSpineIndex = position->spineIndex;
+  nextPageNumber = 0;
+  // The page with the last words read; the anchor keeps them on screen through a later change of text settings.
+  pendingOffsetJump = position->visibleTextOffset;
+  readingAnchor = position->visibleTextOffset;
+  readingAnchorSpine = position->spineIndex;
   section.reset();
   requestUpdate();
 }

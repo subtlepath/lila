@@ -20,6 +20,7 @@
 #include <string_view>
 
 #include "BookSearchText.h"
+#include "HtmlTextRules.h"
 
 namespace booksearch {
 
@@ -117,6 +118,7 @@ class SpineTextScanner final : public Print, private MatchSink {
 
   // Depth inside content the page does not show; its text is counted but not searched.
   uint16_t hiddenDepth = 0;
+  NoteMarkerTracker noteMarkers;
 
   const AnchorTag* anchors = nullptr;
   size_t anchorCount = 0;

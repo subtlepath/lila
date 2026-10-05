@@ -100,7 +100,8 @@ void UiTabListActivity::buildTabBar(UiScreen& screen) {
   // (slot minus a 4px frame, 8px clearance above the divider) with
   // body-size labels; zero horizontal contentInset disables the tabBar's
   // label-width shrink.
-  const bool tabsFocused = tabBarFocused();
+  // Touch boards have no button focus to show: the active tab is underlined.
+  const bool tabsFocused = tabBarFocused() && !mappedInput.hasTouch();
   if (metrics.tabPillFullSlot) {
     tabProps.text = screen.theme().bodyText;
     tabProps.tabInset = fui::Insets{4, 4, 7, 4};

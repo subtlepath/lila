@@ -5,6 +5,7 @@ add_executable(BookSearchTest
   ParserLinkStubs.cpp
   ${REPO_ROOT}/lib/BookSearch/BookSearchResults.cpp
   ${REPO_ROOT}/lib/BookSearch/BookSearchText.cpp
+  ${REPO_ROOT}/lib/BookSearch/HtmlTextRules.cpp
   ${REPO_ROOT}/lib/BookSearch/SpineTextScanner.cpp
   ${REPO_ROOT}/lib/Epub/Epub/htmlEntities.cpp
   ${REPO_ROOT}/lib/Utf8/Utf8.cpp

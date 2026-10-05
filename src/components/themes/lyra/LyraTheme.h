@@ -8,39 +8,40 @@ class GfxRenderer;
 namespace LyraMetrics {
 constexpr ThemeMetrics values = {.batteryWidth = 16,
                                  .batteryHeight = 12,
-                                 // Shared anchor for every header band, including the cover-grid
-                                 // home's status band; roomy enough that the strip clears the edge.
-                                 .topPadding = 10,
-                                 .batteryBarHeight = 20,
-                                 .headerHeight = 84,
+                                 // One band: title, clock and battery share a single line, ruled below.
+                                 // 6px of paper above it balances the band against the glass edge.
+                                 .topPadding = 6,
+                                 .batteryBarHeight = 46,
+                                 .headerHeight = 46,
                                  .verticalSpacing = 16,
                                  .previewPadding = 12,
                                  .previewHeightPercent = 30,
                                  .contentSidePadding = 20,
                                  // Rows, header title and info lines share one text column:
                                  // listInset + listSidePadding == headerSidePadding.
-                                 .listRowHeight = 48,
+                                 .listRowHeight = 44,
                                  .listWithSubtitleRowHeight = 60,
                                  .listRowGap = 0,
-                                 .listRowRadius = 6,
-                                 .listInset = 16,
-                                 .listSidePadding = 8,
-                                 // Solid black pill: bitmap text stays on solid paper or solid ink,
-                                 // never on a dither.
+                                 .listRowRadius = 0,
+                                 .listInset = 8,
+                                 .listSidePadding = 16,
+                                 // Square black bar across the row: bitmap text stays on solid paper
+                                 // or solid ink, never on a dither.
                                  .listSelectionStyle = 0,
                                  .listScrollWidth = 4,
                                  .listScrollSide = 0,
                                  .listTitleBold = false,
                                  .headerSidePadding = 24,
-                                 .headerUnderlineSize = 3,
+                                 .headerUnderlineSize = 2,
                                  .headerTitleAlign = 0,  // left
                                  .headerBatterySide = 0,
-                                 .headerClockCentered = false,
+                                 // The title holds the left of the single line, so the clock centers.
+                                 .headerClockCentered = true,
                                  .tabSpacing = 8,
                                  .tabBarHeight = 48,
                                  .scrollBarWidth = 4,
                                  .scrollBarRightOffset = 5,
-                                 .homeTopPadding = 56,
+                                 .homeTopPadding = 52,
                                  .buttonHintsHeight = 40,
                                  .sideButtonHintsWidth = 30,
                                  .progressBarHeight = 16,
@@ -57,7 +58,7 @@ constexpr ThemeMetrics values = {.batteryWidth = 16,
                                  .popupMarginX = 16,
                                  .popupMarginY = 12,
                                  .popupFrameThickness = 2,
-                                 .popupCornerRadius = 6,
+                                 .popupCornerRadius = 0,
                                  .popupTextBold = false,
                                  .popupTextInverted = false,
                                  .popupTextBaselineOffsetY = 0,

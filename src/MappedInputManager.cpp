@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 #include "CrossPointSettings.h"
-#include "components/HeaderBackTapTarget.h"
+#include "components/HeaderTapTargets.h"
 #include "components/UITheme.h"
 
 namespace fui = freeink::ui;
@@ -300,7 +300,7 @@ bool MappedInputManager::wasBackGesture() const {
   // swipe so every activity's existing Back handling picks it up.
   int tapX = 0;
   int tapY = 0;
-  if (wasScreenTapped(tapX, tapY) && HeaderBackTapTarget::contains(tapX, tapY)) {
+  if (wasScreenTapped(tapX, tapY) && HeaderBackTapTarget.contains(tapX, tapY)) {
     rememberTouchHeldTime();
     return true;
   }
