@@ -33,7 +33,6 @@ struct Screens {
         pause(a),
         datePrompt(a),
         datePicker(a),
-        setClock(a),
         session(a),
         summary(a),
         progress(a),
@@ -66,7 +65,6 @@ struct Screens {
   ui::PauseSheet pause;
   ui::DatePromptScreen datePrompt;
   ui::DatePickerScreen datePicker;
-  ui::SetClockScreen setClock;
   ui::SessionScreen session;
   ui::SummaryScreen summary;
   ui::ProgressScreen progress;
@@ -94,9 +92,7 @@ Screens* createScreens(App& app) { return new (std::nothrow) Screens(app); }
 
 void destroyScreens(Screens* screens) { delete screens; }
 
-// Ids lila has no screen for (sleep settings, the light sheet, firmware
-// update, USB transfer, the input test and type specimen) keep their numbers,
-// which session.bin stores, and show Home.
+// Reserved ids (View.h) show Home.
 View* App::view(const ScreenId id) {
   Screens& s = *screens_;
   switch (id) {
@@ -118,8 +114,6 @@ View* App::view(const ScreenId id) {
       return &s.datePrompt;
     case ScreenId::DatePicker:
       return &s.datePicker;
-    case ScreenId::SetClock:
-      return &s.setClock;
     case ScreenId::Session:
       return &s.session;
     case ScreenId::Summary:

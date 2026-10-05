@@ -26,6 +26,8 @@ class TintaActivity final : public Activity {
   void render(RenderLock&&) override;
   // The X4 Pro's Home pad: Tinta's pause sheet, as on its own firmware.
   bool handleHomeGesture() override;
+  // The word card (PLAN.md 4.7) instead of the screen Tinta was on.
+  bool drawSleepFrame() override;
 
  private:
   void requestFrame();

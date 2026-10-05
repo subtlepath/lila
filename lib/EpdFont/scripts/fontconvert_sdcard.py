@@ -32,6 +32,7 @@ import math
 import argparse
 from collections import namedtuple
 
+from bdf_ligatures import ligature_pairs as bdf_ligature_pairs, open_face
 from cpfont_version import CPFONT_VERSION
 
 
@@ -612,14 +613,14 @@ def rasterize_font_style(fontfile, size, intervals, style_id=0, force_autohint=F
             # Set scalable fonts at 150 DPI, matching fontconvert.py.
             font_face.set_char_size(size << 6, size << 6, 150, 150)
 
-    face = freetype.Face(fontfile)
+    face = open_face(fontfile)
     # Select the size BEFORE any glyph load. load_glyph() with FT_LOAD_RENDER
     # renders at the active size and some drivers reject the default size.
     configure_size(face, fontfile)
     ligature_glyph_indices = extract_ligature_glyph_indices_fonttools(fontfile)
     fallback_face = None
     if fallback_fontfile:
-        fallback_face = freetype.Face(fallback_fontfile)
+        fallback_face = open_face(fallback_fontfile)
         configure_size(fallback_face, fallback_fontfile)
 
     load_flags = freetype.FT_LOAD_RENDER
@@ -803,7 +804,10 @@ def rasterize_font_style(fontfile, size, intervals, style_id=0, force_autohint=F
     # SMP codepoints in ligature inputs / outputs are filtered inside
     # extract_ligatures_fonttools (see the codepoints_set filter), so every
     # entry returned here is already 16-bit safe.
-    ligature_pairs = extract_ligatures_fonttools(fontfile, all_cps)
+    if is_bitmap_font(fontfile):
+        ligature_pairs = bdf_ligature_pairs(cp for cp in all_cps if face.get_char_index(cp) != 0)
+    else:
+        ligature_pairs = extract_ligatures_fonttools(fontfile, all_cps)
     if len(ligature_pairs) > 255:
         print(f"  [{style_label}] WARNING: {len(ligature_pairs)} ligature pairs exceeds uint8_t max (255), truncating",
               file=sys.stderr)

@@ -51,6 +51,10 @@ class Activity {
   virtual bool handleForcedRefresh() { return false; }
   virtual bool isHomeActivity() const { return false; }
   virtual bool handleHomeGesture() { return false; }
+  // Current Page sleep: redraws the frame buffer with what this activity
+  // leaves on the glass instead of its last frame, without presenting it.
+  // True when it drew. Called with the render lock held, before onExit().
+  virtual bool drawSleepFrame() { return false; }
   virtual ScreenshotInfo getScreenshotInfo() const { return {}; }
 
   // Start a new activity without destroying the current one

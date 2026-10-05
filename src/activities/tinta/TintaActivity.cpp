@@ -114,6 +114,8 @@ void TintaActivity::render(RenderLock&&) {
   if (low < renderStackLow) renderStackLow = low;
 }
 
+bool TintaActivity::drawSleepFrame() { return app && app->drawSleepCard(); }
+
 bool TintaActivity::handleHomeGesture() {
   if (!app || !gpio.hasHomeKey()) return false;
   tinta::platform::RawInput event{};

@@ -7,7 +7,7 @@
 
 namespace tinta::core::usage {
 
-// The usage log (PLAN.md 8.6): what the learner did and how the device
+// The usage log (PLAN.md 8.6): what the learner did and how the interface
 // behaved, for the owner to study on a PC (tools/usage-report.py). It is not
 // learner state: nothing reads it back on the device, losing it loses no
 // progress, and a failed write is counted and otherwise ignored.
@@ -56,15 +56,14 @@ enum class Type : uint8_t {
   Boot = 1,
   Dropped = 2,
   LogState = 3,
-  Sleep = 4,
-  Battery = 5,
+  // 4 Sleep and 5 Battery: written by the standalone firmware only.
   ClockChange = 6,
   Error = 7,
   Setting = 8,
   // Interface
   Screen = 16,
   Input = 17,
-  Frame = 18,
+  // 18 Frame: written by the standalone firmware only.
   // Learning
   SessionStart = 32,
   SessionEnd = 33,
@@ -89,10 +88,10 @@ enum class Type : uint8_t {
 };
 
 enum class BootReason : uint8_t {
-  PowerOn = 0,    // a cold start or a reset
-  WakeKey = 1,    // deep sleep, Power key
-  WakeTimer = 2,  // deep sleep, timer (the rotating sleep word)
-  Restart = 3,    // the firmware restarted itself (an update, USB transfer)
+  PowerOn = 0,    // a cold start or a reset; in lila, each opening of Tinta
+  WakeKey = 1,    // standalone: deep sleep, Power key
+  WakeTimer = 2,  // standalone: deep sleep, timer (the rotating sleep word)
+  Restart = 3,    // standalone: the firmware restarted itself (an update, USB transfer)
   FileStart = 4,  // not a boot: the head of a new file, repeating this boot's
   Enabled = 5,    // not a boot: recording turned back on, repeating this boot's
 };
@@ -119,20 +118,9 @@ enum class Outcome : uint8_t {
   Queued = 2,   // it arrived during a refresh and waited for the next frame
 };
 
-enum class Refresh : uint8_t { Full = 0, Half = 1, Fast = 2, Window = 3 };
-
-enum class SleepCause : uint8_t {
-  Key = 0,   // Power
-  Idle = 1,  // the idle timeout
-  Menu = 2,  // Home > Sleep, the pause sheet
-  LowBattery = 3,
-  Rotation = 4,  // back to sleep after a timer wake
-};
-
 enum class ClockKind : uint8_t {
-  Set = 0,           // the learner set date and time
-  DayConfirmed = 1,  // X4: the date confirmed at power-on
-  TimeZone = 2,      // the UTC offset changed
+  // 0 Set and 2 TimeZone: written by the standalone firmware only.
+  DayConfirmed = 1,  // the date confirmed without a trusted clock
   DayRollover = 3,   // the study day changed while awake
 };
 
@@ -240,9 +228,6 @@ class UsageLog {
   // ---- Device ----
   // First, at every boot, once the pack is open. Kept to head each new file.
   void boot(const BootInfo& info);
-  void sleep(SleepCause cause, uint8_t batteryPercent, bool charging, uint32_t wakeAfterSeconds);
-  // percent 0xFF: unknown.
-  void battery(uint8_t percent, bool chargingKnown, bool charging);
   void clockChange(ClockKind kind, uint32_t before, uint32_t after);
   void error(ErrorCode code, uint32_t detail);
   // A setting changed: its profile name ("newPerDay") and new value.
@@ -254,9 +239,6 @@ class UsageLog {
   void screen(uint8_t screen, uint8_t depth, uint8_t how);
   // x, y: logical coordinates of a tap or a swipe's start, else 0xFFFF.
   void input(Input input, Outcome outcome, uint8_t screen, uint16_t x = 0xFFFF, uint16_t y = 0xFFFF);
-  // A presented frame: how, ms from the press that caused it to the frame
-  // being on the glass (0xFFFF: no press), and ms the present itself took.
-  void frame(Refresh refresh, uint16_t latencyMs, uint16_t presentMs, uint8_t screen);
 
   // ---- Learning ----
   // resumed: the session came back after a wake rather than starting.

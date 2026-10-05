@@ -94,6 +94,14 @@ void LyraTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const char
 
 void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
                                 const char* btn4) const {
+  constexpr int bandHeight = LyraMetrics::values.buttonHintsHeight;
+  const int labelTop = (bandHeight - renderer.getLineHeight(UI_10_FONT_ID)) / 2;
+  const char* labels[] = {btn1, btn2, btn3, btn4};
+  drawHintBand(renderer, labels, bandHeight, UI_10_FONT_ID, labelTop, 0);
+}
+
+void LyraTheme::drawHintBand(GfxRenderer& renderer, const char* const labels[4], const int bandHeight, const int fontId,
+                             const int labelTop, const int iconAreaTop, const bool aboveBezel) {
   if (gpio.hasTouch()) {
     return;
   }
@@ -104,15 +112,18 @@ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
   // A plain band over the front keys: one rule, each label centered over its
   // key, and the four directions as chevrons.
   const int pageWidth = renderer.getScreenWidth();
-  constexpr int bandHeight = LyraMetrics::values.buttonHintsHeight;
-  const int bandTop = renderer.getScreenHeight() - bandHeight;
+  int bottomInset = 0;
+  if (aboveBezel) {
+    int viewTop = 0, viewRight = 0, viewLeft = 0;
+    renderer.getOrientedViewableTRBL(&viewTop, &viewRight, &bottomInset, &viewLeft);
+  }
+  const int bandTop = renderer.getScreenHeight() - bottomInset - bandHeight;
   constexpr int buttonWidth = 80;
   // Keyed to the portrait panel width: the 528-wide X3 gets more spacing than
   // the 480-wide boards (X4, X4 Pro, and the other 800x480 panels).
   constexpr int narrowButtonPositions[] = {58, 146, 254, 342};
   constexpr int wideButtonPositions[] = {65, 157, 291, 383};
   const int* buttonPositions = pageWidth >= 528 ? wideButtonPositions : narrowButtonPositions;
-  const char* labels[] = {btn1, btn2, btn3, btn4};
 
   // Zero gray-plane bits leave the monochrome band from the base pass intact.
   if (renderer.getRenderMode() != GfxRenderer::BW && !renderer.grayPlanesAreAbsolute()) {
@@ -123,14 +134,15 @@ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
 
   renderer.fillRect(0, bandTop, pageWidth, bandHeight, false);
   renderer.fillRect(0, bandTop, pageWidth, 1, true);
-  const int textYOffset = (bandHeight - renderer.getLineHeight(UI_10_FONT_ID)) / 2;
+  const int iconAreaHeight = bandHeight - iconAreaTop;
   for (int i = 0; i < 4; i++) {
     if (labels[i] == nullptr || labels[i][0] == '\0') continue;
     const int x = buttonPositions[i];
     if (const freeink::Icon* icon = directionIcon(labels[i])) {
-      drawLineIcon(renderer, *icon, x + (buttonWidth - icon->w) / 2, bandTop + (bandHeight - icon->h) / 2);
+      drawLineIcon(renderer, *icon, x + (buttonWidth - icon->w) / 2,
+                   bandTop + iconAreaTop + (iconAreaHeight - icon->h) / 2);
     } else {
-      drawHintLabel(renderer, UI_10_FONT_ID, labels[i], x, buttonWidth, bandTop, bandHeight, textYOffset);
+      drawHintLabel(renderer, fontId, labels[i], x, buttonWidth, bandTop, bandHeight, labelTop);
     }
   }
 

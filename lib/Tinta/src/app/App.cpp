@@ -8,11 +8,13 @@
 #include <new>
 
 #include "core/library/Library.h"
+#include "core/library/SleepWord.h"
 #include "core/srs/Bytes.h"
 #include "icons/Icons.h"
 #include "platform/Log.h"
 #include "ui/Strings.h"
 #include "ui/TextBuffers.h"
+#include "ui/screens/SleepScreen.h"
 #include "ui/views/CardText.h"
 #include "ui/views/Chrome.h"
 #include "ui/views/ExerciseView.h"
@@ -39,9 +41,7 @@ constexpr const char* kSessionFile = "session.bin";
 constexpr uint8_t kSessionMagic[4] = {'T', 'S', 'E', 'S'};
 constexpr uint16_t kSessionVersion = 2;
 
-bool isTimeStep(const ScreenId id) {
-  return id == ScreenId::DatePrompt || id == ScreenId::DatePicker || id == ScreenId::SetClock;
-}
+bool isTimeStep(const ScreenId id) { return id == ScreenId::DatePrompt || id == ScreenId::DatePicker; }
 
 // The Auto interface language turns Spanish once Unit 4 is behind the
 // learner (PLAN.md 4.1).
@@ -72,8 +72,6 @@ usage::Input usageInput(const ui::InputEvent& event) {
   }
   return usage::Input::Back;
 }
-
-uint16_t clampMs(const uint32_t ms) { return ms < 0xFFFF ? static_cast<uint16_t>(ms) : 0xFFFE; }
 
 }  // namespace
 
@@ -120,7 +118,7 @@ bool App::open() {
   core::DayNumber lastSeen = profile_.lastConfirmedDay;
   const core::DayNumber lastReview = lastJournalDay();
   if (lastReview > lastSeen) lastSeen = lastReview;
-  clock_.configure(profile_.utcOffsetMinutes, profile_.rolloverHour, lastSeen);
+  clock_.configure(profile_.rolloverHour, lastSeen);
   applyLanguage();
 
   // Every panel is landscape-native and Tinta is always held tall.
@@ -188,6 +186,41 @@ void App::close() {
   closeCourse();
 }
 
+// The word is chosen by the day and how many times the device has slept, so
+// it changes from one sleep to the next.
+bool App::drawSleepCard() {
+  if (!opened_ || !packReady()) return false;
+  pack_.beginPass();
+  const core::DayNumber today = clock_.today();
+  const uint32_t seed = static_cast<uint32_t>(today) * 7u + profile_.sleepCount;
+  const core::library::SleepWord word =
+      core::library::pickSleepWord(pack_, progress_, fsrs_, today, seed, profile_.currentLesson);
+  core::pack::Item item;
+  core::pack::Lemma lemma;
+  if (word.item < 0 || !pack_.item(static_cast<uint32_t>(word.item), item) || !pack_.lemma(item.a, lemma)) {
+    log("sleep: no word");
+    return false;
+  }
+  ui::SleepInfo info;
+  info.dayKnown = clock_.trusted();
+  info.day = today;
+  info.pack = &pack_;
+  info.lemma = item.a;
+  info.learnt = word.learnt;
+  if (info.dayKnown) {
+    core::StreakInfo streak;
+    info.streak = core::currentStreak(dayLog_, today, streak) ? streak.days : 0;
+    info.dueTomorrow = core::library::dueBy(progress_, today, static_cast<core::DayNumber>(today + 1));
+    info.countsKnown = true;
+  }
+  ui::drawSleepScreen(*target_, theme_, info);
+  log("sleep word %s%s", pack_.str(lemma.es), word.learnt ? "" : " (new)");
+  // Saved by close().
+  ++profile_.sleepCount;
+  profileDirty_ = true;
+  return true;
+}
+
 bool App::inTimeStep() const { return depth_ > 0 && isTimeStep(stack_[0]); }
 
 void App::beginTimeStep(const ScreenId* then, const uint8_t count) {
@@ -196,17 +229,13 @@ void App::beginTimeStep(const ScreenId* then, const uint8_t count) {
     resumeDepth_ = count < kMaxDepth ? count : kMaxDepth;
     for (uint8_t i = 0; i < resumeDepth_; ++i) resume_[i] = then[i];
   }
-  ScreenId first = ScreenId::SetClock;
-  // The X4 asks for the date at every power-on; the very first time there is
-  // no previous date to offer, so it opens the picker.
-  if (!clock_.hasTimeOfDay()) first = profile_.lastConfirmedDay == 0 ? ScreenId::DatePicker : ScreenId::DatePrompt;
+  // Without a trusted clock Tinta asks for the date once per power-on; the
+  // very first time there is no previous date to offer, so it opens the picker.
+  const ScreenId first = profile_.lastConfirmedDay == 0 ? ScreenId::DatePicker : ScreenId::DatePrompt;
   resetTo(&first, 1, frameCount_ == 0 ? RefreshHint::Full : RefreshHint::Fast);
 }
 
 void App::finishTimeStep() {
-  // From here on the clock is the learner's: a later change of time zone or
-  // rollover hour must not send them back to the clock screen.
-  clock_.configure(profile_.utcOffsetMinutes, profile_.rolloverHour, 0);
   if (clock_.hasTimeOfDay() && clock_.today() != profile_.lastConfirmedDay) {
     profile_.lastConfirmedDay = clock_.today();
     profileDirty_ = true;
@@ -479,7 +508,7 @@ void App::profileChanged() {
   fsrs_.configure(profile_.desiredRetention(), profile_.maxInterval);
   session_.countsChanged();
   ui_->setTransitionFullEvery(profile_.fullRefreshEvery);
-  clock_.configure(profile_.utcOffsetMinutes, profile_.rolloverHour, 0);
+  clock_.setRolloverHour(profile_.rolloverHour);
   profileDirty_ = true;
   invalidate();
 }
@@ -600,9 +629,6 @@ void App::renderFrame(const bool repaint) {
   const bool full = frameCount_ == 0 || pendingHint_ == RefreshHint::Full || pendingHint_ == RefreshHint::Clean;
   const Refresh refresh = full ? Refresh::Full : screenChanged_ ? board_.screenRefresh() : Refresh::Fast;
   if (frameCount_ == 0) log("first frame drawn %lu ms", static_cast<unsigned long>(millis() - power_.bootMs()));
-  presentStartedMs_ = millis();
-  framePressMs_ = pressMs_;
-  pressMs_ = 0;
   // A cursor's worth of change: a window of the panel where the board can.
   // Not when the screen changed since (a cursor move, then Back in the same
   // pass): the X4 family's screen refresh is fast too, and needs the whole frame.
@@ -616,7 +642,6 @@ void App::renderFrame(const bool repaint) {
   ++frameCount_;
   static const char* const kRefreshNames[] = {"full", "half", "fast"};
   log("frame %u %s", frameCount_, window ? "window" : kRefreshNames[static_cast<uint8_t>(refresh)]);
-  recordFrame(refresh, window, millis() - presentStartedMs_);
   if (frameCount_ == 1) {
     log("ready %lu ms, heap free %lu, lowest %lu, arena peak %lu",
         static_cast<unsigned long>(millis() - power_.bootMs()), static_cast<unsigned long>(board_.freeHeap()),
@@ -653,11 +678,9 @@ void App::handle(const ui::InputEvent& event) {
 
 // An input event for the usage log, once handled: a press that changed
 // nothing on screen was a dead one; one that came while the panel was still
-// showing the last frame waited for it. The first press since the last frame
-// times the next one.
+// showing the last frame waited for it.
 void App::recordInput(const ui::InputEvent& event, const uint32_t changesBefore, const bool duringRefresh) {
   const bool changed = changes_ != changesBefore;
-  if (changed && pressMs_ == 0) pressMs_ = millis();
   const usage::Outcome outcome = !changed        ? usage::Outcome::Ignored
                                  : duringRefresh ? usage::Outcome::Queued
                                                  : usage::Outcome::Handled;
@@ -755,7 +778,6 @@ void App::pollPeriodic() {
     if (confirmed && (reading.percentKnown != battery_.percentKnown || reading.percent != battery_.percent)) {
       battery_ = reading;
       log("battery %u%%%s", reading.percent, reading.chargingKnown && reading.charging ? " charging" : "");
-      usage_.battery(reading.percentKnown ? reading.percent : 0xFF, reading.chargingKnown, reading.charging);
       invalidate();
     }
   }
@@ -888,17 +910,7 @@ void App::invalidateWindow(const freeink::ui::Rect rect) {
   ++changes_;
 }
 
-// A frame on the glass: how it was refreshed, how long since the press that
-// caused it, and how long the present took.
-void App::recordFrame(const platform::Board::Refresh refresh, const bool window, const uint32_t presentMs) {
-  usage::Refresh kind = usage::Refresh::Window;
-  if (!window) kind = static_cast<usage::Refresh>(static_cast<uint8_t>(refresh));
-  const uint16_t latency = framePressMs_ ? clampMs(millis() - framePressMs_) : 0xFFFF;
-  framePressMs_ = 0;
-  usage_.frame(kind, latency, clampMs(presentMs), static_cast<uint8_t>(topId()));
-}
-
-// Once the pack is open and the battery read: what this boot is, for the
+// Once the pack is open: what this opening is, for the
 // usage log (docs/usage-log.md), and anything that already went wrong.
 void App::startUsageLog() {
   usage::BootInfo info;
@@ -917,7 +929,6 @@ void App::startUsageLog() {
     info.packBuildTime = pack_.buildTime();
   }
   usage_.boot(info);
-  usage_.battery(battery_.percentKnown ? battery_.percent : 0xFF, battery_.chargingKnown, battery_.charging);
   using Opened = core::ProgressStore::OpenResult;
   if (!pack_.isOpen()) {
     usage_.error(usage::ErrorCode::PackError, static_cast<uint32_t>(packStatus_));

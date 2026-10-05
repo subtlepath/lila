@@ -354,23 +354,16 @@ void sampleSession(MemStore& store) {
   UsageLog log(store, clock, uptime);
   log.open(true);
   log.boot(bootInfo());
-  log.battery(80, true, false);
   log.screen(1, 1, 3);  // Home, restored
-  gUptime = 2400;
-  log.frame(Refresh::Full, 0xFFFF, 1600, 1);
   gUptime = 5000;
   log.input(Input::Confirm, Outcome::Handled, 1);
   log.screen(16, 2, 0);  // Session
   log.sessionStart(SessionKind::Today, 0, 3, 2, 1);
   const char* opts1[] = {"house", "table", "dog", "cat"};
   log.itemShown(1, 4, 0, 1, 2, opts1, 4, 0);
-  gUptime = 5600;
-  log.frame(Refresh::Half, 600, 450, 16);
   gUptime = 9000;
   log.input(Input::Right, Outcome::Handled, 16);
   log.answer(1, 4, 2, Correct::Wrong, 1, 3400, 0);
-  gUptime = 9500;
-  log.frame(Refresh::Fast, 500, 320, 16);
   gUptime = 10000;
   log.input(Input::Up, Outcome::Ignored, 16);
   gUptime = 12000;
@@ -406,11 +399,9 @@ void sampleSession(MemStore& store) {
   log.reveal(5);
   log.undo(5);
   log.setting("newPerDay", 15);
-  log.clockChange(ClockKind::TimeZone, 100, 200);
+  log.clockChange(ClockKind::DayConfirmed, 100, 200);
   log.error(ErrorCode::CardFailed, 0);
   gUptime = 60000;
-  log.battery(78, true, false);
-  log.sleep(SleepCause::Idle, 78, false, 0);
   CHECK(log.flush());
 }
 

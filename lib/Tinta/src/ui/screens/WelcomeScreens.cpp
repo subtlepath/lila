@@ -81,7 +81,7 @@ void WelcomeScreen::activate(const uint8_t index) {
     app_.push(ScreenId::KeyGuide);
     return;
   }
-  // The date (the X4) or a clock that cannot be trusted, then the guide.
+  // Without a trusted clock, the date first, then the guide.
   const ScreenId next[] = {ScreenId::Welcome, ScreenId::KeyGuide};
   app_.beginTimeStep(next, 2);
 }

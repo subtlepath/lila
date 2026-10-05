@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "app/App.h"
+#include "platform/Clock.h"
 #include "platform/Log.h"
 #include "ui/Fonts.h"
 #include "ui/Strings.h"
@@ -194,124 +195,6 @@ void DatePickerScreen::buildHeader(app::UiScreen& screen) {
   if (app_.inTimeStep() && app_.profile().lastConfirmedDay == 0) {
     titleAndText(app_, screen, tr(Str::Welcome), tr(Str::FirstRunDate));
   }
-}
-
-// ── Set clock ────────────────────────────────────────────────────────────────
-
-namespace {
-
-const Str kClockLabels[] = {Str::Year, Str::Month, Str::Day, Str::Hour, Str::Minute};
-const char* const kClockSlugs[] = {"year", "month", "day", "hour", "minute"};
-
-}  // namespace
-
-const char* SetClockScreen::title() const { return tr(Str::SetClockTitle); }
-
-bool SetClockScreen::allowsGlobalGestures() const { return !app_.inTimeStep(); }
-
-void SetClockScreen::enter(const bool returning) {
-  FormView::enter(returning);
-  if (returning) return;
-  hadReading_ = app_.clock().localTime(reading_);
-  if (hadReading_ && app_.clock().trusted()) {
-    time_ = reading_;
-  } else {
-    time_ = platform::LocalTime{};
-    time_.date = date::civil(platform::kFirmwareDay);
-    time_.hour = 12;
-  }
-  time_.second = 0;
-}
-
-uint8_t SetClockScreen::rowCount() const { return app_.depth() > 1 ? 7 : 6; }
-
-void SetClockScreen::row(const uint8_t index, RowSpec& out, char* value, const size_t cap) const {
-  if (index < 5) {
-    out.kind = RowKind::Stepper;
-    out.label = tr(kClockLabels[index]);
-    out.slug = kClockSlugs[index];
-    switch (index) {
-      case 0:
-        formatDateField(time_.date, 2, value, cap);
-        break;
-      case 1:
-        formatDateField(time_.date, 1, value, cap);
-        break;
-      case 2:
-        formatDateField(time_.date, 0, value, cap);
-        break;
-      case 3:
-        snprintf(value, cap, "%02u", time_.hour);
-        break;
-      default:
-        snprintf(value, cap, "%02u", time_.minute);
-        break;
-    }
-    out.value = value;
-  } else {
-    out.kind = RowKind::Action;
-    out.label = tr(index == 5 ? Str::Save : Str::Cancel);
-    out.slug = index == 5 ? "save" : "cancel";
-  }
-}
-
-void SetClockScreen::step(const uint8_t index, const int8_t dir) {
-  switch (index) {
-    case 0:
-      stepDate(time_.date, 2, dir);
-      break;
-    case 1:
-      stepDate(time_.date, 1, dir);
-      break;
-    case 2:
-      stepDate(time_.date, 0, dir);
-      break;
-    case 3:
-      time_.hour = static_cast<uint8_t>((time_.hour + dir + 24) % 24);
-      break;
-    case 4:
-      time_.minute = static_cast<uint8_t>((time_.minute + dir + 60) % 60);
-      break;
-    default:
-      break;
-  }
-}
-
-void SetClockScreen::activate(const uint8_t index) {
-  if (index == 6) {
-    app_.clearTapFlash();
-    app_.pop();
-    return;
-  }
-  if (index != 5) return;
-  const uint32_t before = app_.clock().nowSeconds();
-  if (!app_.clock().setLocalTime(time_)) {
-    platform::log("clock set failed");
-    return;
-  }
-  app_.usage().clockChange(core::usage::ClockKind::Set, before, app_.clock().nowSeconds());
-  app_.profile().lastConfirmedDay = app_.clock().today();
-  app_.profileChanged();
-  app_.clearTapFlash();
-  if (app_.inTimeStep()) {
-    app_.finishTimeStep();
-  } else {
-    app_.pop();
-  }
-}
-
-void SetClockScreen::buildHeader(app::UiScreen& screen) {
-  if (!app_.inTimeStep()) return;
-  if (app_.firstRun() || !hadReading_) {
-    titleAndText(app_, screen, tr(Str::Welcome), tr(Str::FirstRunClock));
-    return;
-  }
-  char reading[48];
-  char text[160];
-  snprintf(reading, sizeof reading, "%04u-%02u-%02u %02u:%02u", reading_.date.year, reading_.date.month,
-           reading_.date.day, reading_.hour, reading_.minute);
-  snprintf(text, sizeof text, tr(Str::ClockUnsetFmt), reading);
-  titleAndText(app_, screen, nullptr, text);
 }
 
 }  // namespace tinta::ui

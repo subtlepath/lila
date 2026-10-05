@@ -79,29 +79,6 @@ def chevron(points):
     return fn
 
 
-def sun(draw, size):
-    s = size * SUPER
-    w = stroke_width(size) * SUPER
-    c = 0.5 * s
-    r = 0.17 * s
-    draw.ellipse((c - r, c - r, c + r, c + r), outline=255, width=w)
-    for i in range(8):
-        a = i * math.pi / 4
-        p0 = (0.5 + 0.30 * math.cos(a), 0.5 + 0.30 * math.sin(a))
-        p1 = (0.5 + 0.43 * math.cos(a), 0.5 + 0.43 * math.sin(a))
-        polyline(draw, size, [p0, p1], stroke_width(size))
-
-
-def moon(draw, size):
-    s = size * SUPER
-    big = Image.new("L", (s, s), 0)
-    ImageDraw.Draw(big).ellipse((0.12 * s, 0.12 * s, 0.86 * s, 0.86 * s), fill=255)
-    bite = Image.new("L", (s, s), 0)
-    ImageDraw.Draw(bite).ellipse((0.36 * s, 0.02 * s, 0.98 * s, 0.64 * s), fill=255)
-    crescent = Image.composite(Image.new("L", (s, s), 0), big, bite)
-    draw.bitmap((0, 0), crescent, fill=255)
-
-
 def warning(draw, size):
     w = stroke_width(size)
     polyline(draw, size, [(0.5, 0.1), (0.92, 0.86), (0.08, 0.86), (0.5, 0.1)], w)
@@ -113,19 +90,16 @@ def warning(draw, size):
 
 ICONS = [
     # (name, painter, sizes)
-    ("Check", check, (24, 32)),
-    ("Cross", cross, (24, 32)),
-    ("Star", star, (24, 32)),
-    ("StarOutline", star_outline, (24, 32)),
-    ("ChevronUp", chevron([(0.2, 0.66), (0.5, 0.36), (0.8, 0.66)]), (16, 24)),
-    ("ChevronDown", chevron([(0.2, 0.36), (0.5, 0.66), (0.8, 0.36)]), (16, 24)),
-    ("ChevronLeft", chevron([(0.64, 0.2), (0.34, 0.5), (0.64, 0.8)]), (16, 24)),
-    ("ChevronRight", chevron([(0.36, 0.2), (0.66, 0.5), (0.36, 0.8)]), (16, 24)),
-    ("Sun", sun, (24, 32)),
-    ("Moon", moon, (24, 32)),
+    ("Check", check, (24,)),
+    ("Cross", cross, (24,)),
+    ("Star", star, (24,)),
+    ("StarOutline", star_outline, (24,)),
+    ("ChevronUp", chevron([(0.2, 0.66), (0.5, 0.36), (0.8, 0.66)]), (24,)),
+    ("ChevronDown", chevron([(0.2, 0.36), (0.5, 0.66), (0.8, 0.36)]), (24,)),
+    ("ChevronLeft", chevron([(0.64, 0.2), (0.34, 0.5), (0.64, 0.8)]), (24,)),
+    ("ChevronRight", chevron([(0.36, 0.2), (0.66, 0.5), (0.36, 0.8)]), (24,)),
     ("Warning", warning, (24, 32)),
 ]
-
 
 def render(painter, size):
     big = Image.new("L", (size * SUPER, size * SUPER), 0)

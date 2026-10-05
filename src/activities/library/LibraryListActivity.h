@@ -44,6 +44,9 @@ class LibraryListActivity final : public UiTabListActivity {
   void onEnter() override;
   void onExit() override;
   bool isHomeActivity() const override { return true; }
+  // Home's status band (Tinta's: 2px rule included), on every board. Like
+  // Tinta's, it starts below the bezel's top viewable inset.
+  static constexpr int STATUS_BAND_HEIGHT = 40;
 
  protected:
   // --- UiListActivity / UiTabListActivity contract ---------------------------
@@ -153,6 +156,8 @@ class LibraryListActivity final : public UiTabListActivity {
 
   // Screen building
   void buildHeader(UiScreen& screen);
+  void buildTouchChoices(UiScreen& screen);
+  static constexpr int TOUCH_CHOICE_CELLS = 4;
   // Materializes ListItems and their strings for the visible window only.
   void buildRows(UiScreen& screen);
   static void formatInitialHeading(uint32_t initial, std::string& out);

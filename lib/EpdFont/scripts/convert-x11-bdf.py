@@ -9,8 +9,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-import freetype
-
+from bdf_ligatures import open_face
 from fontconvert_sdcard import generate_cpfont_multistyle
 
 
@@ -48,7 +47,7 @@ def read_bdf_metadata(path: Path) -> dict[str, str]:
 
 
 def encoded_codepoints(path: Path) -> list[int]:
-    face = freetype.Face(str(path))
+    face = open_face(path)
     codepoints = [codepoint for codepoint, glyph_index in face.get_chars() if glyph_index != 0]
     if face.get_char_index(0x0060) and face.get_char_index(0x0027):
         codepoints.extend((0x2018, 0x2019, 0x201C, 0x201D))

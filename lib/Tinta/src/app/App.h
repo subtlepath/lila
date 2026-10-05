@@ -57,6 +57,12 @@ class App {
   // Writes everything held in RAM (as going to sleep does) and closes the
   // files. Before lila sleeps or goes elsewhere.
   void close();
+  // lila is going to sleep and keeps the current frame on the glass: draws
+  // the sleep card (one of the weakest words, PLAN.md 4.7) into the frame
+  // buffer without presenting it, and moves the next sleep on to another
+  // word. False, with the frame untouched, when there is no word to show.
+  // Before close().
+  bool drawSleepCard();
   // Loop task: input, the clock, saves.
   void update();
   // True when a frame waits to be drawn.
@@ -171,12 +177,10 @@ class App {
   // True while the boot-time date or clock step is showing (the date prompt,
   // or a picker opened from it at boot).
   bool inTimeStep() const;
-  // The boot-time date or clock step is done: go on to the saved screen or Home.
+  // The boot-time date step is done: go on to the saved screen or Home.
   void finishTimeStep();
-  // Asks for the date (the X4) or the clock (an RTC that cannot be trusted),
-  // then goes on to `then` (bottom first), or at boot to the screens saved at
-  // sleep. The first run asks for the language first, so it starts the step
-  // itself.
+  // Asks for the date (no trusted clock: platform/Clock), then goes on to `then` (bottom first), or at boot to the
+  // screens saved at sleep. The first run asks for the language first, so it starts the step itself.
   void beginTimeStep(const ScreenId* then = nullptr, uint8_t count = 0);
 
   void invalidate() {
@@ -216,7 +220,6 @@ class App {
   void logInput(const ui::InputEvent& event);
   void recordInput(const ui::InputEvent& event, uint32_t changesBefore, bool duringRefresh);
   void transition(freeink::ui::RefreshHint hint, uint8_t how);
-  void recordFrame(platform::Board::Refresh refresh, bool window, uint32_t presentMs);
   void applyLanguage();
   void startUsageLog();
   static uint32_t uptimeMs();
@@ -307,13 +310,8 @@ class App {
   HostRequest hostRequest_ = HostRequest::None;
 
   // For the usage log: bumped by everything that changes what is on screen,
-  // so an input that left it unchanged was a dead press; when the press that
-  // led to the frame being drawn was handled, and when that frame's present
-  // started.
+  // so an input that left it unchanged was a dead press.
   uint32_t changes_ = 0;
-  uint32_t pressMs_ = 0;
-  uint32_t framePressMs_ = 0;
-  uint32_t presentStartedMs_ = 0;
 
   platform::BatteryReading battery_{};
   platform::BatteryReading lastBatteryPoll_{};

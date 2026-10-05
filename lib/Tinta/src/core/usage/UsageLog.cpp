@@ -237,24 +237,6 @@ void UsageLog::bootRecord(const BootReason reason) {
   f.u16(clock_.today());
 }
 
-void UsageLog::sleep(const SleepCause cause, const uint8_t batteryPercent, const bool charging,
-                     const uint32_t wakeAfterSeconds) {
-  uint8_t* p = begin(Type::Sleep, 7);
-  if (!p) return;
-  Fields f{p};
-  f.u8(static_cast<uint8_t>(cause));
-  f.u8(batteryPercent);
-  f.u8(charging ? 1 : 0);
-  f.u32(wakeAfterSeconds);
-}
-
-void UsageLog::battery(const uint8_t percent, const bool chargingKnown, const bool charging) {
-  uint8_t* p = begin(Type::Battery, 2);
-  if (!p) return;
-  p[0] = percent;
-  p[1] = static_cast<uint8_t>((chargingKnown ? 1 : 0) | (charging ? 2 : 0));
-}
-
 void UsageLog::clockChange(const ClockKind kind, const uint32_t before, const uint32_t after) {
   uint8_t* p = begin(Type::ClockChange, 11);
   if (!p) return;
@@ -302,16 +284,6 @@ void UsageLog::input(const Input input, const Outcome outcome, const uint8_t scr
   f.u8(screen);
   f.u16(x);
   f.u16(y);
-}
-
-void UsageLog::frame(const Refresh refresh, const uint16_t latencyMs, const uint16_t presentMs, const uint8_t screen) {
-  uint8_t* p = begin(Type::Frame, 6);
-  if (!p) return;
-  Fields f{p};
-  f.u8(static_cast<uint8_t>(refresh));
-  f.u16(latencyMs);
-  f.u16(presentMs);
-  f.u8(screen);
 }
 
 // ---- Learning ----

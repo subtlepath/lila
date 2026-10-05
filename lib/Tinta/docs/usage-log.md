@@ -1,8 +1,8 @@
 # The usage log
 
-What the learner did and how the device behaved, recorded on the SD card for
-the owner to study on a PC (PLAN.md 8.6). The engine is
-`src/core/usage/UsageLog` (host-tested in `test/host/usage_log_test.cpp`);
+What the learner did and how the interface behaved, recorded on the SD card
+for the owner to study on a PC (PLAN.md 8.6). The engine is
+`src/core/usage/UsageLog` (host-tested in `test/tinta/usage_log_test.cpp`);
 `tools/usage-report.py` decodes it and writes the report. The header comment
 in `UsageLog.h` is the contract; this page explains it.
 
@@ -11,13 +11,15 @@ in `UsageLog.h` is the contract; this page explains it.
 - **Not learner state.** Nothing on the device reads it back. Losing it loses
   no progress. The review journal is always written first, and a failed usage
   write is counted and otherwise ignored.
-- **Off and guest.** Settings > Study > Record usage (default on) turns it
-  off. Without a card nothing is recorded or counted.
+- **Always on, except as a guest.** There is no setting to turn it off yet
+  (`UsageLog::setEnabled()` is ready for one). Without a card nothing is
+  recorded or counted.
 - **Cheap to record.** Each call encodes a few bytes into a 1 KB RAM buffer and
   touches nothing else, so it can be called from input handling. Nothing
   allocates.
 - **Written only by `flush()`, when the app asks.** The app calls it right
-  after its journal write, at sleep, and when `needsFlush()` says the buffer
+  after its journal write, when Tinta closes (lila sleeps or goes elsewhere),
+  and when `needsFlush()` says the buffer
   is three quarters full. Each flush is one `StateStore::append` of one chunk.
   On the device that is one more file open per answered item: Storage keeps
   one file open, and the usage file and `reviews.log` take turns.
@@ -35,8 +37,9 @@ then wrap to 1; the report puts them back in order.
 PLAN.md named a single `usage.log`. `StateStore` has no rename, so instead of
 rotating one file by name the files are numbered.
 
-Each file begins with a `boot` record (reason `file-start`, repeating this
-boot's), so any file decodes on its own and joins to the right `ids.lock`.
+In lila each opening of Learn Spanish counts as a boot. Each file begins with
+a `boot` record (reason `file-start`, repeating this boot's), so any file
+decodes on its own and joins to the right `ids.lock`.
 
 ## Layout
 
@@ -66,8 +69,9 @@ capped per field and cut on a character boundary.
 | 6 | fields | |
 
 A record's wall time is the chunk's `wall` minus (the chunk's `uptime` minus
-the record's) / 1000. Without a time of day (the X4), `wall` is the confirmed
-day plus uptime, so it gives the date but not the hour.
+the record's) / 1000. Without a time of day (the X4, or an RTC Tinta does not
+trust), `wall` is the confirmed day plus uptime, so it gives the date but not
+the hour.
 
 A newer firmware may append fields to a record; decoders read the fields they
 know and skip to `size`. A record shorter than a decoder expects came from an
@@ -80,7 +84,9 @@ check matches.
 ## Records
 
 `str` is a capped string. Enumerations are u8; the names are those in
-`UsageLog.h` and in the report.
+`UsageLog.h` and in the report. Rows marked *standalone* were written only by
+the standalone Tinta firmware; lila does not record them, and the report
+still decodes them from older logs.
 
 ### Device and engine
 
@@ -89,9 +95,9 @@ check matches.
 | 1 | boot | reason (power-on, wake-key, wake-timer, restart, file-start, enabled), device str (`X4CLASSIC`), build str (`x4-classic`), version str (`0.7.0`), pack edition u32, pack format major u8, minor u8, pack CRC u32, pack build time u32, study day u16 |
 | 2 | dropped | count u32: records lost just before this point |
 | 3 | log_state | on u8 (the setting changed) |
-| 4 | sleep | cause (key, idle, menu, low-battery, rotation), battery % u8 (255 unknown), charging u8, timer wake after s u32 (0 none) |
-| 5 | battery | % u8 (255 unknown), flags u8 (bit 0 charging known, bit 1 charging) |
-| 6 | clock_change | kind (set, day-confirmed, time-zone, day-rollover), before u32, after u32 (nowSeconds), study day u16 |
+| 4 | sleep | *standalone*: cause (key, idle, menu, low-battery, rotation), battery % u8 (255 unknown), charging u8, timer wake after s u32 (0 none) |
+| 5 | battery | *standalone*: % u8 (255 unknown), flags u8 (bit 0 charging known, bit 1 charging) |
+| 6 | clock_change | kind (day-confirmed, day-rollover; set and time-zone *standalone*), before u32, after u32 (nowSeconds), study day u16 |
 | 7 | error | code (card-failed, pack-error, progress-guest, session-lost, other), detail u32 |
 | 8 | setting | value i32, name str (the profile field, `newPerDay`) |
 
@@ -101,7 +107,7 @@ check matches.
 |---|---|---|
 | 16 | screen | screen u8 (`app::ScreenId`), stack depth u8, how u8 (push, pop, reset, restored) |
 | 17 | input | input (back, confirm, left, right, up, down, power, home, back-hold, home-hold, tap, swipe), outcome (handled, ignored = nothing on screen changed, queued = handled while the last frame was still going to the panel), screen u8, x u16, y u16 (logical; 65535 none) |
-| 18 | frame | refresh (full, half, fast, window), press-to-frame ms u16 (65535: no press), present ms u16, screen u8 |
+| 18 | frame | *standalone*: refresh (full, half, fast, window), press-to-frame ms u16 (65535: no press), present ms u16, screen u8 |
 
 ### Learning
 
@@ -137,11 +143,11 @@ here, and in `TYPES` in `tools/usage-report.py`.
 
 ## Size
 
-A 20-minute day — one session of 40 items, about 120 presses and as many
-frames, a lesson, a few searches and a reading — comes to about **9 KB**:
-127 bytes per answered item (the card with its options, the answer, two
-presses, two frames), 2.7 KB of navigation, and 16 bytes per flush. A 1 MiB
-file lasts about four months; the 16 files kept hold about five years.
+A 20-minute day — one session of 40 items, about 120 presses, a lesson, a few
+searches and a reading — comes to about **7.5 KB**: 103 bytes per answered
+item (the card with its options, the answer, two presses), 2.7 KB of
+navigation, and 16 bytes per flush. A 1 MiB file lasts about four and a half
+months; the 16 files kept hold about six years.
 
 RAM: 1 KB of buffer and about 100 bytes of state on the C3.
 
@@ -152,17 +158,15 @@ loop task. `log` stands for the App's `UsageLog`.
 
 | Where | Call |
 |---|---|
-| `App::setup()`, once the store is open | `log.open(profile.recordUsage)`, then once the pack is open `log.boot({reason, board.id(), platform::buildName(), platform::version(), pack edition, major, minor, CRC, build time})`; reason from `Power::wokeByTimer()` (wake-timer), `wokeFromSleep()` (wake-key), `restarted()` (restart), else power-on. Then `log.battery(...)` |
+| `App::open()`, once the store is open | `log.open(true)`, then once the pack is open `log.boot({power-on, board.id(), "lila", lila's version, pack edition, major, minor, CRC, build time})` |
 | `App` after every journal write (a grade, an undo, a suspend) | `log.flush()` |
-| `App::loop()` | `if (log.needsFlush()) log.flush()` at a quiet moment (not mid-present) |
-| `App::sleepNow()`, `lowBatterySleep()`, the rotation sleep | `log.sleep(cause, %, charging, wakeAfter)` then `log.flush()` before `Power::sleep()` |
-| `App::pollPeriodic()`, battery change | `log.battery(...)` |
-| Clock screens, the X4 date prompt, time zone setting, `pollDayChange()` | `log.clockChange(...)` |
+| `App::update()` | `if (log.needsFlush()) log.flush()` at a quiet moment (not mid-present) |
+| `App::close()` (lila sleeps or leaves Tinta) | `log.flush()` |
+| The date prompt and picker; `pollDayChange()` | `log.clockChange(day-confirmed or day-rollover, ...)` |
 | Card failure, pack error, guest progress store, dropped saved session | `log.error(...)` |
-| Settings: each field change | `log.setting(field key, value)` (the `Field` name in `SettingsScreens.cpp`); Record usage itself: `log.setEnabled(on)` |
+| Settings: each field change | `log.setting(field key, value)` (the `Field` name in `SettingsScreens.cpp`) |
 | `App` push / pop / resetTo, and the resumed stack at boot | `log.screen(id, depth, how)` |
 | `App::handle()`: every input event, after routing | `log.input(input, outcome, topId())`: ignored when nothing on screen changed, queued when it was handled while the last frame was still going to the panel |
-| `App::renderAndPresent()` / `paintNow()` / `presentWindow` | `log.frame(refresh, ms since the press that caused it, present ms, topId())` |
 | `SessionController` build and end | `log.sessionStart(kind, tag, planned, due, new)`, `log.sessionEnd(how, done, right, seconds)` |
 | `SessionController::showCurrent()`, each card shown (not from a build) | `log.itemShown(uid, format, kind, lesson, reps, option texts, count, answer)` |
 | `SessionController` on a grade | `log.answer(...)`, before the journal write's `flush()` |
@@ -192,11 +196,13 @@ The report covers:
 - sessions by kind and how they ended, and how far lessons were read;
 - words glossed most, searches (and those that found nothing: candidate
   headwords), entries opened, starred words, readings opened and finished;
-- time per screen, screen-to-screen paths, presses that did nothing or waited
-  for a refresh, and press-to-frame latency by refresh kind;
-- boots, sleeps, battery use per hour awake and asleep, errors and settings.
+- time per screen, screen-to-screen paths, and presses that did nothing or
+  waited for a refresh;
+- boots (openings), errors and settings;
+- from the standalone firmware's logs only: press-to-frame latency by refresh
+  kind, sleeps, and battery use per hour awake and asleep.
 
 Tests: `python3 -m unittest discover -s tools/tests -p 'test_usage*'` decodes
 a sample written by the firmware's own encoder
-(`tools/tests/data/usage-sample/`), which `test/host/usage_log_test.cpp`
+(`test/tinta/fixtures/usage-sample/`), which `test/tinta/usage_log_test.cpp`
 checks byte for byte, so the two cannot drift apart unnoticed.

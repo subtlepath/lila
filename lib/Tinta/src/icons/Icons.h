@@ -9,25 +9,13 @@
 namespace tinta::icons {
 
 extern const freeink::Icon kCheck24;
-extern const freeink::Icon kCheck32;
 extern const freeink::Icon kCross24;
-extern const freeink::Icon kCross32;
 extern const freeink::Icon kStar24;
-extern const freeink::Icon kStar32;
 extern const freeink::Icon kStarOutline24;
-extern const freeink::Icon kStarOutline32;
-extern const freeink::Icon kChevronUp16;
 extern const freeink::Icon kChevronUp24;
-extern const freeink::Icon kChevronDown16;
 extern const freeink::Icon kChevronDown24;
-extern const freeink::Icon kChevronLeft16;
 extern const freeink::Icon kChevronLeft24;
-extern const freeink::Icon kChevronRight16;
 extern const freeink::Icon kChevronRight24;
-extern const freeink::Icon kSun24;
-extern const freeink::Icon kSun32;
-extern const freeink::Icon kMoon24;
-extern const freeink::Icon kMoon32;
 extern const freeink::Icon kWarning24;
 extern const freeink::Icon kWarning32;
 

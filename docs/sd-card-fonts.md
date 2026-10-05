@@ -216,7 +216,12 @@ Install custom fonts via the web interface or manual SD card copy.
 The converter also accepts BDF and PCF bitmap strikes. Bitmap input keeps its
 native pixels and authored metrics; it is never resized or resampled.
 Because bitmap fonts do not contain OpenType layout tables, their `.cpfont`
-files do not include OpenType kerning or ligature substitutions.
+files do not include OpenType kerning. A strike's standard ligature glyphs
+(`STARTCHAR` named `ff`, `fi`, `fl`, `ffi` or `ffl`, or their `f_i` and
+`uniFB01` forms), which X11 strikes leave unencoded, are encoded at U+FB00–FB04
+and substituted for their letters when the same strike draws those letters.
+Monospaced and character-cell strikes keep their letters apart. The built-in
+fonts (`convert-builtin-fonts.sh`) follow the same rule.
 
 To bundle a directory of X11 BDF fonts by family, point size, and style:
 

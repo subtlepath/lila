@@ -180,7 +180,7 @@ A table keeps the radio on, which uses more battery than reading, and the reader
 
 ### 3.5.1 Learn Spanish
 
-**Learn Spanish** is Tinta, an offline Mexican Spanish course: lessons, a daily review session, graded readings, a phrasebook and a dictionary. It needs the course file on the SD card at `/tinta/course.pack`, and keeps your progress in the same `/tinta/` folder. **Back** on its Home returns to lila, and opening it again continues where you left off. See [docs/tinta.md](docs/tinta.md).
+**Learn Spanish** is Tinta, an offline Mexican Spanish course: lessons, a daily review session, graded readings, a phrasebook and a dictionary. It needs the course file on the SD card at `/tinta/course.pack`, and keeps your progress in the same `/tinta/` folder. **Back** on its Home returns to lila, and opening it again continues where you left off. With the **Current Page** sleep screen, sleeping from Learn Spanish leaves a word to review on the screen. See [docs/tinta.md](docs/tinta.md).
 
 ### 3.6 File Transfer Screen
 

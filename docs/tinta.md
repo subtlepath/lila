@@ -46,10 +46,15 @@ longer exists.
   Tinta.
 - **Power** and auto-sleep work as everywhere in lila. Tinta saves your place first, and opening it again continues
   where you were, in the middle of a session too.
-- On the X4, which has no clock, Tinta asks for the date the first time it is opened after the device starts.
+- With lila's sleep screen on **Current Page**, sleeping from Tinta leaves a word card on the screen instead of the
+  page you were on: one of your weakest words, with its pronunciation, meaning and an example, under the date, with
+  your streak and tomorrow's reviews. Each sleep shows another word. Before you have learnt any, it shows a word from
+  your current lesson. The other sleep screens work as everywhere in lila.
+- Tinta's day follows lila's clock and time zone (**Settings › Clock**). On the X4, which has no clock, or where the
+  clock has not been set, Tinta asks for the date the first time it is opened after the device starts.
 - Tinta's own Settings cover study (new words per day, retention, session length), display (text size, interface
-  language, how often the screen fully refreshes) and date and time. Sleep, the frontlight, firmware updates and USB
-  belong to lila.
+  language, how often the screen fully refreshes) and the date: the hour a study day starts, or, without a clock,
+  today's date. Sleep, the frontlight, the clock and its time zone, firmware updates and USB belong to lila.
 
 ## How it fits in lila (for developers)
 

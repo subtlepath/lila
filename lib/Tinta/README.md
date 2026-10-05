@@ -11,10 +11,11 @@ It began as the standalone Tinta firmware (2026-10-04) and now lives here.
 - `src/platform/*.h`: what Tinta needs from the device. lila implements it in `src/activities/tinta/platform`.
 - `content`: the course sources, compiled into `course.pack` by `tools/packc`. `content-plan` holds the unit plans
   (`content-plan/check_plan.py`).
-- `docs`: the content style guide, the pack format, the usage log and the app shell. `PLAN.md` is the original
-  design document; its device, release and simulator sections describe the standalone firmware.
+- `docs`: the content style guide, the pack format, the usage log and the app shell. `PLAN.md` is the design
+  document and says what is built and what is open.
 
 The course pack is read from `/tinta/course.pack` on the SD card through `PackSource`; screens and buffers are
-allocated while Tinta is open; lila owns power, sleep, the frontlight, firmware updates and USB.
+allocated while Tinta is open; lila owns power, sleep, the frontlight, the clock's time zone, firmware updates and
+USB.
 
 Font and course notices: `NOTICE`, also shown in Tinta's Settings → About → Licences.

@@ -69,9 +69,9 @@ class FixtureTest(unittest.TestCase):
     def test_counts(self):
         self.assertEqual(self.stats["chunks"], 3)
         self.assertEqual(self.stats["skipped_bytes"], 0)
-        self.assertEqual(len(self.events), 42)
+        self.assertEqual(len(self.events), 36)
         self.assertEqual(self.events[0]["type"], "boot")
-        self.assertEqual(self.events[-1]["type"], "sleep")
+        self.assertEqual(self.events[-1]["type"], "error")
 
     def test_boot(self):
         b = self.events[0]
@@ -98,9 +98,6 @@ class FixtureTest(unittest.TestCase):
         inputs = [(e["input"], e["outcome"], e["screen"]) for e in self.events if e["type"] == "input"]
         self.assertIn(("up", "ignored", "Session"), inputs)
         self.assertIn(("confirm", "queued", "Session"), inputs)
-        frames = [e for e in self.events if e["type"] == "frame"]
-        self.assertEqual(frames[0]["latency_ms"], 0xFFFF)
-        self.assertEqual(frames[1]["refresh"], "half")
 
     def test_report(self):
         names = ur.Names({1: "vocab:casa:recognise"}, {})
@@ -110,6 +107,9 @@ class FixtureTest(unittest.TestCase):
         self.assertIn("| spoon | english | 1 |", md)  # a search with no results
         self.assertIn("| Session | up | ignored | 1 |", md)
         self.assertIn("| finished | 1 | 3 |", md)
+        # lila records no frames, sleeps or battery readings.
+        self.assertNotIn("### Refreshes", md)
+        self.assertNotIn("### Battery use", md)
 
 
 class DecoderTest(unittest.TestCase):
@@ -129,6 +129,17 @@ class DecoderTest(unittest.TestCase):
         self.assertEqual([e["type"] for e in events], ["boot", "type-99", "undo", "undo"])
         self.assertEqual([e.get("uid") for e in events if e["type"] == "undo"], [7, 8])
         self.assertEqual(stats["unknown_types"][99], 1)
+
+    def test_standalone_device_records(self):
+        # Frames, sleeps and battery readings from the standalone firmware's logs.
+        frame = record(18, 10, struct.pack("<BHHB", 1, 600, 450, 16))
+        sleep = record(4, 20, struct.pack("<BBBI", 1, 78, 0, 0))
+        events, stats = decode(chunk(boot() + frame + sleep))
+        self.assertEqual((events[1]["refresh"], events[1]["latency_ms"]), ("half", 600))
+        self.assertEqual(events[2]["cause"], "idle")
+        md = ur.report(events, stats, ur.Names({}, {}))
+        self.assertIn("### Refreshes", md)
+        self.assertIn("| idle | 1 |", md)
 
     def test_older_records_with_fewer_fields(self):
         # A battery record from a firmware that wrote only the percent.
@@ -180,7 +191,7 @@ class CommandLineTest(unittest.TestCase):
             with open(os.path.join(out, "report.md"), encoding="utf-8") as fh:
                 self.assertIn("# Tinta usage report", fh.read())
             with open(os.path.join(out, "events.jsonl"), encoding="utf-8") as fh:
-                self.assertEqual(sum(1 for _ in fh), 42)
+                self.assertEqual(sum(1 for _ in fh), 36)
             self.assertTrue(os.path.exists(os.path.join(out, "csv", "answer.csv")))
 
     def test_no_logs(self):

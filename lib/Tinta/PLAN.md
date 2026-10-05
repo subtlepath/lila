@@ -1,38 +1,34 @@
 # Tinta — a Mexican Spanish tutor for Xteink e-paper readers
 
-Design and implementation plan for the Xteink X3, X4, X4 Classic and X4 Pro.
-*Tinta* means "ink".
+The design of Tinta, the Spanish course that lila opens as **Learn Spanish**
+(`docs/tinta.md` in lila is the user-facing page). *Tinta* means "ink".
 
-Status: plan only — nothing is built yet. Written 2026-10-03 against the local
-checkouts of `../freeink-sdk` (HEAD `0a6da12`) and `../crosspoint-reader`
-(HEAD `ab83debc`). Facts taken from those repos are listed in
-[Appendix A](#appendix-a--facts-this-plan-relies-on); anything not yet proven on
-hardware is marked **verify**.
+Tinta began as a standalone firmware on the FreeInk SDK and now lives in lila:
+the engine and screens in `lib/Tinta/src`, hosted by
+`src/activities/tinta/TintaActivity`. Sleep, power, the frontlight, USB,
+firmware updates and the clock's time zone are lila's. Section 11 says what is
+built and what is open. Section numbers are cited from the code, so they stay
+put.
 
 ---
 
 ## 1. Summary
 
-Tinta is a standalone, offline firmware that turns an Xteink e-paper reader into
-a pocket Spanish tutor for English speakers, teaching the Spanish spoken in
-Mexico: Mexican vocabulary, `ustedes` instead of `vosotros`, Mexican
-pronunciation and everyday register.
-
-It is a new firmware built on the FreeInk SDK. It is not a fork of CrossPoint;
-it reuses CrossPoint's bitmap Times and Helvetica strikes.
+Tinta teaches English speakers the Spanish spoken in Mexico: Mexican
+vocabulary, `ustedes` instead of `vosotros`, Mexican pronunciation and everyday
+register. It runs offline on the X3, X4, X4 Classic and X4 Pro.
 
 | Decision | Choice | Why |
 |---|---|---|
-| Targets | Four devices, three builds: `x3x4` (ESP32-C3, X3 and X4 in one binary), `x4c` and `x4pro` (ESP32-S3) | X3 and X4 share a pinout and are told apart at boot; the two S3 boards have different pinouts and the SDK has no detector for them |
-| UI stack | FreeInkUI (`FreeInkApp` + `DisplayTarget`) | No external graphics library; runs in host tests and the simulator |
-| Fonts | CrossPoint's X11 BDF strikes, converted to FreeInkUI `BitmapFont` headers | The BDF is 1-bit, so conversion is lossless; a Spanish/English subset costs 3–11 KB per strike |
+| Host | A lila activity (`LILA_TINTA`, on for the C3, X4 Classic and X4 Pro builds) | One firmware for reading and the course |
+| UI stack | FreeInkUI (`FreeInkApp` + `DisplayTarget`) drawing into lila's framebuffer | No external graphics library; screens run in host tests |
+| Fonts | lila's X11 BDF strikes, converted to FreeInkUI `BitmapFont` data | The BDF is 1-bit, so conversion is lossless; a Spanish/English subset costs 3–11 KB per strike |
 | Typeface roles | **Times = Spanish, Helvetica = English and chrome** | The typeface tells the learner which language they are reading |
-| Content | One memory-mapped binary pack embedded in the firmware image | Zero RAM, zero SD dependency for the course, strings passed to the UI without copying |
+| Content | One binary pack, `/tinta/course.pack` on the SD card, read through a block cache | No flash cost; a new edition is a file copy |
 | Linguistics | Done at build time in Python; the device only reads tables | Conjugation, respelling and tokenising are testable off-device |
 | Scheduling | FSRS spaced repetition, four grades | Four grades map one-to-one onto the four front keys of the X3, X4 and X4 Classic |
-| Progress | SD card: fixed-size state file plus append-only review journal | Survives power loss; user can back it up |
-| Radio | Off in v1 (no Wi-Fi, no BLE) | Saves RAM, flash and battery; nothing in v1 needs it |
-| Audio | None | None of the four board profiles has audio; pronunciation is taught with respelling |
+| Progress | SD card: fixed-size state file plus append-only review journal | Survives power loss; the learner can back it up |
+| Audio | None | None of the four devices has audio; pronunciation is taught with respelling |
 
 Five principles drive the design:
 
@@ -51,75 +47,52 @@ Five principles drive the design:
 
 ### Goals for v1
 
-- A structured A1–A2 course: 13 units, about 44 lessons, about 1,500 lemmas.
+- A structured A1–A2 course: 13 units, 44 lessons, about 1,500 lemmas.
 - Daily spaced-repetition review in sessions of 5–10 minutes.
 - Seven exercise types (section 4.3), all usable with keys only.
 - Graded dialogues and short readings with word glossing.
 - Phrasebook for travel situations in Mexico.
 - Spanish–English dictionary of about 5,000 headwords with verb tables.
-- Streak, statistics and a sleep screen that shows a word to learn.
-- Development and regression testing in the FreeInk simulator, without hardware.
+- Streak, statistics and a sleep card that shows a word to learn.
 
 ### Non-goals for v1
 
 - Audio, speech or listening exercises (no hardware for it).
-- Wi-Fi sync, accounts, OTA downloads.
-- EPUB reading. Tinta is not a general reader; CrossPoint does that.
+- Accounts or syncing progress over Wi-Fi.
 - European Spanish, voseo, or other regional variants.
 - Landscape orientation.
 
-### Later (section 11, milestone M8)
+### Later (section 11)
 
-Typed answers with a BLE keyboard on key devices, SD expansion packs, Anki import,
-B1 content.
+Typed answers with a BLE keyboard on key devices, SD expansion packs, Anki
+import, B1 content.
 
 ---
 
 ## 3. Hardware targets
 
-Four devices in two MCU families, all with 16 MB flash. "Key devices" in this
-plan means the X3, X4 and X4 Classic; the X4 Pro is the only touch device.
+Four devices in two MCU families. "Key devices" in this plan means the X3, X4
+and X4 Classic; the X4 Pro is the only touch device.
 
 | | X3 | X4 | X4 Classic | X4 Pro |
 |---|---|---|---|---|
 | MCU | ESP32-C3 | ESP32-C3 | ESP32-S3 | ESP32-S3 |
-| RAM | about 380 KB, no PSRAM | about 380 KB, no PSRAM | internal plus 8 MB PSRAM | internal plus 8 MB PSRAM |
-| Panel | 792×528 | 800×480 | 800×480 | 800×480 |
-| Controller | UC8253 or UC8279d, per batch | SSD1677; variants probed at boot | SSD1677, UC8179 or UC8279, per unit | SSD1677, UC8179 or UC8279, per batch |
 | Portrait logical size | 528×792 | 480×800 | 480×800 | 480×800 |
-| Framebuffer | 52,272 bytes | 48,000 bytes | 48,000 bytes | 48,000 bytes |
 | Input | 4 front keys, 2 side keys, Power | same as X3 | 4 bottom keys, 2 side keys, Power | GT911 touch, Home pad, 2 side keys, Power |
-| Key wiring | ADC ladder | ADC ladder | discrete GPIOs | discrete GPIOs |
-| Frontlight | none | none | none | warm/cold PWM |
+| Frontlight | none | none | none | warm/cold PWM (lila's light panel) |
 | RTC | DS3231 | **none** | BM8563 | BM8563 |
-| Battery | BQ27220 gauge | ADC | CW2017 gauge | CW2017 gauge |
-| SD | SPI, shares the display bus | SPI, shares the display bus | 1-bit SDMMC | 1-bit SDMMC |
-| USB mass storage | no | no | possible | possible |
-| Build env | `x3x4` | `x3x4` | `x4c` | `x4pro` |
 
 Consequences:
 
-- **Three builds.** The X3 and X4 share a pinout, so one C3 binary carries both
-  profiles and `selectXteinkDevice()` picks one at boot. This is the SDK's
-  documented path and what CrossPoint ships. The X4 Classic and X4 Pro share
-  the S3 and the glass but not the pinout (the Pro's frontlight and touch-power
-  pins are front keys on the Classic), and the SDK has no detector for them, so
-  each gets its own env, as in CrossPoint.
 - **Design to the C3.** RAM budgets and refresh behaviour are set by the X3 and
-  X4. The S3's PSRAM is not required by anything.
+  X4, with about 380 KB of RAM and no PSRAM (section 6.6).
 - **Two input models, two screen sizes.** The three key devices expose the same
   seven logical keys; the X4 Pro is touch-first with two keys. Layouts adapt
   to 528×792 and 480×800. Section 4.4 defines one semantic mapping.
-- **Per-batch panel controllers** are resolved at boot by the SDK's
-  `XteinkDetect` (a bus probe; a factory NVS value on the X4 Classic). Tinta
-  uses only the `FreeInkDisplay` facade, never a driver directly.
-- **On the C3 boards the SD card shares the display SPI bus.** All SD and
-  display traffic runs on the loop task; no background SD I/O.
-- **The X4 has no clock.** It has no RTC, and CrossPoint's sleep path powers
-  the SoC off on battery, so no time survives sleep. Section 6.8 defines how
-  scheduling works on it.
-- **Waking is a cold boot on every device.** Session state is always restored
-  from the SD card.
+- **On the C3 boards the SD card shares the display SPI bus.** Tinta's SD reads
+  and writes go through lila's `HalStorage`, on the loop task, never during a
+  present.
+- **The X4 has no clock.** Section 6.8 defines how scheduling works on it.
 
 ---
 
@@ -198,10 +171,11 @@ keys, the second needs audio.
 | Answer 1–4, or grade Again/Hard/Good/Easy | the four front keys — the footer cell above each key shows what it does | tap the option or footer cell |
 | Reveal / next | Confirm, or side Down | tap the card, or the lower side key |
 | Previous / undo last grade | side Up | upper side key, or swipe right |
-| Pause menu | hold Back 0.6 s | Home pad |
-| Home screen | pause menu → Home | hold Home pad |
-| Sleep | Power | Power |
-| Light panel | — | swipe down from the top, or pause menu |
+| Pause sheet (Resume, End session, Home, Settings, Light, Leave) | hold Back 0.6 s | tap the Home pad |
+| Tinta's Home | pause sheet → Home | hold the Home pad |
+| Back to lila | Back on Tinta's Home, or Leave | the same |
+| Sleep | Power (lila) | Power (lila) |
+| Light panel | — | lila's: swipe down from the top, or Light in the pause sheet or Settings |
 
 On choice screens the four front keys are *answers*, not navigation. A thin
 key-mapping layer in front of FreeInkUI turns a front-key press into
@@ -211,10 +185,9 @@ Touch always goes through FreeInkUI interactions.
 
 All three key devices have four front keys under the screen and two side keys,
 so they share one interaction design. What differs is the physical
-left-to-right order and spacing of the front keys, and the wiring (an ADC
-ladder on the X3 and X4, discrete GPIOs on the X4 Classic). `InputManager`
-hides the wiring. `ui/KeyMap` holds a per-device table of physical key order
-and footer cell geometry, confirmed on each device in M0.
+left-to-right order and spacing of the front keys. `ui/KeyMap` holds a
+per-device table of physical key order and footer cell geometry. Tinta labels
+the keys by position, so lila's button remapping does not apply inside it.
 
 ### 4.5 Screens
 
@@ -259,37 +232,38 @@ Cloze, four options                    Reader with gloss
 Screen list: Home, Session (one controller, seven exercise views), Lesson intro
 (note pages), Lesson summary, Course map, Reader, Phrasebook, Dictionary
 (search, entry, verb table), Progress (streak calendar, forecast, totals),
-Settings, Pause sheet, Light sheet (X4 Pro), Set clock, "What day is it?"
-(X4), Sleep screen, First-run, Storage error.
+Settings, Pause sheet, "What day is it?" (without a trusted clock), First-run,
+Storage error. The light panel is lila's; the sleep card is drawn for lila's
+sleep screen (section 4.7).
 
 ### 4.6 E-paper refresh policy
 
 - Answering an item costs two refreshes: one to show the result with the
   correct answer, one to show the next item. There is no separate
   "Correct!" screen.
-- Use `FAST_REFRESH` within a session. Promote to `FULL_REFRESH` every Nth
-  transition (`FreeInkApp::setTransitionFullEvery`, default 8, user setting)
-  and at session start and end.
+- Tinta draws on lila's render task under its render lock; input is handled
+  on the loop task, and a press that arrives during a refresh waits for the
+  next frame rather than being lost.
+- A new screen gets the board's screen refresh: a half refresh on the X3, fast
+  on the X4 family, where a half refresh flashes. Every Nth transition is full
+  (`FreeInkApp::setTransitionFullEvery`, default 8, a Tinta setting), and so
+  are going Home and the first frame after Tinta opens.
 - Render only when input arrived or state changed, not on every loop pass.
-- Use `presentAsync()` and `display.refreshBusy()` with
-  `InputManager::beginAsync()`, so presses during a waveform are queued, not
-  lost. Accumulate the strongest refresh hint between presents.
-- The reader's word cursor on key devices moves often. Try `displayWindow()`
-  for the cursor rectangle; fall back to a fast full-frame refresh if a
-  controller variant does not support it. **Verify** on each controller.
+- The reader's word cursor on key devices moves often. It is presented as a
+  window of the panel where the controller supports it (the X4's SSD1677),
+  else as a fast full-frame refresh.
 
 ### 4.7 Sleep screen
 
-E-paper holds an image with no power, so the sleep screen teaches. It shows one
-item from the learner's weakest words (Spanish, respelling, gloss, example),
-the streak, and tomorrow's due count.
+E-paper holds an image with no power, so the sleep screen teaches. With lila's
+sleep screen on Current Page, sleeping from inside Tinta leaves a card with one
+of the learner's weakest words (Spanish, respelling, gloss, example) under the
+date, with the streak and tomorrow's due count; lila adds its moon. Each sleep
+moves on to another word. Before anything is learnt the card shows a word of
+the current lesson. lila's other sleep screens apply unchanged.
 
-Optional rotation: a timer wake a few times a day redraws the screen with
-another word and goes back to sleep, skipping night hours. This needs the SoC
-to stay powered in sleep, so it is offered only on the X4 Classic and X4 Pro;
-on the X3 and X4 the sleep path cuts battery power (section 6.8) and the word
-chosen at sleep time stays until the next wake. Default is off until sleep
-current is measured.
+The standalone firmware could also wake on a timer to show another word; lila
+does not.
 
 ---
 
@@ -297,8 +271,8 @@ current is measured.
 
 ### 5.1 Source strikes
 
-CrossPoint's built-in fonts are native X11 bitmap strikes, tracked in its repo
-under `x11/`:
+lila's built-in fonts, inherited from CrossPoint, are native X11 bitmap strikes,
+tracked under `x11/`:
 
 - `x11/font-adobe-100dpi-1.0.4/` — Adobe Times and Helvetica, 8, 10, 12, 14,
   18 and 24 pt at 100 dpi, in four styles each.
@@ -358,7 +332,7 @@ look is confirmed by eye on hardware.
 ### 5.3 Conversion: `tools/bdf2freeink.py`
 
 A small pure-Python BDF parser (BDF is plain text; no FreeType dependency) that
-writes `freeink::ui::BitmapFont` headers into `src/fonts/`.
+writes `freeink::ui::BitmapFont` data into `src/fonts/`.
 
 - **Bit packing.** `DisplayTarget::drawGlyph` reads bit `gy * width + gx` from a
   continuous bit stream. BDF rows are byte-aligned, so the converter repacks
@@ -376,12 +350,10 @@ writes `freeink::ui::BitmapFont` headers into `src/fonts/`.
   outline into the same `BitmapFont` data, with a pinned FreeType so hinting
   cannot drift between machines. `bdf2freeink.py` keeps `--scale` and
   `--smooth hqx|scale2x` for the comparison pages only.
-- Generated headers are committed, as CrossPoint does, so a firmware build
-  needs no Python. CI regenerates them and fails on a diff.
-- The BDF files are copied into `assets/fonts/bdf/` by
-  `tools/sync-fonts.sh ../crosspoint-reader`, so builds do not depend on a
-  sibling checkout. CrossPoint's 21 pt Times strikes currently have uncommitted
-  edits; sync from a committed revision and record it.
+- Generated data is committed, as lila does for its own fonts, so a firmware
+  build needs no Python. `tools/gen-fonts.sh` regenerates `src/fonts/` from
+  lila's `x11/` strikes after a glyph change there; `tools/check-fonts.sh`
+  reports a stale strike.
 
 ### 5.4 Character set
 
@@ -404,8 +376,8 @@ slot; `DisplayTarget` draws U+2026 as three dots. One Python module,
 `constexpr` table in `src/core/lang/Charset.h` serves the few strings built at
 runtime. The compiler fails on any character outside the set.
 
-Ticks, crosses, stars and arrows are not in the fonts. They are icons, generated
-from the SDK's vendored Lucide set with `gen_icons.py`.
+Ticks, crosses, stars and arrows are not in the fonts. They are icons, drawn
+with Pillow by `tools/gen-icons.py` into `src/icons/`.
 
 ### 5.5 Drawing mixed type through FreeInkUI
 
@@ -456,234 +428,124 @@ scratch slot. Neither is required.
 ┌──────────────────────────────────────────────────────────────────────┐
 │ ui/        screens, theme, key map, typeset views       (FreeInkUI)  │
 ├──────────────────────────────────────────────────────────────────────┤
-│ app/       navigation, session controller, settings, sleep policy    │
+│ app/       App: navigation, session controller, settings, refresh    │
 ├──────────────────────────────────────────────────────────────────────┤
 │ core/      pack reader · scheduler · queue · exercises · answer      │
-│            check · typesetter · stats        (freestanding C++17,    │
-│            no Arduino, host-tested)                                  │
+│            check · typesetter · stats · usage log  (freestanding     │
+│            C++17, no Arduino, host-tested)                           │
 ├──────────────────────────────────────────────────────────────────────┤
-│ platform/  Board · Clock · Storage · Light · Power   (thin adapters) │
+│ platform/  Board · Clock · StateFiles · PackFile · Power · Log       │
+│            (headers in lib/Tinta/src/platform, implemented over      │
+│            lila's HAL in src/activities/tinta/platform)              │
 ├──────────────────────────────────────────────────────────────────────┤
-│ FreeInk SDK: BoardConfig · FreeInkDisplay · InputManager ·           │
-│ SDCardManager · XteinkDetect · PowerManager · Rtc · BatteryMonitor · │
-│ FrontlightManager · FreeInkUI · Icons                                │
+│ lila: TintaActivity · ActivityManager · GfxRenderer · HalDisplay ·   │
+│ HalGPIO · HalStorage · HalClock · HalPowerManager                    │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 `core/` reaches the outside only through three small interfaces — `PackSource`
 (bytes), `StateStore` (files) and `Clock` (time) — so it runs unchanged in host
-tests, in the simulator and on the device.
+tests and on the device.
 
 ### 6.2 Repository layout
 
 ```
-spanish/
-  platformio.ini            envs: x3x4, x4c, x4pro (+ release variants)
-  partitions.csv            same table as CrossPoint
-  freeink-sdk/              git submodule; platformio.local.ini may point at ../freeink-sdk
+lib/Tinta/
   src/
-    main.cpp                setup(), loop()
-    platform/               Board, Clock, Storage, Light, Power
-    app/                    App, Navigator, SessionController, Settings, SleepPolicy
-    ui/                     Theme, Fonts, KeyMap, screens/*, views/*
-    core/
-      pack/                 Pack, PackSource, tables, binary search
-      srs/                  Fsrs, ItemState, DayQueue
-      session/              SessionBuilder, ExercisePicker, Distractors
-      lang/                 Utf8, Fold, Charset, AnswerCheck
-      text/                 Typesetter
-      stats/                Streak, DayLog
-    fonts/                  generated BitmapFont headers (committed)
-    icons/                  generated icons (committed)
+    app/                    App, Screens, SessionController, View
+    ui/                     Theme, Fonts, KeyMap, Strings, screens/*, views/*
+    core/                   pack, srs, session, lang, text, stats, library,
+                            reader, search, profile, usage
+    platform/               the device interfaces (implemented in lila)
+    fonts/  icons/          generated, committed
   content/                  course sources (YAML/TSV), ids.lock
-  assets/fonts/bdf/         vendored strikes
-  tools/
-    bdf2freeink.py  charset.py  sync-fonts.sh
-    build_assets.py         PlatformIO pre-script: rebuilds the pack when content changes
-    packc/                  content compiler and validators
-    sim/                    build.sh, run.sh, golden screenshots
-  test/host/                unit tests for core/, run.sh
-  docs/                     pack-format.md, content-style.md, hardware-notes.md
+  content-plan/             the plan for Units 2–12, check_plan.py
+  assets/fonts/outline/     TeX Gyre Termes, for the headword strikes
+  tools/                    packc, bdf2freeink, otf2freeink, gen-fonts.sh,
+                            gen-icons.py, usage-report.py, progress-dump.py
+  docs/                     pack-format.md, content-style.md, app-shell.md,
+                            usage-log.md
+src/activities/tinta/       TintaActivity and the platform layer
+test/tinta/                 host tests for core/ and their fixtures
 ```
 
-### 6.3 Build environments
+### 6.3 Build
 
-```ini
-[base]
-platform = <pioarduino platform-espressif32 55.03.311, the release CrossPoint builds on>
-framework = arduino
-board_build.flash_mode = dio
-board_build.flash_size = 16MB
-board_build.partitions = partitions.csv
-build_unflags = -std=gnu++11 -fexceptions
-build_flags =
-  -std=gnu++2a -fno-exceptions
-  -DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT=1
-  -DEINK_DISPLAY_SINGLE_BUFFER_MODE=1
-extra_scripts = pre:tools/build_assets.py      ; builds the pack if content changed
-lib_deps =
-  BoardConfig=symlink://freeink-sdk/libs/hardware/BoardConfig
-  EInkDisplay=symlink://freeink-sdk/libs/display/FreeInkDisplay
-  InputManager=symlink://freeink-sdk/libs/hardware/InputManager
-  BatteryMonitor=symlink://freeink-sdk/libs/hardware/BatteryMonitor
-  SDCardManager=symlink://freeink-sdk/libs/hardware/SDCardManager
-  XteinkDetect=symlink://freeink-sdk/libs/hardware/XteinkDetect
-  PowerManager=symlink://freeink-sdk/libs/hardware/PowerManager
-  Rtc=symlink://freeink-sdk/libs/hardware/Rtc
-  FreeInkUI=symlink://freeink-sdk/libs/ui/FreeInkUI
-  Icons=symlink://freeink-sdk/libs/assets/Icons
+`-DLILA_TINTA=1` in lila's `platformio.ini` builds Tinta into the C3, X4
+Classic and X4 Pro environments and their release variants. The other boards
+leave `lib/Tinta` out. Device differences come from lila's HAL at runtime
+(touch, frontlight, RTC, screen size), not from `#ifdef`s in Tinta.
 
-[env:x3x4]                 ; X3 and X4, one binary, selected at boot
-extends = base
-board = esp32-c3-devkitm-1
-build_flags = ${base.build_flags} -DFREEINK_DEVICE_X3=1 -DFREEINK_DEVICE_X4=1
+### 6.4 Opening and closing
 
-[s3]                       ; shared by the two ESP32-S3 boards
-extends = base
-board = esp32-s3-devkitc1-n16r8
-board_build.mcu = esp32s3
-board_build.arduino.memory_type = dio_opi
-build_flags = ${base.build_flags} -DBOARD_HAS_PSRAM -DUSE_BLOCK_DEVICE_INTERFACE=1
-
-[env:x4c]                  ; X4 Classic: keys only
-extends = s3
-build_flags = ${s3.build_flags} -DFREEINK_DEVICE_X4CLASSIC=1
-
-[env:x4pro]                ; X4 Pro: touch and frontlight
-extends = s3
-build_flags = ${s3.build_flags} -DFREEINK_DEVICE_X4PRO=1
-lib_deps = ${base.lib_deps}
-  FrontlightManager=symlink://freeink-sdk/libs/hardware/FrontlightManager
-```
-
-Notes:
-
-- Release files are named per device (`tinta-x3-x4.bin`, `tinta-x4-classic.bin`,
-  `tinta-x4-pro.bin`). The two S3 images are not interchangeable: the Pro image
-  would drive the Classic's key pins as frontlight outputs.
-- Device differences are read from `BoardConfig::ACTIVE` at runtime (touch,
-  frontlight, RTC, gauge, bezel insets), not from `#ifdef`s in app code. Only
-  `platform/Board` knows which env it was built for.
-- The platform is pinned to `55.03.311`, which CrossPoint builds on and which
-  is already installed; the SDK sample pins the older `55.03.37`.
-- The partition table is CrossPoint's (`app0`/`app1` of 0x640000 each), so a
-  device already running CrossPoint can take Tinta as an app-slot update.
-- The simulator's `build-firmware.sh` compiles only the display, drivers and
-  `InputManager` from the SDK. `tools/sim/build.sh` wraps it and passes the
-  extra SDK sources Tinta uses (`FreeInkUI.cpp`, `Rtc`, `BatteryMonitor`,
-  `SDCardManager`, `PowerManager`, `FrontlightManager`). It builds four
-  bundles: `X3`, `X4`, `X4CLASSIC`, `X4PRO`.
-
-### 6.4 Boot sequence
-
-```cpp
-void setup() {
-  BoardConfig::holdPowerRails();              // battery latch
-  Serial.begin(115200);
-#if FREEINK_MCU_C3
-  if (freeink::selectXteinkDevice())          // X3 vs X4, then UC8253 vs UC8279d
-    display.setDisplayX3();
-#else
-  freeink::applyXteinkDisplayController();    // X4 Pro: bus probe; X4 Classic: factory NVS value
-#endif
-  input.begin();                              // reject wakes without a held Power key
-  storage.begin();                            // SD before display: shared bus on the C3 boards
-  display.begin();
-  clock.begin(); battery.begin(); light.begin();
-  ui.begin(display);                          // DisplayTarget only after display.begin()
-  app.begin();                                // open pack, load profile, resume or Home
-}
-```
-
-The order follows the SDK's documented contract: device selection before
-`SDCardManager::begin()` and `FreeInkDisplay::begin()`; `DisplayTarget`
-constructed after `display.begin()`.
-
-Target: Power press to a readable screen in under 2 s. Waking from deep sleep
-is a chip reset, so the app restores the saved session and paints it directly.
+`TintaActivity::onEnter()` allocates the `App`, which opens the course pack
+and the learner's files, loads the profile, and restores the screens and the
+review session saved when Tinta last closed (or asks for the date first,
+section 6.8). `onExit()`, which lila runs before it sleeps or opens anything
+else, writes everything held in RAM and frees it all. Sleeping from inside
+Tinta first draws the sleep card (section 4.7).
 
 ### 6.5 Main loop
 
 ```
-loop:
-  collect input (async queue: key presses, taps, swipes, Home pad)
-  if a choice bar is active and a front key was pressed → ActionChoice(i)
-  else build InputSnapshot → app.render() or app.route()
-  handle the action: update state, write journal and item state to SD
-  if dirty: render into the framebuffer, remember the strongest hint
-  if hint pending and !display.refreshBusy(): presentAsync(hint)
-  idle timer → save session, draw sleep screen, deep sleep
+loop task (TintaActivity::loop):
+  poll keys, taps, swipes and the Home pad into Tinta's input queue
+  under the render lock, if the panel is not busy:
+    route input: a choice bar takes front keys as ActionChoice(i),
+                 otherwise FreeInkUI focus routing or interactions
+    handle the action: update state, write journal and item state to SD
+  ask for a frame if something changed
+render task (TintaActivity::render):
+  draw into the framebuffer and present with the strongest pending hint
 ```
 
-SD writes finish before the next display transfer starts. Both happen on the
-loop task, which is the bus-ownership rule for the X3 and X4.
+SD writes finish before the next present; both go through lila's mutexes.
 
 ### 6.6 Memory budget (ESP32-C3: X3 and X4)
 
+Everything below exists only while Tinta is open; a closed Tinta keeps about
+220 bytes of static RAM.
+
 | Use | Size |
 |---|---|
-| Framebuffer, single-buffer mode | 52 KB |
-| Loop task stack (FreeInkUI's default) | 16 KB |
-| Input polling task | 4 KB |
-| Item index: 16-bit state slot per pack item (2 bytes × about 8,500 items with the deck) | ≤ 20 KB |
-| Session queue, typesetter runs, UI interaction tables | ≤ 8 KB |
-| SdFat and file buffers | ≤ 8 KB |
-| Content pack | 0 (flash-mapped) |
-| **Total** | **about 100 KB** of roughly 380 KB |
+| Item index: 16-bit state slot per pack item (2 bytes × 7,223 items) | 14 KB |
+| Pack block cache (8 × 1 KB) and per-pass string arena (6 KB) | 14 KB |
+| Usage log buffer | 1 KB |
+| Screens, shared text buffers, card and exercise views | the rest |
+| **Total** | **about 60 KB**; the `TNT` log lines give the heap before and after opening |
 
-Rules carried over from CrossPoint's experience on this chip: no `String` or
-`std::string` in hot paths, no allocation in render functions, locals under
-256 bytes, constant tables `constexpr`, `new (std::nothrow)` only.
+lila's framebuffer and render task are shared, not Tinta's. Rules carried over
+from lila: no `String` or `std::string` in hot paths, no allocation in render
+functions, locals under 256 bytes, constant tables `constexpr`,
+`new (std::nothrow)` only.
 
-### 6.7 Flash budget
+### 6.7 Flash
 
-| Part | Budget |
-|---|---|
-| Arduino core, IDF, SDK libraries, app code | ≤ 1.4 MB |
-| Fonts and icons | ≤ 0.45 MB |
-| Content pack | ≤ 4.0 MB (the 44-lesson course is 0.77 MB; projected 3.3–3.8 MB with the frequency deck and a 5,000-headword dictionary) |
-| **Image** | **≤ 5.85 MB** in a 6.5 MB app slot |
-
-The pack is linked into the image as read-only data with an `.incbin` stub, so
-it is memory-mapped by the flash MMU and costs no RAM. Host tests and the
-simulator load the same file from disk through the same `PackSource`
-interface.
+Fonts and icons are about 0.35 MB of flash. The course pack costs none: it is
+read from the SD card, block by block, through `core/pack/PackSource`.
 
 ### 6.8 Power and time
 
-**Sleep.** Idle timeout (default 3 min) or Power → save session, draw sleep
-screen, `display.deepSleep()`, `PowerManager::powerDownRailsForSleep()`, then
-sleep with Power-key wake.
-
-- On the S3 boards the power latch (GPIO1) is held through deep sleep, as
-  CrossPoint does, so the SoC stays in deep sleep.
-- On the C3 boards CrossPoint's sleep path drives GPIO13 low, which it
-  describes as cutting battery power to the SoC. Tinta follows the same path.
-  **Verify** on each board what stays powered.
-- Either way, waking is a reset and the app restores from `session.bin`.
-- The X4 Pro frontlight turns off on sleep and restores on wake if it was on.
+**Sleep and power** are lila's. Before lila sleeps or opens something else,
+`TintaActivity::onExit()` saves the session and the profile.
 
 **Time.** The scheduler works in whole days. `platform/Clock` answers two
 questions: `today()` and `hasTimeOfDay()`.
 
-| Device | Source | Behaviour |
-|---|---|---|
-| X3, X4 Classic, X4 Pro | hardware RTC | Date, time and UTC offset are set once (first run, or Settings). The day rolls over at 04:00 local. The status bar shows the time. |
-| X4 | none | At each power-on Tinta asks "What day is it?" with a choice bar: **Same day**, **Next day**, **Other date**. One press in the usual cases. No clock in the status bar. |
+| Clock | Behaviour |
+|---|---|
+| lila's RTC reads a plausible time (X3, X4 Classic, X4 Pro) | Local time is lila's: the RTC keeps UTC and lila's time zone (Settings › Clock, with daylight saving) gives the wall time. The study day rolls over at Tinta's "Day starts at" hour (04:00 by default). |
+| No RTC (X4), or an RTC that reads earlier than the firmware date or the last day the device saw | At the first opening after power-on Tinta asks "What day is it?" with a choice bar: **Same day**, **Next day**, **Other date**. One press in the usual cases. The date holds until the next power-on; no time of day. |
 
-- On RTC devices, if the clock reads earlier than the last recorded review or
-  the firmware build date, Tinta asks for the date before scheduling anything.
-- On the X4 the date the learner confirms is stored in `profile.bin`. Picking
-  "Next day" after several days away under-counts the gap; the scheduler
-  tolerates that (items are simply treated as reviewed on time), but the streak
-  will be wrong unless the learner picks the real date.
-- Two ways to give the X4 a real clock are left for later: keeping it in true
-  deep sleep so the SoC's internal timer survives (depends on measured sleep
-  current and timer drift), or NTP over Wi-Fi at wake (M8).
+- lila sets its clock over Wi-Fi (Settings › Clock). An RTC that is not trusted
+  is used again once it is: at the next power-on after a sync.
+- The confirmed date is stored in `profile.bin`. Picking "Next day" after
+  several days away under-counts the gap; the scheduler tolerates that (items
+  are simply treated as reviewed on time), but the streak will be wrong unless
+  the learner picks the real date.
 
-**Battery.** Percentage in the status bar from `BatteryMonitor`, which reads a
-gauge or the ADC according to the active profile; a low-battery screen below
-5 %.
+**Battery.** Tinta's status bar shows the percentage from lila's battery
+reading.
 
 ---
 
@@ -740,16 +602,18 @@ Python. It reads the sources and writes `build/course.pack`.
    - ids in `ids.lock` never change meaning or disappear.
 6. **Emit** the pack, a size report and a human-readable dump for review.
 
-The conjugator is checked in CI against an external reference verb table.
-Choose the reference in M3 and check its licence; it is used for tests only.
+The conjugator's tests compare it with Fred Jehle's verb database (CC BY-NC-SA,
+fetched for tests only and never shipped: `tools/packc/tests/fetch_reference.py`),
+and with a committed golden table.
 
 ### 7.3 Pack format
 
-Little-endian, sections 4-byte aligned, readable in place. Strings are
-NUL-terminated UTF-8 in the font charset, deduplicated in one heap, referenced
-by 32-bit offset. Because strings are NUL-terminated and flash-mapped, a
-`const char*` into the pack goes straight to FreeInkUI, which borrows strings
-and never copies them.
+Little-endian, sections 4-byte aligned. Strings are NUL-terminated UTF-8 in the
+font charset, deduplicated in one heap, referenced by 32-bit offset. The device
+reads the pack from the SD card through a block cache; a string is copied into
+a per-pass arena and stays valid until the next event or frame
+(`core/pack/PackSource.h`, `Pack::beginPass()`). `docs/pack-format.md` has the
+layouts.
 
 ```
 Header   magic "TNTA", formatVersion, contentVersion, buildTime, size, crc32, locale "es-MX"
@@ -774,30 +638,7 @@ Directory  { tag, offset, size, count } per section
 | `PHRS` | phrasebook categories → sentence ids | by category |
 | `CONF` | authored distractor sets | by lemma id |
 
-Fixed-size records, sketched (final layouts go in `docs/pack-format.md` in M3):
-
-```cpp
-struct Lemma {            // 28 bytes
-  uint32_t es, en, pron, note;      // string offsets (0 = none)
-  uint32_t firstExample;            // sentence id
-  uint16_t freqRank, lesson;
-  uint8_t  pos, gender, level, flags;
-  uint8_t  exampleCount, reserved;
-  uint16_t verbTable;               // 0xFFFF = not a verb
-};
-struct Item {             // 16 bytes
-  uint32_t uid;                     // stable across pack versions
-  uint8_t  kind, flags;
-  uint16_t lesson;
-  uint32_t a, b;                    // lemma or sentence id; token index or form tag
-};
-```
-
-Estimated size for v1: about 1.5–2 MB (sentences and tokens about 0.6 MB, verb
-forms about 0.3 MB, dictionary about 0.5 MB, the rest indexes and notes).
-
-A later version reads the same format from the SD card for expansion packs,
-through a `PackSource` that pages blocks from a file.
+The full course compiles to about 2.8 MB.
 
 ### 7.4 Course scope for v1
 
@@ -893,8 +734,8 @@ On the SD card under `/tinta/`:
 | `items.bin` | header, then 16-byte state records for items that have been seen, in first-seen order | one 16-byte in-place write per review |
 | `reviews.log` | 12 bytes per review: uid, time, grade, format, response time | append |
 | `days.bin` | per-day totals: reviews, correct, new, seconds | one write per session |
-| `profile.bin` | settings, streak, current lesson, UTC offset | write temp file, then rename |
-| `session.bin` | the in-progress session, for resume after sleep | on sleep |
+| `profile.bin` | settings, streak, current lesson, the last confirmed date | write temp file, then rename |
+| `session.bin` | the screens and the in-progress session, to resume | after each grade, and when Tinta closes |
 
 ```cpp
 struct ItemState {        // 16 bytes
@@ -930,7 +771,7 @@ and final punctuation, then compare with the item's accepted answers.
 
 ### 8.5 Dictionary and reader
 
-- **Lookup** is binary search over `LKEY`, `FORM` and `EKEY` in flash. On the
+- **Lookup** is binary search over `LKEY`, `FORM` and `EKEY` in the pack. On the
   X4 Pro the FreeInkUI `qwertyKeyboard` with the `SpanishEs` layout filters as
   you type. On key devices the dictionary is a virtualised alphabetical list
   with a letter-jump menu.
@@ -955,23 +796,24 @@ and final punctuation, then compare with the item's accepted answers.
 ### 8.6 Usage log
 
 The owner wants to learn from real use: which lessons, words and exercise
-formats work, and where the interface gets in the way. The device therefore
-keeps a second, richer record beside the review journal: the usage log,
+formats work, and where the interface gets in the way. Tinta therefore keeps a
+second, richer record beside the review journal: the usage log,
 `/tinta/usage-0001.log` and up on the SD card (numbered files, because the
 state store has no rename; layout in `docs/usage-log.md`). It never leaves the
-card except when the owner copies it; the firmware has no radio code in v1.
+card except when the owner copies it.
 
 - **It is not learner state.** Scheduling never reads it, losing it loses no
   progress, and the review journal is always written first. A failed usage
   write is counted and otherwise ignored. Guest mode (no card) records nothing.
 - **Format:** append-only binary records with a one-byte type, the wall-clock
-  time when the device has one and uptime otherwise, and a boot record that
-  names the firmware version, build, device and pack edition, so a log can be
-  joined to the right `ids.lock`. Records are buffered in RAM and written with
-  the SD write the app is already making (an answer, a sleep), so recording
-  adds no refresh and at most one append per answered item. Each append is one
-  checksummed chunk, so a torn write is skipped on decode. A new file starts at
-  1 MiB and 16 files are kept: about 9 KB for a 20-minute day, so years of use.
+  time when there is one and uptime otherwise, and a boot record (each opening
+  of Tinta) that names the firmware version, device and pack edition, so a log
+  can be joined to the right `ids.lock`. Records are buffered in RAM and
+  written with the SD write the app is already making (an answer, closing), so
+  recording adds no refresh and at most one append per answered item. Each
+  append is one checksummed chunk, so a torn write is skipped on decode. A new
+  file starts at 1 MiB and 16 files are kept: about 7.5 KB for a 20-minute day,
+  so years of use.
 - **What is recorded:**
   - *Learning:* each item shown (uid, format, the options offered), each answer
     (option chosen or text typed, right or wrong, grade, response time,
@@ -982,17 +824,16 @@ card except when the owner copies it; the firmware has no radio code in v1.
     dictionary searches (the text typed, and whether anything matched), entries
     opened, verb tables viewed; phrasebook categories opened and practised.
   - *Interface:* every screen entered (so dwell time and paths follow), keys
-    and taps that did nothing, presses that arrived during a refresh, time from
-    press to finished frame, refresh counts by kind, settings changed.
-  - *Device:* boot, wake and sleep with cause, battery level and charging
-    state, clock changes, storage and pack errors.
-- **A setting** (Settings > Study > Record usage, default on) turns it off.
+    and taps that did nothing, presses that arrived during a refresh, settings
+    changed.
+  - *Device:* openings, confirmed dates and day rollovers, storage and pack
+    errors.
+- It is always on; `UsageLog::setEnabled()` is ready for a setting.
 - **`tools/usage-report.py`** on the PC decodes a log to CSV and writes a
   report: accuracy and time by lesson, word and format; the wrong options most
   often chosen; words glossed or searched most (candidates for new lessons) and
   searches that found nothing (candidates for new headwords); where sessions
-  and lessons are abandoned; screen paths, dwell and dead presses; battery use
-  per hour.
+  and lessons are abandoned; screen paths, dwell and dead presses.
 
 ---
 
@@ -1000,26 +841,11 @@ card except when the owner copies it; the firmware has no radio code in v1.
 
 | Layer | What | How |
 |---|---|---|
-| `core/` | FSRS against reference vectors; pack reader against a sample pack; queue building; distractor determinism; answer checking; typesetter wrapping and hit-testing | Host unit tests, plain C++17, `test/host/run.sh` (same pattern as the SDK's host suites) |
-| Content | Schema, charset, lint, id stability, conjugator against the reference table | `packc --check` in CI |
-| Fonts | Regenerated headers equal committed ones; specimen screenshot | CI and simulator |
-| Whole firmware | Scripted flows on all four devices: boot, lesson, review session, day rollover (and the X4's date prompt), sleep and resume, SD missing, low battery | FreeInk simulator: `freeink-sim press`, `tap`, `expect`, `capture --wait-refresh`, virtual clock, golden PNGs |
-| Hardware | Refresh quality and ghosting, key and touch mapping, sleep current, RTC retention, SD removal mid-session, battery gauge | Checklist per milestone in `docs/hardware-notes.md` |
-
-Simulator notes:
-
-- Build bundles with `--device X3`, `X4`, `X4CLASSIC` and `X4PRO`; the
-  simulator runs the real display drivers, the ADC key ladder, the X4 Classic's
-  discrete keys and the X4 Pro's GT911. The SDK's own simulator suite already
-  covers the X3, X4 Classic and X4 Pro shapes.
-- Most flows are written once against semantic actions ("answer 2", "next")
-  and run on all four bundles; a small per-device table turns an action into a
-  key press or a tap.
-- A bundle's SD card is a host directory, so progress files can be inspected
-  and seeded directly.
-- The simulator appears to model every RTC address as a PCF8563/BM8563. The
-  X3's DS3231 would then read wrongly. Confirm in M0; either add a DS3231 model
-  to the simulator or give sim builds a `Clock` backed by host time.
+| `core/` | FSRS against reference vectors; pack reader (in memory and through the SD block cache); queue building; distractor determinism; answer checking; typesetter wrapping and hit-testing; progress store under power cuts; usage log encoding | Host tests in `test/tinta`, `sh test/tinta/run.sh` and `ctest` |
+| Content | Schema, charset, lint, id stability, conjugator | `packc --check` and the compiler's tests, in CI (`tinta-course`) |
+| Tools | Font conversion, the usage report against a log the engine wrote | `python3 -m unittest discover -s tests` in `tools/` |
+| Fonts | Generated data equals what `x11/` gives | `tools/check-fonts.sh` |
+| Hardware | Refresh quality and ghosting, key and touch mapping, the sleep card, SD removal mid-session | By hand on each device |
 
 ---
 
@@ -1027,273 +853,71 @@ Simulator notes:
 
 | Risk | Effect | Mitigation |
 |---|---|---|
-| Content takes longer than firmware | v1 slips | Start authoring at M3; ship units incrementally; the pack format and validators exist before bulk writing |
 | Content quality or wrong dialect | Teaches errors | Review gate enforced by the compiler (section 7.5); Peninsular lint; register tags |
-| One reviewer for about 44 lessons | Review becomes the bottleneck | Printable per-lesson review pages; review in unit-sized batches from M3, not at the end |
-| Bitmap strikes look small, or the outline headwords clash with the bitmap text | Poor readability | Judge on hardware in M1; text-size setting; fallback to 34 px headwords |
-| URW-derived strikes cannot be redistributed | Lose 22 and 29 px sizes | Adobe-only scale is already defined |
-| Fast-refresh ghosting from frequent card flips | Smeared text | Full refresh every N transitions, tunable; tune per controller on hardware |
-| X4 Pro touch axis flips unconfirmed in the SDK | Taps land mirrored | Corner-tap test in M0; set flip flags once in `platform/Board` |
-| Panel controller variants (five across the four devices) behave differently | Blank or poor display on some units | Use the facade only; test every variant that can be found; log the probe result on the About screen |
-| Front key order and position versus footer cells | Labels do not line up with keys | Per-device key order and footer geometry in `ui/KeyMap`; confirm on each device in M0 |
-| X4 has no clock | Wrong dates, broken streak | One-press date prompt at power-on; scheduler works in whole days; real clock options listed in section 6.8 |
-| X4 Classic profile has pending items in the SDK (GPIO4 role, charge-status polarity, panel orientation) | Upside-down image or wrong charging icon | Check in M0; orientation is a `BoardProfile` field |
-| Four devices to test | Regressions on the device not on the desk | Same scripted flows on four simulator bundles in CI; hardware checklist per device per milestone |
-| Wrong S3 image flashed (Pro image on a Classic or the reverse) | Key pins driven as outputs, no display | Per-device file names; the About and boot log show the build's device; flashing guide warns |
-| SD card missing, removed or corrupt | Progress lost | Journal-first writes, rebuild from journal, guest mode, storage error screen |
-| RTC unset or reset | Wrong scheduling | Sanity check against last review and build date; ask for the date |
-| GPIO0 is a boot strap and a side key on the X4 Pro and X4 Classic | Device enters download mode if held at reset | Document; never require that key at power-on |
-| Platform release mismatch between SDK sample and CrossPoint | Build breaks | Pin one release in M0 |
+| One reviewer for 44 lessons | Review becomes the bottleneck | Printable per-lesson review pages (`packc --review`), reviewed in unit-sized batches |
+| URW-derived strikes cannot be redistributed | Lose the 22 and 29 px sizes | The Adobe-only scale is already defined (section 5.6) |
+| Fast-refresh ghosting from frequent card flips | Smeared text | Full refresh every N transitions, a Tinta setting |
+| Front key order and position versus footer cells | Labels do not line up with keys | Per-device key order and footer geometry in `ui/KeyMap` |
+| X4 has no clock | Wrong dates, broken streak | One-press date prompt at power-on; the scheduler works in whole days |
+| SD card missing, removed or corrupt | Progress lost | Journal-first writes, rebuild from the journal, guest mode, storage error screen |
+| A new pack edition drops content | Orphaned progress | Stable ids (section 7.6); a saved session whose lesson is gone is dropped |
 | No audio | Pronunciation limited | Respelling, Unit 0, stated limitation |
 
 ---
 
-## 11. Implementation plan
+## 11. Status
 
-Milestones are ordered by dependency. Sizes are relative (S ≈ a few days,
-M ≈ one to two weeks, L ≈ three weeks or more) and assume one developer.
-Content work runs alongside from M3.
+| Milestone | State |
+|---|---|
+| M1 fonts and typography | done |
+| M2 app shell | done; inside lila, sleep, power, the clock's time zone and the light are lila's |
+| M3 content pipeline and pack | done; the pack is read from the SD card |
+| M4 scheduler and flashcards | done |
+| M5 exercises and lessons | done |
+| M6 reader, phrasebook, deck, search, sleep card | done |
+| M7 full course | content drafted in full: 44 lessons, 23 readings, 307 phrases, about 1,000 deck words and 3,550 more dictionary headwords. Open: the reviewer's pass over every lesson, after which `packc --release` passes and the release attaches a reviewed pack |
 
-### M0 — Skeleton and bring-up (S)
+Open on hardware: ghosting with the X4 family's fast screen refresh, footer
+cells against the keys on each device, and the sleep card.
 
-- `git init`; add `freeink-sdk` as a submodule; `platformio.ini` with `x3x4`,
-  `x4c` and `x4pro`; `partitions.csv`.
-- `main.cpp` with the boot sequence from section 6.4; draw a test pattern that
-  labels each front key's footer cell, and echo key and touch events.
-- `tools/sim/build.sh` and `run.sh`; first golden screenshot for each of the
-  four bundles.
-- Hardware checks on each device: panel paints upright; every key maps
-  correctly; the physical order of the front keys is recorded; X4 Pro
-  corner-tap test fixes the touch flips; X4 Classic orientation and charge
-  status are checked. Confirm the simulator RTC question.
+**After v1 (M8):**
 
-**Done when:** all three envs build; the test pattern shows upright with
-correctly labelled keys on all four simulator bundles and on each device on
-hand; every key and a tap are logged correctly.
-
-### M1 — Fonts and typography (S–M)
-
-- `tools/sync-fonts.sh`, `tools/charset.py`, `tools/bdf2freeink.py`.
-- Generate the curated strike set and the Termes headword strikes.
-- `ui/Fonts` (slot plan), `core/text/Typesetter` with host tests.
-- Specimen screen: every role, the full charset, accented capitals, a sample
-  card.
-
-**Done when:** the specimen renders identically in the simulator and on
-hardware at both screen sizes; `¿Él está en Ávila? —Sí.` wraps and aligns on one baseline in mixed
-styles; the Termes headword strikes are judged acceptable on hardware, or the
-34 px fallback is chosen, and the result is recorded.
-
-### M2 — App shell (M)
-
-- `FreeInkApp` wiring; theme tokens per device, with the safe area taken from
-  the board profile's bezel insets; status bar (battery, clock where there is
-  one).
-- `KeyMap` (choice bar versus focus routing, per-device key order); pause
-  sheet; Home; Settings.
-- Refresh policy (async present, hint accumulation, full-refresh cadence).
-- `platform/Clock` with its two backends (RTC; asked date on the X4), the
-  set-clock screen and the "What day is it?" screen; `platform/Storage`;
-  `profile.bin`.
-- Sleep and wake with a static sleep screen; idle timeout. Measure sleep
-  current on each device and record what stays powered.
-- X4 Pro light sheet (`FrontlightManager`, brightness and warmth).
-
-**Done when:** a user can move through Home and Settings with keys only on the
-X3, X4 and X4 Classic and with touch only on the X4 Pro; settings survive
-sleep; the X4 schedules correctly across a scripted week of date prompts; no
-press is lost during a refresh in a scripted 50-press simulator test; wake to
-screen is under 2 s.
-
-### M3 — Content pipeline and pack (M)
-
-- `docs/pack-format.md`; `packc` with tokeniser, conjugator, respeller,
-  validators, `ids.lock`.
-- `core/pack` reader with host tests; `.incbin` embedding; disk loading for
-  host and simulator.
-- Sample content: Units 0–1, about 150 lemmas, 200 sentences.
-- Dictionary browse and entry page with verb table.
-
-**Done when:** `packc --check` passes on the sample and fails on seeded errors
-(bad character, `vosotros` form, missing example); the device shows a
-dictionary entry and a verb table straight from the embedded pack; heap use is
-unchanged by pack size.
-
-### M4 — Scheduler and flashcards (M)
-
-- `core/srs/Fsrs` with reference vectors; `ItemState`; `DayQueue`.
-- Progress store: `items.bin`, `reviews.log`, replay and rebuild, guest mode.
-- Session controller; flashcard views (both directions); grade footer with
-  interval previews; undo; session resume after sleep.
-- Progress screen: streak, totals, 14-day forecast.
-
-**Done when:** the FSRS port matches the reference on all vectors; a simulated
-30-day run with the virtual clock produces the expected due counts; pulling the
-SD card or cutting power mid-session loses at most the review in flight.
-
-### M5 — Exercises and lessons (M–L)
-
-- Multiple choice, cloze, gender, conjugation, word order; distractor
-  generator; answer checking.
-- Lesson flow: note pages → presentation → practice → summary; course map;
-  unlock rules.
-- Today session composition; exercise picker by maturity and device.
-- Content through Unit 3.
-
-**Done when:** a new user can complete Units 0–3 on any of the four devices;
-every exercise is answerable with one press on key devices (word order
-excepted); scripted simulator runs cover each exercise type on all four
-bundles; Units 0–3 are reviewed.
-
-### M6 — Reader, phrasebook, sleep screen (M)
-
-- Reader with pagination, word cursor (key devices), tap-to-gloss (X4 Pro),
-  sentence translation, add-to-deck, comprehension questions.
-- Phrasebook with categories and "practise this category".
-- Dictionary search with the on-screen Spanish keyboard (X4 Pro) and
-  letter-jump (key devices); English → Spanish lookup.
-- Sleep screen with a weak word; optional timed rotation on the X4 Classic and
-  X4 Pro after measuring sleep current.
-
-**Done when:** a dialogue can be read and every word glossed on all four devices;
-starred words appear in the next session; sleep current and rotation cost are
-measured and recorded.
-
-### M7 — Full course and release (L)
-
-- Content Units 4–12, frequency deck, full phrasebook and dictionary; every
-  lesson reviewed.
-- UI in Spanish (immersion setting); first-run flow; About and licences.
-- Usage log and `tools/usage-report.py` (section 8.6).
-- `RecoveryBoot` for SD firmware update; USB mass-storage mode on the X4 Pro
-  and X4 Classic for backing up `/tinta/`.
-- Hardware soak: a week of daily use on each device; ghosting and battery
-  tuning; three release images and per-device flashing instructions.
-
-**Done when:** the full pack passes validation and every lesson carries a
-current review hash; each device on hand completes a seven-day soak with no
-lost progress; all three images fit the app slot with margin; licences are
-settled.
-
-### M8 — After v1
-
-- BLE keyboard for typed answers (SDK `BleKeyboardHost`).
-- A real clock for the X4: NTP over Wi-Fi at wake, or true deep sleep.
+- BLE keyboard for typed answers on key devices.
 - SD expansion packs; Anki import tool on the PC.
 - B1 content (subjunctive, conditional, future).
 - PC tool to refit FSRS weights from `reviews.log`.
 - Match-pairs exercise on touch.
-
-### Dependency order
-
-```
-M0 ─► M1 ─┬─► M2 ─┬─► M4 ─► M5 ─► M6 ─► M7
-          └─► M3 ─┘
-              └─ content authoring ──────► M7
-```
-
-M3 can start as soon as M1's charset exists; M4 needs M2 (shell, storage) and
-M3 (pack). Content authoring starts with M3's sample and runs until M7.
+- A Record usage setting.
 
 ---
 
 ## 12. Optional SDK changes
 
-None is required. Each removes a workaround, and the SDK checkout is local.
+None is required. Each removes a workaround in Tinta's text drawing.
 
 | Change | Removes |
 |---|---|
 | Sparse codepoint ranges in `BitmapFont` | The C1 slot remap (section 5.4) |
 | Configurable `DisplayTarget::FONT_SLOTS`, or a public "draw run at baseline with this font" call | The scratch-slot technique (section 5.5) |
-| DS3231 model in the simulator | The sim-only clock fallback |
-| `build-firmware.sh` option to add SDK sources | Part of `tools/sim/build.sh` |
-| Confirmed X4 Pro `flipX`/`flipY` in the board profile | The local override in `platform/Board` |
-| A boot-time detector for X4 Classic versus X4 Pro | The separate `x4c` and `x4pro` builds (one S3 image) |
 
 ---
 
 ## 13. Decisions and open questions
 
-Decided (2026-10-03):
+Decided:
 
-- **Name:** Tinta.
+- **Name:** Tinta. In lila's Home Menu it is **Learn Spanish**.
 - **Content review:** the owner's wife reviews all course content.
-- **Devices:** X3, X4, X4 Classic and X4 Pro are all supported targets.
-- **Devices on hand:** X3, X4 Classic and X4 Pro. The original X4 is covered
-  by the simulator only and is marked as such in release notes.
-- **SDK checkout:** `freeink-sdk` is a symlink to `../freeink-sdk` during
-  development, with the same paths a submodule would have. Converting it to a
-  submodule is a release step.
 - **Headword strikes:** rasterised from TeX Gyre Termes Bold (50–87 px), after
   trying Scale2x and hqx scaling of the bitmap strikes. Adobe bitmaps stay for
   34 px and all body text.
-- **Platform pin:** pioarduino `55.03.311`, the release CrossPoint builds on
-  and the one already installed.
+- **Level:** A1–A2 in v1, B1 after.
+- **Grades:** four (Again, Hard, Good, Easy).
+- **File formats** on the card (`profile.bin`, `session.bin`, the usage log)
+  are the standalone firmware's; ids and fields it used stay reserved.
 
-Open. Defaults are what the plan assumes; none blocks M0.
+Open:
 
-1. **Hardware checks.** Agents cannot run hardware. Each milestone leaves a
-   checklist in `docs/hardware-notes.md` for the three devices on hand.
-2. **X4 date prompt.** Default: ask for the day at each power-on (section 6.8).
-   The alternatives need Wi-Fi or a sleep-current measurement.
-3. **Content licence.** Default: CC BY-SA if Wiktionary data is used.
-4. **CrossPoint 22 and 29 px strikes.** Default: use them; resolve the URW
-   terms before any public release.
-5. **SDK changes.** Default: none; raise the optional ones in section 12
-   separately.
-6. **Level.** Default: A1–A2 in v1, B1 after.
-7. **Grades.** Default: four (Again, Hard, Good, Easy). A two-grade mode is a
-   small addition if preferred.
-
----
-
-## Appendix A — Facts this plan relies on
-
-Read from the local checkouts on 2026-10-03.
-
-**FreeInk SDK**
-
-- `README.md` — device table; X3 and X4 share one C3 binary via
-  `selectXteinkDevice()` and `setDisplayX3()`; per-batch controllers resolved
-  by `applyXteinkDisplayController()`; capability flags; PlatformIO `lib_deps`.
-- `platformio.sample.ini` — `xteink`, `x4c` and `x4pro` envs, platform pin.
-- `docs/xteink-x4pro-support.md` — pins, GT911 (`swapXY`, flips pending), Home
-  pad, keys on GPIO0/7/3, frontlight on GPIO8/9, SDMMC, BM8563, CW2017.
-- `docs/xteink-x3-uc8279-support.md` — UC8279d variant and boot probe.
-- `docs/xteink-x4c-support.md` — X4 Classic: same S3 board and glass as the
-  Pro, different display pins, seven discrete keys (side keys on GPIO0/7,
-  bottom keys on GPIO5/2/8/9), no touch or frontlight, controller chosen from
-  the factory NVS value, pending items (GPIO4, charge status, orientation).
-- `libs/hardware/BoardConfig/include/BoardConfig.h` — `XTEINK_X3` (792×528, ADC
-  ladder, BQ27220, DS3231, no touch, frontlight or audio), `XTEINK_X4`
-  (800×480, ADC ladder, ADC battery, no RTC or other sensors),
-  `XTEINK_X4_CLASSIC` and `XTEINK_X4_PRO` (bezel insets, BM8563, CW2017).
-- `docs/freeink-ui.md`, `libs/ui/FreeInkUI/include/FreeInkUIDisplayTarget.h`,
-  `FreeInkUIFont.h` — `FreeInkApp`, `DisplayTarget` (final, eight font slots,
-  U+2026 handling, glyph bit packing, baseline at `rect.y + ascent`),
-  `BitmapFont` (contiguous range, 16-bit bitmap offset), `presentAsync`,
-  `qwertyKeyboard` with `SpanishEs`, `snapshotFrom`.
-- `libs/hardware/*/include` — `InputManager` (keys, touch, Home pad, async
-  queue), `PowerManager`, `Rtc`, `SDCardManager`, `FrontlightManager`,
-  `UsbMassStorage`, `RecoveryBoot`.
-- `docs/simulator.md`, `tools/simulator/build/build-firmware.sh`,
-  `tools/simulator/core/I2cDevices.cpp` — bundle builds, CLI, which SDK sources
-  are compiled, RTC model.
-
-**CrossPoint reader**
-
-- `x11/font-adobe-100dpi-1.0.4/`, `x11/font-crosspoint-100dpi/` (and its
-  `README.md`) — the strikes, their sizes, provenance and licence notes.
-- `lib/EpdFont/scripts/convert-builtin-fonts.sh`, `lib/EpdFont/EpdFontData.h`,
-  `lib/EpdFont/builtinFonts/*.h` — how CrossPoint builds its font headers and
-  why they are large.
-- `platformio.ini`, `partitions.csv` — separate `x4pro` and `x4c` envs and
-  their settings, partition table.
-- `lib/hal/HalGPIO.cpp`, `src/main.cpp` — device detection order at boot.
-- `lib/hal/HalPowerManager.cpp`, `lib/hal/HalClock.h` — sleep path (GPIO13
-  battery cut on the C3 boards, latch held on the S3 boards); the clock exists
-  only where the SDK finds an RTC.
-- `AGENTS.md` — C3 RAM figure and memory rules.
-
-Glyph coverage and subset sizes in section 5 were measured directly from the
-BDF files.
+1. **Content licence.** CC BY-SA if Wiktionary data is used.
+2. **lila's 22 and 29 px strikes.** Resolve the URW terms before any public
+   release (section 5.6).

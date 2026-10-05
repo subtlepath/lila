@@ -529,15 +529,16 @@ void releaseSdFontCachesForDecode(const GfxRenderer& renderer) {
 
 }  // namespace
 
+bool SleepActivity::keepsCurrentFrame(const bool fromTimeout) {
+  return SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
+         (fromTimeout &&
+          SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
+}
+
 void SleepActivity::onEnter() {
   Activity::onEnter();
 
-  const bool renderQuickResume =
-      SETTINGS.sleepScreen == CrossPointSettings::SLEEP_SCREEN_MODE::QUICK_RESUME ||
-      (fromTimeout &&
-       SETTINGS.quickResumeSleepScreen == CrossPointSettings::QUICK_RESUME_SLEEP_SCREEN::QUICK_RESUME_AFTER_TIMEOUT);
-
-  if (renderQuickResume) {
+  if (keepsCurrentFrame(fromTimeout)) {
     // Quick Resume keeps the current frame as-is, so the driver's inversion
     // state stays too: a night-mode page sleeps in night polarity, and the
     // moon icon inverts with it at transfer like any other draw.
@@ -912,6 +913,12 @@ void SleepActivity::renderLastScreenSleepScreen() const {
   drawSleepIndicator(renderer);
   if (APP_STATE.lastSleepFromReader) {
     renderer.setOrientation(GfxRenderer::Orientation::Portrait);
+  }
+  // A frame the outgoing activity drew for sleep replaces the screen and stays
+  // for hours: a clean pass, so nothing of the old screen ghosts through.
+  if (frameRedrawn) {
+    renderer.displayBuffer(HalDisplay::HALF_REFRESH);
+    return;
   }
   // Only the moon differs from the displayed frame, so a differential FAST
   // update adds it without the flashing clean pass (which sweeps the panel

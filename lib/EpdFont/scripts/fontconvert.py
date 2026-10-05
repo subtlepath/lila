@@ -30,13 +30,15 @@ import os
 import freetype
 from fontTools.ttLib import TTFont
 
+from bdf_ligatures import ligature_pairs as bdf_ligature_pairs, open_face
+
 GlyphProps = namedtuple("GlyphProps", ["width", "height", "advance_x", "left", "top", "data_length", "data_offset", "code_point"])
 
 def is_bitmap_font(font_path):
     """BDF/PCF strikes are pre-rasterized: no OpenType tables, fixed pixel size."""
     return os.path.splitext(font_path)[1].lower() in (".bdf", ".pcf")
 
-font_stack = [freetype.Face(f) for f in args.fontstack]
+font_stack = [open_face(f) for f in args.fontstack]
 is2Bit = args.is2Bit
 size = args.size
 font_name = args.name
@@ -800,6 +802,7 @@ ligature_pairs = []
 for face_idx, cps in lig_face_idx_cps.items():
     font_path = args.fontstack[face_idx]
     if is_bitmap_font(font_path):
+        ligature_pairs.extend(bdf_ligature_pairs(cps))
         continue
     ligature_pairs.extend(extract_ligatures_fonttools(font_path, cps))
 

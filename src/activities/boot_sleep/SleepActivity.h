@@ -8,9 +8,15 @@ class HalFile;
 
 class SleepActivity final : public Activity {
  public:
-  explicit SleepActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool fromTimeout = false)
-      : Activity("Sleep", renderer, mappedInput), fromTimeout(fromTimeout) {}
+  // frameRedrawn: the outgoing activity drew a new frame for Current Page
+  // sleep (Activity::drawSleepFrame()), so it goes up with a clean refresh.
+  explicit SleepActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, bool fromTimeout = false,
+                         bool frameRedrawn = false)
+      : Activity("Sleep", renderer, mappedInput), fromTimeout(fromTimeout), frameRedrawn(frameRedrawn) {}
   void onEnter() override;
+
+  // True when this sleep keeps the current frame on the glass (Current Page).
+  static bool keepsCurrentFrame(bool fromTimeout);
 
  private:
   void renderDefaultSleepScreen() const;
@@ -25,4 +31,5 @@ class SleepActivity final : public Activity {
   void renderBlankSleepScreen() const;
 
   bool fromTimeout = false;
+  bool frameRedrawn = false;
 };

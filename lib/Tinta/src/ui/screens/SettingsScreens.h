@@ -27,7 +27,7 @@ class SettingsScreen final : public FormView {
 
 class SettingsPage final : public FormView {
  public:
-  enum class Page : uint8_t { Study, Display, Time, Sleep };
+  enum class Page : uint8_t { Study, Display, Time };
 
   SettingsPage(app::App& app, Page page) : FormView(app), page_(page) {}
 

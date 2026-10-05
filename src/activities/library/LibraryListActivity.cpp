@@ -4,8 +4,11 @@
 #include <FreeInkUIIcon.h>
 #include <FsHelpers.h>
 #include <GfxRenderer.h>
+#include <HalClock.h>
 #include <HalDisplay.h>
+#include <HalGPIO.h>
 #include <HalMemory.h>
+#include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <LibraryBuilder.h>
@@ -27,8 +30,7 @@
 #include "components/UIScale.h"
 #include "components/UITheme.h"
 #include "components/UiAppHelpers.h"
-#include "components/icons/headerMenu32.h"
-#include "components/icons/search32.h"
+#include "components/themes/lyra/LyraTheme.h"
 #include "fontIds.h"
 #include "util/BookCacheUtils.h"
 #include "util/BookProgress.h"
@@ -92,6 +94,116 @@ class HomeTypeScale {
 
  private:
   fui::GfxRendererTarget& target;
+};
+
+// Home's chrome follows Tinta's main menu: a status band on the top edge, and
+// below the shelf either the key hints in a 44px band of small type or, on
+// touch boards, a 64px bar of tappable choices.
+constexpr int16_t HOME_BAND_HEIGHT = LibraryListActivity::STATUS_BAND_HEIGHT;
+constexpr int16_t HOME_HINTS_HEIGHT = 44;
+constexpr int16_t HOME_CHOICE_HEIGHT = 64;
+// The footer's content starts below its top rule's 2px, as in Tinta.
+constexpr int16_t FOOTER_CONTENT_TOP = 2;
+constexpr int16_t STATUS_GAP = 14;  // between the clock, the percent cluster and the title
+constexpr int16_t PERCENT_GAP = 6;
+// Tinta's battery: a 2px outline, a 3x6 nub and the charge inset 3px.
+constexpr int16_t BATTERY_W = 26;
+constexpr int16_t BATTERY_H = 13;
+constexpr int16_t BATTERY_NUB_W = 3;
+
+fui::TextStyle homeTextStyle(const fui::FontId font, const bool bold,
+                             const fui::TextAlign align = fui::TextAlign::Left) {
+  fui::TextStyle style;
+  style.font = font;
+  style.bold = bold;
+  style.align = align;
+  return style;
+}
+
+// Line-box top that centres `style`'s capitals in [top, top + height).
+int16_t capsCentredLineTop(const fui::DrawTarget& target, const fui::TextStyle& style, const int16_t top,
+                           const int16_t height) {
+  const fui::Rect caps = target.inkBounds(style.font, "H", style);
+  return static_cast<int16_t>(top + (height - caps.height) / 2 - caps.y);
+}
+
+// Tinta's status line: clock, battery percent and battery, ending at the
+// band's right edge, the texts on the title's baseline.
+class HomeStatus {
+ public:
+  HomeStatus() {
+    const uint16_t level = powerManager.getBatteryPercentage();
+    percent = static_cast<uint8_t>(level > 100 ? 100 : level);
+    charging = gpio.isUsbConnected();
+    if (SETTINGS.hideBatteryPercentage != CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS) {
+      snprintf(percentText, sizeof(percentText), "%u%%", static_cast<unsigned>(percent));
+    }
+    if (UITheme::getInstance().getMetrics().headerShowsClock && SETTINGS.clockShowInHeader && halClock.isAvailable() &&
+        !halClock.formatTime(clockText, sizeof(clockText), SETTINGS.clockFormat == 1)) {
+      clockText[0] = '\0';
+    }
+  }
+
+  int16_t width(const fui::DrawTarget& target) const {
+    int width = BATTERY_W + BATTERY_NUB_W;
+    if (percentText[0]) width += PERCENT_GAP + target.measureText(PERCENT_FONT, percentText, percentStyle()).width;
+    if (clockText[0]) width += STATUS_GAP + target.measureText(CLOCK_FONT, clockText, clockStyle()).width;
+    return static_cast<int16_t>(width);
+  }
+
+  void draw(fui::DrawTarget& target, const GfxRenderer& renderer, const int16_t right, const int16_t bandTop,
+            const int16_t bandHeight, const int16_t baseline) const {
+    const fui::Paint ink = fui::Paint::solid(fui::Color::Black);
+    const auto cy = static_cast<int16_t>(bandTop + bandHeight / 2);
+    const fui::Rect body{static_cast<int16_t>(right - BATTERY_NUB_W - BATTERY_W),
+                         static_cast<int16_t>(cy - BATTERY_H / 2), BATTERY_W, BATTERY_H};
+    target.stroke(body, ink, 2);
+    target.fill(fui::Rect{body.right(), static_cast<int16_t>(cy - 3), BATTERY_NUB_W, 6}, ink);
+    if (charging) {
+      target.fill(fui::Rect{static_cast<int16_t>(body.x + 2), static_cast<int16_t>(body.y + 2),
+                            static_cast<int16_t>(BATTERY_W - 4), static_cast<int16_t>(BATTERY_H - 4)},
+                  ink);
+      BaseTheme::drawBatteryLightningBolt(renderer, body.x + (BATTERY_W - 6) / 2, body.y + 2);
+    } else {
+      const int inner = BATTERY_W - 6;
+      const auto fill = static_cast<int16_t>((inner * percent + 50) / 100);
+      if (fill > 0) {
+        target.fill(fui::Rect{static_cast<int16_t>(body.x + 3), static_cast<int16_t>(body.y + 3), fill,
+                              static_cast<int16_t>(BATTERY_H - 6)},
+                    ink);
+      }
+    }
+
+    int16_t x = body.x;
+    if (percentText[0])
+      x = drawText(target, static_cast<int16_t>(x - PERCENT_GAP), baseline, PERCENT_FONT, percentText, percentStyle());
+    if (clockText[0])
+      drawText(target, static_cast<int16_t>(x - STATUS_GAP), baseline, CLOCK_FONT, clockText, clockStyle());
+  }
+
+ private:
+  // Home binds the body slot to the 20px strike (HomeTypeScale); the label
+  // slot is the fixed 17px status font.
+  static constexpr fui::FontId PERCENT_FONT = fui::GfxRendererTarget::FONT_LABEL;
+  static constexpr fui::FontId CLOCK_FONT = fui::GfxRendererTarget::FONT_BODY;
+  static fui::TextStyle percentStyle() { return homeTextStyle(PERCENT_FONT, false); }
+  static fui::TextStyle clockStyle() { return homeTextStyle(CLOCK_FONT, true); }
+
+  // Draws `text` ending at `right` on `baseline`; returns its left edge.
+  static int16_t drawText(fui::DrawTarget& target, const int16_t right, const int16_t baseline, const fui::FontId font,
+                          const char* text, const fui::TextStyle& style) {
+    const int16_t w = target.measureText(font, text, style).width;
+    const fui::Rect caps = target.inkBounds(font, "H", style);
+    const auto left = static_cast<int16_t>(right - w);
+    target.text(fui::Rect{left, static_cast<int16_t>(baseline - caps.y - caps.height), w, target.lineHeight(font)},
+                text, style);
+    return left;
+  }
+
+  uint8_t percent = 0;
+  bool charging = false;
+  char percentText[8] = {};
+  char clockText[10] = {};
 };
 
 std::string fileNameOf(const std::string& path) {
@@ -1333,47 +1445,85 @@ void LibraryListActivity::formatProgress(const int progress, std::string& out) {
 void LibraryListActivity::buildHeader(UiScreen& screen) {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const auto& theme = screen.theme();
+  auto& target = screen.target();
+  const auto frameRect = screen.frame().screen();
+  const fui::Rect rect{frameRect.x, screen.frame().safeRect().y, frameRect.width, HOME_BAND_HEIGHT};
+  const auto bandHeight = static_cast<int16_t>(rect.height - metrics.headerUnderlineSize);
+
   fui::HeaderProps header;
   header.title = headerTitle();
-  header.titleText = theme.titleText;
-  header.titleText.align = theme.headerTitleAlign;
+  header.titleText = homeTextStyle(fui::GfxRendererTarget::FONT_BODY, true, theme.headerTitleAlign);
   header.sidePadding = theme.headerSidePadding;
-  header.minTouchSize = theme.minTouchSize;
   header.styles = theme.popup;
   if (header.styles.normal.border.kind == fui::PaintKind::None && theme.headerUnderline > 0) {
     header.styles.normal.border = fui::Paint::solid(fui::Color::Black);
     header.styles.normal.borderWidth = theme.headerUnderline;
   }
-  header.trailingStyles = fui::plainStyles(fui::Paint::solid(fui::Color::Black));
   header.borderEdges = fui::EdgeBottom;
-  // Same battery/clock band as every GUI.drawHeader screen; the header
-  // heights are unified across themes, so the buttons derive from the band.
-  GUI.applyHeaderStatus(renderer, header);
-  // Home is the root: no back arrow. Touch boards get the shelf's two doors on
-  // the right, menu outermost; button boards reach them from the top of the
-  // shelf (Back and Previous), so their band stays plain.
-  if (mappedInput.hasTouch()) {
-    header.trailingIcon = fui::bitmapFromIcon(icon_header_menu_32);
-    header.trailingAction = ACTION_MENU;
-    if (!degraded) {
-      header.trailingAdjacentIcon = fui::bitmapFromIcon(icon_search_32);
-      header.trailingAdjacentAction = ACTION_SEARCH;
-    }
-  }
+  // As in Tinta, the title's line box centres on the band above the rule;
+  // header() centres it on the whole rect, so lift it by the difference.
+  const int16_t titleLineHeight = target.lineHeight(header.titleText.font);
+  const auto titleTop = static_cast<int16_t>(rect.y + (bandHeight - titleLineHeight) / 2);
+  header.titleOffsetY = static_cast<int16_t>(titleTop - (rect.y + (rect.height - titleLineHeight) / 2));
+  const fui::Rect caps = target.inkBounds(header.titleText.font, "H", header.titleText);
+  const auto baseline = static_cast<int16_t>(titleTop + caps.y + caps.height);
+
+  const HomeStatus status;
+  header.rightReserve = static_cast<int16_t>(status.width(target) + STATUS_GAP);
+  // Home is the root: no back arrow, and its doors are on the keys or the
+  // touch choice bar, so the band holds no buttons.
+  headerWithActions(screen.frame(), rect, header);
+  status.draw(target, renderer, static_cast<int16_t>(rect.right() - theme.headerSidePadding), rect.y, bandHeight,
+              baseline);
+}
+
+// Touch boards get Tinta's choice bar in place of key hints: four ruled cells
+// across the bottom edge, the shelf's two doors in the first two.
+void LibraryListActivity::buildTouchChoices(UiScreen& screen) {
+  auto& target = screen.target();
   const auto frameRect = screen.frame().screen();
-  // Header and tabs share a screen-relative boundary, independent of bezel insets.
-  headerWithActions(screen.frame(),
-                    fui::Rect{frameRect.x, static_cast<int16_t>(metrics.topPadding), frameRect.width,
-                              static_cast<int16_t>(metrics.headerHeight)},
-                    header);
+  const fui::Rect bar{frameRect.x, static_cast<int16_t>(screen.frame().safeRect().bottom() - HOME_CHOICE_HEIGHT),
+                      frameRect.width, HOME_CHOICE_HEIGHT};
+  const fui::Paint ink = fui::Paint::solid(fui::Color::Black);
+  target.fill(bar, fui::Paint::solid(fui::Color::White));
+  target.fill(fui::Rect{bar.x, bar.y, bar.width, 2}, ink);
+
+  struct Choice {
+    const char* label;
+    fui::ActionId action;
+  };
+  const Choice choices[TOUCH_CHOICE_CELLS] = {
+      {tr(STR_HOME_MENU), ACTION_MENU},
+      {degraded ? nullptr : tr(STR_SEARCH), ACTION_SEARCH},
+      {nullptr, fui::NO_ACTION},
+      {nullptr, fui::NO_ACTION},
+  };
+  const fui::TextStyle labelStyle = homeTextStyle(fui::GfxRendererTarget::FONT_BODY, true, fui::TextAlign::Center);
+  const auto contentHeight = static_cast<int16_t>(bar.height - FOOTER_CONTENT_TOP);
+  for (int i = 0; i < TOUCH_CHOICE_CELLS; i++) {
+    const auto x0 = static_cast<int16_t>(bar.x + bar.width * i / TOUCH_CHOICE_CELLS);
+    const auto x1 = static_cast<int16_t>(bar.x + bar.width * (i + 1) / TOUCH_CHOICE_CELLS);
+    if (i > 0)
+      target.fill(fui::Rect{x0, static_cast<int16_t>(bar.y + 8), 1, static_cast<int16_t>(bar.height - 16)}, ink);
+    if (!choices[i].label) continue;
+    screen.frame().hit(fui::Rect{x0, bar.y, static_cast<int16_t>(x1 - x0), bar.height}, choices[i].action, 0,
+                       fui::InputTouch);
+    target.text(fui::Rect{static_cast<int16_t>(x0 + 2), static_cast<int16_t>(bar.y + FOOTER_CONTENT_TOP),
+                          static_cast<int16_t>(x1 - x0 - 4), contentHeight},
+                choices[i].label, labelStyle);
+  }
 }
 
 void LibraryListActivity::buildScreen(UiScreen& screen) {
-  const auto& metrics = UITheme::getInstance().getMetrics();
   const HomeTypeScale typeScale(uiTarget);
   buildHeader(screen);
-  screen.setContentMarginFromScreen(fui::Insets{static_cast<int16_t>(metrics.topPadding + metrics.headerHeight), 0,
-                                                static_cast<int16_t>(metrics.buttonHintsHeight), 0});
+  int16_t footerHeight = HOME_HINTS_HEIGHT;
+  if (mappedInput.hasTouch()) {
+    buildTouchChoices(screen);
+    footerHeight = HOME_CHOICE_HEIGHT;
+  }
+  // Both bands sit inside the bezel's viewable insets, as Tinta's do.
+  screen.setContentMargin(fui::Insets{HOME_BAND_HEIGHT, 0, footerHeight, 0});
 
   if (heroShown()) {
     buildHero(screen);
@@ -1427,5 +1577,11 @@ void LibraryListActivity::drawFooter() {
   }
   if (atTop && !degraded) previousLabel = tr(STR_SEARCH);
   const auto labels = mappedInput.mapLabels(backLabel, confirmLabel, previousLabel, tr(STR_DIR_DOWN));
-  GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
+  const char* hints[] = {labels.btn1, labels.btn2, labels.btn3, labels.btn4};
+  // Tinta's key-hint band: small labels with their capitals centred below the
+  // rule, chevrons likewise.
+  const fui::TextStyle labelStyle = homeTextStyle(fui::GfxRendererTarget::FONT_LABEL, false);
+  const int labelTop = capsCentredLineTop(uiTarget, labelStyle, FOOTER_CONTENT_TOP,
+                                          static_cast<int16_t>(HOME_HINTS_HEIGHT - FOOTER_CONTENT_TOP));
+  LyraTheme::drawHintBand(renderer, hints, HOME_HINTS_HEIGHT, SMALL_FONT_ID, labelTop, FOOTER_CONTENT_TOP, true);
 }

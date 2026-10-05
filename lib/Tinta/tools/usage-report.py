@@ -458,24 +458,30 @@ def report(events, stats, names):
     total = len(inputs)
     w(f"\n{total} input(s): {pct(sum(1 for e in inputs if e['outcome'] == 'ignored'), total) or 'n/a'} did nothing, "
       f"{pct(sum(1 for e in inputs if e['outcome'] == 'queued'), total) or 'n/a'} waited for a refresh.\n")
-    w("### Refreshes\n")
+    # Frames, sleeps and battery readings come only from the standalone
+    # firmware's logs; lila does not record them.
     frames = [e for e in events if e["type"] == "frame"]
-    rows = []
-    for kind, group in sorted(_group(frames, "refresh").items(), key=lambda kv: str(kv[0])):
-        lat = [g["latency_ms"] for g in group if g["latency_ms"] != 0xFFFF]
-        rows.append([kind, len(group), median(lat), p90(lat), median([g["present_ms"] for g in group])])
-    w(table(["refresh", "frames", "press to frame, median ms", "p90 ms", "present median ms"], rows))
+    if frames:
+        w("### Refreshes\n")
+        rows = []
+        for kind, group in sorted(_group(frames, "refresh").items(), key=lambda kv: str(kv[0])):
+            lat = [g["latency_ms"] for g in group if g["latency_ms"] != 0xFFFF]
+            rows.append([kind, len(group), median(lat), p90(lat), median([g["present_ms"] for g in group])])
+        w(table(["refresh", "frames", "press to frame, median ms", "p90 ms", "present median ms"], rows))
 
     # ---- Device ----
     w("\n## Device\n")
     w(table(["boot reason", "times"], Counter(e["reason"] for e in events if e["type"] == "boot").most_common()))
-    w("")
-    w(table(["sleep cause", "times"], Counter(e["cause"] for e in events if e["type"] == "sleep").most_common()))
-    w("\n### Battery use (stretches of a quarter hour or more)\n")
-    awake, asleep = _battery(events)
-    w(table(["while", "hours", "percent used", "% per hour"],
-            [[label, f"{h:.1f}", used, f"{used / h:.2f}" if h else ""] for label, (h, used) in
-             (("awake", awake), ("asleep or off", asleep)) if h >= 0.25]))
+    sleeps = Counter(e["cause"] for e in events if e["type"] == "sleep")
+    if sleeps:
+        w("")
+        w(table(["sleep cause", "times"], sleeps.most_common()))
+    if any(e["type"] == "battery" for e in events):
+        w("\n### Battery use (stretches of a quarter hour or more)\n")
+        awake, asleep = _battery(events)
+        w(table(["while", "hours", "percent used", "% per hour"],
+                [[label, f"{h:.1f}", used, f"{used / h:.2f}" if h else ""] for label, (h, used) in
+                 (("awake", awake), ("asleep or off", asleep)) if h >= 0.25]))
     errors = Counter((e["code"], e["detail"]) for e in events if e["type"] == "error")
     w("\n### Errors and settings\n")
     w(table(["error", "detail", "times"], [[c, d, n] for (c, d), n in errors.most_common()]))

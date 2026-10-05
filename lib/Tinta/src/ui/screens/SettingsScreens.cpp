@@ -54,15 +54,6 @@ void cycle(E& value, int8_t dir, uint8_t count) {
 
 void formatNumber(char* out, size_t cap, unsigned value) { snprintf(out, cap, "%u", value); }
 
-void formatOffset(char* out, size_t cap, int16_t minutes) {
-  if (minutes == 0) {
-    snprintf(out, cap, "UTC");
-    return;
-  }
-  const unsigned m = static_cast<unsigned>(minutes < 0 ? -minutes : minutes);
-  snprintf(out, cap, "UTC%s%02u:%02u", minutes < 0 ? TINTA_EN_DASH : "+", m / 60, m % 60);
-}
-
 bool hasTime(App& app) { return app.clock().hasTimeOfDay(); }
 bool noTime(App& app) { return !app.clock().hasTimeOfDay(); }
 
@@ -128,14 +119,9 @@ const Field kDisplay[] = {
 };
 
 const Field kTime[] = {
-    {Str::SetDateTime, "setClock", RowKind::Link, nullptr, nullptr, nullptr, ScreenId::SetClock, hasTime},
     {Str::TodaysDate, "date", RowKind::Link,
      [](App& a, char* o, size_t c) { formatDate(a.clock().today(), DateStyle::Short, o, c); }, nullptr, nullptr,
      ScreenId::DatePicker, noTime},
-    {Str::TimeZone, "utcOffset", RowKind::Stepper,
-     [](App& a, char* o, size_t c) { formatOffset(o, c, a.profile().utcOffsetMinutes); },
-     [](App& a, int8_t d) { stepClamped(a.profile().utcOffsetMinutes, d, 30, -720, 840); }, nullptr, ScreenId::None,
-     hasTime, [](App& a) -> int32_t { return a.profile().utcOffsetMinutes; }},
     {Str::DayStartsAt, "rolloverHour", RowKind::Stepper,
      [](App& a, char* o, size_t c) { snprintf(o, c, "%02u:00", a.profile().rolloverHour); },
      [](App& a, int8_t d) { stepClamped(a.profile().rolloverHour, d, 1, 0, 23); }, nullptr, ScreenId::None, hasTime,
@@ -153,8 +139,6 @@ const PageInfo kPages[] = {
     {"settings-study", Str::Study, kStudy, sizeof kStudy / sizeof kStudy[0]},
     {"settings-display", Str::Display, kDisplay, sizeof kDisplay / sizeof kDisplay[0]},
     {"settings-time", Str::DateAndTime, kTime, sizeof kTime / sizeof kTime[0]},
-    // Sleep belongs to lila; the page stays so the ids keep their places.
-    {"settings-sleep", Str::SleepAndPower, nullptr, 0},
 };
 
 // The root menu.
@@ -256,13 +240,9 @@ void SettingsPage::row(const uint8_t index, RowSpec& out, char* value, const siz
 void SettingsPage::step(const uint8_t index, const int8_t dir) {
   const Field* f = field(index);
   if (!f || !f->step) return;
-  const uint32_t before = app_.clock().nowSeconds();
   f->step(app_, dir);
   app_.profileChanged();
   if (f->number) app_.usage().setting(f->slug, f->number(app_));
-  if (f->label == Str::TimeZone) {
-    app_.usage().clockChange(core::usage::ClockKind::TimeZone, before, app_.clock().nowSeconds());
-  }
   char value[kValueCap] = {};
   if (f->format) {
     f->format(app_, value, sizeof value);

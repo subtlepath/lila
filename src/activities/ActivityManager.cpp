@@ -128,8 +128,13 @@ void ActivityManager::loop() {
       // the strip above the title. The header's buttons share this band;
       // their taps stay theirs.
       const auto& metrics = UITheme::getInstance().getMetrics();
-      const int statusBand =
+      int statusBand =
           metrics.batteryBarHeight >= metrics.headerHeight ? metrics.topPadding + metrics.headerHeight : 44;
+      if (currentActivity->isHomeActivity()) {
+        int viewTop = 0, viewRight = 0, viewBottom = 0, viewLeft = 0;
+        renderer.getOrientedViewableTRBL(&viewTop, &viewRight, &viewBottom, &viewLeft);
+        statusBand = viewTop + LibraryListActivity::STATUS_BAND_HEIGHT;
+      }
       statusBarTap = mappedInput.wasScreenTapped(tx, ty) && ty < statusBand && !HeaderBackTapTarget.contains(tx, ty) &&
                      !HeaderActionTapTarget.contains(tx, ty);
     }
@@ -333,7 +338,12 @@ void ActivityManager::goToReader(std::string path, const bool allowFastInitialRe
 }
 
 void ActivityManager::goToSleep(bool fromTimeout) {
-  replaceActivity(std::make_unique<SleepActivity>(renderer, mappedInput, fromTimeout));
+  bool frameRedrawn = false;
+  if (currentActivity && SleepActivity::keepsCurrentFrame(fromTimeout)) {
+    RenderLock lock;
+    frameRedrawn = currentActivity->drawSleepFrame();
+  }
+  replaceActivity(std::make_unique<SleepActivity>(renderer, mappedInput, fromTimeout, frameRedrawn));
   loop();  // Important: sleep screen must be rendered immediately, the caller will go to sleep right after this returns
 }
 
