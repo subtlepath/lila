@@ -17,6 +17,9 @@
 #include "browser/OpdsBookBrowserActivity.h"
 #include "components/HeaderBackTapTarget.h"
 #include "games/GamesActivity.h"
+#if LILA_TINTA
+#include "tinta/TintaActivity.h"
+#endif
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
 #include "library/LibraryListActivity.h"
@@ -276,6 +279,17 @@ void ActivityManager::goToGames() {
   }
   replaceActivity(std::move(activity));
 }
+
+#if LILA_TINTA
+void ActivityManager::goToTinta() {
+  auto activity = makeUniqueNoThrow<TintaActivity>(renderer, mappedInput);
+  if (!activity) {
+    LOG_ERR("ACT", "OOM: tinta activity");
+    return;
+  }
+  replaceActivity(std::move(activity));
+}
+#endif
 
 void ActivityManager::goToBrowser() {
   const auto& servers = OPDS_STORE.getServers();

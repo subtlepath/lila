@@ -43,6 +43,12 @@ class HalClock {
   // Returns false if RTC is not available.
   bool formatTime(char* buf, size_t bufSize, bool use12Hour = false) const;
 
+  // The RTC's own reading (UTC), uncached. False without an RTC or a reading.
+  bool utcNow(Rtc::DateTime& out) const;
+
+  // Set the RTC from a UTC date and time. False without an RTC or on a failed write.
+  bool setUtc(const Rtc::DateTime& utc);
+
   // Sync the RTC from an NTP server. Requires WiFi to be connected.
   // Blocks for up to ~5s while waiting for SNTP response.
   // Returns true if the RTC was successfully updated.

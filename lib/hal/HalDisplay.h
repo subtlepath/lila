@@ -50,6 +50,10 @@ class HalDisplay {
                             bool fromProgmem = false) const;
 
   void displayBuffer(RefreshMode mode = RefreshMode::FAST_REFRESH, bool turnOffScreen = false);
+  // Fast differential refresh of one window, in panel memory coordinates (x and w multiples of 8). On the
+  // X4's SSD1677 only the window's bytes cross the SPI bus; other panels refresh the whole frame. Pixels
+  // outside the window must match what the panel shows.
+  void displayWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool turnOffScreen = false);
   // Non-blocking refresh (shadow-free): starts the panel waveform and returns
   // while the panel refreshes on its own. The framebuffer must stay untouched
   // until waitRefreshComplete(), and the caller must rebuild the differential

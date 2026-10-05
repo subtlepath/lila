@@ -68,6 +68,7 @@ add_subdirectory(chapter_position)
 add_subdirectory(home_button)
 add_subdirectory(table_games)
 add_subdirectory(book_search)
+add_subdirectory(tinta)
 
 add_subdirectory(inflate_stream)
 add_subdirectory(fs_helpers)

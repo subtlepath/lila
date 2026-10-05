@@ -13,8 +13,12 @@ class LibraryMenuActivity final : public UiListActivity {
 
   void onEnter() override;
 
-  enum class Entry : uint8_t { Folders, AddBooks, Catalogs, Games, Settings };
+  enum class Entry : uint8_t { Folders, AddBooks, Catalogs, Games, Tinta, Settings };
+#if LILA_TINTA
+  static constexpr int MAX_ROWS = 6;
+#else
   static constexpr int MAX_ROWS = 5;
+#endif
 
  private:
   int listCount() const override { return rowCount; }

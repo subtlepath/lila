@@ -22,6 +22,9 @@ constexpr MenuRow MENU_ROWS[] = {
     {LibraryMenuActivity::Entry::AddBooks, StrId::STR_ADD_BOOKS, UIIcon::Transfer},
     {LibraryMenuActivity::Entry::Catalogs, StrId::STR_OPDS_BROWSER, UIIcon::Blocks},
     {LibraryMenuActivity::Entry::Games, StrId::STR_GAMES, UIIcon::Dices},
+#if LILA_TINTA
+    {LibraryMenuActivity::Entry::Tinta, StrId::STR_TINTA, UIIcon::Text},
+#endif
     {LibraryMenuActivity::Entry::Settings, StrId::STR_SETTINGS_TITLE, UIIcon::Settings},
 };
 static_assert(sizeof(MENU_ROWS) / sizeof(MENU_ROWS[0]) == LibraryMenuActivity::MAX_ROWS, "menu row storage");
@@ -78,6 +81,11 @@ void LibraryMenuActivity::activateIndex(const int index) {
       break;
     case Entry::Games:
       activityManager.goToGames();
+      break;
+    case Entry::Tinta:
+#if LILA_TINTA
+      activityManager.goToTinta();
+#endif
       break;
     case Entry::Settings:
       activityManager.goToSettings();

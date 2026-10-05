@@ -32,3 +32,6 @@ lib/EpdFont/scripts/output/
 /sdkconfig.*
 sdkconfig.sticky
 flake.*
+
+# Tinta: the whole course for local tests (test/tinta/run.sh says how to build it).
+test/tinta/fixtures/full.pack

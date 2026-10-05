@@ -153,6 +153,7 @@ Press **Back** on the current book (or tap the Menu icon) to open the menu:
 - **Add Books** opens **[File Transfer](#36-file-transfer-screen)**.
 - **OPDS Browser** appears once an OPDS server is set up in Settings.
 - **[Games](#35-games-screen)**
+- **[Learn Spanish](#351-learn-spanish)** (X3, X4, X4 Classic and X4 Pro)
 - **[Settings](#37-settings)**
 
 Press **Back** to return to Home.
@@ -176,6 +177,10 @@ Available games:
 During a game, **Back** opens the table menu: resume, play again, choose another game, let the CPU play for readers who have dropped out, or leave or close the table. If a reader drops out, for example because it went out of range or to sleep, its seat is kept and it rejoins automatically when it comes back. Closing the table as host ends it for everyone.
 
 A table keeps the radio on, which uses more battery than reading, and the reader stays awake while a table is active. After 20 minutes with no moves or button presses, normal auto-sleep resumes.
+
+### 3.5.1 Learn Spanish
+
+**Learn Spanish** is Tinta, an offline Mexican Spanish course: lessons, a daily review session, graded readings, a phrasebook and a dictionary. It needs the course file on the SD card at `/tinta/course.pack`, and keeps your progress in the same `/tinta/` folder. **Back** on its Home returns to lila, and opening it again continues where you left off. See [docs/tinta.md](docs/tinta.md).
 
 ### 3.6 File Transfer Screen
 

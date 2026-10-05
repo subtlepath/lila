@@ -52,6 +52,16 @@ bool HalClock::localTime(struct tm& out) const {
   return true;
 }
 
+bool HalClock::utcNow(Rtc::DateTime& out) const { return _available && _sdkRtc.now(out); }
+
+bool HalClock::setUtc(const Rtc::DateTime& utc) {
+  if (!_available || !_sdkRtc.set(utc)) return false;
+  _cachedUtc = epochFromUtc(utc);
+  _hasCachedTime = true;
+  _lastPollMs = 0;
+  return true;
+}
+
 bool HalClock::getTime(uint8_t& hour, uint8_t& minute) const {
   struct tm local;
   if (!localTime(local)) return false;

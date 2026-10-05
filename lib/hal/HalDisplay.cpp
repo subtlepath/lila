@@ -67,6 +67,20 @@ void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen)
   einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
 }
 
+void HalDisplay::displayWindow(const uint16_t x, const uint16_t y, const uint16_t w, const uint16_t h,
+                               const bool turnOffScreen) {
+  // The SSD1677 driver copies the window into a std::vector, which aborts rather than fail: send a window
+  // only when that copy is certain to fit, with room to spare for the rest of the system.
+  constexpr uint32_t HEAP_MARGIN = 8 * 1024;
+  const uint32_t windowBytes = static_cast<uint32_t>(w / 8) * h;
+  if (getController() != Controller::SSD1677 || einkDisplay.isX3Mode() ||
+      ESP.getMaxAllocHeap() < windowBytes + HEAP_MARGIN) {
+    displayBuffer(RefreshMode::FAST_REFRESH, turnOffScreen);
+    return;
+  }
+  einkDisplay.displayWindow(x, y, w, h, turnOffScreen);
+}
+
 void HalDisplay::displayBufferAsync(HalDisplay::RefreshMode mode) {
   if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
     einkDisplay.requestResync(1);
