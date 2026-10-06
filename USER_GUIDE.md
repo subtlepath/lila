@@ -122,6 +122,7 @@ On a button-only device:
 - Use **Up/Down** or **Left/Right** to move from Continue Reading to Sort By and on into the books. Hold a direction to move a page at a time.
 - Press **Up** (or **Left**) on Continue Reading to **Search** by title or author.
 - Press **Back** to clear a search or return to Continue Reading. Press it on Continue Reading to open the **[Home Menu](#34-home-menu)**.
+- Leaving the search keyboard with **Back** or **Home** clears the search, and so does **Home** while search results are showing.
 - On Sort By, press **Confirm** to switch to the next order, or hold **Confirm** to reverse its direction.
 - Hold **Confirm** on Continue Reading, or on a book in the Recent order, for its options: open, remove from recents, delete, or refresh the library.
 - In the Title or Author views, hold **Confirm** on a book to collapse the list to its letter or author groups. The matching group remains selected. Press **Confirm** to enter a group, or **Back** to restore the exact book and position you came from.

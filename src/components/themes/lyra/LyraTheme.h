@@ -93,8 +93,9 @@ class LyraTheme : public BaseTheme {
 
   // The front-key hints as one plain band on the bottom edge: a 1px rule,
   // labels in `fontId` centred over their keys (line box `labelTop` below the
-  // band top), directions as chevrons centred below `iconAreaTop`. With
-  // `aboveBezel`, the band sits on the bezel's bottom viewable inset instead.
+  // band top), directions as chevrons centred between `iconAreaTop` and
+  // `iconAreaBottom` above the band's bottom. With `aboveBezel`, the band sits
+  // on the bezel's bottom viewable inset instead.
   static void drawHintBand(GfxRenderer& renderer, const char* const labels[4], int bandHeight, int fontId, int labelTop,
-                           int iconAreaTop, bool aboveBezel = false);
+                           int iconAreaTop, bool aboveBezel = false, int iconAreaBottom = 0);
 };

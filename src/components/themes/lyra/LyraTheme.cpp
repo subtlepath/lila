@@ -101,7 +101,8 @@ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
 }
 
 void LyraTheme::drawHintBand(GfxRenderer& renderer, const char* const labels[4], const int bandHeight, const int fontId,
-                             const int labelTop, const int iconAreaTop, const bool aboveBezel) {
+                             const int labelTop, const int iconAreaTop, const bool aboveBezel,
+                             const int iconAreaBottom) {
   if (gpio.hasTouch()) {
     return;
   }
@@ -134,7 +135,7 @@ void LyraTheme::drawHintBand(GfxRenderer& renderer, const char* const labels[4],
 
   renderer.fillRect(0, bandTop, pageWidth, bandHeight, false);
   renderer.fillRect(0, bandTop, pageWidth, 1, true);
-  const int iconAreaHeight = bandHeight - iconAreaTop;
+  const int iconAreaHeight = bandHeight - iconAreaTop - iconAreaBottom;
   for (int i = 0; i < 4; i++) {
     if (labels[i] == nullptr || labels[i][0] == '\0') continue;
     const int x = buttonPositions[i];

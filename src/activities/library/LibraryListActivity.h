@@ -110,6 +110,8 @@ class LibraryListActivity final : public UiTabListActivity {
   // Sub-screens act on button press, so a button still held when we resume must
   // not also act here. Records what to swallow on the next release.
   void swallowHeldReleases();
+  // Drops the query and returns focus to the top of the whole shelf.
+  void clearSearch();
   // Staged back-out shared by Button::Back: clear the search, expand groups,
   // return focus to the top, then open the menu.
   void handleBackAction();
@@ -241,6 +243,9 @@ class LibraryListActivity final : public UiTabListActivity {
   // Set when a book opened from the pinned Recent rows: it becomes the hero, so
   // Home comes back with the hero focused.
   bool focusHeroOnReturn = false;
+  // Set while the search keyboard is open: leaving search by Back or Home
+  // returns to the whole shelf.
+  bool searchOpen = false;
   bool heroCoverReady = false;
   bool heroCoverPending = false;
   int heroCoverHeight = 0;

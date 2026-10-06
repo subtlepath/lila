@@ -104,6 +104,9 @@ constexpr int16_t HOME_HINTS_HEIGHT = 44;
 constexpr int16_t HOME_CHOICE_HEIGHT = 64;
 // The footer's content starts below its top rule's 2px, as in Tinta.
 constexpr int16_t FOOTER_CONTENT_TOP = 2;
+// Key hints centre this far above the hint band's bottom: on the key boards,
+// labels centred on the whole band read as cut off by the bezel.
+constexpr int16_t HINTS_CONTENT_BOTTOM = 8;
 constexpr int16_t STATUS_GAP = 14;  // between the clock, the percent cluster and the title
 constexpr int16_t PERCENT_GAP = 6;
 // Tinta's battery: a 2px outline, a 3x6 nub and the charge inset 3px.
@@ -483,16 +486,17 @@ void LibraryListActivity::buildBarRow(UiScreen& screen, const fui::ActionId acti
 
 void LibraryListActivity::saveShelf() {
   shelfMemory.valid = true;
-  shelfMemory.heroFocused = heroFocused || focusHeroOnReturn;
   shelfMemory.activeTab = static_cast<uint8_t>(activeTabIndex);
   shelfMemory.descendingTabs = descendingTabs;
   // A book opened from the pinned rows or a search becomes the hero, so the
   // shelf comes back on it: the pinned order has changed under the old row,
-  // and the search has done its job.
+  // and the search has done its job. Home pressed during a search abandons it.
+  const bool resetShelf = focusHeroOnReturn || searchOpen;
+  shelfMemory.heroFocused = heroFocused || resetShelf;
   const fui::ListNav& nav = groupsCollapsed ? expandedNav : activeNav();
-  shelfMemory.selected = focusHeroOnReturn ? 0 : nav.selected.load();
-  shelfMemory.top = focusHeroOnReturn ? 0 : nav.top;
-  snprintf(shelfMemory.query, sizeof(shelfMemory.query), "%s", focusHeroOnReturn ? "" : query.c_str());
+  shelfMemory.selected = resetShelf ? 0 : nav.selected.load();
+  shelfMemory.top = resetShelf ? 0 : nav.top;
+  snprintf(shelfMemory.query, sizeof(shelfMemory.query), "%s", resetShelf ? "" : query.c_str());
 }
 
 void LibraryListActivity::restoreShelf() {
@@ -836,10 +840,16 @@ void LibraryListActivity::openSearch() {
     LOG_ERR("LIB", "OOM: search keyboard");
     return;
   }
+  searchOpen = true;
   startActivityForResult(std::move(keyboard), [this](const ActivityResult& result) {
+    searchOpen = false;
     swallowHeldReleases();
-    if (result.isCancelled) return;
-    query = std::get<KeyboardResult>(result.data).text;
+    // Backing out of the search ends it rather than keeping the old query.
+    if (result.isCancelled) {
+      query.clear();
+    } else {
+      query = std::get<KeyboardResult>(result.data).text;
+    }
     applyFilter();
     auto& nav = activeNav();
     if (query.empty()) {
@@ -1062,17 +1072,22 @@ void LibraryListActivity::applyFilter() {
   filteredCount = matchCount;
 }
 
+void LibraryListActivity::clearSearch() {
+  query.clear();
+  applyFilter();
+  auto& nav = activeNav();
+  nav.selected = 0;
+  nav.top = 0;
+  heroFocused = heroShown();
+  requestUpdate();
+}
+
 // Staged back-out: clear the search, expand collapsed groups, return focus to
 // the top of the shelf, then open the menu. Home has nowhere further back to go.
 void LibraryListActivity::handleBackAction() {
   auto& nav = activeNav();
   if (!query.empty()) {
-    query.clear();
-    applyFilter();
-    nav.selected = 0;
-    nav.top = 0;
-    heroFocused = heroShown();
-    requestUpdate();
+    clearSearch();
   } else if (groupsCollapsed) {
     restoreExpandedList();
   } else if (!heroFocused && heroShown()) {
@@ -1164,6 +1179,12 @@ bool LibraryListActivity::rowTextFor(const int entry, std::string& title, std::s
 
 bool LibraryListActivity::handleCustomInput() {
   if (optionPopup.handleInput(mappedInput, [this] { requestUpdate(); })) return true;
+  // Home on Home has nowhere to go; with a search showing it returns to the
+  // whole shelf.
+  if (!query.empty() && mappedInput.wasHomeGesture()) {
+    clearSearch();
+    return true;
+  }
 
   // The hero first paints text-only; its cover is written once the shelf is on
   // screen, so a missing thumb never delays Home.
@@ -1578,10 +1599,12 @@ void LibraryListActivity::drawFooter() {
   if (atTop && !degraded) previousLabel = tr(STR_SEARCH);
   const auto labels = mappedInput.mapLabels(backLabel, confirmLabel, previousLabel, tr(STR_DIR_DOWN));
   const char* hints[] = {labels.btn1, labels.btn2, labels.btn3, labels.btn4};
-  // Tinta's key-hint band: small labels with their capitals centred below the
-  // rule, chevrons likewise.
+  // Tinta's key-hint band: small labels with their capitals centred between
+  // the rule and the content bottom, chevrons likewise.
   const fui::TextStyle labelStyle = homeTextStyle(fui::GfxRendererTarget::FONT_LABEL, false);
-  const int labelTop = capsCentredLineTop(uiTarget, labelStyle, FOOTER_CONTENT_TOP,
-                                          static_cast<int16_t>(HOME_HINTS_HEIGHT - FOOTER_CONTENT_TOP));
-  LyraTheme::drawHintBand(renderer, hints, HOME_HINTS_HEIGHT, SMALL_FONT_ID, labelTop, FOOTER_CONTENT_TOP, true);
+  const int labelTop =
+      capsCentredLineTop(uiTarget, labelStyle, FOOTER_CONTENT_TOP,
+                         static_cast<int16_t>(HOME_HINTS_HEIGHT - FOOTER_CONTENT_TOP - HINTS_CONTENT_BOTTOM));
+  LyraTheme::drawHintBand(renderer, hints, HOME_HINTS_HEIGHT, SMALL_FONT_ID, labelTop, FOOTER_CONTENT_TOP, true,
+                          HINTS_CONTENT_BOTTOM);
 }
