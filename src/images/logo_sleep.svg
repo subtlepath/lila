@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- lila asleep: logo.svg with her eyes closed. Render with scripts/convert_logo.py. -->
+  <g transform="rotate(-7 60 64)">
+    <path d="M60 23 C80 23 95 29 100 42 C105 56 108 73 103 86 C97 99 80 104 60 104
+             C40 104 23 99 17 86 C12 73 15 56 20 42 C25 29 40 23 60 23 Z" fill="#000"/>
+    <path d="M71 31 Q88 24 104 30 Q110 32 109 38 L103 59 Q90 45 71 31 Z" fill="#000" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M49 31 Q32 24 16 30 Q10 32 11 38 L17 59 Q30 45 49 31 Z" fill="#000" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M102 56 Q92 45 80 36" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M18 56 Q28 45 40 36" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M27 57 Q38 67 49 57" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M71 57 Q82 67 93 57" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M49 71 Q60 63 71 71" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M54 77 L56.5 79" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M66 77 L63.5 79" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M60 83 L60 87" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M48 87 Q54 93 60 87 Q66 93 72 87" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M62 90 L71 90 L71 96 Q71 101 66.5 101 Q62 101 62 96 Z" fill="#fff"/>
+    <path d="M66.5 92 L66.5 97" stroke="#000" stroke-width="1.5"/>
+  </g>
+</svg>

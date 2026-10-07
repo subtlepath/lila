@@ -4,7 +4,7 @@ _order: "35"
 _bcp47: "fa"
 
 STR_CROSSPOINT: "lila"
-STR_BOOTING: "در حال راه‌اندازی"
+STR_BOOTING: "در حال بیدار شدن"
 STR_SLEEPING: "در حالت خواب"
 STR_ENTERING_SLEEP: "در حال ورود به حالت خواب"
 STR_BROWSE_FILES: "مرور فایل‌ها"

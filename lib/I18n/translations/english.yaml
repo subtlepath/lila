@@ -4,7 +4,7 @@ _order: "0"
 _bcp47: "en"
 
 STR_CROSSPOINT: "lila"
-STR_BOOTING: "BOOTING"
+STR_BOOTING: "WAKING UP"
 STR_SLEEPING: "SLEEPING"
 STR_ENTERING_SLEEP: "Going to sleep"
 STR_BROWSE_FILES: "Browse Files"
