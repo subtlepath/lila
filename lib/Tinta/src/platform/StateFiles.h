@@ -19,6 +19,8 @@
 
 #include <HalStorage.h>
 
+#include <span>
+
 #include "core/StateStore.h"
 
 namespace tinta::platform {
@@ -26,9 +28,10 @@ namespace tinta::platform {
 class StateFiles final : public core::StateStore {
  public:
   void begin();
+  bool beginCourse(std::span<const uint8_t, 16> course);
 
   bool available() const override { return mounted_ && !failed_; }
-  // True when the card answered at begin() and has since stopped responding.
+  // True when storage or pending-file recovery prevents safe use.
   bool failed() const { return failed_; }
 
   int32_t size(const char* name) override;
@@ -42,6 +45,9 @@ class StateFiles final : public core::StateStore {
   void release() { closeCached(); }
 
  private:
+  static constexpr size_t kPathCap = 76;
+  bool pathFor(const char* name, char (&out)[kPathCap], const char* suffix = "") const;
+  void beginRoot();
   enum class Mode : uint8_t { None, Read, Write };
 
   // Opens `name` (cached) for reading or writing; false if it is missing or
@@ -51,13 +57,14 @@ class StateFiles final : public core::StateStore {
   // Called after any failed operation: decides whether the card is gone.
   void checkCard();
   // Promotes a leftover <name>.tmp from an interrupted replace().
-  void recover(const char* name);
+  bool recover(const char* name);
 
   bool mounted_ = false;
   bool failed_ = false;
   HalFile file_;
   Mode mode_ = Mode::None;
   char cachedName_[24] = {};
+  char root_[48] = "/tinta";
 };
 
 }  // namespace tinta::platform

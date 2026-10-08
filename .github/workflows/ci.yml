@@ -9,6 +9,35 @@ permissions:
   contents: read
 
 jobs:
+  companion-release-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install course pack compiler dependency
+        run: pip install "pyyaml>=6.0.2"
+      - name: Test companion release manifests
+        run: python3 -m unittest discover -s test/release_manifest -v
+      - name: Test pinned NimBLE configuration patches
+        run: python3 -m unittest discover -s test/companion_config -v
+
+  companion-apple-core:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test shared Apple protocol against firmware fixtures
+        run: swift test --package-path apple/CompanionKit
+      - name: Build native iOS companion for simulator
+        run: >-
+          xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-iOS
+          -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Build native macOS companion
+        run: >-
+          xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-macOS
+          -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+
   clang-format:
     runs-on: ubuntu-latest
     steps:
@@ -148,6 +177,12 @@ jobs:
         run: |
           set -euo pipefail
           pio run -e ${{ matrix.env }} | tee pio.log
+
+      - name: Test removal snapshots against installed SdFat and ArduinoJson
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libssl-dev
+          python3 test/companion/sdfat_path_lookup_check.py .pio/libdeps/${{ matrix.env }}/SdFat/src
 
       - name: Extract firmware stats
         run: |

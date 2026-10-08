@@ -213,6 +213,13 @@ bool EpubReaderActivity::loadBook() {
   });
 
   epub->setupCacheDir();
+#if LILA_COMPANION
+  const auto restored = companion::restoreReaderProgress(*epub);
+  if (restored != companion::TintaJournalResult::Ok && restored != companion::TintaJournalResult::Unavailable) {
+    LOG_ERR("ERS", "Companion reading replay pending: %u", static_cast<unsigned>(restored));
+    pendingSyncSaveError = true;
+  }
+#endif
 
   HalFile f;
   if (Storage.openFileForRead("ERS", epub->getCachePath() + "/progress.bin", f)) {
@@ -1636,7 +1643,9 @@ std::optional<uint32_t> EpubReaderActivity::readingOffsetForPage(const int page)
 bool EpubReaderActivity::saveProgress(int spineIndex, int currentPage, int pageCount) {
   const std::optional<uint32_t> offset =
       spineIndex == currentSpineIndex ? readingOffsetForPage(currentPage) : std::nullopt;
-  return EpubReaderUtils::saveProgress(*epub, spineIndex, currentPage, pageCount, offset);
+  const bool saved = EpubReaderUtils::saveProgress(*epub, spineIndex, currentPage, pageCount, offset);
+  if (!saved) pendingSyncSaveError = true;
+  return saved;
 }
 
 void EpubReaderActivity::rememberCurrentContentOffset() {

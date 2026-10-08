@@ -80,3 +80,9 @@ add_subdirectory(absolute_grayscale)
 add_subdirectory(sd_card_font)
 add_subdirectory(glyph_bitmap)
 add_subdirectory(typeset_preview)
+
+add_subdirectory(companion)
+
+add_subdirectory(i18n)
+
+add_subdirectory(bookmark)

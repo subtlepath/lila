@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "check.h"
+#include "core/profile/LessonCompletion.h"
 #include "core/srs/Bytes.h"
 #include "fakes.h"
 
@@ -241,7 +242,97 @@ void testCardDropsOut() {
 
 }  // namespace
 
+void testLessonJournal() {
+  Profile profile;
+  profile.currentLesson = 2;
+  profile.unlockedThrough = 2;
+  LessonCompletion completion;
+  struct Observer {
+    Profile& profile;
+    bool accept = false;
+    bool recovery = true;
+    unsigned calls = 0;
+  } observer{profile};
+  completion.setMutationJournal({&observer,
+                                 [](void* context, uint16_t first, uint16_t last) {
+                                   auto& observer = *static_cast<Observer*>(context);
+                                   ++observer.calls;
+                                   CHECK_EQ(first, 2u);
+                                   CHECK_EQ(last, 4u);
+                                   CHECK_EQ(observer.profile.currentLesson, 2u);
+                                   CHECK_EQ(observer.profile.unlockedThrough, 2u);
+                                   return observer.accept;
+                                 },
+                                 [](void* context) { return static_cast<Observer*>(context)->recovery; }});
+  CHECK(!completion.apply(profile, 4, 6));
+  CHECK_EQ(profile.currentLesson, 2u);
+  CHECK_EQ(profile.unlockedThrough, 2u);
+  observer.accept = true;
+  CHECK(!completion.apply(profile, 4, 6));
+  CHECK_EQ(observer.calls, 1u);
+  observer.recovery = false;
+  CHECK(!completion.recover(true));
+  CHECK(!completion.apply(profile, 4, 6));
+  observer.recovery = true;
+  CHECK(completion.recover(true));
+  CHECK(completion.apply(profile, 4, 6));
+  CHECK_EQ(profile.currentLesson, 5u);
+  CHECK_EQ(profile.unlockedThrough, 5u);
+  CHECK(completion.apply(profile, 4, 6));
+  CHECK_EQ(observer.calls, 2u);
+  CHECK(!completion.apply(profile, 6, 6));
+  CHECK(!completion.apply(profile, 65535, 0));
+  observer.recovery = false;
+  CHECK(completion.recover(false));
+  LessonCompletion local;
+  Profile legacy;
+  CHECK(local.apply(legacy, 2, 3));
+  CHECK_EQ(legacy.currentLesson, 3u);
+  CHECK_EQ(legacy.unlockedThrough, 2u);
+}
+
+void testLessonProjection() {
+  struct Context {
+    uint32_t bits = 0;
+    int failAt = -1;
+  } context;
+  const auto completed = [](void* ctx, uint16_t index, bool& done) {
+    auto& owner = *static_cast<Context*>(ctx);
+    if (index == owner.failAt) return false;
+    done = (owner.bits & (1u << index)) != 0;
+    return true;
+  };
+  for (uint32_t bits = 0; bits < 32; ++bits) {
+    context.bits = bits;
+    tinta::core::Profile profile;
+    profile.currentLesson = 4;
+    profile.unlockedThrough = 1;
+    profile.retentionPermille = 870;
+    for (int fail = 0; fail < 5; ++fail) {
+      context.failAt = fail;
+      CHECK(!tinta::core::LessonCompletion::project(profile, 5, &context, completed));
+      CHECK_EQ(profile.currentLesson, 4);
+      CHECK_EQ(profile.unlockedThrough, 1);
+    }
+    context.failAt = -1;
+    CHECK(tinta::core::LessonCompletion::project(profile, 5, &context, completed));
+    uint16_t first = 0;
+    while (first < 5 && (bits & (1u << first))) ++first;
+    CHECK_EQ(profile.currentLesson, first);
+    CHECK(profile.unlockedThrough >= (first < 5 ? first : 4));
+    CHECK_EQ(profile.retentionPermille, 870);
+  }
+  tinta::core::Profile empty;
+  empty.currentLesson = empty.unlockedThrough = 12;
+  CHECK(tinta::core::LessonCompletion::project(empty, 0, &context, completed));
+  CHECK_EQ(empty.currentLesson, 0);
+  CHECK_EQ(empty.unlockedThrough, 0);
+  CHECK(!tinta::core::LessonCompletion::project(empty, 0, nullptr, nullptr));
+}
+
 int main() {
+  testLessonJournal();
+  testLessonProjection();
   testDefaultsAndRoundTrip();
   testUpgrades();
   testCorrupt();

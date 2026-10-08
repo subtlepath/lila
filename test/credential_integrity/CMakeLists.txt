@@ -8,3 +8,7 @@ target_link_libraries(CredentialIntegrityTest PRIVATE
 )
 
 gtest_discover_tests(CredentialIntegrityTest)
+
+add_executable(WifiCredentialSnapshotTest WifiCredentialSnapshotTest.cpp)
+target_link_libraries(WifiCredentialSnapshotTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(WifiCredentialSnapshotTest)

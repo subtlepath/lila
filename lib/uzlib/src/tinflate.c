@@ -449,15 +449,10 @@ static int tinf_inflate_block_data(TINF_DATA *d, TINF_TREE *lt, TINF_TREE *dt)
             if (offs > d->dict_size) {
                 return TINF_DICT_ERROR;
             }
-            /* Note: unlike full-dest-in-memory case below, we don't
-               try to catch offset which points to not yet filled
-               part of the dictionary here. Doing so would require
-               keeping another variable to track "filled in" size
-               of the dictionary. Appearance of such an offset cannot
-               lead to accessing memory outside of the dictionary
-               buffer, and clients which don't want to leak unrelated
-               information, should explicitly initialize dictionary
-               buffer passed to uzlib. */
+            /* lila: reject references preceding this stream's decoded history. */
+            if (offs > d->dict_filled) {
+                return TINF_DATA_ERROR;
+            }
 
             d->lzOff = d->dict_idx - offs;
             if (d->lzOff < 0) {
@@ -558,6 +553,7 @@ void uzlib_uncompress_init(TINF_DATA *d, void *dict, unsigned int dictLen)
    d->dict_size = dictLen;
    d->dict_ring = dict;
    d->dict_idx = 0;
+   d->dict_filled = 0;
    d->curlen = 0;
 }
 

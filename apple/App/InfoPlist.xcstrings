@@ -1,0 +1,26 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSBluetoothAlwaysUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lila Companion connects to your readers to transfer books, Tinta packs and reading progress."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lila Companion uses Wi-Fi to transfer books and Tinta packs to your readers."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

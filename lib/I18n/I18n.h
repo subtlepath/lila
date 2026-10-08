@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string_view>
 
 #include "I18nKeys.h"
 /**
@@ -24,6 +25,8 @@ class I18n {
   void setLanguage(Language lang);
   const char* getLanguageName(Language lang) const;
   static Language languageFromCode(const char* code);
+  static bool languageFromTag(std::string_view tag, Language& output);
+  static std::string_view languageTag(Language language);
 
   // Get all unique characters used in a specific language
   // Returns a sorted string of unique characters

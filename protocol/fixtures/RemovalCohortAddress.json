@@ -1,0 +1,17 @@
+{
+  "parentPlanSha256": "dc005ea34d8791784814f4251a51d975fd6229230a979715bfe6a6798cec5e27",
+  "addresses": [
+    {
+      "ordinal": "0",
+      "address": "/.crosspoint/companion/removal-cohort-bytes-8fa5d41f9eb1e6a5f0b0d71812965ece2d51c71bc5379c1d16d68d8f21c2382b"
+    },
+    {
+      "ordinal": "1",
+      "address": "/.crosspoint/companion/removal-cohort-bytes-dd10089f0b31783514d066bae23e811eed1d580536563c2517e2903b0cca8faf"
+    },
+    {
+      "ordinal": "18446744073709551615",
+      "address": "/.crosspoint/companion/removal-cohort-bytes-8b4bdc105fb37e98daa1d4f2b812edfa9a76ce3fd654346ac0a163be93196291"
+    }
+  ]
+}

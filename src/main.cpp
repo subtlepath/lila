@@ -5,6 +5,7 @@
 #include <FontDecompressor.h>
 #include <GfxRenderer.h>
 #include <HalClock.h>
+#include <HalCompanionRecovery.h>
 #include <HalDisplay.h>
 #include <HalFrontlight.h>
 #include <HalGPIO.h>
@@ -15,6 +16,7 @@
 #include <HalTiltSensor.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <Memory.h>
 #include <SPI.h>
 #include <VectorFontSupport.h>
 #include <WiFi.h>
@@ -23,6 +25,7 @@
 
 #include <cstring>
 
+#include "CompanionReaderPreferences.h"
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
 #include "KOReaderCredentialStore.h"
@@ -34,8 +37,10 @@
 #include "activities/ActivityManager.h"
 #include "activities/boot_sleep/SleepActivity.h"
 #include "activities/settings/SdFirmwareUpdateActivity.h"
+#include "activities/util/SettingsSaveErrorActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "network/FirmwareFlasher.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "util/ButtonNavigator.h"
 #include "util/ScreenshotUtil.h"
@@ -352,6 +357,8 @@ void setupDisplayAndFonts(bool seamless = false) {
   LOG_DBG("MAIN", "Fonts setup");
 }
 
+static bool companionRecoveryAllocationBlocked = false;
+
 void setup() {
   BoardConfig::holdPowerRails();
 
@@ -416,6 +423,17 @@ void setup() {
     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);
     return;
   }
+
+#if LILA_COMPANION
+  const bool companionRecoveryFailed =
+      !companion::recoverAtStartup(firmware_flash::validateForNextPartition, firmware_flash::runningImageDigest);
+  if (companionRecoveryFailed) {
+    companionRecoveryAllocationBlocked = true;
+    setupDisplayAndFonts(true);
+    GUI.drawPopup(renderer, tr(STR_COMPANION_RECOVERY_FAILED));
+    return;
+  }
+#endif
 
   HalSystem::checkPanic();
 
@@ -503,6 +521,15 @@ void setup() {
   bool needsWakeRefresh = false;
 
   setupDisplayAndFonts(resume != BootResume::Splash);
+#if LILA_COMPANION
+  const auto preferenceRecovery = companion::restoreReaderPreferenceRuntime(SETTINGS, sdFontSystem);
+  if (preferenceRecovery == companion::ReaderPreferenceApplicationResult::Applied) {
+    sdFontSystem.ensureLoaded(renderer);
+    UITheme::getInstance().reload();
+  } else if (preferenceRecovery != companion::ReaderPreferenceApplicationResult::Unchanged) {
+    LOG_ERR("MAIN", "Reader preference replay pending: %u", static_cast<unsigned>(preferenceRecovery));
+  }
+#endif
 
   switch (resume) {
     case BootResume::Silent:
@@ -594,6 +621,20 @@ void loop() {
 
   gpio.setSharedConfirmPowerShortPressEmitsPower(SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SLEEP);
   mappedInputManager.update();
+  if (companionRecoveryAllocationBlocked) {
+    delay(50);
+    return;
+  }
+
+#if LILA_COMPANION
+  if (!activityManager.requiresExclusiveStorageLoop() && companion::takeReaderPreferenceSaveError()) {
+    auto error = makeUniqueNoThrow<SettingsSaveErrorActivity>(renderer, mappedInputManager);
+    if (error)
+      activityManager.pushActivity(std::move(error));
+    else
+      LOG_ERR("MAIN", "OOM: settings save error activity");
+  }
+#endif
 
   if (activityManager.requiresExclusiveStorageLoop()) {
     // USB Drive handed the raw SD card to the host. Do not run screenshots,

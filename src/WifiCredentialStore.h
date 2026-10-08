@@ -3,6 +3,7 @@
 #include <PersistableStore.h>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -61,6 +62,7 @@ class WifiCredentialStore : public PersistableStore<WifiCredentialStore> {
   // Last connected network
   void setLastConnectedSsid(const std::string& ssid);
   std::string getLastConnectedSsid() const;
+  bool copyLastConnectedCredential(std::span<char> ssid, std::span<char> password) const;
   void clearLastConnectedSsid();
 
   // Clear all credentials

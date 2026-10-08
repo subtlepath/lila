@@ -1,0 +1,15 @@
+{
+  "recordVersion": 1,
+  "recordType": "DeviceDescriptor",
+  "fields": {
+    "device": "0102030405060708090a0b0c0d0e0f10",
+    "storageGeneration": "1112131415161718191a1b1c1d1e1f20",
+    "board": 1,
+    "capabilities": 3,
+    "batteryPercent": 75,
+    "minimumProtocol": 1,
+    "maximumProtocol": 1,
+    "runningBuild": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+  },
+  "binaryHex": "01010102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2001030000004b0101000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+}

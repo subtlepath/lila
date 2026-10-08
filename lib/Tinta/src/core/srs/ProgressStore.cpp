@@ -27,7 +27,7 @@ JournalEntry JournalEntry::review(uint32_t uid, Grade grade, uint8_t format, uin
   e.time = time;
   e.day = day;
   e.op = static_cast<uint8_t>((static_cast<uint8_t>(grade) & 0x07) | ((format & 0x1F) << 3));
-  uint32_t quarters = (responseMs + 125) / 250;
+  uint32_t quarters = responseMs / 250 + (responseMs % 250 >= 125 ? 1 : 0);
   if (quarters > 255) quarters = 255;
   if (quarters == 0 && responseMs > 0) quarters = 1;
   e.arg = static_cast<uint8_t>(quarters);
@@ -141,6 +141,7 @@ ProgressStore::OpenResult ProgressStore::fail() {
 ProgressStore::OpenResult ProgressStore::open(uint16_t* slots, uint32_t slotCount, ItemState* guestRecords,
                                               uint16_t guestCapacity) {
   mode_ = Mode::Closed;
+  authoritativeRecoveryFailed_ = false;
   header_ = Header();
   slots_ = slots;
   slotCount_ = slots ? slotCount : 0;
@@ -152,6 +153,10 @@ ProgressStore::OpenResult ProgressStore::open(uint16_t* slots, uint32_t slotCoun
   if (!store_.available()) {
     mode_ = Mode::Guest;
     return OpenResult::Guest;
+  }
+  if (mutationJournal_.recover && !mutationJournal_.recover(mutationJournal_.context)) {
+    authoritativeRecoveryFailed_ = true;
+    return fail();
   }
   mode_ = Mode::Disk;
 
@@ -526,7 +531,7 @@ bool ProgressStore::commit(const Change& change) {
   return true;
 }
 
-ProgressStore::Status ProgressStore::apply(const JournalEntry& entry, Change& change) {
+ProgressStore::Status ProgressStore::apply(const JournalEntry& entry, Change& change, uint32_t responseMilliseconds) {
   if (mode_ != Mode::Disk && mode_ != Mode::Guest) return Status::Failed;
   const Plan plan = this->plan(entry, false, change);
   if (plan == Plan::IoError) {
@@ -535,6 +540,11 @@ ProgressStore::Status ProgressStore::apply(const JournalEntry& entry, Change& ch
   }
   if (plan == Plan::Invalid) return Status::Invalid;
   if (plan == Plan::NoRoom) return Status::NotStored;
+  if (mode_ == Mode::Disk && mutationJournal_.persist &&
+      !mutationJournal_.persist(mutationJournal_.context, entry, change.before, change.after, responseMilliseconds)) {
+    mode_ = Mode::Failed;
+    return Status::Failed;
+  }
   if (mode_ == Mode::Disk) {
     uint8_t buffer[JournalEntry::kSize];
     entry.encode(buffer);
@@ -547,10 +557,54 @@ ProgressStore::Status ProgressStore::apply(const JournalEntry& entry, Change& ch
     mode_ = Mode::Failed;
     return Status::Failed;
   }
+  if (mode_ == Mode::Disk && mutationJournal_.committed &&
+      !mutationJournal_.committed(mutationJournal_.context, entry, change.before, change.after, responseMilliseconds)) {
+    mode_ = Mode::Failed;
+    return Status::Failed;
+  }
   return Status::Stored;
 }
 
 // --- Public operations ------------------------------------------------------
+
+bool ProgressStore::verifyCommittedMutation(const JournalEntry& entry, const ItemState& before,
+                                            const ItemState& after) {
+  if (mode_ != Mode::Disk || !store_.available() || entry.uid != before.uid || entry.uid != after.uid) return false;
+  Header disk;
+  if (!loadHeader(disk) || !disk.pendingValid || !disk.journalCount ||
+      disk.journalCount > static_cast<uint32_t>(INT32_MAX) / JournalEntry::kSize || disk.seq != header_.seq ||
+      disk.recordCount != header_.recordCount || disk.journalCount != header_.journalCount ||
+      disk.statDay != header_.statDay || disk.statNew != header_.statNew || disk.statReviews != header_.statReviews ||
+      disk.pendingSlot != header_.pendingSlot || !(disk.pending == after) || disk.undoValid != entry.isReview() ||
+      (disk.undoValid && (disk.undoSlot != disk.pendingSlot || !(disk.undoBefore == before))) ||
+      store_.size(kItemsFile) != static_cast<int32_t>(kRecordsOffset + disk.recordCount * ItemState::kPackedSize) ||
+      store_.size(kJournalFile) != static_cast<int32_t>(disk.journalCount * JournalEntry::kSize))
+    return false;
+  uint8_t journal[JournalEntry::kSize], expected[JournalEntry::kSize];
+  entry.encode(expected);
+  if (store_.read(kJournalFile, (disk.journalCount - 1) * JournalEntry::kSize, journal, sizeof(journal)) !=
+          static_cast<int32_t>(sizeof(journal)) ||
+      std::memcmp(journal, expected, sizeof(journal)) != 0)
+    return false;
+  ItemState stored;
+  return readRecord(disk.pendingSlot, stored) && stored == after;
+}
+
+bool ProgressStore::loadUndoReview(JournalEntry& entry, ItemState& before, ItemState& after) {
+  if (mode_ != Mode::Disk || !header_.undoValid || !header_.pendingValid || !header_.journalCount ||
+      header_.journalCount > static_cast<uint32_t>(INT32_MAX) / JournalEntry::kSize)
+    return false;
+  uint8_t bytes[JournalEntry::kSize];
+  if (store_.read(kJournalFile, (header_.journalCount - 1) * JournalEntry::kSize, bytes, sizeof(bytes)) !=
+      static_cast<int32_t>(sizeof(bytes)))
+    return false;
+  const auto review = JournalEntry::decode(bytes);
+  if (!review.isReview() || !verifyCommittedMutation(review, header_.undoBefore, header_.pending)) return false;
+  entry = review;
+  before = header_.undoBefore;
+  after = header_.pending;
+  return true;
+}
 
 bool ProgressStore::load(uint32_t index, ItemState& out) {
   if (index >= slotCount_ || index >= catalog_.itemCount()) return false;
@@ -571,7 +625,7 @@ ProgressStore::ReviewResult ProgressStore::review(uint32_t index, Grade grade, u
   }
   const JournalEntry entry = JournalEntry::review(catalog_.uidAt(index), grade, format, responseMs, day, time);
   Change change;
-  result.status = apply(entry, change);
+  result.status = apply(entry, change, responseMs);
   if (result.status == Status::Stored) {
     result.before = change.before;
     result.after = change.after;

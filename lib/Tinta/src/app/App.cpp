@@ -9,6 +9,7 @@
 
 #include "core/library/Library.h"
 #include "core/library/SleepWord.h"
+#include "core/session/SessionFile.h"
 #include "core/srs/Bytes.h"
 #include "icons/Icons.h"
 #include "platform/Log.h"
@@ -33,13 +34,14 @@ constexpr uint32_t kSaveDelayMs = 1000;
 // session.bin: what to return to after a wake or a power cut.
 //   0 magic "TSES"  4 version u16  6 depth u8  7 ids[depth] u8
 //   version 2 then: session length u16, the review session (SessionController)
+//   version 3 appends the verified learner snapshot SHA-256
 //   then crc32 of everything before it
 // Version 1 (M2) had no session part. The file is rewritten in place after
 // every grade, so it may be longer than its content; the CRC sits where the
 // lengths say.
 constexpr const char* kSessionFile = "session.bin";
 constexpr uint8_t kSessionMagic[4] = {'T', 'S', 'E', 'S'};
-constexpr uint16_t kSessionVersion = 2;
+constexpr uint16_t kSessionVersion = 3;
 
 bool isTimeStep(const ScreenId id) { return id == ScreenId::DatePrompt || id == ScreenId::DatePicker; }
 
@@ -90,7 +92,26 @@ App::~App() {
   ui::closeTextBuffers();
 }
 
-bool App::open() {
+bool App::setLearnerPreparation(LearnerPreparation preparation) {
+  if (opened_) {
+    log("learner preparation: app already open");
+    return false;
+  }
+  learnerPreparation_ = preparation;
+  return true;
+}
+
+bool App::setVerifiedLearnerSnapshot(std::span<const uint8_t, 32> digest) {
+  if (opened_ || std::all_of(digest.begin(), digest.end(), [](uint8_t byte) { return byte == 0; })) {
+    log("session snapshot: invalid binding or already open");
+    return false;
+  }
+  std::copy(digest.begin(), digest.end(), learnerSnapshot_);
+  learnerSnapshotBound_ = true;
+  return true;
+}
+
+bool App::open(const uint8_t* courseIdentity) {
   power_.begin();
   // The screens and the shared text buffers first: the biggest blocks, while
   // the heap is least broken up. Without them there is nothing to show.
@@ -99,8 +120,20 @@ bool App::open() {
     log("open: no memory for the screens");
     return false;
   }
-  storage_.begin();
+#if LILA_TINTA
+  if (courseIdentity) {
+    if (!storage_.beginCourse(std::span<const uint8_t, 16>(courseIdentity, 16))) {
+      log("open: course state unavailable");
+      return false;
+    }
+  } else
+#endif
+    storage_.begin();
 
+  if (!lessonCompletion_.recover(storage_.available())) {
+    log("open: authoritative lesson recovery failed");
+    return false;
+  }
   const core::Profile::LoadResult loaded = profile_.load(storage_);
   static const char* const kLoadNames[] = {"loaded", "upgraded", "defaults", "corrupt"};
   log("profile %s", kLoadNames[static_cast<uint8_t>(loaded)]);
@@ -110,7 +143,12 @@ bool App::open() {
   // Settings > Study > Record usage arrives with its profile field; on until then.
   usage_.open(true);
 
-  openCourse();
+  if (!openCourse()) {
+    closeCourse();
+    storage_.release();
+    log("open: authoritative learner recovery failed");
+    return false;
+  }
 
   clock_.begin(board_.hasRtc());
   // An RTC reading before the last day the device saw (or studied) is not
@@ -270,6 +308,7 @@ void App::resumeSession() {
     resumeDepth_ = at;
   }
   pendingSessionLength_ = 0;
+  pendingSessionRebuild_ = false;
 }
 
 // ── Course and progress ──────────────────────────────────────────────────────
@@ -283,7 +322,9 @@ const char* App::packStatusName() const {
   return i < sizeof kNames / sizeof kNames[0] ? kNames[i] : "?";
 }
 
-void App::openCourse() {
+bool App::openCourse() {
+  const auto preparation = learnerPreparation_;
+  learnerPreparation_ = {};
   fsrs_.configure(profile_.desiredRetention(), profile_.maxInterval);
   const uint32_t started = millis();
   packBlocks_ = new (std::nothrow) uint8_t[kPackBlocks * core::pack::CachedSource::kBlockSize];
@@ -291,27 +332,32 @@ void App::openCourse() {
   if (!packBlocks_ || !arena_) {
     log("pack: no memory for its cache");
     packStatus_ = core::pack::PackStatus::TooSmall;
-    return;
+    return true;
   }
   pack_.setArena(arena_, kArenaBytes);
   packFound_ = packFile_.open(platform::kPackPath, packBlocks_, kPackBlocks);
   packStatus_ = packFound_ ? pack_.open(packFile_) : core::pack::PackStatus::TooSmall;
   if (!pack_.isOpen()) {
     log("pack %s: %s", platform::kPackPath, packStatusName());
-    return;
+    return true;
   }
   log("pack open in %lu ms: %s, %lu bytes, edition %lu, %lu items, %lu lemmas",
       static_cast<unsigned long>(millis() - started), platform::kPackPath, static_cast<unsigned long>(packFile_.size()),
       static_cast<unsigned long>(pack_.contentVersion()), static_cast<unsigned long>(pack_.itemCount()),
       static_cast<unsigned long>(pack_.count(core::pack::Section::Lemm)));
 
+  if (storage_.available() && preparation.run && !preparation.run(preparation.context, *this)) {
+    log("learner preparation: authoritative recovery failed");
+    return false;
+  }
+  fsrs_.configure(profile_.desiredRetention(), profile_.maxInterval);
   slotCount_ = pack_.itemCount();
   slots_ = new (std::nothrow) uint16_t[slotCount_];
   if (!slots_) {
     // Too little memory for the slot table: no progress at all this time.
     log("progress: no memory for %lu slots", static_cast<unsigned long>(slotCount_));
     slotCount_ = 0;
-    return;
+    return true;
   }
   const uint32_t opening = millis();
   const core::ProgressStore::OpenResult opened = progress_.open(slots_, slotCount_, guest_, kGuestCapacity);
@@ -320,9 +366,13 @@ void App::openCourse() {
   log("progress %s in %lu ms: %lu records, %lu journal", kOpenNames[static_cast<uint8_t>(opened)],
       static_cast<unsigned long>(millis() - opening), static_cast<unsigned long>(progress_.recordCount()),
       static_cast<unsigned long>(progress_.journalCount()));
+  if (progress_.authoritativeRecoveryFailed()) return false;
   starred_.open();
+  if (starred_.journalFailed()) return false;
   readLog_.open();
+  if (readLog_.journalFailed()) return false;
   log("starred %u, read %u", starred_.count(), readLog_.count());
+  return true;
 }
 
 void App::closeCourse() {
@@ -391,16 +441,16 @@ App::LessonState App::lessonState(const uint16_t lesson) const {
   return lesson <= profile_.unlockedThrough ? LessonState::Open : LessonState::Locked;
 }
 
-void App::lessonCompleted(const uint16_t lesson) {
-  const uint16_t count = lessonCount();
-  if (lesson + 1u > profile_.currentLesson) profile_.currentLesson = static_cast<uint16_t>(lesson + 1);
-  const uint16_t next =
-      profile_.currentLesson < count ? profile_.currentLesson : static_cast<uint16_t>(count ? count - 1 : 0);
-  if (next > profile_.unlockedThrough) profile_.unlockedThrough = next;
+bool App::lessonCompleted(const uint16_t lesson) {
+  if (!lessonCompletion_.apply(profile_, lesson, lessonCount(), storage_.available())) {
+    log("lesson completion persistence failed: %u", lesson);
+    return false;
+  }
   log("lesson %u complete; current %u, unlocked through %u", lesson, profile_.currentLesson, profile_.unlockedThrough);
   profileChanged();
   // Not left to the idle save: the unlock is the learner's reward.
   saveIfDirty();
+  return true;
 }
 
 void App::unlockAllLessons() {
@@ -422,12 +472,14 @@ void App::reopenProgressAsGuest() {
 }
 
 core::DayNumber App::lastJournalDay() {
+  const core::DayNumber snapshotDay = progress_.lastStudyDay();
   const int32_t size = storage_.size(core::ProgressStore::kJournalFile);
-  if (size < static_cast<int32_t>(core::JournalEntry::kSize)) return 0;
+  if (size < static_cast<int32_t>(core::JournalEntry::kSize)) return snapshotDay;
   uint8_t record[core::JournalEntry::kSize];
   const uint32_t at = (static_cast<uint32_t>(size) / core::JournalEntry::kSize - 1) * core::JournalEntry::kSize;
-  if (storage_.read(core::ProgressStore::kJournalFile, at, record, sizeof record) != sizeof record) return 0;
-  return core::JournalEntry::decode(record).day;
+  if (storage_.read(core::ProgressStore::kJournalFile, at, record, sizeof record) != sizeof record) return snapshotDay;
+  const auto journalDay = core::JournalEntry::decode(record).day;
+  return journalDay > snapshotDay ? journalDay : snapshotDay;
 }
 
 // ── Navigation ───────────────────────────────────────────────────────────────
@@ -501,6 +553,15 @@ void App::openLight() {
   if (view(topId())->kind() == View::Kind::Overlay) pop();
   hostRequest_ = HostRequest::Light;
   ++changes_;
+}
+
+bool App::setProfileMutationJournal(ProfileMutationJournal journal) {
+  if (profileAuthorityFailed_ && journal.persist) {
+    log("profile journal: authority recovery requires fresh app");
+    return false;
+  }
+  profileJournal_ = journal;
+  return true;
 }
 
 void App::profileChanged() {
@@ -808,6 +869,15 @@ void App::saveIfDirty() {
   if (!profileDirty_) return;
   profileDirty_ = false;
   if (!storage_.available()) return;
+  if (profileAuthorityFailed_) {
+    log("profile save blocked: authority recovery required");
+    return;
+  }
+  if (profileJournal_.persist && !profileJournal_.persist(profileJournal_.context, profile_)) {
+    profileAuthorityFailed_ = true;
+    log("profile save blocked: authoritative journal failed");
+    return;
+  }
   if (profile_.save(storage_)) {
     log("profile saved");
   } else {
@@ -837,13 +907,18 @@ void App::saveSession() {
       if (!view(stack_[i])->restorable()) break;
       b[7 + depth++] = static_cast<uint8_t>(stack_[i]);
     }
-    sessionLength = session_.serialize(b + 7 + depth + 2, kSessionFileCap - (7u + depth + 2) - 4);
+    sessionLength = session_.serialize(b + 7 + depth + 2, kSessionFileCap - (7u + depth + 2) - 32 - 4);
   }
   for (uint8_t i = 0; i < 4; ++i) b[i] = kSessionMagic[i];
-  core::putU16(b + 4, kSessionVersion);
+  const bool bindSnapshot = learnerSnapshotBound_ && !(inTimeStep() && pendingSessionRebuild_);
+  core::putU16(b + 4, bindSnapshot ? kSessionVersion : 2);
   b[6] = depth;
   core::putU16(b + 7 + depth, static_cast<uint16_t>(sessionLength));
-  const uint32_t covered = 7u + depth + 2 + sessionLength;
+  uint32_t covered = 7u + depth + 2 + sessionLength;
+  if (bindSnapshot) {
+    std::copy_n(learnerSnapshot_, 32, b + covered);
+    covered += 32;
+  }
   core::putU32(b + covered, core::crc32(b, covered));
   // In place, not through a temporary file: this runs after every grade, and
   // a torn write only fails the CRC, which loses no more than the session's
@@ -854,31 +929,20 @@ void App::saveSession() {
 uint8_t App::loadResumeStack(ScreenId* out, const uint8_t cap) {
   uint8_t* b = sessionFile_;
   pendingSessionLength_ = 0;
+  pendingSessionRebuild_ = false;
   const int32_t size = storage_.size(kSessionFile);
   if (size < 11) return 0;
   const uint32_t length = static_cast<uint32_t>(size) < kSessionFileCap ? static_cast<uint32_t>(size) : kSessionFileCap;
   if (storage_.read(kSessionFile, 0, b, length) != static_cast<int32_t>(length)) return 0;
-  for (uint8_t i = 0; i < 4; ++i) {
-    if (b[i] != kSessionMagic[i]) return 0;
-  }
-  const uint16_t version = core::getU16(b + 4);
-  const uint8_t depth = b[6];
-  if ((version != 1 && version != kSessionVersion) || depth > cap) return 0;
-  uint32_t covered = 7u + depth;
-  uint32_t sessionAt = 0;
-  uint32_t sessionLength = 0;
-  if (version >= 2) {
-    if (covered + 2 > length) return 0;
-    sessionLength = core::getU16(b + covered);
-    sessionAt = covered + 2;
-    covered = sessionAt + sessionLength;
-  }
-  if (covered + 4 > length || core::getU32(b + covered) != core::crc32(b, covered)) return 0;
-  for (uint8_t i = 0; i < depth; ++i) {
-    if (b[7 + i] == 0 || b[7 + i] >= static_cast<uint8_t>(ScreenId::Count)) return 0;
-    out[i] = static_cast<ScreenId>(b[7 + i]);
-  }
-  pendingSessionAt_ = sessionAt;
+  core::SessionFileView saved;
+  if (!core::decodeSessionFile({b, length}, cap, static_cast<uint8_t>(ScreenId::Count), saved) ||
+      (saved.version >= 3 && !learnerSnapshotBound_))
+    return 0;
+  pendingSessionRebuild_ = learnerSnapshotBound_ && core::sessionSnapshotChanged(saved, learnerSnapshot_);
+  const auto depth = static_cast<uint8_t>(saved.screens.size());
+  for (uint8_t i = 0; i < depth; ++i) out[i] = static_cast<ScreenId>(saved.screens[i]);
+  const auto sessionLength = static_cast<uint32_t>(saved.session.size());
+  pendingSessionAt_ = sessionLength ? static_cast<uint32_t>(saved.session.data() - b) : 0;
   pendingSessionLength_ = sessionLength;
   if (depth > 0) log("resume %u screens%s", depth, sessionLength ? " and a session" : "");
   return depth;

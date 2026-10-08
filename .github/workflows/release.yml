@@ -126,6 +126,18 @@ jobs:
           SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
             python3 lib/Tinta/tools/packc --content "$RUNNER_TEMP/tinta-content" --out dist/course.pack --quiet
 
+      - name: Build companion release manifest
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_CHANNEL: ${{ github.event.release.prerelease && 'rc' || 'stable' }}
+        run: |
+          python3 scripts/build_companion_release_manifest.py \
+            --assets-dir dist --tag "$RELEASE_TAG" --revision "$(git rev-parse HEAD)" \
+            --repository "$GITHUB_REPOSITORY" --channel "$RELEASE_CHANNEL" \
+            --companion-protocol 1 --state-schema-min 0 --state-schema-max 1 \
+            --journal-header-versions 1 2 3 \
+            --output dist/companion-release.json
+
       - name: Attach firmware assets
         env:
           GH_TOKEN: ${{ github.token }}
@@ -136,5 +148,5 @@ jobs:
             test -f "dist/lila-${version}-${device}.bin"
           done
           test "$(find dist -maxdepth 1 -type f -name 'lila-*.bin' | wc -l)" -eq 5
-          gh release upload "$RELEASE_TAG" dist/lila-*.bin dist/course.pack \
+          gh release upload "$RELEASE_TAG" dist/lila-*.bin dist/course.pack dist/companion-release.json \
             --repo "$GITHUB_REPOSITORY" --clobber

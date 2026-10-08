@@ -493,6 +493,13 @@ def generate_keys_header(
     lines.append("};")
     lines.append("")
 
+    lines.append("// Supported BCP 47 tags in Language enum order")
+    lines.append("inline constexpr const char* LANGUAGE_TAGS[] = {")
+    for tag in language_bcp47:
+        _append_string_entry(lines, tag)
+    lines.append("};")
+    lines.append("")
+
     # Extern declarations
     lines.append("// Language codes (defined in I18nStrings.cpp)")
     lines.append("extern const char* const LANGUAGE_CODES[];")

@@ -34,6 +34,9 @@ class HalClock {
   // Returns false if RTC is not available.
   bool localTime(struct tm& out) const;
 
+  // Unix UTC seconds from the same snapshot used by localTime, not a trust assertion.
+  bool unixTime(uint64_t& out) const;
+
   // Get current local hour (0-23) and minute (0-59).
   // Returns false if RTC is not available.
   bool getTime(uint8_t& hour, uint8_t& minute) const;

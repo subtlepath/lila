@@ -6,6 +6,7 @@
 #include <Utf8.h>
 
 #include <cstdlib>
+#include <cstring>
 
 // Decompressed-glyph page slots and the hot-group buffers are placed in PSRAM
 // when the board has it (fiFontMalloc), falling back to the internal heap

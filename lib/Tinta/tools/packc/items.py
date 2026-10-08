@@ -97,7 +97,7 @@ class IdLock:
         return self.by_key[key]
 
     def write(self) -> None:
-        if not self.appended:
+        if not self.appended and not os.path.exists(self.path):
             return
         exists = os.path.exists(self.path)
         with open(self.path, "a", encoding="utf-8") as fh:
@@ -105,6 +105,9 @@ class IdLock:
                 fh.write(LOCK_HEADER)
             for uid, key in self.appended:
                 fh.write(f"{uid}\t{key}\t{_check(uid, key)}\n")
+            # Publish a pack only after its item identities have reached storage.
+            fh.flush()
+            os.fsync(fh.fileno())
         self.appended = []
 
 

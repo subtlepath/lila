@@ -493,6 +493,17 @@ void testSessionFile() {
   for (uint16_t i = 0; i < moved.size(); ++i) {
     CHECK_EQ(updated.uidAt(moved.entries()[i].index), catalog.uidAt(rig.queue.entries()[i + 1].index));
   }
+  std::vector<uint32_t> retired;
+  retired.reserve(rig.queue.size());
+  for (uint16_t i = 0; i < rig.queue.size(); ++i) retired.push_back(catalog.uidAt(rig.queue.entries()[i].index));
+  const FakeCatalog replaced = catalog.edited(retired, {});
+  std::vector<uint16_t> replacedSlots(replaced.itemCount());
+  ProgressStore replacedProgress(store, replaced, rig.fsrs);
+  replacedProgress.open(replacedSlots.data(), static_cast<uint32_t>(replacedSlots.size()), nullptr, 0);
+  DayQueue pending(replacedProgress, replaced, rig.fsrs, rig.clock, entries.data(), 64);
+  CHECK(pending.restore(blob, n));
+  CHECK(pending.empty());
+  CHECK(pending.build(SessionLimits()));
 }
 
 // Lesson items, frequency-list items and phrases, interleaved in catalog order

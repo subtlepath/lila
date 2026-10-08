@@ -25,6 +25,9 @@ constexpr MenuRow MENU_ROWS[] = {
 #if LILA_TINTA
     {LibraryMenuActivity::Entry::Tinta, StrId::STR_TINTA, UIIcon::Text},
 #endif
+#if LILA_COMPANION
+    {LibraryMenuActivity::Entry::Companion, StrId::STR_COMPANION_CONNECT_SYNC, UIIcon::Transfer},
+#endif
     {LibraryMenuActivity::Entry::Settings, StrId::STR_SETTINGS_TITLE, UIIcon::Settings},
 };
 static_assert(sizeof(MENU_ROWS) / sizeof(MENU_ROWS[0]) == LibraryMenuActivity::MAX_ROWS, "menu row storage");
@@ -85,6 +88,11 @@ void LibraryMenuActivity::activateIndex(const int index) {
     case Entry::Tinta:
 #if LILA_TINTA
       activityManager.goToTinta();
+#endif
+      break;
+    case Entry::Companion:
+#if LILA_COMPANION
+      activityManager.goToCompanion();
 #endif
       break;
     case Entry::Settings:

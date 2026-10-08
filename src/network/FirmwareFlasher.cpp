@@ -12,6 +12,7 @@
 #include <cstring>
 #include <memory>
 
+#include "CompanionFirmwareImageExtent.h"
 #include "FirmwareBoardTag.h"
 #include "OtaBootSwitch.h"
 
@@ -69,6 +70,20 @@ const char* resultName(Result r) {
   return "?";
 }
 
+uint32_t nextPartitionBytes() {
+  const auto* partition = esp_ota_get_next_update_partition(nullptr);
+  return partition ? partition->size : 0;
+}
+
+bool validateForNextPartition(const char* sdPath) {
+  const uint32_t size = nextPartitionBytes();
+  if (!size) {
+    LOG_ERR("FLASH", "No destination partition for validation");
+    return false;
+  }
+  return validateImageFile(sdPath, size) == Result::OK;
+}
+
 uint16_t runningPartitionChipId() {
   // esp_partition_read hits SPI flash; cache the running slot's chip_id so we
   // only pay that cost once per boot. The running image is immutable at
@@ -83,6 +98,59 @@ uint16_t runningPartitionChipId() {
     return id;
   }();
   return cached;
+}
+
+namespace {
+bool readRunningImage(void* context, uint64_t offset, std::span<uint8_t> bytes) {
+  const auto* partition = static_cast<const esp_partition_t*>(context);
+  return offset <= partition->size && bytes.size() <= partition->size - offset &&
+         esp_partition_read(partition, static_cast<size_t>(offset), bytes.data(), bytes.size()) == ESP_OK;
+}
+}  // namespace
+static bool partitionImageDigest(const esp_partition_t* partition, std::span<uint8_t> scratch,
+                                 std::span<uint8_t> digest) {
+  if (scratch.size() < 512 || digest.size() != 32) {
+    LOG_ERR("FLASH", "Invalid running image digest buffers");
+    return false;
+  }
+  const auto scratchAddress = reinterpret_cast<uintptr_t>(scratch.data());
+  const auto digestAddress = reinterpret_cast<uintptr_t>(digest.data());
+  if (scratchAddress <= digestAddress ? digestAddress - scratchAddress < scratch.size()
+                                      : scratchAddress - digestAddress < digest.size()) {
+    LOG_ERR("FLASH", "Running image digest buffers overlap");
+    return false;
+  }
+  uint64_t extent = 0;
+  if (!partition || !companion::firmwareImageExtent(readRunningImage, const_cast<esp_partition_t*>(partition),
+                                                    partition->size, extent)) {
+    LOG_ERR("FLASH", "Cannot read running image extent");
+    return false;
+  }
+  mbedtls_sha256_context hash;
+  mbedtls_sha256_init(&hash);
+  mbedtls_sha256_starts(&hash, 0);
+  uint64_t offset = 0;
+  while (offset < extent) {
+    const size_t count = static_cast<size_t>(std::min<uint64_t>(scratch.size(), extent - offset));
+    if (!readRunningImage(const_cast<esp_partition_t*>(partition), offset, scratch.first(count))) {
+      mbedtls_sha256_free(&hash);
+      LOG_ERR("FLASH", "Cannot hash running image");
+      return false;
+    }
+    mbedtls_sha256_update(&hash, scratch.data(), count);
+    const bool yield = offset / (16 * 1024) != (offset + count) / (16 * 1024);
+    offset += count;
+    if (yield) delay(1);
+  }
+  uint8_t result[32];
+  mbedtls_sha256_finish(&hash, result);
+  mbedtls_sha256_free(&hash);
+  std::copy_n(result, sizeof(result), digest.begin());
+  return true;
+}
+
+bool runningImageDigest(std::span<uint8_t> scratch, std::span<uint8_t> digest) {
+  return partitionImageDigest(esp_ota_get_running_partition(), scratch, digest);
 }
 
 namespace {
@@ -272,7 +340,12 @@ Result validateImageFile(const char* sdPath, size_t partitionSize) {
   return Result::OK;
 }
 
-Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated) {
+Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated,
+                       std::span<const uint8_t> expectedImageHash) {
+  if (!expectedImageHash.empty() && expectedImageHash.size() != 32) {
+    LOG_ERR("FLASH", "Invalid expected image digest");
+    return Result::BAD_SHA;
+  }
   // Resolve destination first so we can size-check during validation. The full image-integrity
   // pass below verifies header, segment table, XOR checksum and SHA256 trailer end-to-end before
   // we touch otadata, so a truncated/corrupted .bin can never become the next boot target.
@@ -301,6 +374,10 @@ Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, boo
   }
 
   const size_t firmwareSize = file.fileSize();
+  if (firmwareSize < MIN_FIRMWARE_SIZE || firmwareSize > dest->size) {
+    LOG_ERR("FLASH", "Reopened firmware size outside partition bounds");
+    return firmwareSize < MIN_FIRMWARE_SIZE ? Result::TOO_SMALL : Result::TOO_LARGE;
+  }
   LOG_INF("FLASH", "src=%s size=%u dest=%s @0x%x partsize=%u", sdPath, static_cast<unsigned>(firmwareSize), dest->label,
           static_cast<unsigned>(dest->address), static_cast<unsigned>(dest->size));
 
@@ -347,6 +424,14 @@ Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, boo
   }
   file.close();
 
+  if (!expectedImageHash.empty()) {
+    uint8_t writtenHash[32];
+    if (!partitionImageDigest(dest, {buffer.get(), CHUNK}, writtenHash) ||
+        !std::equal(expectedImageHash.begin(), expectedImageHash.end(), std::begin(writtenHash))) {
+      LOG_ERR("FLASH", "Written image does not match authorized digest; boot slot retained");
+      return Result::BAD_SHA;
+    }
+  }
   if (!ota_boot::switchTo(dest)) {
     LOG_ERR("FLASH", "otadata switch failed");
     return Result::OTADATA_FAIL;

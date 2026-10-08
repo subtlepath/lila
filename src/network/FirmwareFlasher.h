@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 // Flash a firmware image from an SD-card path into the next OTA app
 // partition, then switch otadata so the X3/X4 stock bootloader picks it up
@@ -47,7 +48,8 @@ using ProgressCb = void (*)(size_t written, size_t total, void* ctx);
 // the user the confirmation prompt) skip the redundant second pass. Defaults
 // to false so callers without prior validation (any future entry point) keep
 // the defense-in-depth check.
-Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated = false);
+Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx, bool alreadyValidated = false,
+                       std::span<const uint8_t> expectedImageHash = {});
 
 // Full-image integrity check that mirrors the bootloader's verification:
 // header magic, segment table walk, XOR checksum, and SHA256 trailer (when
@@ -69,5 +71,14 @@ const char* resultName(Result r);
 // successfully, its chip_id is authoritative for the current CPU, so a
 // candidate image must match it to be safe to flash.
 uint16_t runningPartitionChipId();
+// Zero means the destination partition is unavailable.
+uint32_t nextPartitionBytes();
+// Validates an SD candidate against the actual next OTA partition; never flashes.
+bool validateForNextPartition(const char* sdPath);
+
+// Complete running-image SHA-256, including its trailer, matching release hashes.
+// Borrows scratch (at least 512 bytes); digest must have exactly 32 bytes.
+// Digest changes only on success. No heap allocation is required.
+bool runningImageDigest(std::span<uint8_t> scratch, std::span<uint8_t> digest);
 
 }  // namespace firmware_flash

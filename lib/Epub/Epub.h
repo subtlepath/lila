@@ -1,6 +1,14 @@
 #pragma once
 
 #include <Print.h>
+#if LILA_COMPANION
+#include <HalStorage.h>
+
+#include <array>
+#include <span>
+
+#include "CompanionReaderProgressSaveCache.h"
+#endif
 
 #include <memory>
 #include <string>
@@ -19,6 +27,12 @@ class Epub {
   std::string tocNavItem;
   // where is the EPUBfile?
   std::string filepath;
+#if LILA_COMPANION
+  mutable std::array<uint8_t, 32> companionContentIdentity{};
+  mutable HalFile companionContentFile;
+  mutable bool companionContentIdentityReady = false;
+  mutable companion::ReaderProgressSaveCache companionProgressCache;
+#endif
   // the base path for items in the EPUB file
   std::string contentBasePath;
   // Uniq cache key based on filepath
@@ -52,6 +66,17 @@ class Epub {
   void setupCacheDir() const;
   const std::string& getCachePath() const;
   const std::string& getPath() const;
+#if LILA_COMPANION
+  // Caller serializes access and excludes content writers for this loaded book.
+  bool matchesCompanionProgress(uint64_t revision, std::span<const uint8_t> bytes) const {
+    return companionProgressCache.matches(revision, bytes);
+  }
+  void rememberCompanionProgress(uint64_t revision, std::span<const uint8_t> bytes) const {
+    companionProgressCache.remember(revision, bytes);
+  }
+  bool hasCompanionContentIdentity() const { return companionContentIdentityReady; }
+  bool getCompanionContentIdentity(std::span<uint8_t> scratch, std::array<uint8_t, 32>& output) const;
+#endif
   const std::string& getTitle() const;
   const std::string& getAuthor() const;
   const std::string& getLanguage() const;

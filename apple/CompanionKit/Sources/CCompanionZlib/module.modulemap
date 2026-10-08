@@ -1,0 +1,5 @@
+module CCompanionZlib [system] {
+    header "shim.h"
+    link "z"
+    export *
+}

@@ -1,0 +1,4346 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A decision is required": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A decision is required"
+          }
+        }
+      }
+    },
+    "A file could not be imported. Check that it is complete and supported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A file could not be imported. Check that it is complete and supported."
+          }
+        }
+      }
+    },
+    "A shared prefix requires further reconciliation before shared history can be imported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A shared prefix requires further reconciliation before shared history can be imported."
+          }
+        }
+      }
+    },
+    "Authenticating": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authenticating"
+          }
+        }
+      }
+    },
+    "Backup identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup identity"
+          }
+        }
+      }
+    },
+    "Battery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Battery"
+          }
+        }
+      }
+    },
+    "Bluetooth unavailable": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth unavailable"
+          }
+        }
+      }
+    },
+    "Bookmark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmark"
+          }
+        }
+      }
+    },
+    "Bookmarks": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmarks"
+          }
+        }
+      }
+    },
+    "Bookmarks could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookmarks could not be loaded."
+          }
+        }
+      }
+    },
+    "Bytes saved on reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bytes saved on reader"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Cancel Wi-Fi transfer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel Wi-Fi transfer"
+          }
+        }
+      }
+    },
+    "Cancel download": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel download"
+          }
+        }
+      }
+    },
+    "Cancel release check": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel release check"
+          }
+        }
+      }
+    },
+    "Cancel transfer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel transfer"
+          }
+        }
+      }
+    },
+    "Cancellation is pending. Reconnect to finish cancelling this transfer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellation is pending. Reconnect to finish cancelling this transfer."
+          }
+        }
+      }
+    },
+    "Cancelled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled"
+          }
+        }
+      }
+    },
+    "Card generation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card generation"
+          }
+        }
+      }
+    },
+    "Check iCloud account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check iCloud account"
+          }
+        }
+      }
+    },
+    "Check pack compatibility and the active course before transferring. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check pack compatibility and the active course before transferring. Pending work has been retained."
+          }
+        }
+      }
+    },
+    "Check stable releases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check stable releases"
+          }
+        }
+      }
+    },
+    "Checking overlapping history…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking overlapping history…"
+          }
+        }
+      }
+    },
+    "Checking reading completions…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking reading completions…"
+          }
+        }
+      }
+    },
+    "Checking stable releases": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking stable releases"
+          }
+        }
+      }
+    },
+    "Choose an existing course only when this pack is an edition of the same course. Matching language or title is not enough.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an existing course only when this pack is an edition of the same course. Matching language or title is not enough."
+          }
+        }
+      }
+    },
+    "Choose completed readings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose completed readings"
+          }
+        }
+      }
+    },
+    "Choose content for this reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose content for this reader"
+          }
+        }
+      }
+    },
+    "Choose the content you want on this reader. Selections are saved on this device; changing them does not immediately transfer or remove content.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the content you want on this reader. Selections are saved on this device; changing them does not immediately transfer or remove content."
+          }
+        }
+      }
+    },
+    "Choose this for a different course with separate learning history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose this for a different course with separate learning history."
+          }
+        }
+      }
+    },
+    "Cloud history failed integrity or identity checks. Synchronization stopped; local history remains available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud history failed integrity or identity checks. Synchronization stopped; local history remains available."
+          }
+        }
+      }
+    },
+    "Cloud synchronization state could not be saved locally. Check device storage before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud synchronization state could not be saved locally. Check device storage before retrying."
+          }
+        }
+      }
+    },
+    "CloudKit setup is required for this build": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CloudKit setup is required for this build"
+          }
+        }
+      }
+    },
+    "Completed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed"
+          }
+        }
+      }
+    },
+    "Completed lessons": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed lessons"
+          }
+        }
+      }
+    },
+    "Completed readings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completed readings"
+          }
+        }
+      }
+    },
+    "Confirm": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm"
+          }
+        }
+      }
+    },
+    "Confirm course identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm course identity"
+          }
+        }
+      }
+    },
+    "Confirm only when this backup represents separate study activity. If the history was copied between readers, review shared history instead.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm only when this backup represents separate study activity. If the history was copied between readers, review shared history instead."
+          }
+        }
+      }
+    },
+    "Confirm shared learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm shared learning history"
+          }
+        }
+      }
+    },
+    "Confirm the current iCloud account before synchronizing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the current iCloud account before synchronizing"
+          }
+        }
+      }
+    },
+    "Confirm this is the same history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm this is the same history"
+          }
+        }
+      }
+    },
+    "Connect a reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a reader"
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        }
+      }
+    },
+    "Connected; continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected; continue"
+          }
+        }
+      }
+    },
+    "Connecting": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecting"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connection"
+          }
+        }
+      }
+    },
+    "Content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content"
+          }
+        }
+      }
+    },
+    "Content hash": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content hash"
+          }
+        }
+      }
+    },
+    "Content transfer stopped. Reconnect and refresh installed content to resume pending work.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content transfer stopped. Reconnect and refresh installed content to resume pending work."
+          }
+        }
+      }
+    },
+    "Content transfers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content transfers"
+          }
+        }
+      }
+    },
+    "Content version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Content version"
+          }
+        }
+      }
+    },
+    "Course identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course identity"
+          }
+        }
+      }
+    },
+    "Course identity confirmed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course identity confirmed"
+          }
+        }
+      }
+    },
+    "Create a new course identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a new course identity"
+          }
+        }
+      }
+    },
+    "Devices": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devices"
+          }
+        }
+      }
+    },
+    "Diagnostic usage bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostic usage bytes"
+          }
+        }
+      }
+    },
+    "Dialogue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dialogue"
+          }
+        }
+      }
+    },
+    "Disable iCloud history sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable iCloud history sync"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        }
+      }
+    },
+    "Disconnected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected"
+          }
+        }
+      }
+    },
+    "Download firmware": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download firmware"
+          }
+        }
+      }
+    },
+    "Downloaded firmware is verified and saved on this device. Reader installation is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded firmware is verified and saved on this device. Reader installation is not available yet."
+          }
+        }
+      }
+    },
+    "Downloading firmware": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading firmware"
+          }
+        }
+      }
+    },
+    "Edition of an existing course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edition of an existing course"
+          }
+        }
+      }
+    },
+    "Find readers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find readers"
+          }
+        }
+      }
+    },
+    "Finding readers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finding readers"
+          }
+        }
+      }
+    },
+    "Finishing installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finishing installation"
+          }
+        }
+      }
+    },
+    "Firmware": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware"
+          }
+        }
+      }
+    },
+    "Firmware could not be downloaded or verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware could not be downloaded or verified."
+          }
+        }
+      }
+    },
+    "Firmware updates are installed on a selected reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware updates are installed on a selected reader."
+          }
+        }
+      }
+    },
+    "History could not be imported. Refresh the review and check compatibility and overlapping backups before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History could not be imported. Refresh the review and check compatibility and overlapping backups before retrying."
+          }
+        }
+      }
+    },
+    "I confirm these are independent study histories": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I confirm these are independent study histories"
+          }
+        }
+      }
+    },
+    "Import books and Tinta course packs to get started.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import books and Tinta course packs to get started."
+          }
+        }
+      }
+    },
+    "Import files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import files"
+          }
+        }
+      }
+    },
+    "Import files to choose content for this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import files to choose content for this reader."
+          }
+        }
+      }
+    },
+    "Import files…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import files…"
+          }
+        }
+      }
+    },
+    "Import history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import history"
+          }
+        }
+      }
+    },
+    "Import release manifest": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import release manifest"
+          }
+        }
+      }
+    },
+    "Import reviewed history into this app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import reviewed history into this app"
+          }
+        }
+      }
+    },
+    "Import reviewed learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import reviewed learning history"
+          }
+        }
+      }
+    },
+    "Import this backup using the saved reading and independent-history decisions. The backup remains preserved. This updates local app history; it does not install learning state on a reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import this backup using the saved reading and independent-history decisions. The backup remains preserved. This updates local app history; it does not install learning state on a reader."
+          }
+        }
+      }
+    },
+    "Import this pack again to validate it before confirming its course identity.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import this pack again to validate it before confirming its course identity."
+          }
+        }
+      }
+    },
+    "Include release candidates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include release candidates"
+          }
+        }
+      }
+    },
+    "Installed content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed content"
+          }
+        }
+      }
+    },
+    "Installed content could not be read. Try refreshing again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed content could not be read. Try refreshing again."
+          }
+        }
+      }
+    },
+    "Item state bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item state bytes"
+          }
+        }
+      }
+    },
+    "Join Wi-Fi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join Wi-Fi"
+          }
+        }
+      }
+    },
+    "Journal synchronization enabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal synchronization enabled"
+          }
+        }
+      }
+    },
+    "Journal synchronization needs attention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journal synchronization needs attention"
+          }
+        }
+      }
+    },
+    "Keep position": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep position"
+          }
+        }
+      }
+    },
+    "Keep removal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep removal"
+          }
+        }
+      }
+    },
+    "Keep this bookmark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this bookmark"
+          }
+        }
+      }
+    },
+    "Keep this bookmark version?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this bookmark version?"
+          }
+        }
+      }
+    },
+    "Keep this position": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this position"
+          }
+        }
+      }
+    },
+    "Keep this reading position?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this reading position?"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        }
+      }
+    },
+    "Last connected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last connected"
+          }
+        }
+      }
+    },
+    "Last successful sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last successful sync"
+          }
+        }
+      }
+    },
+    "Learner files are identical": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learner files are identical"
+          }
+        }
+      }
+    },
+    "Learner profile bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learner profile bytes"
+          }
+        }
+      }
+    },
+    "Learning backups could not be verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning backups could not be verified."
+          }
+        }
+      }
+    },
+    "Learning history could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning history could not be loaded."
+          }
+        }
+      }
+    },
+    "Learning state": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning state"
+          }
+        }
+      }
+    },
+    "Lesson": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesson"
+          }
+        }
+      }
+    },
+    "Lesson completion bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesson completion bytes"
+          }
+        }
+      }
+    },
+    "Library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        }
+      }
+    },
+    "Loading bookmarks…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading bookmarks…"
+          }
+        }
+      }
+    },
+    "Loading learning history…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading learning history…"
+          }
+        }
+      }
+    },
+    "Loading reading positions…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading reading positions…"
+          }
+        }
+      }
+    },
+    "Matching backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching backup"
+          }
+        }
+      }
+    },
+    "Matching files do not prove that two readers share the same study history. Confirm only when you know these backups represent the same history. Both backups remain preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching files do not prove that two readers share the same study history. Confirm only when you know these backups represent the same history. Both backups remain preserved."
+          }
+        }
+      }
+    },
+    "Matching initial review records": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching initial review records"
+          }
+        }
+      }
+    },
+    "Matching readings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matching readings"
+          }
+        }
+      }
+    },
+    "Maximum interval days": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum interval days"
+          }
+        }
+      }
+    },
+    "Migration review could not be prepared. Verify the backup and course association.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Migration review could not be prepared. Verify the backup and course association."
+          }
+        }
+      }
+    },
+    "Migration review saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Migration review saved"
+          }
+        }
+      }
+    },
+    "Nearby readers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nearby readers"
+          }
+        }
+      }
+    },
+    "Needs attention": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs attention"
+          }
+        }
+      }
+    },
+    "Network": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Network"
+          }
+        }
+      }
+    },
+    "New course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New course"
+          }
+        }
+      }
+    },
+    "New items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New items"
+          }
+        }
+      }
+    },
+    "No ambiguous reading completions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ambiguous reading completions"
+          }
+        }
+      }
+    },
+    "No bookmarks saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No bookmarks saved"
+          }
+        }
+      }
+    },
+    "No completed sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No completed sync"
+          }
+        }
+      }
+    },
+    "No installed content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No installed content"
+          }
+        }
+      }
+    },
+    "No overlapping learning backups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No overlapping learning backups"
+          }
+        }
+      }
+    },
+    "No preserved learning backups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No preserved learning backups"
+          }
+        }
+      }
+    },
+    "No reading position saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No reading position saved"
+          }
+        }
+      }
+    },
+    "No study totals saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No study totals saved"
+          }
+        }
+      }
+    },
+    "None of these readings was completed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of these readings was completed"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Observed iCloud account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Observed iCloud account"
+          }
+        }
+      }
+    },
+    "Older backups may use the same completion key for several readings. These candidates require an explicit decision during migration. Viewing them does not change completion state.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older backups may use the same completion key for several readings. These candidates require an explicit decision during migration. Viewing them does not change completion state."
+          }
+        }
+      }
+    },
+    "On this device": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On this device"
+          }
+        }
+      }
+    },
+    "Only local content files can be imported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only local content files can be imported."
+          }
+        }
+      }
+    },
+    "Open Connect & Sync on your reader, then find readers.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Connect & Sync on your reader, then find readers."
+          }
+        }
+      }
+    },
+    "Overlapping backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlapping backup"
+          }
+        }
+      }
+    },
+    "Overlapping history could not be verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlapping history could not be verified."
+          }
+        }
+      }
+    },
+    "Overlapping learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overlapping learning history"
+          }
+        }
+      }
+    },
+    "Pack details": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack details"
+          }
+        }
+      }
+    },
+    "Pack format": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pack format"
+          }
+        }
+      }
+    },
+    "Pair reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair reader"
+          }
+        }
+      }
+    },
+    "Pair this reader with this app installation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair this reader with this app installation."
+          }
+        }
+      }
+    },
+    "Paper Mono": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paper Mono"
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Pause transfer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause transfer"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused"
+          }
+        }
+      }
+    },
+    "Pending transfers could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending transfers could not be loaded."
+          }
+        }
+      }
+    },
+    "Position in section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position in section"
+          }
+        }
+      }
+    },
+    "Preparing migration review…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing migration review…"
+          }
+        }
+      }
+    },
+    "Preserved learning backups": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preserved learning backups"
+          }
+        }
+      }
+    },
+    "Private iCloud history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private iCloud history"
+          }
+        }
+      }
+    },
+    "Private iCloud library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private iCloud library"
+          }
+        }
+      }
+    },
+    "Queued": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued"
+          }
+        }
+      }
+    },
+    "Reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader"
+          }
+        }
+      }
+    },
+    "Reader content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader content"
+          }
+        }
+      }
+    },
+    "Reader history could not be synchronized. Try refreshing again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader history could not be synchronized. Try refreshing again."
+          }
+        }
+      }
+    },
+    "Reader hotspot": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader hotspot"
+          }
+        }
+      }
+    },
+    "Reader identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader identity"
+          }
+        }
+      }
+    },
+    "Reader model": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader model"
+          }
+        }
+      }
+    },
+    "Readers could not be found. Check Bluetooth and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Readers could not be found. Check Bluetooth and try again."
+          }
+        }
+      }
+    },
+    "Reading completion bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading completion bytes"
+          }
+        }
+      }
+    },
+    "Reading completion conflicts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading completion conflicts"
+          }
+        }
+      }
+    },
+    "Reading completions could not be verified against this pack.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading completions could not be verified against this pack."
+          }
+        }
+      }
+    },
+    "Reading positions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading positions"
+          }
+        }
+      }
+    },
+    "Reading positions could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading positions could not be loaded."
+          }
+        }
+      }
+    },
+    "Reading without an assigned lesson": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading without an assigned lesson"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        }
+      }
+    },
+    "Refresh installed content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh installed content"
+          }
+        }
+      }
+    },
+    "Refresh installed content before starting or resuming transfers.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh installed content before starting or resuming transfers."
+          }
+        }
+      }
+    },
+    "Refresh to see this reader’s installed content.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh to see this reader’s installed content."
+          }
+        }
+      }
+    },
+    "Release": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release"
+          }
+        }
+      }
+    },
+    "Remove from library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from library"
+          }
+        }
+      }
+    },
+    "Remove this content from your library?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this content from your library?"
+          }
+        }
+      }
+    },
+    "Removed content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed content"
+          }
+        }
+      }
+    },
+    "Restore to library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore to library"
+          }
+        }
+      }
+    },
+    "Retention basis points": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retention basis points"
+          }
+        }
+      }
+    },
+    "Review could not be saved. Refresh and review the current backups and choices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review could not be saved. Refresh and review the current backups and choices."
+          }
+        }
+      }
+    },
+    "Review journal bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review journal bytes"
+          }
+        }
+      }
+    },
+    "Review migration decisions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review migration decisions"
+          }
+        }
+      }
+    },
+    "Review saved. No learning events have been imported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review saved. No learning events have been imported."
+          }
+        }
+      }
+    },
+    "Reviewed learning history is saved in this app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviewed learning history is saved in this app"
+          }
+        }
+      }
+    },
+    "Reviews": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reviews"
+          }
+        }
+      }
+    },
+    "Save migration review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save migration review"
+          }
+        }
+      }
+    },
+    "Saved items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved items"
+          }
+        }
+      }
+    },
+    "Saved learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved learning history"
+          }
+        }
+      }
+    },
+    "Saved reader network": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved reader network"
+          }
+        }
+      }
+    },
+    "Saved readers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved readers"
+          }
+        }
+      }
+    },
+    "Saved scheduler settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved scheduler settings"
+          }
+        }
+      }
+    },
+    "Saving course identity…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving course identity…"
+          }
+        }
+      }
+    },
+    "Saving selection…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving selection…"
+          }
+        }
+      }
+    },
+    "Section": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Section"
+          }
+        }
+      }
+    },
+    "Select every reading you completed, or explicitly choose none.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select every reading you completed, or explicitly choose none."
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Shared history confirmed without adding duplicate events": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared history confirmed without adding duplicate events"
+          }
+        }
+      }
+    },
+    "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not have a separate migration reservation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not have a separate migration reservation."
+          }
+        }
+      }
+    },
+    "Some content operations are not supported yet. Pending jobs have been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some content operations are not supported yet. Pending jobs have been retained."
+          }
+        }
+      }
+    },
+    "Source reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source reader"
+          }
+        }
+      }
+    },
+    "Stable releases could not be checked. Try again or import a release manifest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stable releases could not be checked. Try again or import a release manifest."
+          }
+        }
+      }
+    },
+    "Starred item bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starred item bytes"
+          }
+        }
+      }
+    },
+    "Starred items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starred items"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Sticky": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sticky"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage"
+          }
+        }
+      }
+    },
+    "Story": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Story"
+          }
+        }
+      }
+    },
+    "Study day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study day"
+          }
+        }
+      }
+    },
+    "Study totals": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study totals"
+          }
+        }
+      }
+    },
+    "Suspended items": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suspended items"
+          }
+        }
+      }
+    },
+    "Synchronization disabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronization disabled"
+          }
+        }
+      }
+    },
+    "Synchronize": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize"
+          }
+        }
+      }
+    },
+    "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Course associations and library deletions are not synchronized yet. Reader pairing credentials stay on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Course associations and library deletions are not synchronized yet. Reader pairing credentials stay on this device."
+          }
+        }
+      }
+    },
+    "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Library deletions are not synchronized yet. Reader pairing credentials stay on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Library deletions are not synchronized yet. Reader pairing credentials stay on this device."
+          }
+        }
+      }
+    },
+    "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Library removal and restore decisions are included; files remain preserved. Reader pairing credentials stay on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize EPUBs, Tinta packs, fonts, dictionaries and saved journal history with your private iCloud account. Library removal and restore decisions are included; files remain preserved. Reader pairing credentials stay on this device."
+          }
+        }
+      }
+    },
+    "Synchronize private iCloud history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize private iCloud history"
+          }
+        }
+      }
+    },
+    "Synchronize reviewed account": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize reviewed account"
+          }
+        }
+      }
+    },
+    "Synchronize saved reading positions, bookmarks, portable preferences and Tinta history with your private iCloud account. Content files and library metadata are not synchronized yet. Reader pairing credentials stay on this device.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronize saved reading positions, bookmarks, portable preferences and Tinta history with your private iCloud account. Content files and library metadata are not synchronized yet. Reader pairing credentials stay on this device."
+          }
+        }
+      }
+    },
+    "Synchronizing iCloud history…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronizing iCloud history…"
+          }
+        }
+      }
+    },
+    "The bookmark could not be resolved. Refresh bookmarks and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The bookmark could not be resolved. Refresh bookmarks and try again."
+          }
+        }
+      }
+    },
+    "The course association could not be saved. Existing learning history was not changed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The course association could not be saved. Existing learning history was not changed."
+          }
+        }
+      }
+    },
+    "The file could not be accepted. Wait for the current import to finish and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file could not be accepted. Wait for the current import to finish and try again."
+          }
+        }
+      }
+    },
+    "The library change could not be saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The library change could not be saved."
+          }
+        }
+      }
+    },
+    "The network is unavailable. Reconnect before retrying synchronization.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The network is unavailable. Reconnect before retrying synchronization."
+          }
+        }
+      }
+    },
+    "The reader connected, but its details could not be saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader connected, but its details could not be saved."
+          }
+        }
+      }
+    },
+    "The reader could not be connected.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader could not be connected."
+          }
+        }
+      }
+    },
+    "The reader could not be paired.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader could not be paired."
+          }
+        }
+      }
+    },
+    "The reader could not verify the transferred file. Reconnect and refresh installed content before retrying. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader could not verify the transferred file. Reconnect and refresh installed content before retrying. Pending work has been retained."
+          }
+        }
+      }
+    },
+    "The reader rejected this content. Check pack compatibility and the active course before retrying. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader rejected this content. Check pack compatibility and the active course before retrying. Pending work has been retained."
+          }
+        }
+      }
+    },
+    "The reader reported more than one active course. Reconnect and refresh installed content before retrying. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader reported more than one active course. Reconnect and refresh installed content before retrying. Pending work has been retained."
+          }
+        }
+      }
+    },
+    "The reader’s content selection could not be saved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader’s content selection could not be saved."
+          }
+        }
+      }
+    },
+    "The reading position could not be resolved. Refresh the positions and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reading position could not be resolved. Refresh the positions and try again."
+          }
+        }
+      }
+    },
+    "The release manifest could not be imported.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The release manifest could not be imported."
+          }
+        }
+      }
+    },
+    "The selected files could not be opened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected files could not be opened."
+          }
+        }
+      }
+    },
+    "These are bookmarks saved in this app. Reader and cloud history exchange is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are bookmarks saved in this app. Reader and cloud history exchange is not available yet."
+          }
+        }
+      }
+    },
+    "These are bookmarks saved in this app. Reader history exchange is not available yet. Private iCloud synchronization can be enabled in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are bookmarks saved in this app. Reader history exchange is not available yet. Private iCloud synchronization can be enabled in Settings."
+          }
+        }
+      }
+    },
+    "These are positions saved in this app. Reader and cloud history exchange is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are positions saved in this app. Reader and cloud history exchange is not available yet."
+          }
+        }
+      }
+    },
+    "These are saved positions for this book. Sync a compatible reader to exchange reading history. Private iCloud synchronization can be enabled in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are saved positions for this book. Sync a compatible reader to exchange reading history. Private iCloud synchronization can be enabled in Settings."
+          }
+        }
+      }
+    },
+    "These backups have been checked against their saved hashes. Reader export and guided migration are not available yet. Preserved files remain separate from learning history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These backups have been checked against their saved hashes. Reader export and guided migration are not available yet. Preserved files remain separate from learning history."
+          }
+        }
+      }
+    },
+    "These backups have been checked against their saved hashes. Review migration decisions before importing them into local history. Reader export and installation of learning state are not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These backups have been checked against their saved hashes. Review migration decisions before importing them into local history. Reader export and installation of learning state are not available yet."
+          }
+        }
+      }
+    },
+    "These decisions are saved locally for this exact backup and course pack. Migration will recheck compatibility and overlapping backups before importing history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These decisions are saved locally for this exact backup and course pack. Migration will recheck compatibility and overlapping backups before importing history."
+          }
+        }
+      }
+    },
+    "This association is saved. Compatibility checks are still required before learning history can be applied.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This association is saved. Compatibility checks are still required before learning history can be applied."
+          }
+        }
+      }
+    },
+    "This book has different reading positions. Choose the position you want to keep.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This book has different reading positions. Choose the position you want to keep."
+          }
+        }
+      }
+    },
+    "This bookmark has conflicting changes. Choose the version to keep.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This bookmark has conflicting changes. Choose the version to keep."
+          }
+        }
+      }
+    },
+    "This bookmark was removed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This bookmark was removed."
+          }
+        }
+      }
+    },
+    "This choice is permanent for this pack. It records course identity and does not move or apply learning history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This choice is permanent for this pack. It records course identity and does not move or apply learning history."
+          }
+        }
+      }
+    },
+    "This course update cannot preserve existing learning history. Choose a compatible edition of the same course. The installed pack and pending work have been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This course update cannot preserve existing learning history. Choose a compatible edition of the same course. The installed pack and pending work have been retained."
+          }
+        }
+      }
+    },
+    "This is history saved in this app for the confirmed course, including its associated editions. Reader and cloud history exchange is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is history saved in this app for the confirmed course, including its associated editions. Reader and cloud history exchange is not available yet."
+          }
+        }
+      }
+    },
+    "This is history saved in this app for the confirmed course, including its associated editions. Connecting a reader that supports journal export imports its saved history. Sending merged learning history to the reader is not available yet. Private iCloud synchronization can be enabled in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is history saved in this app for the confirmed course, including its associated editions. Connecting a reader that supports journal export imports its saved history. Sending merged learning history to the reader is not available yet. Private iCloud synchronization can be enabled in Settings."
+          }
+        }
+      }
+    },
+    "This pack belongs to a different course. Switching the reader’s active course is not available yet. The current course and pending work have been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This pack belongs to a different course. Switching the reader’s active course is not available yet. The current course and pending work have been retained."
+          }
+        }
+      }
+    },
+    "This removes the selection from all readers and retains files needed for recovery. Reader-side removal is not available yet. Restoring does not select the content again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the selection from all readers and retains files needed for recovery. Reader-side removal is not available yet. Restoring does not select the content again."
+          }
+        }
+      }
+    },
+    "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Reader-side removal is not available yet. Restoring does not select the content again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Reader-side removal is not available yet. Restoring does not select the content again."
+          }
+        }
+      }
+    },
+    "This transfer belongs to a different SD card.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This transfer belongs to a different SD card."
+          }
+        }
+      }
+    },
+    "Tinta course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta course"
+          }
+        }
+      }
+    },
+    "Transfer selected content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfer selected content"
+          }
+        }
+      }
+    },
+    "Transferring": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferring"
+          }
+        }
+      }
+    },
+    "Transferring content…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferring content…"
+          }
+        }
+      }
+    },
+    "Unable to complete the action": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to complete the action"
+          }
+        }
+      }
+    },
+    "Unit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates"
+          }
+        }
+      }
+    },
+    "Upload this app's content files and saved journal history to the current private iCloud account and import its content and journal records. Confirm only if this is the account you want to use for this library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upload this app's content files and saved journal history to the current private iCloud account and import its content and journal records. Confirm only if this is the account you want to use for this library."
+          }
+        }
+      }
+    },
+    "Upload this app's saved journal history to the current private iCloud account and import its journal records. Confirm only if this is the account you want to use for this library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upload this app's saved journal history to the current private iCloud account and import its journal records. Confirm only if this is the account you want to use for this library."
+          }
+        }
+      }
+    },
+    "Use Wi-Fi for large transfers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Wi-Fi for large transfers"
+          }
+        }
+      }
+    },
+    "Use reader hotspot for large transfers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use reader hotspot for large transfers"
+          }
+        }
+      }
+    },
+    "Use the matching backup's installed migration as this backup's shared history. This decision prevents importing this backup independently.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use the matching backup's installed migration as this backup's shared history. This decision prevents importing this backup independently."
+          }
+        }
+      }
+    },
+    "Use your system Wi-Fi controls to join this network, then continue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your system Wi-Fi controls to join this network, then continue."
+          }
+        }
+      }
+    },
+    "Verifying learning backups…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifying learning backups…"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "Wait until the retry time before synchronizing again": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait until the retry time before synchronizing again"
+          }
+        }
+      }
+    },
+    "Wi-Fi network": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi network"
+          }
+        }
+      }
+    },
+    "Wi-Fi transfer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi transfer"
+          }
+        }
+      }
+    },
+    "Wi-Fi transfer finished. Reconnect to continue any pending work.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi transfer finished. Reconnect to continue any pending work."
+          }
+        }
+      }
+    },
+    "X4": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "X4"
+          }
+        }
+      }
+    },
+    "X4 Classic": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "X4 Classic"
+          }
+        }
+      }
+    },
+    "X4 Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "X4 Pro"
+          }
+        }
+      }
+    },
+    "Your iCloud account is unavailable or changed. Check the account before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iCloud account is unavailable or changed. Check the account before retrying."
+          }
+        }
+      }
+    },
+    "Your iCloud storage is full. Manage storage in iCloud settings before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iCloud storage is full. Manage storage in iCloud settings before retrying."
+          }
+        }
+      }
+    },
+    "Your library could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library could not be loaded."
+          }
+        }
+      }
+    },
+    "Your library could not be opened.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library could not be opened."
+          }
+        }
+      }
+    },
+    "Your library is empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library is empty"
+          }
+        }
+      }
+    },
+    "iCloud history could not be synchronized. Check your account, storage quota and network, then retry. Local reader operations remain available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud history could not be synchronized. Check your account, storage quota and network, then retry. Local reader operations remain available."
+          }
+        }
+      }
+    },
+    "iCloud is temporarily unavailable. Wait before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud is temporarily unavailable. Wait before retrying."
+          }
+        }
+      }
+    },
+    "Study day totals bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study day totals bytes"
+          }
+        }
+      }
+    },
+    "Session state bytes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session state bytes"
+          }
+        }
+      }
+    },
+    "Preserve learning from connected reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preserve learning from connected reader"
+          }
+        }
+      }
+    },
+    "Preserving learning backup…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preserving learning backup…"
+          }
+        }
+      }
+    },
+    "Learning backup could not be completed. Reconnect and retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning backup could not be completed. Reconnect and retry."
+          }
+        }
+      }
+    },
+    "These backups have been checked against their saved hashes. Connect the reader with this course installed to preserve its learning files. Review migration decisions before importing them into local history. Installing merged learning state is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These backups have been checked against their saved hashes. Connect the reader with this course installed to preserve its learning files. Review migration decisions before importing them into local history. Installing merged learning state is not available yet."
+          }
+        }
+      }
+    },
+    "Pause backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause backup"
+          }
+        }
+      }
+    },
+    "The course switch could not be queued. Refresh the reader inventory and review the switch again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The course switch could not be queued. Refresh the reader inventory and review the switch again."
+          }
+        }
+      }
+    },
+    "Switch connected reader to this course": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch connected reader to this course"
+          }
+        }
+      }
+    },
+    "Course switch queued. Use Transfer selected content to install it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Course switch queued. Use Transfer selected content to install it."
+          }
+        }
+      }
+    },
+    "Switch the reader’s Tinta course?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch the reader’s Tinta course?"
+          }
+        }
+      }
+    },
+    "Confirm switch and queue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm switch and queue"
+          }
+        }
+      }
+    },
+    "This replaces the reader’s active course pack. Learning progress stays separate for each course and the previous course’s files are preserved. Other course selections for this reader will be cleared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This replaces the reader’s active course pack. Learning progress stays separate for each course and the previous course’s files are preserved. Other course selections for this reader will be cleared."
+          }
+        }
+      }
+    },
+    "Firmware is verified and staged on the reader’s SD card. Flashing is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware is verified and staged on the reader’s SD card. Flashing is not available yet."
+          }
+        }
+      }
+    },
+    "Firmware staging paused. Reconnect and stage this image again to resume.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware staging paused. Reconnect and stage this image again to resume."
+          }
+        }
+      }
+    },
+    "Firmware could not be staged. Check reader compatibility and battery level, then reconnect and retry. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware could not be staged. Check reader compatibility and battery level, then reconnect and retry. Pending work has been retained."
+          }
+        }
+      }
+    },
+    "Downloaded firmware can be verified and staged on a connected reader. Flashing is not available yet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded firmware can be verified and staged on a connected reader. Flashing is not available yet."
+          }
+        }
+      }
+    },
+    "Stage firmware on connected reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stage firmware on connected reader"
+          }
+        }
+      }
+    },
+    "Firmware is verified and staged on the reader’s SD card. Confirm installation in Updates to flash it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware is verified and staged on the reader’s SD card. Confirm installation in Updates to flash it."
+          }
+        }
+      }
+    },
+    "Firmware installation verified after reconnect.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware installation verified after reconnect."
+          }
+        }
+      }
+    },
+    "Firmware installation status could not be checked. Reconnect to retry verification.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware installation status could not be checked. Reconnect to retry verification."
+          }
+        }
+      }
+    },
+    "Firmware installation requested. Reconnect after the reader restarts to verify the update.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware installation requested. Reconnect after the reader restarts to verify the update."
+          }
+        }
+      }
+    },
+    "Firmware installation was not confirmed. Reconnect to check the running image before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmware installation was not confirmed. Reconnect to check the running image before retrying."
+          }
+        }
+      }
+    },
+    "Stage firmware on the connected reader, then confirm installation. Reconnect after restart to verify the update.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stage firmware on the connected reader, then confirm installation. Reconnect after restart to verify the update."
+          }
+        }
+      }
+    },
+    "Installing firmware": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installing firmware"
+          }
+        }
+      }
+    },
+    "Install staged firmware": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install staged firmware"
+          }
+        }
+      }
+    },
+    "Boot previously verified": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boot previously verified"
+          }
+        }
+      }
+    },
+    "Awaiting boot verification": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Awaiting boot verification"
+          }
+        }
+      }
+    },
+    "Install firmware on connected reader?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install firmware on connected reader?"
+          }
+        }
+      }
+    },
+    "Install and restart reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install and restart reader"
+          }
+        }
+      }
+    },
+    "Compatibility and battery will be checked again. Keep the reader powered on until it restarts, then reconnect to verify the update.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility and battery will be checked again. Keep the reader powered on until it restarts, then reconnect to verify the update."
+          }
+        }
+      }
+    },
+    "Reader removal could not be queued. Refresh installed content and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader removal could not be queued. Refresh installed content and try again."
+          }
+        }
+      }
+    },
+    "Reader removal pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader removal pending"
+          }
+        }
+      }
+    },
+    "Remove from this reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from this reader"
+          }
+        }
+      }
+    },
+    "Remove this book from the reader?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this book from the reader?"
+          }
+        }
+      }
+    },
+    "The companion library copy is retained. An interrupted removal will resume when you synchronize this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The companion library copy is retained. An interrupted removal will resume when you synchronize this reader."
+          }
+        }
+      }
+    },
+    "This removal belongs to a different SD card.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removal belongs to a different SD card."
+          }
+        }
+      }
+    },
+    "Finish or cancel this book’s pending transfer before removing it from the reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish or cancel this book’s pending transfer before removing it from the reader."
+          }
+        }
+      }
+    },
+    "Preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences"
+          }
+        }
+      }
+    },
+    "Portable preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portable preferences"
+          }
+        }
+      }
+    },
+    "Loading preferences…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading preferences…"
+          }
+        }
+      }
+    },
+    "Preferences could not be loaded.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences could not be loaded."
+          }
+        }
+      }
+    },
+    "No portable preferences saved": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No portable preferences saved"
+          }
+        }
+      }
+    },
+    "This preference has conflicting changes. Choose the value to keep.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This preference has conflicting changes. Choose the value to keep."
+          }
+        }
+      }
+    },
+    "Required content": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required content"
+          }
+        }
+      }
+    },
+    "Keep this value": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this value"
+          }
+        }
+      }
+    },
+    "Keep this preference value?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep this preference value?"
+          }
+        }
+      }
+    },
+    "Keep value": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep value"
+          }
+        }
+      }
+    },
+    "The preference could not be resolved. Refresh preferences and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The preference could not be resolved. Refresh preferences and try again."
+          }
+        }
+      }
+    },
+    "Disabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabled"
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enabled"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Spanish": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spanish"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        }
+      }
+    },
+    "Small": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Small"
+          }
+        }
+      }
+    },
+    "Medium": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium"
+          }
+        }
+      }
+    },
+    "Large": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "Font": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font"
+          }
+        }
+      }
+    },
+    "Font size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Font size"
+          }
+        }
+      }
+    },
+    "Line spacing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line spacing"
+          }
+        }
+      }
+    },
+    "Text alignment": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text alignment"
+          }
+        }
+      }
+    },
+    "Paragraph spacing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragraph spacing"
+          }
+        }
+      }
+    },
+    "Word spacing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word spacing"
+          }
+        }
+      }
+    },
+    "Character spacing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Character spacing"
+          }
+        }
+      }
+    },
+    "Margins": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Margins"
+          }
+        }
+      }
+    },
+    "Hyphenation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyphenation"
+          }
+        }
+      }
+    },
+    "Dictionary": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictionary"
+          }
+        }
+      }
+    },
+    "Text smoothing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text smoothing"
+          }
+        }
+      }
+    },
+    "Book styles": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Book styles"
+          }
+        }
+      }
+    },
+    "Focus reading": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Focus reading"
+          }
+        }
+      }
+    },
+    "Tinta new items per day": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta new items per day"
+          }
+        }
+      }
+    },
+    "Tinta review limit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta review limit"
+          }
+        }
+      }
+    },
+    "Tinta retention target": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta retention target"
+          }
+        }
+      }
+    },
+    "Tinta maximum interval": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta maximum interval"
+          }
+        }
+      }
+    },
+    "Tinta session size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta session size"
+          }
+        }
+      }
+    },
+    "Tinta text size": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta text size"
+          }
+        }
+      }
+    },
+    "Tinta interface language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta interface language"
+          }
+        }
+      }
+    },
+    "Tinta sensitive vocabulary": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta sensitive vocabulary"
+          }
+        }
+      }
+    },
+    "Tinta typed answers": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinta typed answers"
+          }
+        }
+      }
+    },
+    "Connect the reader with this course installed. Preserve a current learning backup before installing reviewed history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect the reader with this course installed. Preserve a current learning backup before installing reviewed history."
+          }
+        }
+      }
+    },
+    "Install on reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install on reader"
+          }
+        }
+      }
+    },
+    "Install reviewed history on connected reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install reviewed history on connected reader"
+          }
+        }
+      }
+    },
+    "Install reviewed learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install reviewed learning history"
+          }
+        }
+      }
+    },
+    "Install this reviewed history and other saved history for this course on the connected reader. Learning files will be rebuilt together; the original backup stays preserved. Interrupted work can be resumed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install this reviewed history and other saved history for this course on the connected reader. Learning files will be rebuilt together; the original backup stays preserved. Interrupted work can be resumed."
+          }
+        }
+      }
+    },
+    "Installing learning history…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installing learning history…"
+          }
+        }
+      }
+    },
+    "Learning history could not be installed. Reconnect the reader and verify its course, current backup, and saved review before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning history could not be installed. Reconnect the reader and verify its course, current backup, and saved review before retrying."
+          }
+        }
+      }
+    },
+    "Learning history installation is paused": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning history installation is paused"
+          }
+        }
+      }
+    },
+    "Learning history installed on reader": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning history installed on reader"
+          }
+        }
+      }
+    },
+    "Pause learning history installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause learning history installation"
+          }
+        }
+      }
+    },
+    "Resume learning history installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume learning history installation"
+          }
+        }
+      }
+    },
+    "These backups have been checked against their saved hashes. Connect the reader with this course installed to preserve its learning files. Review migration decisions before importing them into local history. Install reviewed learning history from the migration review screen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These backups have been checked against their saved hashes. Connect the reader with this course installed to preserve its learning files. Review migration decisions before importing them into local history. Install reviewed learning history from the migration review screen."
+          }
+        }
+      }
+    },
+    "Confirmed shared learning history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed shared learning history"
+          }
+        }
+      }
+    },
+    "Installation reuses the confirmed shared history without importing this backup again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation reuses the confirmed shared history without importing this backup again."
+          }
+        }
+      }
+    },
+    "Connect the source reader with the same card used for this backup.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect the source reader with the same card used for this backup."
+          }
+        }
+      }
+    },
+    "Keep installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep installation"
+          }
+        }
+      }
+    },
+    "Cancellation could not be confirmed. Reconnect the source reader and retry; the saved job remains pending.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellation could not be confirmed. Reconnect the source reader and retry; the saved job remains pending."
+          }
+        }
+      }
+    },
+    "Cancel installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel installation"
+          }
+        }
+      }
+    },
+    "Retry cancellation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry cancellation"
+          }
+        }
+      }
+    },
+    "Cancel the pending reader installation. The original backup and history saved in this app remain available. If the connection is interrupted, retry cancellation on this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel the pending reader installation. The original backup and history saved in this app remain available. If the connection is interrupted, retry cancellation on this reader."
+          }
+        }
+      }
+    },
+    "Cancel learning history installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel learning history installation"
+          }
+        }
+      }
+    },
+    "Cancelling learning history installation…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelling learning history installation…"
+          }
+        }
+      }
+    },
+    "Learning history installation cancelled; preserved history is still available": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning history installation cancelled; preserved history is still available"
+          }
+        }
+      }
+    },
+    "Cancellation is pending. Reconnect the source reader and retry cancellation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellation is pending. Reconnect the source reader and retry cancellation."
+          }
+        }
+      }
+    },
+    "Installation has reached commit. Resume to confirm the reader’s result before starting another job.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation has reached commit. Resume to confirm the reader’s result before starting another job."
+          }
+        }
+      }
+    },
+    "Pause cancellation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause cancellation"
+          }
+        }
+      }
+    },
+    "Checking backed-up preferences…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking backed-up preferences…"
+          }
+        }
+      }
+    },
+    "Backed-up preferences could not be verified.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed-up preferences could not be verified."
+          }
+        }
+      }
+    },
+    "Review backed-up Tinta preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review backed-up Tinta preferences"
+          }
+        }
+      }
+    },
+    "Import backed-up Tinta preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import backed-up Tinta preferences"
+          }
+        }
+      }
+    },
+    "Import these preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import these preferences"
+          }
+        }
+      }
+    },
+    "Resolve portable preference conflicts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve portable preference conflicts"
+          }
+        }
+      }
+    },
+    "Import the displayed portable Tinta preferences from this verified backup. Existing choices remain available for conflict resolution. Retrying this import reuses its saved events. The original backup stays preserved.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import the displayed portable Tinta preferences from this verified backup. Existing choices remain available for conflict resolution. Retrying this import reuses its saved events. The original backup stays preserved."
+          }
+        }
+      }
+    },
+    "Backed-up preferences are saved in this app": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed-up preferences are saved in this app"
+          }
+        }
+      }
+    },
+    "Backed-up Tinta preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed-up Tinta preferences"
+          }
+        }
+      }
+    },
+    "Import preferences": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import preferences"
+          }
+        }
+      }
+    },
+    "These choices can be included in reader history installation. Conflicting saved preferences require an explicit choice. Device clock and other device-only settings stay on their reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These choices can be included in reader history installation. Conflicting saved preferences require an explicit choice. Device clock and other device-only settings stay on their reader."
+          }
+        }
+      }
+    },
+    "Preferences could not be imported. Refresh and verify the backup before retrying.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferences could not be imported. Refresh and verify the backup before retrying."
+          }
+        }
+      }
+    },
+    "Import backed-up preferences before starting a new installation. An installation already in progress keeps its original choices.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import backed-up preferences before starting a new installation. An installation already in progress keeps its original choices."
+          }
+        }
+      }
+    },
+    "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not have independently imported learning history or preferences.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not have independently imported learning history or preferences."
+          }
+        }
+      }
+    },
+    "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not already have a separate learning migration or preference import.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shared history could not be confirmed. The matching backup must already be migrated, and this backup must not already have a separate learning migration or preference import."
+          }
+        }
+      }
+    },
+    "Resolve conflicting Tinta preferences before preparing this installation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve conflicting Tinta preferences before preparing this installation."
+          }
+        }
+      }
+    },
+    "Check result or cancel pending installation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check result or cancel pending installation"
+          }
+        }
+      }
+    },
+    "Installation has reached commit. Resume or check the reader’s result before starting another job.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installation has reached commit. Resume or check the reader’s result before starting another job."
+          }
+        }
+      }
+    },
+    "Check the pending reader installation and cancel it if it has not been committed. An already committed installation is confirmed and retained. The original backup and app history remain available. Retry this check if the connection is interrupted.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the pending reader installation and cancel it if it has not been committed. An already committed installation is confirmed and retained. The original backup and app history remain available. Retry this check if the connection is interrupted."
+          }
+        }
+      }
+    },
+    "History synchronization was interrupted. Reconnect to resume the saved job.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History synchronization was interrupted. Reconnect to resume the saved job."
+          }
+        }
+      }
+    },
+    "History sync paused. Refresh to resume.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History sync paused. Refresh to resume."
+          }
+        }
+      }
+    },
+    "Resolve portable preference conflicts before syncing history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resolve portable preference conflicts before syncing history."
+          }
+        }
+      }
+    },
+    "Install the selected font or dictionary on this reader before syncing history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install the selected font or dictionary on this reader before syncing history."
+          }
+        }
+      }
+    },
+    "History includes a dependency on another course. Keep it preserved until the reader can accept that course history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History includes a dependency on another course. Keep it preserved until the reader can accept that course history."
+          }
+        }
+      }
+    },
+    "Syncing history": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Syncing history"
+          }
+        }
+      }
+    },
+    "History synchronized.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History synchronized."
+          }
+        }
+      }
+    },
+    "History is up to date.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History is up to date."
+          }
+        }
+      }
+    },
+    "Finish or cancel the pending learning installation before syncing history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish or cancel the pending learning installation before syncing history."
+          }
+        }
+      }
+    },
+    "Preserve and review this reader’s learning backup before syncing history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preserve and review this reader’s learning backup before syncing history."
+          }
+        }
+      }
+    },
+    "The reader’s learning state needs recovery before history can be uploaded. Reopen Connect & Sync and retry.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader’s learning state needs recovery before history can be uploaded. Reopen Connect & Sync and retry."
+          }
+        }
+      }
+    },
+    "Reader history was imported; history upload is unavailable in the current reader state.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader history was imported; history upload is unavailable in the current reader state."
+          }
+        }
+      }
+    },
+    "Refresh and sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh and sync"
+          }
+        }
+      }
+    },
+    "Pause history sync": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause history sync"
+          }
+        }
+      }
+    },
+    "Reopen Connect & Sync on the reader, then reconnect to rebuild its library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reopen Connect & Sync on the reader, then reconnect to rebuild its library."
+          }
+        }
+      }
+    },
+    "Update the reader firmware before uploading history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update the reader firmware before uploading history."
+          }
+        }
+      }
+    },
+    "History was already committed and has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History was already committed and has been retained."
+          }
+        }
+      }
+    },
+    "Pending history upload cancelled. Preserved history remains in the library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pending history upload cancelled. Preserved history remains in the library."
+          }
+        }
+      }
+    },
+    "History cancellation needs confirmation. Retry cancellation on this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History cancellation needs confirmation. Retry cancellation on this reader."
+          }
+        }
+      }
+    },
+    "Retry history cancellation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry history cancellation"
+          }
+        }
+      }
+    },
+    "Check result or cancel history upload": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check result or cancel history upload"
+          }
+        }
+      }
+    },
+    "Cancel pending history upload": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel pending history upload"
+          }
+        }
+      }
+    },
+    "Check result or cancel upload": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check result or cancel upload"
+          }
+        }
+      }
+    },
+    "Keep upload": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep upload"
+          }
+        }
+      }
+    },
+    "Cancellation was not confirmed. Reconnect to the same reader and retry cancellation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancellation was not confirmed. Reconnect to the same reader and retry cancellation."
+          }
+        }
+      }
+    },
+    "Uncommitted uploads will be cancelled. Already committed history is retained, and the library history remains available.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uncommitted uploads will be cancelled. Already committed history is retained, and the library history remains available."
+          }
+        }
+      }
+    },
+    "More history changes are pending. Sync again to finish.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More history changes are pending. Sync again to finish."
+          }
+        }
+      }
+    },
+    "History is verified. Finish pending content or resolve conflicts to complete sync.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History is verified. Finish pending content or resolve conflicts to complete sync."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

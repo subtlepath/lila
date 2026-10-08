@@ -5,13 +5,15 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import struct
+import tempfile
 
 from . import review
 from .build import compile_course
 from .diag import Diagnostics
 from .dump import dump, size_report
 from .emit import emit
-from .reader import Pack
+from .reader import Pack, PackError
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -19,6 +21,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--content", default="content", help="content directory (default: content)")
     parser.add_argument("--out", help="pack to write (default: build/course.pack)")
     parser.add_argument("--check", action="store_true", help="validate only; write nothing")
+    parser.add_argument("--baseline-from", metavar="PACK",
+                        help="add identity history only if all course sections match this legacy pack")
     parser.add_argument("--dump", action="store_true", help="also write a human-readable listing next to the pack")
     parser.add_argument("--review", action="store_true", help="write printable review pages to build/review/")
     parser.add_argument("--review-dir", help="where --review writes (default: build/review/ for the default "
@@ -80,6 +84,12 @@ def main(argv: list[str] | None = None) -> int:
 
     data, _report = emit(b, release=args.release)
     pack = Pack(data)
+    if args.baseline_from:
+        try:
+            _validate_baseline(pack, args.baseline_from)
+        except (OSError, ValueError, PackError, struct.error) as exc:
+            print(f"packc: identity baseline refused: {exc}", file=sys.stderr)
+            return 1
     summary = (f"{len(b.lemmas)} lemmas, {len(b.verbs)} verb tables, {len(b.sentences)} sentences, "
                f"{len(b.items)} items, {len(b.lessons)} lessons, {len(b.stories)} stories, "
                f"{len(b.phrase_entries)} phrases")
@@ -89,10 +99,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"packc: check passed: {summary}{extra}; {len(diag.warnings)} warning(s)")
         return 0
 
-    b.id_lock.write()
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    with open(args.out, "wb") as fh:
-        fh.write(data)
+    try:
+        b.id_lock.write()
+    except OSError as exc:
+        print(f"packc: cannot persist item identities: {exc}", file=sys.stderr)
+        return 1
+    try:
+        _write_pack(args.out, data)
+    except OSError as exc:
+        print(f"packc: cannot publish pack: {exc}", file=sys.stderr)
+        return 1
     if args.dump:
         dump_path = os.path.splitext(args.out)[0] + ".dump.txt"
         with open(dump_path, "w", encoding="utf-8") as fh:
@@ -105,6 +121,44 @@ def main(argv: list[str] | None = None) -> int:
         if args.dump:
             print(f"dump: {dump_path}")
     return 0
+
+
+def _validate_baseline(candidate: Pack, path: str) -> None:
+    with open(path, "rb") as fh:
+        previous = Pack(fh.read())
+    if not previous.crc_ok():
+        raise ValueError("legacy pack checksum mismatch")
+    if "IDEN" in previous.sections:
+        raise ValueError("reference pack already has identity history")
+    if previous.locale.lower() != candidate.locale.lower():
+        raise ValueError("course language differs")
+    tags = tuple(tag for tag in candidate.sections if tag != "IDEN")
+    if tuple(previous.sections) != tags:
+        raise ValueError("course section layout differs")
+    for tag in tags:
+        old_offset, old_size, old_count = previous.sections[tag]
+        new_offset, new_size, new_count = candidate.sections[tag]
+        if (old_size, old_count) != (new_size, new_count) or (
+                previous.data[old_offset:old_offset + old_size] !=
+                candidate.data[new_offset:new_offset + new_size]):
+            raise ValueError(f"course section {tag} changed; use the original source and ids.lock")
+
+
+def _write_pack(path: str, data: bytes) -> None:
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    staged = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=directory, prefix=".packc-", delete=False) as fh:
+            staged = fh.name
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(staged, path)
+        staged = None
+    finally:
+        if staged is not None:
+            os.unlink(staged)
 
 
 def _mark_reviewed(args) -> int:

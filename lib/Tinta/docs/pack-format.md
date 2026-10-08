@@ -357,6 +357,29 @@ records). Item keys in `ids.lock` describe what an item asks, not where it
 stands (`cloze:la mesa es nueva:mesa`), so reordering content keeps uids
 (`docs/content-style.md`, section 12).
 
+**Optional `IDEN` section.** New compiler builds include the complete assigned
+UID history from `ids.lock`, including retired items, sorted by UID. Each
+36-byte record contains a little-endian `u32 uid` followed by 32 digest bytes:
+`SHA-256(b"Tinta item identity v1\0" + key.encode("utf-8"))`. The key is the
+exact compiler item key, without display-character encoding or additional
+normalization. Its UID is stored separately and is not hashed. Readers that do
+not recognize this section skip it; older packs can omit it.
+
+Course-update validation can compare these records to detect reassigned IDs
+without loading the table into RAM. A removed item retains its record so a
+later update cannot assign its UID a new meaning. A digest is a compatibility
+claim by the pack author, not a signature or proof of trustworthy content.
+Legacy packs lacking this section need an explicit migration policy before
+identity continuity can be established.
+
+To create a baseline from unchanged legacy sources, run
+`python3 tools/packc --content CONTENT --baseline-from LEGACY.pack --out BASELINE.pack`.
+The compiler checks the reference checksum and requires every existing section's
+tag, count, size, order, and payload bytes to match before persisting IDs or
+publishing output. Install this baseline before an updated course edition. It
+does not map changed legacy learning content or recover a missing original
+source tree; the pack author's identity claims still require trust.
+
 Candidates are ordered best first. The device picks up to three with a
 deterministic generator seeded by uid and repetition count; the leading
 `flags & 3` candidates (members of an authored confusable set) are always

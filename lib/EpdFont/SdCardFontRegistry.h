@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "VectorFontSupport.h"
@@ -56,7 +57,7 @@ class SdCardFontRegistry {
   bool discover();
 
   const std::vector<SdCardFontFamilyInfo>& getFamilies() const { return families_; }
-  const SdCardFontFamilyInfo* findFamily(const std::string& name) const;
+  const SdCardFontFamilyInfo* findFamily(std::string_view name) const;
   int getFamilyIndex(const std::string& name) const;
   int getFamilyCount() const { return static_cast<int>(families_.size()); }
 

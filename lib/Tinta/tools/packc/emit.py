@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import hashlib
 import struct
 import sys
 import time
@@ -30,6 +31,7 @@ SENTENCE = struct.Struct("<4IHBBBBBB")      # 24
 TOKEN = struct.Struct("<HBBHH")             # 8
 ITEM = struct.Struct("<IBBHHHHBBI")         # 20
 ITEM_UID = struct.Struct("<IHH")            # 8
+ITEM_IDENTITY = struct.Struct("<I32s")      # 36, optional IDEN section
 UNIT = struct.Struct("<3I4H")               # 20
 LESSON = struct.Struct("<3I9HBB")           # 32
 NOTE = struct.Struct("<IIHHBBH")            # 16
@@ -219,12 +221,17 @@ def emit(b: Build, release: bool = False, build_time: int | None = None) -> tupl
     sec["CONF"] = (b"".join(rows), len(rows))
 
     sec["STRS"] = (bytes(s.heap), len(s.offsets))
+    identities = sorted((uid, key) for key, uid in b.id_lock.by_key.items())
+    sec["IDEN"] = (b"".join(ITEM_IDENTITY.pack(uid, hashlib.sha256(
+        b"Tinta item identity v1\0" + key.encode("utf-8")).digest())
+        for uid, key in identities), len(identities))
 
     # Assemble.
-    directory_size = DIRENT.size * len(ORDER)
+    order = ORDER + ("IDEN",)
+    directory_size = DIRENT.size * len(order)
     offset = HEADER_SIZE + directory_size
     layout = []
-    for tag in ORDER:
+    for tag in order:
         data, count = sec[tag]
         offset = (offset + 3) & ~3
         layout.append((tag, offset, data, count))
@@ -238,7 +245,7 @@ def emit(b: Build, release: bool = False, build_time: int | None = None) -> tupl
     if build_time is None:
         build_time = int(os.environ.get("SOURCE_DATE_EPOCH", time.time()))
     header = HEADER.pack(b"TNTA", FORMAT_MAJOR, FORMAT_MINOR, b.course.version, build_time, total, 0,
-                         b.course.locale.encode()[:8].ljust(8, b"\0"), HEADER_SIZE, len(ORDER), HEADER_SIZE,
+                         b.course.locale.encode()[:8].ljust(8, b"\0"), HEADER_SIZE, len(order), HEADER_SIZE,
                          FLAG_RELEASE if release else 0, 0)
     out[:HEADER_SIZE] = header
     crc = zlib.crc32(bytes(out))

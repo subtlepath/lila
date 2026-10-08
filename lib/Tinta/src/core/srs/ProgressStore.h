@@ -150,8 +150,23 @@ class ProgressStore {
   // it has to; exposed for tests and for a "repair" action.
   OpenResult rebuild();
 
+  bool authoritativeRecoveryFailed() const { return authoritativeRecoveryFailed_; }
   bool isGuest() const { return mode_ == Mode::Guest; }
   bool failed() const { return mode_ == Mode::Failed || mode_ == Mode::Closed; }
+
+  // Persist the authoritative event before local journal/derived-state writes.
+  // The callback must log failures and keep its context alive through this store.
+  struct MutationJournal {
+    void* context = nullptr;
+    bool (*persist)(void*, const JournalEntry&, const ItemState&, const ItemState&,
+                    uint32_t responseMilliseconds) = nullptr;
+    // Recover authoritative mutations into local files before open reads them.
+    bool (*recover)(void*) = nullptr;
+    // Acknowledge only after local disk state is durable; failure requires recovery.
+    bool (*committed)(void*, const JournalEntry&, const ItemState&, const ItemState&,
+                      uint32_t responseMilliseconds) = nullptr;
+  };
+  void setMutationJournal(MutationJournal journal) { mutationJournal_ = journal; }
 
   // Graded at least once (and not undone back to new).
   bool seen(uint32_t index) const {
@@ -163,10 +178,17 @@ class ProgressStore {
   // error or a bad index.
   bool load(uint32_t index, ItemState& out);
 
+  // Read-only proof of the latest disk mutation. Caller excludes writers.
+  // Does not validate companion authority or earlier journal history.
+  bool verifyCommittedMutation(const JournalEntry& entry, const ItemState& before, const ItemState& after);
+
   // Grades item `index` on `day`. `time` is Clock::nowSeconds().
   ReviewResult review(uint32_t index, Grade grade, uint8_t format, uint32_t responseMs, DayNumber day, uint32_t time);
 
   bool canUndo() const { return mode_ != Mode::Failed && header_.undoValid; }
+  // Read-only native proof for companion undo-identity recovery. Outputs change
+  // only on success; caller excludes mutations and validates companion authority.
+  bool loadUndoReview(JournalEntry& entry, ItemState& before, ItemState& after);
   // Undoes the last review; `restored` receives the item's state as it was.
   Status undo(DayNumber day, uint32_t time, ItemState* restored = nullptr);
 
@@ -180,6 +202,8 @@ class ProgressStore {
 
   uint32_t recordCount() const { return header_.recordCount; }
   uint32_t journalCount() const { return header_.journalCount; }
+  // Canonical companion snapshots retain this day even with an empty local log.
+  DayNumber lastStudyDay() const { return header_.statDay; }
 
   // Calls visit(const ItemState&, int32_t index) for every record in slot
   // order; index is -1 for a retired uid. One sequential pass over items.bin.
@@ -231,7 +255,7 @@ class ProgressStore {
 
   Plan plan(const JournalEntry& entry, bool allowUnknownUid, Change& out);
   bool commit(const Change& change);
-  Status apply(const JournalEntry& entry, Change& change);
+  Status apply(const JournalEntry& entry, Change& change, uint32_t responseMilliseconds = 0);
   bool resolveSlot(uint32_t uid, int32_t& index, uint32_t& slot, bool& exists);
   bool findRecord(uint32_t uid, uint32_t& slot);
   bool readRecord(uint32_t slot, ItemState& out);
@@ -257,6 +281,8 @@ class ProgressStore {
   ItemState* guest_ = nullptr;
   uint16_t guestCapacity_ = 0;
   Mode mode_ = Mode::Closed;
+  MutationJournal mutationJournal_;
+  bool authoritativeRecoveryFailed_ = false;
   bool rebuilding_ = false;
   Header header_;
 };

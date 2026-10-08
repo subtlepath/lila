@@ -66,6 +66,11 @@ uint32_t Clock::nowSeconds() const {
   return static_cast<uint32_t>(today()) * 86400u + (millis() - bootMs_) / 1000u;
 }
 
+bool Clock::unixUtc(uint64_t& out) const {
+  if (!hasTimeOfDay()) return false;
+  return halClock.unixTime(out);
+}
+
 bool Clock::localTime(LocalTime& out) const {
   uint32_t local = 0;
   if (!hasTimeOfDay() || !localSeconds(local)) return false;

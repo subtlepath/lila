@@ -42,6 +42,9 @@ class Clock final : public core::Clock {
   bool hasTimeOfDay() const override;
   uint32_t nowSeconds() const override;
 
+  // Absolute UTC for event journals; absent with only a learner-confirmed date.
+  bool unixUtc(uint64_t& out) const;
+
   // False until the date is known: the RTC is trusted, or the learner has
   // confirmed a date this power-on. The app asks for it before scheduling.
   bool trusted() const;

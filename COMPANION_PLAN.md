@@ -58,7 +58,10 @@ The current journal has local review/undo records without distributed identities
 
 **Content and firmware**
 
-- Start with the existing Spanish `course.pack`, supported fonts/dictionaries, and EPUBs. Course updates retain stable item identities. New courses or runtime translation systems are separate content/firmware work.
+- Support transferring Tinta language-learning packs through the companion: import a pack into the library, select a reader, and queue installation over the shared resumable BLE/Wi-Fi transfer protocol. Start with the existing Spanish `course.pack`; additional languages require compatible pack content and reader support.
+- Include pack language, stable course identity, pack-format version, required reader capabilities, length, and content hash in library metadata and compatibility checks. Validate the complete staged pack before a recoverable installation; interrupted or incompatible transfers must leave the installed pack and learning progress usable.
+- Course updates retain stable item identities and learning history. A different course requires an explicit switch and separate learner state; do not overwrite the current course's progress. The current single-active-pack reader needs course switching and state isolation before the companion can offer that operation.
+- Supported fonts/dictionaries and EPUBs use the same content-transfer foundation. Runtime UI translation packs require a separately defined format and firmware loader; transferring Tinta learning content does not by itself add runtime UI translation support.
 - Add a release manifest containing asset hashes, board compatibility, protocol requirements, and pack-format compatibility.
 - Default to stable lila releases and support manually imported firmware files. Download on the Apple device, stage on SD, then reuse the existing validator/flasher ([FirmwareFlasher.h:50](src/network/FirmwareFlasher.h#L50)).
 - Require at least 30% reported battery before flashing. Validate chip, board, partition size, and image integrity; release radio resources before writing flash. Report success only after reconnecting and verifying the expected running build.
@@ -68,7 +71,7 @@ The current journal has local review/undo records without distributed identities
 
 - **Protocol tests:** malformed frames, authorization, bounded queues, duplicate commands, reconnects, transport handoff, offset recovery, insufficient storage, and interrupted commits.
 - **Sync tests:** two readers changing offline; reversed arrival order; duplicate delivery through iPhone/Mac/iCloud; inaccurate clocks; undo after concurrent reviews; legacy migration; bookmark deletion; preference conflicts; and repeated sync producing no further changes.
-- **Content/update tests:** renamed identical EPUBs, different editions, incompatible packs, interrupted dictionary installation, wrong-board/corrupt firmware, and reboot verification.
+- **Content/update tests:** renamed identical EPUBs, different editions, Tinta pack import and transfer, compatible course updates preserving progress, explicit course switches with isolated learner state, incompatible packs, interrupted pack/dictionary installation, wrong-board/corrupt firmware, and reboot verification.
 - **Build checks:** Apple unit/UI tests and iOS simulator/native Mac builds; affected C++/Tinta host tests; repository formatting wrapper; one final build per affected firmware target.
 - **Hardware acceptance:** test with two readers, including a C3 and S3, plus a physical iPhone and Mac. Exercise BLE and Wi-Fi recovery, firmware updates, and reading resumption. Monitor free/largest heap and stack watermarks; require over 50 KiB free heap and no accumulating loss across repeated sessions.
 - Implement in dependency order: transport/resource validation, safe persistence and migration, synchronization, then complete app/cloud/update flows. Preserve existing local work.

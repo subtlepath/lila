@@ -3,6 +3,7 @@
 #include <Utf8.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 
 namespace library {

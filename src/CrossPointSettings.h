@@ -9,6 +9,10 @@
 #include "util/HomeButtonInput.h"
 
 class GfxRenderer;
+namespace companion {
+struct ReaderPreferenceValues;
+enum class ReaderPreferenceStoreResult : uint8_t;
+}  // namespace companion
 
 class CrossPointSettings : public PersistableStore<CrossPointSettings> {
  private:
@@ -461,6 +465,16 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   ReaderRenderSpec readerRenderSpec(const GfxRenderer& renderer, uint16_t viewportWidth, uint16_t viewportHeight) const;
 
   static const char* getFilePath() { return "/.crosspoint/settings.json"; }
+  void readPortablePreferences(companion::ReaderPreferenceValues& output) const;
+  // The journal owner outlives the binding. The callback runs under storeMutex
+  // and must not re-enter settings or acquire an inverse lock order.
+  using PortablePreferenceSave = bool (*)(void*, const companion::ReaderPreferenceValues&,
+                                          companion::ReaderPreferenceValues& rollback);
+  void bindPortablePreferenceSave(void* context, PortablePreferenceSave callback);
+  void unbindPortablePreferenceSave(void* context);
+  bool saveToFile();
+  companion::ReaderPreferenceStoreResult applyPortablePreferencesIfUnchanged(
+      const companion::ReaderPreferenceValues& expected, const companion::ReaderPreferenceValues& replacement);
   void toJson(JsonDocument& doc) const;
   bool fromJson(JsonVariantConst doc);
 
@@ -472,6 +486,10 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   float getReaderLineCompression(int naturalLineHeight) const;
   unsigned long getSleepTimeoutMs() const;
   int getRefreshFrequency() const;
+
+ private:
+  void* portablePreferenceSaveContext = nullptr;
+  PortablePreferenceSave portablePreferenceSave = nullptr;
 };
 
 // Helper macro to access settings

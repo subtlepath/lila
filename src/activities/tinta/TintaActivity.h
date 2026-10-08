@@ -10,6 +10,7 @@
 namespace tinta::app {
 class App;
 }
+struct TintaCompanionSession;
 
 // Tinta, the Spanish course (lib/Tinta), as a lila app. Tinta draws its own
 // FreeInkUI screens straight into the framebuffer and keeps its progress and
@@ -33,6 +34,7 @@ class TintaActivity final : public Activity {
   void requestFrame();
 
   std::unique_ptr<tinta::app::App> app;
+  std::unique_ptr<TintaCompanionSession> companionSession;
   bool failed = false;
   // Set when this activity asked for the frame; a render nobody here asked for
   // follows an activity drawn on top (lila's light panel), so Tinta repaints.

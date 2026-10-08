@@ -253,6 +253,22 @@ uint32_t Pack::hashStr(uint32_t offset) const {
   return h;
 }
 
+bool Pack::visitStr(uint32_t offset, void* context, bool (*visit)(void*, const uint8_t*, uint32_t)) const {
+  const View& v = sections_[static_cast<size_t>(Section::Strs)];
+  if (!visit || offset == 0 || offset >= v.size) return false;
+  uint8_t chunk[32];
+  for (uint32_t pos = offset; pos < v.size;) {
+    const uint32_t n = v.size - pos < sizeof chunk ? v.size - pos : static_cast<uint32_t>(sizeof chunk);
+    if (!readAt(v.offset + pos, chunk, n)) return false;
+    uint32_t length = 0;
+    while (length < n && chunk[length] != 0) ++length;
+    if (length && !visit(context, chunk, length)) return false;
+    if (length < n) return true;
+    pos += n;
+  }
+  return false;
+}
+
 bool Pack::readBytes(Section s, uint32_t index, uint32_t at, void* out, uint32_t len) const {
   const View& v = sections_[static_cast<size_t>(s)];
   // index < count bounds index * stride by the section size checked at open.

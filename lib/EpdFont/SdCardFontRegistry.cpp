@@ -431,9 +431,9 @@ const char* SdCardFontRegistry::defaultWriteRoot() {
   return FONTS_DIR_HIDDEN;
 }
 
-const SdCardFontFamilyInfo* SdCardFontRegistry::findFamily(const std::string& name) const {
+const SdCardFontFamilyInfo* SdCardFontRegistry::findFamily(std::string_view name) const {
   for (const auto& f : families_) {
-    if (f.name == name) return &f;
+    if (std::string_view(f.name) == name) return &f;
   }
   return nullptr;
 }

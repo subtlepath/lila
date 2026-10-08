@@ -114,6 +114,7 @@ struct uzlib_uncomp {
     unsigned char *dict_ring;
     unsigned int dict_size;
     unsigned int dict_idx;
+    unsigned int dict_filled; /* lila: valid ring history, saturated at dict_size */
 
     TINF_TREE ltree; /* dynamic length/symbol tree */
     TINF_TREE dtree; /* dynamic distance tree */
@@ -124,7 +125,8 @@ struct uzlib_uncomp {
 #define TINF_PUT(d, c) \
     { \
         *d->dest++ = c; \
-        if (d->dict_ring) { d->dict_ring[d->dict_idx++] = c; if (d->dict_idx == d->dict_size) d->dict_idx = 0; } \
+        if (d->dict_ring) { d->dict_ring[d->dict_idx++] = c; if (d->dict_idx == d->dict_size) d->dict_idx = 0; \
+            if (d->dict_filled < d->dict_size) ++d->dict_filled; } \
     }
 
 unsigned char TINFCC uzlib_get_byte(TINF_DATA *d);

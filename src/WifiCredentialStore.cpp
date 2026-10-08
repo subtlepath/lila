@@ -3,6 +3,7 @@
 #include <CredentialIntegrity.h>
 #include <Logging.h>
 #include <ObfuscationUtils.h>
+#include <WifiCredentialSnapshot.h>
 
 #include <algorithm>
 
@@ -226,4 +227,15 @@ void WifiCredentialStore::clearAll() {
   }
   saveToFile();
   LOG_DBG("WCS", "Cleared all WiFi credentials");
+}
+
+bool WifiCredentialStore::copyLastConnectedCredential(std::span<char> ssid, std::span<char> password) const {
+  std::lock_guard<std::mutex> lock(credentialMutex);
+  const auto found = std::find_if(credentials.begin(), credentials.end(),
+                                  [this](const auto& value) { return value.ssid == lastConnectedSsid; });
+  const bool copied = found == credentials.end()
+                          ? copyWifiCredentialSnapshot({}, {}, ssid, password)
+                          : copyWifiCredentialSnapshot(found->ssid, found->password, ssid, password);
+  if (!copied) LOG_ERR("WCS", "Last connected credential unavailable or invalid");
+  return copied;
 }

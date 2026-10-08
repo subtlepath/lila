@@ -52,6 +52,13 @@ bool HalClock::localTime(struct tm& out) const {
   return true;
 }
 
+bool HalClock::unixTime(uint64_t& out) const {
+  struct tm local;
+  if (!localTime(local) || !_hasCachedTime || _cachedUtc < 0) return false;
+  out = static_cast<uint64_t>(_cachedUtc);
+  return true;
+}
+
 bool HalClock::utcNow(Rtc::DateTime& out) const { return _available && _sdkRtc.now(out); }
 
 bool HalClock::setUtc(const Rtc::DateTime& utc) {

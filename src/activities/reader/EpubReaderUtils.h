@@ -8,6 +8,9 @@
 #include <vector>
 
 #include "ProgressFile.h"
+#if LILA_COMPANION
+#include "CompanionReaderPreferences.h"
+#endif
 
 namespace EpubReaderUtils {
 
@@ -34,7 +37,14 @@ inline bool saveProgress(const Epub& epub, int spineIndex, int pageNumber, int p
     data[9] = (*visibleTextOffset >> 24) & 0xFF;
     dataSize = sizeof(data);
   }
-  if (!ProgressFile::writeAtomic(epub.getCachePath(), data, dataSize)) {
+#if LILA_COMPANION
+  if (visibleTextOffset.has_value()) {
+    if (!companion::saveReaderProgress(epub, {static_cast<uint16_t>(spineIndex), *visibleTextOffset},
+                                       std::span(data).first(dataSize)))
+      return false;
+  } else
+#endif
+      if (!ProgressFile::writeAtomic(epub.getCachePath(), data, dataSize)) {
     return false;
   }
   LOG_DBG("ERS", "Progress saved: spine=%d offset=%u page=%d", spineIndex, visibleTextOffset.value_or(0), pageNumber);

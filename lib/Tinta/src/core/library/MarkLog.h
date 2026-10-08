@@ -31,6 +31,15 @@ class MarkLog {
   // Reads the file into RAM; an absent or unreadable file is an empty set.
   void open();
 
+  struct MutationJournal {
+    void* context = nullptr;
+    bool (*persist)(void*, uint32_t key, bool enabled) = nullptr;
+    bool (*recover)(void*) = nullptr;
+  };
+  // The owner logs failures and outlives this log and every callback.
+  void setMutationJournal(MutationJournal journal) { mutationJournal_ = journal; }
+  bool journalFailed() const { return journalFailed_; }
+
   bool contains(uint32_t key) const;
   // False when the set is full or the record could not be written (it is
   // then kept in RAM regardless, for this power-on).
@@ -41,11 +50,14 @@ class MarkLog {
   uint32_t at(uint16_t i) const { return i < count_ ? keys_[i] : 0; }
 
  private:
+  bool persistMutation(uint32_t key, bool enabled);
   bool append(uint32_t key, uint8_t op);
   void compact();
   void insert(uint32_t key);
   void erase(uint32_t key);
 
+  MutationJournal mutationJournal_;
+  bool journalFailed_ = false;
   StateStore& store_;
   const char* file_;
   uint32_t keys_[kCapacity] = {};

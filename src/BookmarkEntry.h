@@ -3,9 +3,13 @@
 #include <cstdint>
 #include <string>
 
+#include "util/BookmarkIdentity.h"
+
 // A single bookmark entry — a position in a book.
 struct BookmarkEntry {
   static constexpr std::size_t MAX_NAME_LENGTH = 128;
+
+  BookmarkIdentity::Value identity{};  // Zero until a legacy bookmark receives a sync identity.
 
   std::string xpath;    // XPath-like progress string
   std::string summary;  // First few words of a page to help identify it

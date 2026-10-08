@@ -80,6 +80,9 @@ class ActivityManager {
 
   // goTo... functions are convenient wrapper for replaceActivity()
   void goToFileTransfer();
+#if LILA_COMPANION
+  bool goToCompanion(bool recovering = false);
+#endif
   void goToUsbDrive();
   void goToSettings();
   void goToFileBrowser(std::string path = {});

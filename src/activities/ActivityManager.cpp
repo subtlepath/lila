@@ -25,6 +25,9 @@
 #include "home/FileBrowserActivity.h"
 #include "library/LibraryListActivity.h"
 #include "network/CrossPointWebServerActivity.h"
+#if LILA_COMPANION
+#include "network/CompanionConnectActivity.h"
+#endif
 #include "network/UsbDriveActivity.h"
 #include "reader/ReaderActivity.h"
 #include "settings/OpdsServerListActivity.h"
@@ -261,6 +264,18 @@ void ActivityManager::replaceActivity(std::unique_ptr<Activity>&& newActivity) {
     currentActivity->onEnter();
   }
 }
+
+#if LILA_COMPANION
+bool ActivityManager::goToCompanion(bool recovering) {
+  auto activity = makeUniqueNoThrow<CompanionConnectActivity>(renderer, mappedInput, recovering);
+  if (!activity) {
+    LOG_ERR("ACT", "OOM: companion activity");
+    return false;
+  }
+  replaceActivity(std::move(activity));
+  return true;
+}
+#endif
 
 void ActivityManager::goToFileTransfer() {
   replaceActivity(std::make_unique<CrossPointWebServerActivity>(renderer, mappedInput));

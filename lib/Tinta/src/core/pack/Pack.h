@@ -95,6 +95,8 @@ class Pack final : public ItemCatalog {
   uint32_t copyStr(uint32_t offset, char* out, uint32_t cap) const;
   // FNV-1a over a string's bytes, without using the arena.
   uint32_t hashStr(uint32_t offset) const;
+  // Visits complete string bytes without the arena; false on read/callback failure.
+  bool visitStr(uint32_t offset, void* context, bool (*visit)(void*, const uint8_t*, uint32_t)) const;
 
   bool lemma(uint16_t id, Lemma& out) const { return read(Section::Lemm, id, out); }
   // n-th example sentence id of a lemma, kNone16 past the end.

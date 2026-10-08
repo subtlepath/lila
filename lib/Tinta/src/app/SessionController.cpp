@@ -454,7 +454,7 @@ void SessionController::end(const usage::SessionEndHow how) {
   log("session end reviewed %u correct %u new %u seconds %lu", summary_.reviews, summary_.correct, summary_.newItems,
       static_cast<unsigned long>((summary_.milliseconds + 500) / 1000));
   app_.usage().sessionEnd(how, summary_.reviews, summary_.correct, (summary_.milliseconds + 500) / 1000);
-  if (completedLesson_ >= 0) app_.lessonCompleted(static_cast<uint16_t>(completedLesson_));
+  if (completedLesson_ >= 0 && !app_.lessonCompleted(static_cast<uint16_t>(completedLesson_))) completedLesson_ = -1;
   if (!platform::kSimulator) {
     log("heap free %lu, lowest %lu", static_cast<unsigned long>(app_.board().freeHeap()),
         static_cast<unsigned long>(app_.board().minFreeHeap()));
@@ -495,7 +495,7 @@ SessionController::Resume SessionController::restore(const uint8_t* in, const ui
   if (!app_.packReady() || length < kHeader) return Resume::Gone;
   const uint32_t blob = core::getU16(in + 16);
   if (kHeader + blob > length) return Resume::Gone;
-  if (!queue_.restore(in + kHeader, blob) || queue_.empty()) {
+  if (!queue_.restore(in + kHeader, blob) || (queue_.empty() && !app_.pendingSessionRequiresRebuild())) {
     log("session not resumed: another day, or nothing left");
     return Resume::Gone;
   }
@@ -514,11 +514,10 @@ SessionController::Resume SessionController::restore(const uint8_t* in, const ui
   flushed_.correct = core::getU16(in + 8);
   flushed_.newItems = core::getU16(in + 10);
   flushed_.milliseconds = core::getU32(in + 12);
-  if (core::getU32(in) != app_.progress().journalCount()) {
-    // A grade reached the journal after session.bin was written: the queue
-    // above still holds that card. Today's queue built again is exact.
+  if (app_.pendingSessionRequiresRebuild() || core::getU32(in) != app_.progress().journalCount()) {
+    // The saved queue belongs to earlier authority. Build from current schedules.
     const core::StudyTotals kept = flushed_;
-    log("session.bin is behind the journal; rebuilding today's session");
+    log("session authority changed; rebuilding today's session");
     resuming_ = true;
     const bool rebuilt = startToday();
     resuming_ = false;

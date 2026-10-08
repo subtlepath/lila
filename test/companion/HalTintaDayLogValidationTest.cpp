@@ -1,0 +1,686 @@
+#include <gtest/gtest.h>
+#include <openssl/sha.h>
+
+#include <fstream>
+#include <iterator>
+
+#include "../tinta/fakes.h"
+#include "HalTintaCompletionSetView.h"
+#include "HalTintaDayLogValidation.h"
+#include "HalTintaNativeDerivedPreparation.h"
+#include "HalTintaNativeLessonRecovery.h"
+#include "HalTintaNativeReadingRecovery.h"
+#include "HalTintaNativeStarRecovery.h"
+#include "HalTintaPreferenceApplication.h"
+
+using namespace companion;
+
+TEST(HalTintaCompletionSetView, MaximumSetUsesBoundedSearchAndRejectsExtentChange) {
+  inventory_hal_test::state = {};
+  constexpr const char* path = "/large-completions.bin";
+  auto& state = inventory_hal_test::state;
+  auto& bytes = state.files[path];
+  bytes.resize(16 + 65535 * 4);
+  std::memcpy(bytes.data(), "TCS1", 4);
+  bytes[4] = 1;
+  binary_record::putU32(bytes.data() + 8, 65535);
+  for (uint32_t i = 0; i < 65535; ++i) binary_record::putU32(bytes.data() + 12 + i * 4, (i + 1) * 2);
+  binary_record::putU32(bytes.data() + bytes.size() - 4, binary_record::crc32(bytes.data(), bytes.size() - 4));
+  HalFile file(path);
+  HalTintaCompletionSetView view(file);
+  std::array<uint8_t, 128> scratch{};
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Lessons, scratch));
+  for (uint32_t key : {1u, 2u, 65536u, 131070u, 131071u}) {
+    const auto before = state.reads;
+    bool found = false;
+    ASSERT_TRUE(view.contains(key, found));
+    EXPECT_EQ(found, key >= 2 && key <= 131070 && key % 2 == 0);
+    EXPECT_LE(state.reads - before, 16u);
+  }
+  bool found = true;
+  bytes.push_back(0);
+  EXPECT_FALSE(view.contains(3, found));
+  EXPECT_TRUE(found);
+  bytes.pop_back();
+  unsigned calls = 0;
+  const auto cancel = [](void* context) { return ++*static_cast<unsigned*>(context) < 2; };
+  EXPECT_FALSE(view.begin(TintaCompletionKind::Lessons, scratch, cancel, &calls));
+  EXPECT_FALSE(view.contains(2, found));
+  EXPECT_FALSE(view.begin(TintaCompletionKind::Lessons, std::span(scratch).first(11)));
+}
+
+TEST(HalTintaCompletionSetView, ValidatesSharedFixtureAndDistinguishesAbsentFromReadError) {
+  inventory_hal_test::state = {};
+  constexpr const char* path = "/completions.bin";
+  auto& state = inventory_hal_test::state;
+  state.files[path] = {84, 67, 83, 49, 2, 0, 0, 0, 2, 0, 0, 0, 7, 0, 0, 0, 9, 0, 0, 0, 215, 125, 242, 166};
+  HalFile file(path);
+  HalTintaCompletionSetView view(file);
+  std::array<uint8_t, 128> scratch{};
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Readings, scratch));
+  for (uint32_t key : {1u, 7u, 8u, 9u, 10u}) {
+    bool found = false;
+    ASSERT_TRUE(view.contains(key, found));
+    EXPECT_EQ(found, key == 7 || key == 9);
+  }
+  bool found = true;
+  state.failRead = state.reads + 1;
+  EXPECT_FALSE(view.contains(8, found));
+  EXPECT_TRUE(found);
+  state.failRead = 0;
+  EXPECT_FALSE(view.contains(8, found));
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Readings, scratch));
+  ASSERT_TRUE(view.contains(8, found));
+  EXPECT_FALSE(found);
+  EXPECT_FALSE(view.begin(TintaCompletionKind::Lessons, scratch));
+  state.files[path].back() ^= 1;
+  EXPECT_FALSE(view.begin(TintaCompletionKind::Readings, scratch));
+  EXPECT_TRUE(file.isOpen());
+}
+namespace {
+constexpr const char* PATH = "/staged-days.bin";
+void seed() {
+  inventory_hal_test::state = {};
+  inventory_hal_test::state.files[PATH] = {0x54, 0x44, 0x4c, 0x31, 2, 0, 3, 0, 2, 0, 1, 0, 2, 0, 0x44, 0x1b};
+}
+}  // namespace
+TEST(HalTintaDayLogValidation, ReadsExactFixtureAndKeepsBorrowedHandleOpen) {
+  seed();
+  HalFile file(PATH);
+  std::array<uint8_t, 12> scratch{};
+  ASSERT_TRUE(validateTintaDayLogFile(file, scratch));
+  EXPECT_TRUE(file.isOpen());
+  EXPECT_TRUE(validateTintaDayLogFile(file, scratch));
+  EXPECT_FALSE(validateTintaDayLogFile(file, std::span(scratch).first(11)));
+}
+TEST(HalTintaDayLogValidation, RejectsReadFailuresCorruptionTrailingBytesAndCancellation) {
+  std::array<uint8_t, 12> scratch{};
+  for (unsigned mode = 0; mode < 5; ++mode) {
+    seed();
+    auto& state = inventory_hal_test::state;
+    if (mode == 0) state.files[PATH][14] ^= 1;
+    if (mode == 1) state.files[PATH].push_back(0);
+    if (mode == 2) state.failRead = 2;
+    if (mode == 3) state.shortRead = 2;
+    HalFile file(PATH);
+    unsigned calls = 0;
+    const auto progress = [](void* context) { return ++*static_cast<unsigned*>(context) < 2; };
+    EXPECT_FALSE(validateTintaDayLogFile(file, scratch, mode == 4 ? +progress : nullptr, &calls));
+    EXPECT_TRUE(file.isOpen());
+  }
+}
+
+TEST(HalTintaCompletionSetView, IndexedReadsPreserveOutputOnFailureAndRequireRevalidation) {
+  inventory_hal_test::state = {};
+  auto& state = inventory_hal_test::state;
+  constexpr const char* path = "/indexed-completions.bin";
+  state.files[path] = {84, 67, 83, 49, 2, 0, 0, 0, 2, 0, 0, 0, 7, 0, 0, 0, 9, 0, 0, 0, 215, 125, 242, 166};
+  HalFile file(path);
+  HalTintaCompletionSetView view(file);
+  std::array<uint8_t, 128> scratch{};
+  uint32_t output = 99;
+  EXPECT_FALSE(view.entryCount(TintaCompletionKind::Readings, output));
+  EXPECT_EQ(output, 99u);
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Readings, scratch));
+  ASSERT_TRUE(view.entryCount(TintaCompletionKind::Readings, output));
+  EXPECT_EQ(output, 2u);
+  ASSERT_TRUE(view.identityAt(0, output));
+  EXPECT_EQ(output, 7u);
+  ASSERT_TRUE(view.identityAt(1, output));
+  EXPECT_EQ(output, 9u);
+  output = 99;
+  EXPECT_FALSE(view.identityAt(2, output));
+  EXPECT_EQ(output, 99u);
+  EXPECT_FALSE(view.entryCount(TintaCompletionKind::Readings, output));
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Readings, scratch));
+  state.failRead = state.reads + 1;
+  EXPECT_FALSE(view.identityAt(0, output));
+  EXPECT_EQ(output, 99u);
+  state.failRead = 0;
+  EXPECT_FALSE(view.identityAt(0, output));
+  ASSERT_TRUE(view.begin(TintaCompletionKind::Readings, scratch));
+  state.files[path].push_back(0);
+  EXPECT_FALSE(view.entryCount(TintaCompletionKind::Readings, output));
+  EXPECT_EQ(output, 99u);
+}
+
+TEST(HalTintaNativeReadingRecovery, ProjectsVerifiedStableReadingAndPreservesLocalStateOnFailure) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  pk::Pack pack;
+  ASSERT_EQ(pack.open(packBytes.data(), packBytes.size()), pk::PackStatus::Ok);
+  uint32_t identity = 0, key = 0;
+  bool matched = false;
+  for (uint32_t i = 0; i < pack.count(pk::Section::Stor); ++i) {
+    pk::Story story;
+    ASSERT_TRUE(pack.story(i, story));
+    ASSERT_TRUE(tintaPackStoryIdentity(pack, story, identity));
+    if (resolveTintaStableStoryIdentity(pack, identity, key) == LegacyStoryIdentityResult::Matched) {
+      matched = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(matched);
+  constexpr const char* path = "/recovery-readings.bin";
+  auto& state = inventory_hal_test::state;
+  for (unsigned mode = 0; mode < 4; ++mode) {
+    state = {};
+    auto& bytes = state.files[path];
+    bytes.resize(20);
+    std::memcpy(bytes.data(), "TCS1", 4);
+    bytes[4] = mode == 3 ? 1 : 2;
+    binary_record::putU32(bytes.data() + 8, 1);
+    binary_record::putU32(bytes.data() + 12, mode == 1 ? 123 : identity);
+    binary_record::putU32(bytes.data() + 16, binary_record::crc32(bytes.data(), 16));
+    HalFile file(path);
+    HalTintaCompletionSetView view(file);
+    std::array<uint8_t, 128> validation{};
+    ASSERT_TRUE(view.begin(mode == 3 ? TintaCompletionKind::Lessons : TintaCompletionKind::Readings, validation));
+    tinta_test::MemStore local;
+    local.files["read.bin"] = {'T', 'M', 'K', '1'};
+    const auto previous = local.files["read.bin"];
+    std::array<uint8_t, TINTA_NATIVE_MARK_SNAPSHOT_SIZE> scratch{};
+    if (mode == 2) state.failRead = state.reads + 1;
+    const auto result = restoreTintaNativeReadings(local, view, pack, scratch);
+    if (mode == 0) {
+      ASSERT_EQ(result, TintaNativeMarkSnapshotResult::Ok);
+      tinta::core::library::MarkLog marks(local, "read.bin");
+      marks.open();
+      EXPECT_EQ(marks.count(), 1);
+      EXPECT_TRUE(marks.contains(key));
+    } else {
+      EXPECT_NE(result, TintaNativeMarkSnapshotResult::Ok);
+      EXPECT_EQ(local.files["read.bin"], previous);
+      EXPECT_EQ(local.calls, 0);
+    }
+  }
+  EXPECT_EQ(pack.arenaPeak(), 0u);
+}
+
+TEST(HalTintaNativeReadingRecovery, ReceiptBindingAndActualFileHashPrecedeNativeReplacement) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  pk::Pack pack;
+  ASSERT_EQ(pack.open(packBytes.data(), packBytes.size()), pk::PackStatus::Ok);
+  uint32_t identity = 0, key = 0;
+  bool matched = false;
+  for (uint32_t i = 0; i < pack.count(pk::Section::Stor); ++i) {
+    pk::Story story;
+    ASSERT_TRUE(pack.story(i, story));
+    ASSERT_TRUE(tintaPackStoryIdentity(pack, story, identity));
+    if (resolveTintaStableStoryIdentity(pack, identity, key) == LegacyStoryIdentityResult::Matched) {
+      matched = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(matched);
+  Identity course{}, generation{};
+  Digest packHash{}, frontier{};
+  course.fill(1);
+  generation.fill(2);
+  packHash.fill(3);
+  frontier.fill(4);
+  for (unsigned mode = 0; mode < 7; ++mode) {
+    inventory_hal_test::state = {};
+    auto& bytes = inventory_hal_test::state.files["/bound-readings.bin"];
+    bytes.resize(20);
+    std::memcpy(bytes.data(), "TCS1", 4);
+    bytes[4] = 2;
+    binary_record::putU32(bytes.data() + 8, 1);
+    binary_record::putU32(bytes.data() + 12, identity);
+    binary_record::putU32(bytes.data() + 16, binary_record::crc32(bytes.data(), 16));
+    HalFile file("/bound-readings.bin");
+    std::array<uint8_t, TINTA_NATIVE_MARK_SNAPSHOT_SIZE> scratch{};
+    Digest hash{};
+    uint64_t length = 0;
+    ASSERT_TRUE(hashInventoryFile(file, scratch, length, hash));
+    std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
+    std::memcpy(receipt.data(), "TDS1", 4);
+    std::copy(course.begin(), course.end(), receipt.begin() + 4);
+    std::copy(packHash.begin(), packHash.end(), receipt.begin() + 20);
+    std::copy(frontier.begin(), frontier.end(), receipt.begin() + 52);
+    std::fill(receipt.begin() + 84, receipt.begin() + 100, 5);
+    std::copy(generation.begin(), generation.end(), receipt.begin() + 100);
+    receipt[120] = 1;
+    const uint32_t lengths[] = {1024, 0, 16, 20, 4};
+    for (unsigned at = 0; at < 5; ++at) {
+      binary_record::putU32(receipt.data() + 128 + at * 40, lengths[at]);
+      std::fill_n(receipt.begin() + 136 + at * 40, 32, 6);
+    }
+    std::copy(hash.begin(), hash.end(), receipt.begin() + 136 + 3 * 40);
+    if (mode >= 1 && mode <= 4) receipt[mode == 1 ? 4 : mode == 2 ? 100 : mode == 3 ? 20 : 52] ^= 1;
+    binary_record::putU32(receipt.data() + 328, binary_record::crc32(receipt.data(), 328));
+    TintaDerivedManifestView manifest;
+    ASSERT_TRUE(manifest.decode(receipt));
+    if (mode == 5) bytes[12] ^= 1;
+    if (mode == 6) inventory_hal_test::state.failRead = inventory_hal_test::state.reads + 1;
+    tinta_test::MemStore local;
+    local.files["read.bin"] = {'T', 'M', 'K', '1'};
+    const auto previous = local.files["read.bin"];
+    const auto result = restoreVerifiedTintaNativeReadings(local, file, manifest, course, generation, packHash,
+                                                           frontier, pack, scratch);
+    if (mode == 0) {
+      ASSERT_EQ(result, TintaNativeMarkSnapshotResult::Ok);
+      tinta::core::library::MarkLog marks(local, "read.bin");
+      marks.open();
+      EXPECT_TRUE(marks.contains(key));
+    } else {
+      EXPECT_NE(result, TintaNativeMarkSnapshotResult::Ok);
+      EXPECT_EQ(local.files["read.bin"], previous);
+      EXPECT_EQ(local.calls, 0);
+    }
+  }
+}
+
+TEST(HalTintaNativeLessonRecovery, MapsStableLessonAndRejectsUnknownSubjectsAndReadFailures) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  pk::Pack pack;
+  ASSERT_EQ(pack.open(bytes.data(), bytes.size()), pk::PackStatus::Ok);
+  TintaPackSubjectKeys lessons(pack, false);
+  ASSERT_GT(lessons.count(), 1u);
+  uint32_t identity = 0;
+  ASSERT_TRUE(lessons.read(0, identity));
+  for (unsigned mode = 0; mode < 4; ++mode) {
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& contents = state.files["/lesson-recovery.bin"];
+    contents.resize(20);
+    std::memcpy(contents.data(), "TCS1", 4);
+    contents[4] = mode == 3 ? 2 : 1;
+    binary_record::putU32(contents.data() + 8, 1);
+    binary_record::putU32(contents.data() + 12, mode == 1 ? 123 : identity);
+    binary_record::putU32(contents.data() + 16, binary_record::crc32(contents.data(), 16));
+    HalFile file("/lesson-recovery.bin");
+    HalTintaCompletionSetView view(file);
+    std::array<uint8_t, 128> scratch{};
+    ASSERT_TRUE(view.begin(mode == 3 ? TintaCompletionKind::Readings : TintaCompletionKind::Lessons, scratch));
+    tinta::core::Profile profile;
+    profile.currentLesson = 4;
+    profile.unlockedThrough = 0;
+    profile.retentionPermille = 860;
+    if (mode == 2) state.failRead = state.reads + 1;
+    const bool projected = projectTintaNativeLessons(profile, view, pack);
+    if (mode == 0) {
+      ASSERT_TRUE(projected);
+      EXPECT_EQ(profile.currentLesson, 1);
+      EXPECT_EQ(profile.unlockedThrough, 1);
+      struct Cancellation {
+        uint32_t calls = 0, stop = 0;
+      } cancellation;
+      const auto progress = [](void* opaque) {
+        auto& cancel = *static_cast<Cancellation*>(opaque);
+        return ++cancel.calls < cancel.stop;
+      };
+      for (uint32_t stop = 1; stop <= lessons.count() + 2; ++stop) {
+        cancellation = {0, stop};
+        profile.currentLesson = 4;
+        profile.unlockedThrough = 0;
+        EXPECT_FALSE(projectTintaNativeLessons(profile, view, pack, progress, &cancellation));
+        EXPECT_EQ(profile.currentLesson, 4);
+        EXPECT_EQ(profile.unlockedThrough, 0);
+      }
+      tinta_test::MemStore cancelledStore;
+      cancellation = {0, lessons.count() + 3};
+      EXPECT_FALSE(persistTintaNativeLessonProjection(cancelledStore, profile, view, pack, progress, &cancellation));
+      EXPECT_EQ(cancelledStore.calls, 0);
+      EXPECT_TRUE(cancelledStore.files.empty());
+      EXPECT_EQ(profile.currentLesson, 4);
+      Identity course{}, generation{};
+      Digest packHash{}, frontier{}, hash{};
+      course.fill(1);
+      generation.fill(2);
+      packHash.fill(3);
+      frontier.fill(4);
+      uint64_t length = 0;
+      ASSERT_TRUE(hashInventoryFile(file, scratch, length, hash));
+      std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
+      std::memcpy(receipt.data(), "TDS1", 4);
+      std::copy(course.begin(), course.end(), receipt.begin() + 4);
+      std::copy(packHash.begin(), packHash.end(), receipt.begin() + 20);
+      std::copy(frontier.begin(), frontier.end(), receipt.begin() + 52);
+      std::fill(receipt.begin() + 84, receipt.begin() + 100, 5);
+      std::copy(generation.begin(), generation.end(), receipt.begin() + 100);
+      receipt[120] = 1;
+      const uint32_t lengths[] = {1024, 0, 20, 16, 4};
+      for (unsigned at = 0; at < 5; ++at) {
+        binary_record::putU32(receipt.data() + 128 + at * 40, lengths[at]);
+        std::fill_n(receipt.begin() + 136 + at * 40, 32, 6);
+      }
+      std::copy(hash.begin(), hash.end(), receipt.begin() + 136 + 2 * 40);
+      binary_record::putU32(receipt.data() + 328, binary_record::crc32(receipt.data(), 328));
+      TintaDerivedManifestView manifest;
+      ASSERT_TRUE(manifest.decode(receipt));
+      profile.currentLesson = 4;
+      profile.unlockedThrough = 0;
+      auto otherCourse = course;
+      otherCourse[0] ^= 1;
+      EXPECT_FALSE(projectVerifiedTintaNativeLessons(profile, file, manifest, otherCourse, generation, packHash,
+                                                     frontier, pack, scratch));
+      EXPECT_EQ(profile.currentLesson, 4);
+      EXPECT_EQ(profile.unlockedThrough, 0);
+      contents[12] ^= 1;
+      EXPECT_FALSE(projectVerifiedTintaNativeLessons(profile, file, manifest, course, generation, packHash, frontier,
+                                                     pack, scratch));
+      EXPECT_EQ(profile.currentLesson, 4);
+      contents[12] ^= 1;
+      ASSERT_TRUE(projectVerifiedTintaNativeLessons(profile, file, manifest, course, generation, packHash, frontier,
+                                                    pack, scratch));
+      EXPECT_EQ(profile.currentLesson, 1);
+      EXPECT_EQ(profile.unlockedThrough, 1);
+      for (const bool verified : {false, true}) {
+        for (const auto tear : {tinta_test::MemStore::Tear::Nothing, tinta_test::MemStore::Tear::Prefix,
+                                tinta_test::MemStore::Tear::Zeros, tinta_test::MemStore::Tear::Garbage}) {
+          tinta_test::MemStore local;
+          profile.currentLesson = 4;
+          profile.unlockedThrough = 0;
+          ASSERT_TRUE(profile.save(local));
+          const auto oldBytes = local.files.at(tinta::core::Profile::kFile);
+          if (verified) {
+            const auto writes = local.calls;
+            EXPECT_FALSE(persistVerifiedTintaNativeLessons(local, profile, file, manifest, otherCourse, generation,
+                                                           packHash, frontier, pack, scratch));
+            EXPECT_EQ(profile.currentLesson, 4);
+            EXPECT_EQ(local.calls, writes);
+            EXPECT_EQ(local.files.at(tinta::core::Profile::kFile), oldBytes);
+          }
+          const auto persist = [&] {
+            return verified ? persistVerifiedTintaNativeLessons(local, profile, file, manifest, course, generation,
+                                                                packHash, frontier, pack, scratch)
+                            : persistTintaNativeLessonProjection(local, profile, view, pack);
+          };
+          local.cutAt(local.calls, tear);
+          EXPECT_FALSE(persist());
+          EXPECT_EQ(profile.currentLesson, 4);
+          EXPECT_EQ(profile.unlockedThrough, 0);
+          EXPECT_EQ(local.files.at(tinta::core::Profile::kFile), oldBytes);
+          local.powerOn();
+          ASSERT_TRUE(persist());
+          EXPECT_EQ(profile.currentLesson, 1);
+          EXPECT_EQ(profile.unlockedThrough, 1);
+          tinta::core::Profile reopened;
+          ASSERT_EQ(reopened.load(local), tinta::core::Profile::LoadResult::Loaded);
+          EXPECT_EQ(reopened.currentLesson, 1);
+          EXPECT_EQ(reopened.retentionPermille, 860);
+          const auto writes = local.calls;
+          ASSERT_TRUE(persist());
+          EXPECT_EQ(local.calls, writes);
+          local.present = false;
+          EXPECT_FALSE(persist());
+          EXPECT_EQ(local.calls, writes);
+        }
+      }
+    } else {
+      EXPECT_FALSE(projected);
+      EXPECT_EQ(profile.currentLesson, 4);
+      EXPECT_EQ(profile.unlockedThrough, 0);
+    }
+    EXPECT_EQ(profile.retentionPermille, 860);
+  }
+}
+
+TEST(HalTintaNativeStars, VerifiedFlagsRestoreAndCapacityFailurePreservesNativeMarks) {
+  inventory_hal_test::state = {};
+  constexpr const char* path = "/items.bin";
+  auto& bytes = inventory_hal_test::state.files[path];
+  class Catalog final : public TintaSubjectCatalog {
+   public:
+    TintaSubjectMembership contains(EventKind kind, uint32_t uid) override {
+      return kind == EventKind::Star && uid ? TintaSubjectMembership::Present : TintaSubjectMembership::Missing;
+    }
+  } catalog;
+  Identity course{}, generation{};
+  Digest packHash{}, frontier{};
+  course.fill(1);
+  generation.fill(2);
+  packHash.fill(3);
+  frontier.fill(4);
+  for (uint32_t records : {2u, 97u}) {
+    bytes.assign(1024 + records * 16, 0);
+    for (unsigned slot = 0; slot < 2; ++slot) {
+      auto* header = bytes.data() + slot * 512;
+      std::memcpy(header, "TIS1", 4);
+      binary_record::putU16(header + 4, 1);
+      binary_record::putU16(header + 6, 80);
+      binary_record::putU32(header + 8, slot + 1);
+      binary_record::putU32(header + 12, records);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    for (uint32_t index = 0; index < records; ++index) {
+      auto item = tinta::core::ItemState::fresh(index + 1);
+      if (records == 97 || index == 0) item.flags |= tinta::core::item_flag::kStarred;
+      item.encode(bytes.data() + 1024 + index * 16);
+    }
+    HalFile file(path);
+    std::array<uint8_t, TINTA_NATIVE_STAR_WORKSPACE_SIZE> scratch{};
+    Digest hash{};
+    uint64_t length = 0;
+    ASSERT_TRUE(hashInventoryFile(file, scratch, length, hash));
+    std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
+    std::memcpy(receipt.data(), "TDS1", 4);
+    std::copy(course.begin(), course.end(), receipt.begin() + 4);
+    std::copy(packHash.begin(), packHash.end(), receipt.begin() + 20);
+    std::copy(frontier.begin(), frontier.end(), receipt.begin() + 52);
+    std::fill(receipt.begin() + 84, receipt.begin() + 100, 5);
+    std::copy(generation.begin(), generation.end(), receipt.begin() + 100);
+    receipt[120] = 1;
+    const uint32_t lengths[] = {static_cast<uint32_t>(length), 0, 16, 16, 4};
+    for (unsigned at = 0; at < 5; ++at) {
+      binary_record::putU32(receipt.data() + 128 + at * 40, lengths[at]);
+      std::fill_n(receipt.begin() + 136 + at * 40, 32, 6);
+    }
+    std::copy(hash.begin(), hash.end(), receipt.begin() + 136);
+    binary_record::putU32(receipt.data() + 328, binary_record::crc32(receipt.data(), 328));
+    TintaDerivedManifestView manifest;
+    ASSERT_TRUE(manifest.decode(receipt));
+    tinta_test::MemStore local;
+    local.files["starred.bin"] = {'o', 'l', 'd'};
+    const auto original = local.files["starred.bin"];
+    if (records == 2) {
+      local.cutAt(local.calls, tinta_test::MemStore::Tear::Prefix);
+      EXPECT_EQ(restoreVerifiedTintaNativeStars(local, file, manifest, course, generation, packHash, frontier, catalog,
+                                                scratch),
+                TintaNativeMarkSnapshotResult::IoError);
+      EXPECT_EQ(local.files["starred.bin"], original);
+      local.powerOn();
+      auto otherGeneration = generation;
+      otherGeneration.fill(9);
+      const auto writes = local.calls;
+      EXPECT_EQ(restoreVerifiedTintaNativeStars(local, file, manifest, course, otherGeneration, packHash, frontier,
+                                                catalog, scratch),
+                TintaNativeMarkSnapshotResult::Invalid);
+      EXPECT_EQ(local.calls, writes);
+      EXPECT_EQ(local.files["starred.bin"], original);
+    }
+    const auto result = restoreVerifiedTintaNativeStars(local, file, manifest, course, generation, packHash, frontier,
+                                                        catalog, scratch);
+    if (records == 97) {
+      EXPECT_EQ(result, TintaNativeMarkSnapshotResult::Invalid);
+      EXPECT_EQ(local.files["starred.bin"], original);
+      EXPECT_EQ(local.calls, 0);
+    } else {
+      ASSERT_EQ(result, TintaNativeMarkSnapshotResult::Ok);
+      tinta::core::library::MarkLog marks(local, "starred.bin");
+      marks.open();
+      EXPECT_EQ(marks.count(), 1);
+      EXPECT_TRUE(marks.contains(1));
+      EXPECT_FALSE(marks.contains(2));
+      const auto saved = local.files["starred.bin"];
+      const auto writes = local.calls;
+      ASSERT_EQ(restoreVerifiedTintaNativeStars(local, file, manifest, course, generation, packHash, frontier, catalog,
+                                                scratch),
+                TintaNativeMarkSnapshotResult::Ok);
+      EXPECT_EQ(local.calls, writes);
+      EXPECT_EQ(local.files["starred.bin"], saved);
+      local.dropAtRead(local.readCalls);
+      EXPECT_EQ(restoreVerifiedTintaNativeStars(local, file, manifest, course, generation, packHash, frontier, catalog,
+                                                scratch),
+                TintaNativeMarkSnapshotResult::IoError);
+      EXPECT_EQ(local.calls, writes);
+      EXPECT_EQ(local.files["starred.bin"], saved);
+      local.powerOn();
+      bytes[1024] ^= 1;
+      EXPECT_EQ(restoreVerifiedTintaNativeStars(local, file, manifest, course, generation, packHash, frontier, catalog,
+                                                scratch),
+                TintaNativeMarkSnapshotResult::Invalid);
+      EXPECT_EQ(local.files["starred.bin"], saved);
+    }
+  }
+}
+
+TEST(HalTintaNativePreparation, CompleteGenerationPreflightPreservesPreferencesAndRetriesWithoutWrites) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  pk::Pack pack;
+  ASSERT_EQ(pack.open(packBytes.data(), packBytes.size()), pk::PackStatus::Ok);
+  TintaPackSubjectKeys lessons(pack, false);
+  uint32_t lesson = 0;
+  ASSERT_TRUE(lessons.read(0, lesson));
+  class Catalog final : public TintaSubjectCatalog {
+    TintaSubjectMembership contains(EventKind, uint32_t) override { return TintaSubjectMembership::Present; }
+  } catalog;
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  Identity course{}, generation{};
+  Digest packHash{}, frontier{};
+  course.fill(1);
+  generation.fill(2);
+  packHash.fill(3);
+  frontier.fill(4);
+  std::array<char, 96> root{}, path{};
+  ASSERT_TRUE(courseStateDirectory(course, root));
+  state.directories[root.data()] = {};
+  struct ProofGate {
+    bool allowed = true;
+    unsigned calls = 0;
+  } proof;
+  const auto prove = [](void* context, const TintaDerivedManifestView&) {
+    auto& gate = *static_cast<ProofGate*>(context);
+    ++gate.calls;
+    return gate.allowed;
+  };
+  HalTintaNativeDerivedPreparation preparation(course, &proof, prove);
+  tinta_test::MemStore local;
+  tinta::core::Profile profile;
+  profile.retentionPermille = 860;
+  profile.currentLesson = 4;
+  profile.unlockedThrough = 0;
+  EXPECT_EQ(preparation.run(local, profile, pack, catalog, generation, packHash, frontier),
+            TintaNativePreparationResult::NoReceipt);
+  EXPECT_TRUE(local.files.empty());
+  std::array<std::vector<uint8_t>, 5> files;
+  files[0].resize(1024);
+  for (unsigned at = 0; at < 2; ++at) {
+    auto* header = files[0].data() + at * 512;
+    std::memcpy(header, "TIS1", 4);
+    binary_record::putU16(header + 4, 1);
+    binary_record::putU16(header + 6, 80);
+    binary_record::putU32(header + 8, at + 1);
+    binary_record::putU16(header + 20, 5);
+    binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+  }
+  for (unsigned at = 2; at < 4; ++at) {
+    files[at].resize(at == 2 ? 20 : 16);
+    auto* header = files[at].data();
+    std::memcpy(header, "TCS1", 4);
+    header[4] = at == 2 ? 1 : 2;
+    binary_record::putU32(header + 8, at == 2 ? 1 : 0);
+    if (at == 2) binary_record::putU32(header + 12, lesson);
+    binary_record::putU32(header + files[at].size() - 4, binary_record::crc32(header, files[at].size() - 4));
+  }
+  files[4] = {'T', 'D', 'L', '1'};
+  std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
+  std::memcpy(receipt.data(), "TDS1", 4);
+  std::copy(course.begin(), course.end(), receipt.begin() + 4);
+  std::copy(packHash.begin(), packHash.end(), receipt.begin() + 20);
+  std::copy(frontier.begin(), frontier.end(), receipt.begin() + 52);
+  std::fill(receipt.begin() + 84, receipt.begin() + 100, 5);
+  std::copy(generation.begin(), generation.end(), receipt.begin() + 100);
+  binary_record::putU16(receipt.data() + 116, 5);
+  receipt[120] = 1;
+  for (unsigned at = 0; at < 5; ++at) {
+    ASSERT_TRUE(tintaDerivedFilePath(course, static_cast<TintaDerivedFile>(at), TintaDerivedRole::Active, path));
+    state.files[path.data()] = files[at];
+    binary_record::putU32(receipt.data() + 128 + at * 40, files[at].size());
+    ASSERT_NE(SHA256(files[at].data(), files[at].size(), receipt.data() + 136 + at * 40), nullptr);
+  }
+  binary_record::putU32(receipt.data() + 328, binary_record::crc32(receipt.data(), 328));
+  ASSERT_TRUE(tintaDerivedRecordPath(course, TintaDerivedRecord::Receipt, path));
+  state.files[path.data()] = {receipt.begin(), receipt.end()};
+  proof.allowed = false;
+  EXPECT_EQ(preparation.run(local, profile, pack, catalog, generation, packHash, frontier),
+            TintaNativePreparationResult::Failed);
+  EXPECT_TRUE(local.files.empty());
+  EXPECT_EQ(proof.calls, 1U);
+  proof.allowed = true;
+  auto otherGeneration = generation;
+  otherGeneration[0] ^= 1;
+  EXPECT_EQ(preparation.run(local, profile, pack, catalog, otherGeneration, packHash, frontier),
+            TintaNativePreparationResult::Failed);
+  EXPECT_TRUE(local.files.empty());
+  ASSERT_TRUE(tintaDerivedFilePath(course, TintaDerivedFile::Days, TintaDerivedRole::Active, path));
+  state.files[path.data()][0] ^= 1;
+  EXPECT_EQ(preparation.run(local, profile, pack, catalog, generation, packHash, frontier),
+            TintaNativePreparationResult::Failed);
+  EXPECT_TRUE(local.files.empty());
+  EXPECT_EQ(profile.currentLesson, 4);
+  state.files[path.data()][0] ^= 1;
+  ASSERT_EQ(preparation.run(local, profile, pack, catalog, generation, packHash, frontier),
+            TintaNativePreparationResult::Prepared);
+  EXPECT_EQ(profile.currentLesson, 1);
+  EXPECT_EQ(profile.unlockedThrough, 1);
+  EXPECT_EQ(profile.retentionPermille, 860);
+  const auto writes = local.calls;
+  ASSERT_EQ(preparation.run(local, profile, pack, catalog, generation, packHash, frontier),
+            TintaNativePreparationResult::Prepared);
+  EXPECT_EQ(local.calls, writes);
+}
+
+TEST(HalTintaDayLogValidationTest, ResolvedPreferencesValidateWholeBatchAndPersistOnlyChanges) {
+  tinta_test::MemStore store;
+  tinta::core::Profile profile, source;
+  profile.fullRefreshEvery = 17;
+  source.newPerDay = 20;
+  source.retentionPermille = 950;
+  std::array<uint8_t, 8> first{}, second{};
+  ASSERT_EQ(companion::encodeTintaPreference(source, 32, first), 8U);
+  ASSERT_EQ(companion::encodeTintaPreference(source, 34, second), 8U);
+  std::array<std::span<const uint8_t>, 2> batch{first, second};
+  second[4] = 0xff;
+  EXPECT_FALSE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(store.calls, 0);
+  EXPECT_EQ(profile.newPerDay, 10);
+  ASSERT_EQ(companion::encodeTintaPreference(source, 34, second), 8U);
+  batch[1] = first;
+  EXPECT_FALSE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(store.calls, 0);
+  batch[1] = second;
+  store.failFrom(0);
+  EXPECT_FALSE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(profile.newPerDay, 10);
+  EXPECT_EQ(profile.retentionPermille, 900);
+  store.powerOn();
+  ASSERT_TRUE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(profile.newPerDay, 20);
+  EXPECT_EQ(profile.retentionPermille, 950);
+  EXPECT_EQ(profile.fullRefreshEvery, 17);
+  tinta::core::Profile loaded;
+  ASSERT_EQ(loaded.load(store), tinta::core::Profile::LoadResult::Loaded);
+  EXPECT_EQ(loaded.newPerDay, 20);
+  EXPECT_EQ(loaded.fullRefreshEvery, 17);
+  const auto calls = store.calls;
+  EXPECT_TRUE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(store.calls, calls);
+  store.present = false;
+  EXPECT_FALSE(companion::persistResolvedTintaPreferences(store, profile, batch));
+  EXPECT_EQ(store.calls, calls);
+}

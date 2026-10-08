@@ -1,0 +1,9 @@
+{
+  "protocolVersion": 1,
+  "command": "beginTransfer",
+  "commandCode": 4,
+  "response": false,
+  "requestId": 305419896,
+  "payloadHex": "090807",
+  "frameHex": "4c4301040000785634120300090807"
+}

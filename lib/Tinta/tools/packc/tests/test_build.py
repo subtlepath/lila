@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import os
+import hashlib
+import struct
+import zlib
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from packc import forms as F
 from packc import markup
@@ -277,7 +281,18 @@ class WriterRequests(FixtureCase):
     def test_review_dir_follows_the_content(self):
         result = self.packc("--check", "--review", "--quiet")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue(os.path.exists(os.path.join(self.tmp, "build", "review-content", "index.html")))
+        default_index = os.path.join(self.tmp, "build", "review", "index.html")
+        self.assertTrue(os.path.exists(default_index))
+        with open(default_index, "wb") as fh:
+            fh.write(b"existing course review")
+        scratch = os.path.join(self.tmp, "scratch-content")
+        os.rename(self.content, scratch)
+        self.content = scratch
+        result = self.packc("--check", "--review", "--quiet")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(os.path.exists(os.path.join(self.tmp, "build", "review-scratch-content", "index.html")))
+        with open(default_index, "rb") as fh:
+            self.assertEqual(fh.read(), b"existing course review")
         out = os.path.join(self.tmp, "mine", "x.pack")
         self.assertEqual(self.packc("--out", out, "--review", "--quiet").returncode, 0)
         self.assertTrue(os.path.exists(os.path.join(self.tmp, "mine", "review", "index.html")))
@@ -973,6 +988,129 @@ COME = '  - es: "Luis {come|comer:pres.3s} dos {tacos}."\n'
 
 
 class IdLock(FixtureCase):
+    def test_legacy_baseline_checks_payload_before_publication(self):
+        b, diag = self.compile()
+        self.assertFalse(diag.errors)
+        data, _ = emit(b, build_time=0)
+        legacy = bytearray(data)
+        sections = struct.unpack_from("<H", legacy, 36)[0]
+        struct.pack_into("<H", legacy, 36, sections - 1)
+        def seal(value):
+            value[20:24] = bytes(4)
+            struct.pack_into("<I", value, 20, zlib.crc32(value))
+        seal(legacy)
+        reference = os.path.join(self.tmp, "legacy.pack")
+        output = os.path.join(self.tmp, "baseline.pack")
+        with open(reference, "wb") as fh:
+            fh.write(legacy)
+        result = self.packc("--baseline-from", reference, "--out", output, "--quiet")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        with open(output, "rb") as fh:
+            baseline = fh.read()
+        self.assertIn("IDEN", Pack(baseline).sections)
+        with open(self.path("ids.lock"), "rb") as fh:
+            lock = fh.read()
+        strings = Pack(bytes(legacy)).sections["STRS"][0]
+        legacy[strings + 1] ^= 1
+        seal(legacy)
+        with open(reference, "wb") as fh:
+            fh.write(legacy)
+        result = self.packc("--baseline-from", reference, "--out", output, "--quiet")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("identity baseline refused", result.stderr)
+        with open(output, "rb") as fh:
+            self.assertEqual(fh.read(), baseline)
+        with open(self.path("ids.lock"), "rb") as fh:
+            self.assertEqual(fh.read(), lock)
+
+    def identities(self, pack):
+        offset, size, count = pack.sections["IDEN"]
+        self.assertEqual(size, count * 36)
+        records = [struct.unpack_from("<I32s", pack.data, offset + index * 36) for index in range(count)]
+        self.assertEqual([uid for uid, _ in records], sorted(set(uid for uid, _ in records)))
+        return dict(records)
+
+    def test_pack_identities_include_retired_ids(self):
+        b, diag = self.compile()
+        self.assertFalse(diag.errors)
+        retired = b.id_lock.uid_for("vocab:retired-example:recognise")
+        data, _ = emit(b, build_time=0)
+        identities = self.identities(Pack(data))
+        self.assertEqual(len(identities), len(b.id_lock.by_key))
+        self.assertEqual(identities[retired], hashlib.sha256(
+            b"Tinta item identity v1\0vocab:retired-example:recognise").digest())
+        for item in b.items:
+            self.assertEqual(identities[item.uid], hashlib.sha256(
+                b"Tinta item identity v1\0" + item.key.encode("utf-8")).digest())
+
+    def test_pack_reader_rejects_malformed_identity_history(self):
+        from packc.reader import PackError
+        b, diag = self.compile()
+        self.assertFalse(diag.errors)
+        data, _ = emit(b, build_time=0)
+        pack = Pack(data)
+        offset, size, count = pack.sections["IDEN"]
+        for changed, length in ((offset, 4), (offset + 4, 32)):
+            damaged = bytearray(data)
+            damaged[changed:changed + length] = bytes(length)
+            with self.assertRaisesRegex(PackError, "identity history record"):
+                Pack(bytes(damaged))
+        directory, sections = struct.unpack_from("<IH", data, 32)
+        entry = next(directory + index * 16 for index in range(sections)
+                     if data[directory + index * 16:directory + index * 16 + 4] == b"IDEN")
+        for new_size, new_count in ((size - 1, count), ((count - 1) * 36, count - 1)):
+            damaged = bytearray(data)
+            struct.pack_into("<II", damaged, entry + 8, new_size, new_count)
+            with self.assertRaises(PackError):
+                Pack(bytes(damaged))
+        damaged = bytearray(data)
+        damaged[entry:entry + 4] = b"ITEM"
+        with self.assertRaisesRegex(PackError, "duplicate section"):
+            Pack(bytes(damaged))
+
+    def test_pack_publication_failure_preserves_previous_pack(self):
+        from packc.cli import _write_pack
+
+        output = os.path.join(self.tmp, "x.pack")
+        with open(output, "wb") as fh:
+            fh.write(b"previous course")
+        for operation in ("fsync", "replace"):
+            with self.subTest(operation=operation):
+                with patch(f"packc.cli.os.{operation}", side_effect=OSError("publication failed")):
+                    with self.assertRaisesRegex(OSError, "publication failed"):
+                        _write_pack(output, b"new course")
+                with open(output, "rb") as fh:
+                    self.assertEqual(fh.read(), b"previous course")
+                self.assertFalse(any(name.startswith(".packc-") for name in os.listdir(self.tmp)))
+        _write_pack(output, b"new course")
+        with open(output, "rb") as fh:
+            self.assertEqual(fh.read(), b"new course")
+
+    def test_id_sync_failure_does_not_publish_pack(self):
+        from packc.cli import main
+
+        output = os.path.join(self.tmp, "x.pack")
+        previous = b"previous installed course"
+        with open(output, "wb") as fh:
+            fh.write(previous)
+        with patch("packc.items.os.fsync", side_effect=OSError("sync failed")) as sync:
+            self.assertEqual(main(["--content", self.content, "--out", output, "--quiet"]), 1)
+        sync.assert_called_once()
+        with open(output, "rb") as fh:
+            self.assertEqual(fh.read(), previous)
+        # A retry still requires a sync even when all IDs are already in the log.
+        with patch("packc.items.os.fsync", side_effect=OSError("sync failed")) as sync:
+            self.assertEqual(main(["--content", self.content, "--out", output, "--quiet"]), 1)
+        sync.assert_called_once()
+        with open(output, "rb") as fh:
+            self.assertEqual(fh.read(), previous)
+        # The flushed identities can be loaded on retry without assigning new IDs.
+        result = self.packc("--out", output, "--quiet")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        b, diag = self.compile()
+        self.assertFalse(diag.errors)
+        self.assertEqual(b.new_uids, 0)
+
     def build(self):
         result = self.packc("--out", os.path.join(self.tmp, "x.pack"), "--quiet")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -981,12 +1119,18 @@ class IdLock(FixtureCase):
 
     def test_inserting_and_reordering_keeps_every_uid(self):
         first = self.build()
+        with open(os.path.join(self.tmp, "x.pack"), "rb") as fh:
+            first_identities = self.identities(Pack(fh.read()))
         # A sentence with the same target lemma and form as an existing one, inserted
         # before it; then the lesson's first two sentences swapped.
         self.add_sentence("Luis {come|comer:pres.3s} en la casa.", "Luis eats in the house.")
         self.replace(LESSON, VIVE, "")
         self.replace(LESSON, COME, VIVE + COME)
         second = self.build()
+        with open(os.path.join(self.tmp, "x.pack"), "rb") as fh:
+            second_identities = self.identities(Pack(fh.read()))
+        for uid, digest in first_identities.items():
+            self.assertEqual(second_identities[uid], digest)
         for uid, what in first.items():
             self.assertEqual(second.get(uid), what, uid)
         self.assertEqual(len(second), len(first) + 1)  # the new sentence's cloze

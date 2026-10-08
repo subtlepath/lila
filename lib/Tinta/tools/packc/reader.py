@@ -54,12 +54,25 @@ class Pack:
             tag, off, sz, n = emit.DIRENT.unpack_from(data, dir_off + i * emit.DIRENT.size)
             if off % 4 or off + sz > len(data):
                 raise PackError(f"section {tag!r} out of bounds")
+            if tag.decode() in self.sections:
+                raise PackError(f"duplicate section {tag!r}")
             self.sections[tag.decode()] = (off, sz, n)
         for tag in emit.ORDER:
             if tag not in self.sections:
                 raise PackError(f"missing section {tag}")
         off, sz, _n = self.sections["STRS"]
         self.heap = data[off:off + sz]
+        if "IDEN" in self.sections:
+            off, size, count = self.sections["IDEN"]
+            if count >= 0xFFFFFFFF or size != count * 36:
+                raise PackError("invalid identity history size")
+            for index in range(count):
+                uid, digest = emit.ITEM_IDENTITY.unpack_from(data, off + index * 36)
+                if uid != index + 1 or not any(digest):
+                    raise PackError("invalid identity history record")
+            for item in self.records("ITEM"):
+                if not 0 < item["uid"] <= count:
+                    raise PackError("identity history misses active item")
 
     def crc_ok(self) -> bool:
         copy = bytearray(self.data)

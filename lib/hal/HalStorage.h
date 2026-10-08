@@ -10,6 +10,8 @@
 
 class HalFile;
 
+enum class HalDirectoryResult : uint8_t { Entry, End, Error };
+
 enum class UsbDriveState : uint8_t {
   Unsupported,
   WaitingForHost,
@@ -24,6 +26,7 @@ class HalStorage {
   HalStorage();
   bool begin();
   bool ready() const;
+  bool cardIdentity(uint8_t out[16]);
   // Stop the SD card for deep sleep: unmount, stop the SDMMC host, and release
   // the bus pads (no-op on SPI boards). Call only after all file users have
   // stopped; open HalFiles become invalid. A deep-sleep wake resets the MCU and
@@ -59,9 +62,13 @@ class HalStorage {
   bool rmdir(const char* path);
 
   bool openFileForRead(const char* moduleName, const char* path, HalFile& file);
+  // Retain the handle allocation across close/reopen operations.
+  bool openFileForReadReusing(const char* moduleName, const char* path, HalFile& file);
   bool openFileForRead(const char* moduleName, const std::string& path, HalFile& file);
   bool openFileForRead(const char* moduleName, const String& path, HalFile& file);
   bool openFileForWrite(const char* moduleName, const char* path, HalFile& file);
+  // Retain the wrapper allocation while creating/truncating a staging file.
+  bool openFileForWriteReusing(const char* moduleName, const char* path, HalFile& file);
   bool openFileForWrite(const char* moduleName, const std::string& path, HalFile& file);
   bool openFileForWrite(const char* moduleName, const String& path, HalFile& file);
   bool removeDir(const char* path);
@@ -94,7 +101,12 @@ class HalFile : public Print {
   HalFile& operator=(const HalFile&) = delete;
 
   void flush();
+  // Report sync errors before acknowledging durable transfer offsets.
+  bool sync();
+  bool truncate(uint64_t length);
   size_t getName(char* name, size_t len);
+  // Checked FAT alias; successful exFAT lookup returns an empty string.
+  bool getShortName(char* name, size_t len);
   size_t size();
   size_t fileSize();
   uint64_t fileSize64();
@@ -115,6 +127,9 @@ class HalFile : public Print {
   void rewindDirectory();
   bool close();
   HalFile openNextFile();
+  // Prepare once before a scan; nextEntry reuses this handle without allocation.
+  bool prepareDirectoryEntry();
+  HalDirectoryResult nextEntry(HalFile& entry);
   bool isOpen() const;
   operator bool() const;
 };

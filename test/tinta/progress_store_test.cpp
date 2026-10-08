@@ -95,6 +95,107 @@ int studyDay(Rig& rig, FakeClock& clock, const SessionLimits& limits) {
   return graded;
 }
 
+void testAuthoritativeRecoveryPrecedesLocalReads() {
+  const auto catalog = FakeCatalog::vocab(3, 1);
+  MemStore canonical;
+  {
+    Rig initial(canonical, catalog);
+    CHECK(initial.open() == OpenResult::Created);
+    CHECK(initial.progress.review(0, Grade::Good, 0, 1234, 10, 1).status == Status::Stored);
+  }
+  for (unsigned mode = 0; mode < 3; ++mode) {
+    MemStore store;
+    store.present = mode != 2;
+    struct Recovery {
+      MemStore& target;
+      const MemStore& canonical;
+      unsigned calls = 0;
+      bool accept = false;
+    } recovery{store, canonical, 0, mode == 1};
+    Rig reopened(store, catalog);
+    reopened.progress.setMutationJournal({&recovery, nullptr, [](void* context) {
+                                            auto& recovery = *static_cast<Recovery*>(context);
+                                            ++recovery.calls;
+                                            CHECK_EQ(recovery.target.sizeCalls, 0);
+                                            CHECK_EQ(recovery.target.readCalls, 0);
+                                            CHECK_EQ(recovery.target.calls, 0);
+                                            if (!recovery.accept) return false;
+                                            recovery.target.files = recovery.canonical.files;
+                                            return true;
+                                          }});
+    const auto opened = reopened.open();
+    CHECK(reopened.progress.authoritativeRecoveryFailed() == (mode == 0));
+    if (mode == 0) {
+      CHECK(opened == OpenResult::Failed);
+      CHECK(store.files.empty());
+      CHECK_EQ(store.sizeCalls, 0);
+      CHECK_EQ(store.readCalls, 0);
+      CHECK_EQ(store.calls, 0);
+      CHECK(reopened.progress.review(0, Grade::Good, 0, 0, 10, 2).status == Status::Failed);
+    } else if (mode == 1) {
+      CHECK(opened != OpenResult::Failed);
+      CHECK_EQ(reopened.progress.journalCount(), 1u);
+      CHECK(reopened.progress.seen(0));
+    } else {
+      CHECK(opened == OpenResult::Guest);
+      CHECK(store.files.empty());
+    }
+    CHECK_EQ(recovery.calls, mode == 2 ? 0u : 1u);
+    store.present = false;
+    CHECK(reopened.open() == OpenResult::Guest);
+    CHECK(!reopened.progress.authoritativeRecoveryFailed());
+  }
+}
+
+void testMutationJournalPrecedesLocalWrites() {
+  for (unsigned operation = 0; operation < 3; ++operation) {
+    MemStore store;
+    const auto catalog = FakeCatalog::vocab(3, 1);
+    Rig rig(store, catalog);
+    CHECK(rig.open() == OpenResult::Created);
+    if (operation == 1) CHECK(rig.progress.review(0, Grade::Good, 0, 0, 10, 1).status == Status::Stored);
+    struct Observer {
+      MemStore& store;
+      decltype(store.files) original;
+      unsigned calls = 0;
+      bool accept = false;
+      uint32_t expectedMilliseconds = 0;
+    } observer{store, store.files};
+    observer.expectedMilliseconds = operation == 0 ? 1234 : 0;
+    rig.progress.setMutationJournal({&observer, [](void* context, const JournalEntry& entry, const ItemState& before,
+                                                   const ItemState& after, uint32_t responseMilliseconds) {
+                                       auto& observer = *static_cast<Observer*>(context);
+                                       ++observer.calls;
+                                       CHECK(observer.store.files == observer.original);
+                                       CHECK_EQ(before.uid, after.uid);
+                                       CHECK_EQ(responseMilliseconds, observer.expectedMilliseconds);
+                                       if (responseMilliseconds == UINT32_MAX) CHECK_EQ(entry.arg, 255u);
+                                       return observer.accept;
+                                     }});
+    Status status;
+    if (operation == 0)
+      status = rig.progress.review(0, Grade::Good, 0, 1234, 10, 2).status;
+    else if (operation == 1)
+      status = rig.progress.undo(10, 2);
+    else
+      status = rig.progress.setFlags(0, item_flag::kStarred, 10, 2);
+    CHECK(status == Status::Failed);
+    CHECK(rig.progress.failed());
+    CHECK_EQ(observer.calls, 1u);
+    CHECK(store.files == observer.original);
+    observer.accept = true;
+    CHECK(rig.progress.review(1, Grade::Good, 0, 0, 10, 3).status == Status::Failed);
+    CHECK_EQ(observer.calls, 1u);
+    CHECK(rig.open() == OpenResult::Opened);
+    observer.expectedMilliseconds = UINT32_MAX;
+    CHECK(rig.progress.review(1, Grade::Good, 0, UINT32_MAX, 10, 3).status == Status::Stored);
+    CHECK_EQ(observer.calls, 2u);
+    CHECK(rig.progress.review(99, Grade::Good, 0, 0, 10, 4).status == Status::Invalid);
+    CHECK_EQ(observer.calls, 2u);
+    CHECK(rig.progress.rebuild() == OpenResult::Rebuilt);
+    CHECK_EQ(observer.calls, 2u);
+  }
+}
 void testCreateAndReopen() {
   MemStore store;
   const FakeCatalog catalog = FakeCatalog::vocab(20, 5);
@@ -159,6 +260,46 @@ void testCreateAndReopen() {
   std::vector<uint16_t> small(3);
   ProgressStore tiny(store, catalog, again.fsrs);
   CHECK(tiny.open(small.data(), 3, nullptr, 0) == OpenResult::Failed);
+}
+
+void testUndoReviewProof() {
+  MemStore store;
+  const auto catalog = FakeCatalog::vocab(2, 1);
+  Rig rig(store, catalog);
+  CHECK(rig.open() != OpenResult::Failed);
+  JournalEntry entry;
+  entry.uid = 777;
+  auto before = ItemState::fresh(777);
+  auto after = before;
+  CHECK(!rig.progress.loadUndoReview(entry, before, after));
+  CHECK_EQ(entry.uid, 777);
+  const auto result = rig.progress.review(0, Grade::Good, 2, 1234, 5, 100);
+  CHECK(result.status == Status::Stored);
+  CHECK(rig.progress.loadUndoReview(entry, before, after));
+  CHECK_EQ(entry.uid, catalog.uidAt(0));
+  CHECK_EQ(entry.time, 100);
+  CHECK_EQ(entry.day, 5);
+  CHECK(entry.grade() == Grade::Good);
+  CHECK_EQ(entry.format(), 2);
+  CHECK(before == result.before);
+  CHECK(after == result.after);
+  const auto savedEntry = entry;
+  store.files["items.bin"][1024 + 8] ^= 1;
+  CHECK(!rig.progress.loadUndoReview(entry, before, after));
+  CHECK_EQ(entry.uid, savedEntry.uid);
+  CHECK_EQ(entry.time, savedEntry.time);
+  CHECK(before == result.before);
+  CHECK(after == result.after);
+  store.files["items.bin"][1024 + 8] ^= 1;
+  Rig reopened(store, catalog);
+  CHECK(reopened.open() != OpenResult::Failed);
+  CHECK(reopened.progress.loadUndoReview(entry, before, after));
+  CHECK(before == result.before);
+  CHECK(after == result.after);
+  CHECK(reopened.progress.setFlags(0, item_flag::kStarred, 5, 101) == Status::Stored);
+  CHECK(!reopened.progress.loadUndoReview(entry, before, after));
+  CHECK(before == result.before);
+  CHECK(after == result.after);
 }
 
 void testUndo() {
@@ -831,8 +972,11 @@ void testCardDropsOut() {
 }  // namespace
 
 int main() {
+  testAuthoritativeRecoveryPrecedesLocalReads();
+  testMutationJournalPrecedesLocalWrites();
   testCreateAndReopen();
   testUndo();
+  testUndoReviewProof();
   testFlags();
   testForecastAndTotals();
   testRebuild();

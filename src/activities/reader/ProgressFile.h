@@ -9,6 +9,28 @@
 
 namespace ProgressFile {
 
+class Stage final {
+ public:
+  bool write(const char* path, const uint8_t* data, size_t len) {
+    if (!Storage.openFileForWrite("PRG", path, file)) {
+      LOG_ERR("PRG", "Could not open temp progress file for write: %s", path);
+      return false;
+    }
+    if (file.write(data, len) != len || !file.sync()) {
+      LOG_ERR("PRG", "Failed to write/sync temp progress file: %s", path);
+      return false;
+    }
+    if (!file.close()) {
+      LOG_ERR("PRG", "Failed to close temp progress file: %s", path);
+      return false;
+    }
+    return true;
+  }
+
+ private:
+  HalFile file;
+};
+
 // Writes `len` bytes of reader progress to `<cachePath>/progress.bin` without
 // ever leaving the canonical file half-written.
 //
@@ -33,22 +55,8 @@ inline bool writeAtomic(const std::string& cachePath, const uint8_t* data, size_
   const std::string finalPath = cachePath + "/progress.bin";
   const std::string tmpPath = cachePath + "/progress.bin.tmp";
 
-  {
-    HalFile f;
-    if (!Storage.openFileForWrite("PRG", tmpPath, f)) {
-      LOG_ERR("PRG", "Could not open temp progress file for write: %s", tmpPath.c_str());
-      return false;
-    }
-    const size_t written = f.write(data, len);
-    if (written != len) {
-      LOG_ERR("PRG", "Short write saving progress to %s: %u/%u bytes", tmpPath.c_str(), (unsigned)written,
-              (unsigned)len);
-      return false;
-    }
-    f.flush();
-    // f (the temp file) is closed at scope exit (DESTRUCTOR_CLOSES_FILE=1) before
-    // the rename below -- SdFat must not rename a path that still has an open FsFile.
-  }
+  Stage stage;
+  if (!stage.write(tmpPath.c_str(), data, len)) return false;
 
   // SdFat's rename does not overwrite an existing destination, so drop the old
   // canonical file first. The brief window where neither file exists reads as

@@ -8,6 +8,9 @@
 #include <PngToBmpConverter.h>
 #include <Utf8.h>
 #include <ZipFile.h>
+#if LILA_COMPANION
+#include <HalInventoryFileHash.h>
+#endif
 
 #include "Epub/parsers/ContainerParser.h"
 #include "Epub/parsers/ContentOpfParser.h"
@@ -429,6 +432,10 @@ CssParser::ParseResult Epub::parseCssFiles(const CssParser::CacheStatus existing
 
 // load in the meta data for the epub file
 bool Epub::load(const bool buildIfMissing, const bool skipLoadingCss) {
+#if LILA_COMPANION
+  companionContentIdentityReady = false;
+  companionProgressCache.clear();
+#endif
   LOG_DBG("EBP", "Loading ePub: %s", filepath.c_str());
 
   // Initialize spine/TOC cache
@@ -650,6 +657,30 @@ void Epub::setupCacheDir() const {
 const std::string& Epub::getCachePath() const { return cachePath; }
 
 const std::string& Epub::getPath() const { return filepath; }
+#if LILA_COMPANION
+bool Epub::getCompanionContentIdentity(std::span<uint8_t> scratch, std::array<uint8_t, 32>& output) const {
+  if (companionContentIdentityReady) {
+    output = companionContentIdentity;
+    return true;
+  }
+  if (!Storage.openFileForRead("EBP", filepath.c_str(), companionContentFile)) {
+    LOG_ERR("EBP", "Could not open book for companion identity");
+    return false;
+  }
+  companion::Digest digest{};
+  uint64_t length = 0;
+  const bool hashed = companion::hashInventoryFile(companionContentFile, scratch, length, digest);
+  const bool closed = companionContentFile.close();
+  if (!hashed || !length || !closed) {
+    LOG_ERR("EBP", "Could not verify/close companion book identity");
+    return false;
+  }
+  companionContentIdentity = digest;
+  companionContentIdentityReady = true;
+  output = digest;
+  return true;
+}
+#endif
 
 const std::string& Epub::getTitle() const {
   static std::string blank;

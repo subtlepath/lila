@@ -61,6 +61,20 @@ void testStrings() {
     uint32_t h = 2166136261u;
     for (const char* p = expect; *p; ++p) h = (h ^ static_cast<uint8_t>(*p)) * 16777619u;
     CHECK_EQ(gSd.hashStr(offset), h);
+    struct Visitor {
+      const char* expected;
+      uint32_t bytes;
+    } visitor{expect, 0};
+    const auto visit = [](void* context, const uint8_t* bytes, uint32_t length) {
+      auto& state = *static_cast<Visitor*>(context);
+      if (std::memcmp(state.expected + state.bytes, bytes, length) != 0) return false;
+      state.bytes += length;
+      return true;
+    };
+    CHECK(gSd.visitStr(offset, &visitor, visit));
+    CHECK_EQ(visitor.bytes, std::strlen(expect));
+    const auto reject = [](void*, const uint8_t*, uint32_t) { return false; };
+    if (*expect) CHECK(!gSd.visitStr(offset, nullptr, reject));
     offset += static_cast<uint32_t>(std::strlen(expect)) + 1;
     ++checked;
   }
@@ -69,6 +83,7 @@ void testStrings() {
   // Out of range and offset 0.
   CHECK_STR_EQ(gSd.str(0), "");
   CHECK_STR_EQ(gSd.str(0xFFFFFFF0u), "");
+  CHECK(!gSd.visitStr(0, nullptr, nullptr));
 }
 
 void testRecords() {

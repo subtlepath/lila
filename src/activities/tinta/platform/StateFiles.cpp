@@ -5,29 +5,60 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "CompanionCourseStatePaths.h"
 #include "platform/Log.h"
 
 namespace tinta::platform {
-namespace {
-
-constexpr const char* kRoot = "/tinta";
-constexpr size_t kPathCap = 48;
-
-bool pathFor(const char* name, char (&out)[kPathCap], const char* suffix = "") {
-  const int n = snprintf(out, kPathCap, "%s/%s%s", kRoot, name, suffix);
+bool StateFiles::pathFor(const char* name, char (&out)[kPathCap], const char* suffix) const {
+  if (!name || !name[0] || strlen(name) >= sizeof(cachedName_) || strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
+    return false;
+  for (const auto* at = name; *at; ++at) {
+    const auto byte = static_cast<unsigned char>(*at);
+    if (!((byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z') || (byte >= '0' && byte <= '9') || byte == '.' ||
+          byte == '-' || byte == '_'))
+      return false;
+  }
+  const int n = snprintf(out, kPathCap, "%s/%s%s", root_, name, suffix);
   return n > 0 && static_cast<size_t>(n) < kPathCap;
 }
 
-}  // namespace
-
 void StateFiles::begin() {
+  closeCached();
+  strcpy(root_, "/tinta");
+  beginRoot();
+}
+bool StateFiles::beginCourse(std::span<const uint8_t, 16> course) {
+  closeCached();
+  mounted_ = false;
   failed_ = false;
-  mounted_ = Storage.exists(kRoot) || Storage.mkdir(kRoot);
+  companion::Identity identity{};
+  std::copy(course.begin(), course.end(), identity.begin());
+  if (!companion::courseStateDirectory(identity, root_)) {
+    failed_ = true;
+    log("storage: invalid course identity");
+    return false;
+  }
+  if (!Storage.ensureDirectoryExists("/tinta") || !Storage.ensureDirectoryExists("/tinta/courses")) {
+    log("storage: cannot create course state parent");
+    return false;
+  }
+  beginRoot();
+  if (!available()) return false;
+  static constexpr const char* LEARNER_FILES[] = {"items.bin",   "reviews.log", "profile.bin", "days.bin",
+                                                  "session.bin", "starred.bin", "read.bin"};
+  for (const auto* name : LEARNER_FILES) {
+    if (!recover(name)) return false;
+  }
+  return available();
+}
+void StateFiles::beginRoot() {
+  failed_ = false;
+  mounted_ = Storage.exists(root_) || Storage.mkdir(root_);
   if (!mounted_) {
-    log("storage: cannot use %s, guest mode", kRoot);
+    log("storage: cannot use %s, guest mode", root_);
     return;
   }
-  log("storage: %s ready", kRoot);
+  log("storage: %s ready", root_);
 }
 
 void StateFiles::closeCached() {
@@ -37,18 +68,25 @@ void StateFiles::closeCached() {
 }
 
 void StateFiles::checkCard() {
-  if (failed_ || Storage.exists(kRoot)) return;
+  if (failed_ || Storage.exists(root_)) return;
   failed_ = true;
   closeCached();
   log("storage: card stopped responding, guest mode");
 }
 
-void StateFiles::recover(const char* name) {
+bool StateFiles::recover(const char* name) {
   char path[kPathCap];
   char tmp[kPathCap];
-  if (!pathFor(name, path) || !pathFor(name, tmp, ".tmp")) return;
-  if (Storage.exists(path) || !Storage.exists(tmp)) return;
-  if (Storage.rename(tmp, path)) log("storage: recovered %s from an interrupted replace", name);
+  if (!pathFor(name, path) || !pathFor(name, tmp, ".tmp")) return false;
+  if (Storage.exists(path) || !Storage.exists(tmp)) return true;
+  if (!Storage.rename(tmp, path)) {
+    failed_ = true;
+    closeCached();
+    log("storage: recovery of %s failed", name);
+    return false;
+  }
+  log("storage: recovered %s from an interrupted replace", name);
+  return true;
 }
 
 bool StateFiles::openCached(const char* name, const Mode mode) {
@@ -58,7 +96,7 @@ bool StateFiles::openCached(const char* name, const Mode mode) {
   closeCached();
   char path[kPathCap];
   if (strlen(name) >= sizeof cachedName_ || !pathFor(name, path)) return false;
-  recover(name);
+  if (!recover(name)) return false;
   if (mode == Mode::Read) {
     if (!Storage.exists(path)) {
       checkCard();
@@ -111,16 +149,22 @@ bool StateFiles::write(const char* name, const uint32_t offset, const void* data
     at += n;
   }
   ok = ok && file_.write(static_cast<const uint8_t*>(data), len) == len;
-  if (ok) file_.flush();
-  if (!ok) checkCard();
+  if (ok) ok = file_.sync();
+  if (!ok) {
+    log("storage: write %s failed", name);
+    checkCard();
+  }
   return ok;
 }
 
 bool StateFiles::append(const char* name, const void* data, const uint32_t len) {
   if (!available() || !openCached(name, Mode::Write)) return false;
-  const bool ok = file_.seekSet(file_.size()) && file_.write(static_cast<const uint8_t*>(data), len) == len;
-  if (ok) file_.flush();
-  if (!ok) checkCard();
+  const bool ok =
+      file_.seekSet(file_.size()) && file_.write(static_cast<const uint8_t*>(data), len) == len && file_.sync();
+  if (!ok) {
+    log("storage: append %s failed", name);
+    checkCard();
+  }
   return ok;
 }
 
@@ -134,7 +178,7 @@ bool StateFiles::replace(const char* name, const void* data, const uint32_t len)
   {
     HalFile out = Storage.open(tmp, O_RDWR | O_CREAT | O_TRUNC);
     ok = static_cast<bool>(out) && out.write(static_cast<const uint8_t*>(data), len) == len;
-    if (ok) out.flush();
+    if (ok) ok = out.sync();
     // Closed before the rename.
   }
   // Only once the new copy is safely on the card does the old one go.
@@ -152,9 +196,16 @@ bool StateFiles::remove(const char* name) {
   char path[kPathCap];
   char tmp[kPathCap];
   if (!pathFor(name, path) || !pathFor(name, tmp, ".tmp")) return false;
-  if (Storage.exists(tmp)) Storage.remove(tmp);
+  if (Storage.exists(tmp) && !Storage.remove(tmp)) {
+    log("storage: remove temporary %s failed", name);
+    checkCard();
+    return false;
+  }
   const bool ok = !Storage.exists(path) || Storage.remove(path);
-  if (!ok) checkCard();
+  if (!ok) {
+    log("storage: remove %s failed", name);
+    checkCard();
+  }
   return ok;
 }
 

@@ -2,7 +2,11 @@
 
 #include <FS.h>  // need to be included before SdFat.h for compatibility with FS.h's File class
 #include <Logging.h>
+#include <Memory.h>
 #include <SDCardManager.h>
+#ifndef LILA_SDFAT_DIRECTORY_ERRORS
+#error "SdFat directory-error patch must run before compiling HalStorage"
+#endif
 #if FREEINK_CAP_USB_MSC
 #include <UsbMassStorage.h>
 #endif
@@ -43,6 +47,11 @@ class HalStorage::StorageLock {
   StorageLock() { xSemaphoreTakeRecursive(HalStorage::getInstance().storageMutex, portMAX_DELAY); }
   ~StorageLock() { xSemaphoreGiveRecursive(HalStorage::getInstance().storageMutex); }
 };
+
+bool HalStorage::cardIdentity(uint8_t out[16]) {
+  StorageLock lock;
+  return SDCard.cardIdentity(out);
+}
 
 void HalStorage::prepareForDeepSleep() {
   StorageLock lock;
@@ -148,6 +157,7 @@ bool HalStorage::ensureDirectoryExists(const char* path) { HAL_STORAGE_WRAPPED_C
 
 class HalFile::Impl {
  public:
+  Impl() = default;
   Impl(FsFile&& fsFile) : file(std::move(fsFile)) {}
   // SdFat is not thread-safe; FsFile::close() touches SD/SPI and must run
   // under StorageLock or it races SdSpiCard::m_spiActive across tasks and
@@ -170,7 +180,9 @@ HalFile& HalFile::operator=(HalFile&&) = default;
 
 HalFile HalStorage::open(const char* path, const oflag_t oflag) {
   StorageLock lock;  // ensure thread safety for the duration of this function
-  return HalFile(std::make_unique<HalFile::Impl>(SDCard.open(path, oflag)));
+  auto handle = makeUniqueNoThrow<HalFile::Impl>(SDCard.open(path, oflag));
+  if (!handle) LOG_ERR("STORAGE", "OOM: file handle for %s", path);
+  return HalFile(std::move(handle));
 }
 
 bool HalStorage::mkdir(const char* path, const bool pFlag) { HAL_STORAGE_WRAPPED_CALL(mkdir, path, pFlag); }
@@ -188,12 +200,40 @@ bool HalStorage::openFileForRead(const char* moduleName, const char* path, HalFi
   StorageLock lock;  // ensure thread safety for the duration of this function
   FsFile fsFile;
   bool ok = SDCard.openFileForRead(moduleName, path, fsFile);
-  file = HalFile(std::make_unique<HalFile::Impl>(std::move(fsFile)));
+  auto handle = makeUniqueNoThrow<HalFile::Impl>(std::move(fsFile));
+  if (!handle) {
+    LOG_ERR("STORAGE", "OOM: file handle for %s", path);
+    file = HalFile();
+    return false;
+  }
+  file = HalFile(std::move(handle));
   return ok;
 }
 
 bool HalStorage::openFileForRead(const char* moduleName, const std::string& path, HalFile& file) {
   return openFileForRead(moduleName, path.c_str(), file);
+}
+
+bool HalStorage::openFileForReadReusing(const char* moduleName, const char* path, HalFile& file) {
+  StorageLock lock;
+  if (!path || !moduleName) {
+    LOG_ERR("STORAGE", "Invalid reusable read arguments");
+    return false;
+  }
+  if (!file.impl) file.impl = makeUniqueNoThrow<HalFile::Impl>();
+  if (!file.impl) {
+    LOG_ERR("STORAGE", "OOM: reusable file handle for %s", path);
+    return false;
+  }
+  if (file.impl->file.isOpen() && !file.impl->file.close()) {
+    LOG_ERR("STORAGE", "Failed closing reusable handle for %s", path);
+    return false;
+  }
+  if (!SDCard.openFileForRead(moduleName, path, file.impl->file)) {
+    LOG_ERR("STORAGE", "Failed opening reusable read handle for %s", path);
+    return false;
+  }
+  return true;
 }
 
 bool HalStorage::openFileForRead(const char* moduleName, const String& path, HalFile& file) {
@@ -204,12 +244,40 @@ bool HalStorage::openFileForWrite(const char* moduleName, const char* path, HalF
   StorageLock lock;  // ensure thread safety for the duration of this function
   FsFile fsFile;
   bool ok = SDCard.openFileForWrite(moduleName, path, fsFile);
-  file = HalFile(std::make_unique<HalFile::Impl>(std::move(fsFile)));
+  auto handle = makeUniqueNoThrow<HalFile::Impl>(std::move(fsFile));
+  if (!handle) {
+    LOG_ERR("STORAGE", "OOM: file handle for %s", path);
+    file = HalFile();
+    return false;
+  }
+  file = HalFile(std::move(handle));
   return ok;
 }
 
 bool HalStorage::openFileForWrite(const char* moduleName, const std::string& path, HalFile& file) {
   return openFileForWrite(moduleName, path.c_str(), file);
+}
+
+bool HalStorage::openFileForWriteReusing(const char* moduleName, const char* path, HalFile& file) {
+  StorageLock lock;
+  if (!path || !moduleName) {
+    LOG_ERR("STORAGE", "Invalid reusable write arguments");
+    return false;
+  }
+  if (!file.impl) file.impl = makeUniqueNoThrow<HalFile::Impl>();
+  if (!file.impl) {
+    LOG_ERR("STORAGE", "OOM: reusable write handle for %s", path);
+    return false;
+  }
+  if (file.impl->file.isOpen() && !file.impl->file.close()) {
+    LOG_ERR("STORAGE", "Failed closing reusable write handle for %s", path);
+    return false;
+  }
+  if (!SDCard.openFileForWrite(moduleName, path, file.impl->file)) {
+    LOG_ERR("STORAGE", "Failed opening reusable write handle for %s", path);
+    return false;
+  }
+  return true;
 }
 
 bool HalStorage::openFileForWrite(const char* moduleName, const String& path, HalFile& file) {
@@ -232,7 +300,17 @@ bool HalStorage::removeDir(const char* path) { HAL_STORAGE_WRAPPED_CALL(removeDi
   return impl->file.method(__VA_ARGS__);
 
 void HalFile::flush() { HAL_FILE_WRAPPED_CALL(flush, ); }
+bool HalFile::sync() { HAL_FILE_WRAPPED_CALL(sync, ); }
+bool HalFile::truncate(uint64_t length) { HAL_FILE_WRAPPED_CALL(truncate, length); }
 size_t HalFile::getName(char* name, size_t len) { HAL_FILE_WRAPPED_CALL(getName, name, len); }
+bool HalFile::getShortName(char* name, size_t len) {
+  HalStorage::StorageLock lock;
+  if (!impl || !impl->file.isOpen() || !name || len < 13 || !impl->file.getShortName(name, len)) {
+    LOG_ERR("STORAGE", "Failed reading short filename");
+    return false;
+  }
+  return true;
+}
 size_t HalFile::size() { HAL_FILE_FORWARD_CALL(size, ); }              // already thread-safe, no need to wrap
 size_t HalFile::fileSize() { HAL_FILE_FORWARD_CALL(fileSize, ); }      // already thread-safe, no need to wrap
 uint64_t HalFile::fileSize64() { HAL_FILE_FORWARD_CALL(fileSize, ); }  // already thread-safe, no need to wrap
@@ -261,7 +339,29 @@ bool HalFile::close() { HAL_FILE_WRAPPED_CALL(close, ); }
 HalFile HalFile::openNextFile() {
   HalStorage::StorageLock lock;
   assert(impl != nullptr);
-  return HalFile(std::make_unique<Impl>(impl->file.openNextFile()));
+  auto handle = makeUniqueNoThrow<Impl>(impl->file.openNextFile());
+  if (!handle) LOG_ERR("STORAGE", "OOM: directory entry handle");
+  return HalFile(std::move(handle));
+}
+bool HalFile::prepareDirectoryEntry() {
+  HalStorage::StorageLock lock;
+  if (impl) return true;
+  impl = makeUniqueNoThrow<Impl>();
+  if (!impl) LOG_ERR("STORAGE", "OOM: reusable directory entry handle");
+  return impl != nullptr;
+}
+HalDirectoryResult HalFile::nextEntry(HalFile& entry) {
+  HalStorage::StorageLock lock;
+  if (this == &entry || !impl || !impl->file.isDir() || !entry.impl || impl->file.getError()) {
+    LOG_ERR("STORAGE", "Invalid directory scan or unprepared entry handle");
+    return HalDirectoryResult::Error;
+  }
+  if (entry.impl->file.openNext(&impl->file)) return HalDirectoryResult::Entry;
+  if (impl->file.getError()) {
+    LOG_ERR("STORAGE", "Directory enumeration failed");
+    return HalDirectoryResult::Error;
+  }
+  return HalDirectoryResult::End;
 }
 bool HalFile::isOpen() const { return impl != nullptr && impl->file.isOpen(); }  // already thread-safe, no need to wrap
 HalFile::operator bool() const { return isOpen(); }

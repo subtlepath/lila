@@ -1,0 +1,7 @@
+{
+  "record": "ContentRemovalReply",
+  "command": 15,
+  "result": "ok",
+  "transactionHex": "01010101010101010101010101010101",
+  "binaryHex": "0001010101010101010101010101010101"
+}

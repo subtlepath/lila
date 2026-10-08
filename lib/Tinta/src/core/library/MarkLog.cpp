@@ -27,7 +27,12 @@ void encode(uint8_t* out, uint32_t key, uint8_t op) {
 void MarkLog::open() {
   count_ = 0;
   records_ = 0;
+  journalFailed_ = false;
   if (!store_.available()) return;
+  if (mutationJournal_.recover && !mutationJournal_.recover(mutationJournal_.context)) {
+    journalFailed_ = true;
+    return;
+  }
   const int32_t size = store_.size(file_);
   if (size < static_cast<int32_t>(kHeaderSize)) return;
   uint8_t head[kHeaderSize];
@@ -75,16 +80,27 @@ void MarkLog::erase(const uint32_t key) {
 }
 
 bool MarkLog::add(const uint32_t key) {
+  if (journalFailed_) return false;
   if (contains(key)) return true;
-  if (count_ >= kCapacity) return false;
+  if (count_ >= kCapacity || !persistMutation(key, true)) return false;
   insert(key);
   return append(key, kAdd);
 }
 
 bool MarkLog::remove(const uint32_t key) {
+  if (journalFailed_) return false;
   if (!contains(key)) return true;
+  if (!persistMutation(key, false)) return false;
   erase(key);
   return append(key, kRemove);
+}
+
+bool MarkLog::persistMutation(const uint32_t key, const bool enabled) {
+  if (!store_.available() || !mutationJournal_.persist ||
+      mutationJournal_.persist(mutationJournal_.context, key, enabled))
+    return true;
+  journalFailed_ = true;
+  return false;
 }
 
 bool MarkLog::append(const uint32_t key, const uint8_t op) {

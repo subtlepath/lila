@@ -49,6 +49,34 @@ Language I18n::languageFromCode(const char* code) {
   return Language::EN;
 }
 
+bool I18n::languageFromTag(std::string_view tag, Language& output) {
+  if (tag.empty() || tag.size() > 63) return false;
+  for (const auto index : SORTED_LANGUAGE_INDICES) {
+    const std::string_view supported(LANGUAGE_TAGS[index]);
+    if (tag.size() != supported.size()) continue;
+    bool matches = true;
+    for (size_t at = 0; at < tag.size(); ++at) {
+      const auto lower = [](char byte) { return byte >= 'A' && byte <= 'Z' ? byte + ('a' - 'A') : byte; };
+      if (lower(tag[at]) != lower(supported[at])) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) {
+      output = static_cast<Language>(index);
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string_view I18n::languageTag(Language language) {
+  for (const auto index : SORTED_LANGUAGE_INDICES) {
+    if (static_cast<Language>(index) == language) return LANGUAGE_TAGS[index];
+  }
+  return {};
+}
+
 // Generate character set for a specific language
 const char* I18n::getCharacterSet(Language lang) {
   const auto langIndex = static_cast<size_t>(lang);

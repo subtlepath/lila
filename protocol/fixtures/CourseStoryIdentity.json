@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "fixture": "test/tinta/fixtures/mini.pack",
+  "stories": [
+    {
+      "index": 0,
+      "kind": 0,
+      "lessonIdentity": 65537,
+      "title": "En la calle",
+      "inputHex": "545354310001000100456e206c612063616c6c65",
+      "identity": 3491721030
+    },
+    {
+      "index": 1,
+      "kind": 0,
+      "lessonIdentity": 65538,
+      "title": "En la taquería",
+      "inputHex": "545354310002000100456e206c6120746171756572c3ad61",
+      "identity": 3028353045
+    },
+    {
+      "index": 2,
+      "kind": 1,
+      "lessonIdentity": 65538,
+      "title": "Luis en México",
+      "inputHex": "5453543101020001004c75697320656e204dc3a97869636f",
+      "identity": 1274730023
+    }
+  ]
+}

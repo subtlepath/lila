@@ -12,3 +12,14 @@ target_include_directories(InflateStreamTest PRIVATE
 )
 target_link_libraries(InflateStreamTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(InflateStreamTest)
+
+add_executable(UzlibHistoryTest
+  UzlibHistoryTest.cpp
+  ${REPO_ROOT}/lib/uzlib/src/tinflate.c
+)
+target_include_directories(UzlibHistoryTest PRIVATE ${REPO_ROOT}/lib/uzlib/src)
+target_compile_options(UzlibHistoryTest PRIVATE -ffunction-sections -fdata-sections)
+target_link_options(UzlibHistoryTest PRIVATE -Wl,--gc-sections)
+target_compile_definitions(UzlibHistoryTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures")
+target_link_libraries(UzlibHistoryTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(UzlibHistoryTest)

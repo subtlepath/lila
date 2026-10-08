@@ -924,7 +924,9 @@ extern "C"
         TINFL_FLAG_PARSE_ZLIB_HEADER = 1,
         TINFL_FLAG_HAS_MORE_INPUT = 2,
         TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF = 4,
-        TINFL_FLAG_COMPUTE_ADLER32 = 8
+        TINFL_FLAG_COMPUTE_ADLER32 = 8,
+        /* lila: reject ring references preceding decoded stream history. */
+        TINFL_FLAG_VALIDATE_RING_HISTORY = 16
     };
 
     /* High level decompression functions: */
@@ -1039,6 +1041,7 @@ typedef mz_uint32 tinfl_bit_buf_t;
         mz_uint32 m_state, m_num_bits, m_zhdr0, m_zhdr1, m_z_adler32, m_final, m_type, m_check_adler32, m_dist, m_counter, m_num_extra, m_table_sizes[TINFL_MAX_HUFF_TABLES];
         tinfl_bit_buf_t m_bit_buf;
         size_t m_dist_from_out_buf_start;
+        mz_uint32 m_ring_history; /* lila: saturated decoded history */
         mz_int16 m_look_up[TINFL_MAX_HUFF_TABLES][TINFL_FAST_LOOKUP_SIZE];
         mz_int16 m_tree_0[TINFL_MAX_HUFF_SYMBOLS_0 * 2];
         mz_int16 m_tree_1[TINFL_MAX_HUFF_SYMBOLS_1 * 2];

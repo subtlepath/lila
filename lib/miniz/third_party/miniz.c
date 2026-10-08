@@ -2476,6 +2476,7 @@ extern "C"
 
         bit_buf = num_bits = dist = counter = num_extra = r->m_zhdr0 = r->m_zhdr1 = 0;
         r->m_z_adler32 = r->m_check_adler32 = 1;
+        r->m_ring_history = 0;
         if (decomp_flags & TINFL_FLAG_PARSE_ZLIB_HEADER)
         {
             TINFL_GET_BYTE(1, r->m_zhdr0);
@@ -2787,6 +2788,13 @@ extern "C"
                         TINFL_CR_RETURN_FOREVER(37, TINFL_STATUS_FAILED);
                     }
 
+                    /* lila: strict raw/gzip validation must reject unfilled ring references. */
+                    if ((decomp_flags & TINFL_FLAG_VALIDATE_RING_HISTORY) && !(decomp_flags & TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF) &&
+                        (dist == 0 || dist > MZ_MIN(out_buf_size_mask + 1, (size_t)r->m_ring_history + (size_t)(pOut_buf_cur - pOut_buf_next))))
+                    {
+                        TINFL_CR_RETURN_FOREVER(64, TINFL_STATUS_FAILED);
+                    }
+
                     pSrc = pOut_buf_start + ((dist_from_out_buf_start - dist) & out_buf_size_mask);
 
                     if ((MZ_MAX(pOut_buf_cur, pSrc) + counter) > pOut_buf_end)
@@ -2893,6 +2901,8 @@ extern "C"
         r->m_counter = counter;
         r->m_num_extra = num_extra;
         r->m_dist_from_out_buf_start = dist_from_out_buf_start;
+        if (!(decomp_flags & TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF))
+            r->m_ring_history = (mz_uint32)MZ_MIN((size_t)32768, (size_t)r->m_ring_history + (size_t)(pOut_buf_cur - pOut_buf_next));
         *pIn_buf_size = pIn_buf_cur - pIn_buf_next;
         *pOut_buf_size = pOut_buf_cur - pOut_buf_next;
         if ((decomp_flags & (TINFL_FLAG_PARSE_ZLIB_HEADER | TINFL_FLAG_COMPUTE_ADLER32)) && (status >= 0))

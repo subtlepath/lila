@@ -11,6 +11,7 @@
 #include <limits>
 #include <string>
 
+#include "CompanionReaderPreferences.h"
 #include "I18nKeys.h"
 #include "ReaderFontSizes.h"
 #include "ReaderTypography.h"
@@ -18,6 +19,42 @@
 #include "fontIds.h"
 
 namespace {
+
+void capturePortablePreferences(const CrossPointSettings& settings, companion::ReaderPreferenceValues& output) {
+  output.fontFamily = settings.fontFamily;
+  output.fontPointSize = settings.fontPointSize;
+  output.lineSpacing = settings.lineSpacing;
+  output.paragraphAlignment = settings.paragraphAlignment;
+  output.extraParagraphSpacing = settings.extraParagraphSpacing;
+  output.wordSpacing = settings.wordSpacing;
+  output.characterSpacing = settings.characterSpacing;
+  output.screenMargin = settings.screenMargin;
+  output.hyphenationEnabled = settings.hyphenationEnabled;
+  output.language = settings.language;
+  output.textAntiAliasing = settings.textAntiAliasing;
+  output.embeddedStyle = settings.embeddedStyle;
+  output.focusReadingEnabled = settings.focusReadingEnabled;
+  std::copy_n(settings.sdFontFamilyName, output.sdFontFamilyName.size(), output.sdFontFamilyName.begin());
+  std::copy_n(settings.dictionaryName, output.dictionaryName.size(), output.dictionaryName.begin());
+}
+
+void applyPortablePreferences(CrossPointSettings& settings, const companion::ReaderPreferenceValues& replacement) {
+  settings.fontFamily = replacement.fontFamily;
+  settings.fontPointSize = replacement.fontPointSize;
+  settings.lineSpacing = replacement.lineSpacing;
+  settings.paragraphAlignment = replacement.paragraphAlignment;
+  settings.extraParagraphSpacing = replacement.extraParagraphSpacing;
+  settings.wordSpacing = replacement.wordSpacing;
+  settings.characterSpacing = replacement.characterSpacing;
+  settings.screenMargin = replacement.screenMargin;
+  settings.hyphenationEnabled = replacement.hyphenationEnabled;
+  settings.language = replacement.language;
+  settings.textAntiAliasing = replacement.textAntiAliasing;
+  settings.embeddedStyle = replacement.embeddedStyle;
+  settings.focusReadingEnabled = replacement.focusReadingEnabled;
+  std::copy(replacement.sdFontFamilyName.begin(), replacement.sdFontFamilyName.end(), settings.sdFontFamilyName);
+  std::copy(replacement.dictionaryName.begin(), replacement.dictionaryName.end(), settings.dictionaryName);
+}
 
 // Stack buffer for "<key>_obf" key construction — avoids a std::string
 // allocation per obfuscated setting on every save and load.
@@ -412,4 +449,57 @@ int CrossPointSettings::getReaderFontId() const {
     default:
       return sans ? HELVETICA_12_FONT_ID : TIMES_12_FONT_ID;
   }
+}
+
+void CrossPointSettings::readPortablePreferences(companion::ReaderPreferenceValues& output) const {
+  std::lock_guard<std::mutex> lock(storeMutex);
+  capturePortablePreferences(*this, output);
+}
+
+void CrossPointSettings::bindPortablePreferenceSave(void* context, PortablePreferenceSave callback) {
+  std::lock_guard<std::mutex> lock(storeMutex);
+  portablePreferenceSaveContext = callback ? context : nullptr;
+  portablePreferenceSave = callback;
+}
+
+void CrossPointSettings::unbindPortablePreferenceSave(void* context) {
+  std::lock_guard<std::mutex> lock(storeMutex);
+  if (portablePreferenceSaveContext != context) return;
+  portablePreferenceSave = nullptr;
+  portablePreferenceSaveContext = nullptr;
+}
+
+bool CrossPointSettings::saveToFile() {
+  std::lock_guard<std::mutex> lock(storeMutex);
+  if (portablePreferenceSave) {
+    companion::ReaderPreferenceValues values;
+    capturePortablePreferences(*this, values);
+    companion::ReaderPreferenceValues rollback = values;
+    if (!portablePreferenceSave(portablePreferenceSaveContext, values, rollback)) {
+      applyPortablePreferences(*this, rollback);
+#if LILA_COMPANION
+      companion::notifyReaderPreferenceSaveError();
+#endif
+      I18N.setLanguage(static_cast<Language>(language));
+      LOG_ERR("SET", "Portable preference journal failed; settings save refused");
+      return false;
+    }
+  }
+  JsonDocument doc;
+  toJson(doc);
+  const bool saved = writeDocToFile(getFilePath(), doc);
+#if LILA_COMPANION
+  if (!saved && portablePreferenceSave) companion::notifyReaderPreferenceSaveError();
+#endif
+  return saved;
+}
+
+companion::ReaderPreferenceStoreResult CrossPointSettings::applyPortablePreferencesIfUnchanged(
+    const companion::ReaderPreferenceValues& expected, const companion::ReaderPreferenceValues& replacement) {
+  std::lock_guard<std::mutex> lock(storeMutex);
+  companion::ReaderPreferenceValues current;
+  capturePortablePreferences(*this, current);
+  if (current != expected) return companion::ReaderPreferenceStoreResult::Conflict;
+  applyPortablePreferences(*this, replacement);
+  return companion::ReaderPreferenceStoreResult::Ok;
 }

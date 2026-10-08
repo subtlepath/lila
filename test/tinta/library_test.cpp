@@ -43,6 +43,65 @@ LoadedPack gFull;
 
 // ── Mark log ─────────────────────────────────────────────────────────────────
 
+void testMarkJournal() {
+  for (bool removal : {false, true}) {
+    tinta_test::MemStore store;
+    lib::MarkLog marks(store, "read.bin");
+    marks.open();
+    if (removal) CHECK(marks.add(7));
+    const auto before = store.files;
+    struct Observer {
+      lib::MarkLog& marks;
+      bool removal;
+      bool accept = false;
+      unsigned calls = 0;
+    } observer{marks, removal};
+    marks.setMutationJournal({&observer,
+                              [](void* context, uint32_t key, bool enabled) {
+                                auto& observer = *static_cast<Observer*>(context);
+                                ++observer.calls;
+                                CHECK_EQ(key, 7u);
+                                CHECK(enabled == !observer.removal);
+                                CHECK(observer.marks.contains(key) == observer.removal);
+                                return observer.accept;
+                              },
+                              nullptr});
+    CHECK(!(removal ? marks.remove(7) : marks.add(7)));
+    CHECK(marks.journalFailed());
+    CHECK(marks.contains(7) == removal);
+    CHECK(store.files == before);
+    observer.accept = true;
+    CHECK(!marks.add(8));
+    CHECK_EQ(observer.calls, 1u);
+    marks.open();
+    CHECK(removal ? marks.remove(7) : marks.add(7));
+    const auto calls = observer.calls;
+    CHECK(removal ? marks.remove(7) : marks.add(7));
+    CHECK_EQ(observer.calls, calls);
+  }
+  tinta_test::MemStore store;
+  lib::MarkLog marks(store, "read.bin");
+  struct Recovery {
+    tinta_test::MemStore& store;
+    unsigned calls = 0;
+  } recovery{store};
+  marks.setMutationJournal({&recovery, nullptr, [](void* context) {
+                              auto& recovery = *static_cast<Recovery*>(context);
+                              ++recovery.calls;
+                              CHECK_EQ(recovery.store.readCalls, 0);
+                              CHECK_EQ(recovery.store.sizeCalls, 0);
+                              return false;
+                            }});
+  marks.open();
+  CHECK(marks.journalFailed());
+  CHECK(!marks.add(7));
+  CHECK(store.files.empty());
+  store.present = false;
+  marks.open();
+  CHECK(!marks.journalFailed());
+  CHECK_EQ(recovery.calls, 1u);
+}
+
 void testMarkLog() {
   MemStore store;
   {
@@ -361,6 +420,7 @@ int main() {
     std::printf("  missing fixtures/sim-fixture.pack\n");
     return 1;
   }
+  testMarkJournal();
   testMarkLog();
   // The readings and the phrasebook need the whole course (run.sh says how
   // to build it).

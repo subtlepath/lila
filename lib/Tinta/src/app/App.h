@@ -26,6 +26,7 @@ class GfxRenderer;
 #include "app/View.h"
 #include "core/library/MarkLog.h"
 #include "core/pack/Pack.h"
+#include "core/profile/LessonCompletion.h"
 #include "core/profile/Profile.h"
 #include "core/srs/Fsrs.h"
 #include "core/srs/ProgressStore.h"
@@ -53,7 +54,7 @@ class App {
   // Allocates the screens and buffers, opens the course and the learner's
   // files and picks the first screen. False when memory ran out; the App can
   // then only be destroyed.
-  bool open();
+  bool open(const uint8_t* courseIdentity = nullptr);
   // Writes everything held in RAM (as going to sleep does) and closes the
   // files. Before lila sleeps or goes elsewhere.
   void close();
@@ -89,6 +90,15 @@ class App {
   platform::Board& board() { return board_; }
   platform::Clock& clock() { return clock_; }
   platform::StateFiles& storage() { return storage_; }
+  struct LearnerPreparation {
+    void* context = nullptr;
+    bool (*run)(void*, App&) = nullptr;
+  };
+  // Set before open; borrowed context outlives startup. Runs with profile and
+  // pack loaded, before progress/marks open, only for durable learner storage.
+  bool setLearnerPreparation(LearnerPreparation preparation);
+  bool setVerifiedLearnerSnapshot(std::span<const uint8_t, 32> digest);
+  bool pendingSessionRequiresRebuild() const { return pendingSessionRebuild_; }
   const ui::Theme& theme() const { return theme_; }
   const ui::KeyMap& keys() const { return keys_; }
   freeink::ui::DisplayTarget& target() { return *target_; }
@@ -99,6 +109,13 @@ class App {
   // current burst of input has been handled.
   core::Profile& profile() { return profile_; }
   void profileChanged();
+  struct ProfileMutationJournal {
+    void* context = nullptr;
+    bool (*persist)(void*, const core::Profile&) = nullptr;
+  };
+  // Bind after recovered startup; context outlives profile saves and close().
+  // Clear before context destruction. Failed authority requires a fresh App.
+  bool setProfileMutationJournal(ProfileMutationJournal journal);
   // True when profile.bin did not exist at boot.
   bool firstRun() const { return firstRun_; }
 
@@ -156,7 +173,10 @@ class App {
   LessonState lessonState(uint16_t lesson) const;
   uint16_t lessonCount() const { return static_cast<uint16_t>(pack_.count(core::pack::Section::Less)); }
   // A lesson's practice ran to the end: the next one is unlocked.
-  void lessonCompleted(uint16_t lesson);
+  bool lessonCompleted(uint16_t lesson);
+  void setLessonMutationJournal(core::LessonCompletion::MutationJournal journal) {
+    lessonCompletion_.setMutationJournal(journal);
+  }
   void unlockAllLessons();
 
   // Navigation. Each change is a counted transition (see setTransitionFullEvery).
@@ -227,7 +247,7 @@ class App {
   void pollPeriodic();
   void saveIfDirty();
   uint8_t loadResumeStack(ScreenId* out, uint8_t cap);
-  void openCourse();
+  bool openCourse();
   void closeCourse();
   core::DayNumber lastJournalDay();
   void resumeSession();
@@ -251,6 +271,9 @@ class App {
   ui::Theme theme_{};
   ui::KeyMap keys_;
   core::Profile profile_{};
+  core::LessonCompletion lessonCompletion_;
+  ProfileMutationJournal profileJournal_{};
+  bool profileAuthorityFailed_ = false;
   bool profileDirty_ = false;
   bool firstRun_ = false;
   core::usage::UsageLog usage_{storage_, clock_, uptimeMs};
@@ -281,10 +304,13 @@ class App {
   uint32_t starredItems_[core::library::MarkLog::kCapacity] = {};
 
   // session.bin: magic, version, the screen stack, the review session, CRC.
-  static constexpr uint32_t kSessionFileCap = 4 + 2 + 1 + kMaxDepth + 2 + SessionController::kBlobCap + 4;
+  static constexpr uint32_t kSessionFileCap = 4 + 2 + 1 + kMaxDepth + 2 + SessionController::kBlobCap + 32 + 4;
   uint8_t sessionFile_[kSessionFileCap] = {};
   // The review session read at boot, inside sessionFile_, until the screens
   // are restored.
+  uint8_t learnerSnapshot_[32]{};
+  bool learnerSnapshotBound_ = false;
+  bool pendingSessionRebuild_ = false;
   uint32_t pendingSessionAt_ = 0;
   uint32_t pendingSessionLength_ = 0;
 
@@ -305,6 +331,7 @@ class App {
   freeink::ui::Rect window_{};  // invalidateWindow()'s, empty when the frame is whole
   bool screenChanged_ = false;
   uint16_t frameCount_ = 0;
+  LearnerPreparation learnerPreparation_;
   bool opened_ = false;
   bool exitRequested_ = false;
   HostRequest hostRequest_ = HostRequest::None;
