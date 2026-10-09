@@ -806,3 +806,8 @@ gtest_discover_tests(CompanionCourseContextTest)
 add_executable(CompanionCoursePackArchiveTest CompanionCoursePackArchiveTest.cpp ../../lib/Companion/CompanionRecords.cpp)
 target_link_libraries(CompanionCoursePackArchiveTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
 gtest_discover_tests(CompanionCoursePackArchiveTest)
+
+add_executable(CompanionCourseBaselineImportTest CompanionCourseBaselineImportTest.cpp ../../lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionCourseBaselineImportTest PRIVATE crosspoint_test_common GTest::gtest_main)
+target_compile_definitions(CompanionCourseBaselineImportTest PRIVATE COURSE_BASELINE_IMPORT_FIXTURE="${REPO_ROOT}/protocol/fixtures/CourseBaselineImportRequest-v1.fixture" COURSE_BASELINE_REVIEW_FIXTURE="${REPO_ROOT}/protocol/fixtures/CourseBaselineReview-v1.fixture")
+gtest_discover_tests(CompanionCourseBaselineImportTest)

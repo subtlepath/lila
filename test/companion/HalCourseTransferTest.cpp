@@ -38,6 +38,8 @@
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
+#include "lib/hal/HalCourseBaselineReviewCapture.h"
+#include "lib/hal/HalCourseBaselineReviewStore.h"
 #include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCoursePackHistory.h"
 #include "lib/hal/HalCoursePackHistoryValidator.h"
@@ -126,6 +128,19 @@ class HalCourseTransferTest : public testing::Test {
     HalCompletedRemovalJournalRelease release(journal, journalStorage, completions, releaseBytes);
     ASSERT_EQ(release.release(), CompletedRemovalResult::Ok);
     ASSERT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
+  }
+  void prepareBaselineReview(std::vector<uint8_t>& encoded, Digest& hash, Identity& reader) {
+    inventory_hal_test::state.files["/tinta/items.bin"] = {17};
+    removeInstalledCourse();
+    ASSERT_FALSE(HasFatalFailure());
+    reader[0] = 51;
+    auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(capture);
+    ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+              CourseBaselineReviewResult::Ok);
+    ASSERT_NE(capture->hash(), nullptr);
+    hash = *capture->hash();
+    encoded.assign(capture->bytes().begin(), capture->bytes().end());
   }
   uint32_t addIdentityHistory() {
     tinta::core::pack::Pack pack;
@@ -4098,6 +4113,154 @@ TEST_F(HalCourseTransferTest, HistoricalCourseHistoryRejectsDuplicateReceiptsAnd
   EXPECT_EQ(hal.files, baseline);
 }
 
+TEST_F(HalCourseTransferTest, NativeCourseReturnFindsLegacyBridgesAcrossArchivesAndRemovalReceipts) {
+  const auto legacyBytes = bytes;
+  const auto legacyDeclaration = declaration;
+  auto& hal = inventory_hal_test::state;
+  auto authorize = [&](HalTransferStorage& target, Transfer& transfer, const ContentManifest& previous) {
+    CourseSwitchRequest consent;
+    consent.generation = generation;
+    consent.transaction = declaration.state.transaction;
+    consent.previousCourse = previous.logicalIdentity;
+    consent.previousHash = previous.contentHash;
+    consent.nextCourse = declaration.manifest.logicalIdentity;
+    consent.nextHash = declaration.manifest.contentHash;
+    std::array<uint8_t, COURSE_SWITCH_REQUEST_SIZE> body{};
+    std::array<uint8_t, COURSE_SWITCH_REPLY_SIZE> reply{};
+    ASSERT_TRUE(encodeCourseSwitchRequest(consent, body));
+    ASSERT_EQ(handleCourseSwitch(target, transfer, generation, declaration.state.owner, body, reply, scratch),
+              reply.size());
+    ASSERT_EQ(reply[0], static_cast<uint8_t>(TransferResult::Ok));
+  };
+  for (bool legacyInArchive : {false, true}) {
+    SCOPED_TRACE(legacyInArchive);
+    hal = {};
+    hal.enumerateFileMap = true;
+    hal.directories["/"] = {};
+    hal.files["/tinta/items.bin"] = {17};
+    declaration = legacyDeclaration;
+    bytes = legacyBytes;
+    HalTransferStorage initial;
+    HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+    if (legacyInArchive) {
+      hal.files["/legacy.pack"] = bytes;
+      ASSERT_EQ(archive.publish(declaration.manifest, "/legacy.pack"), CourseArchiveResult::Ok);
+      ASSERT_TRUE(archive.closeReaders());
+      addIdentityHistory();
+      removeInstalledCourse();
+    } else {
+      removeInstalledCourse();
+      addIdentityHistory();
+      hal.files["/identity.pack"] = bytes;
+      ASSERT_EQ(archive.publish(declaration.manifest, "/identity.pack"), CourseArchiveResult::Ok);
+      ASSERT_TRUE(archive.closeReaders());
+    }
+    const auto identityBytes = bytes;
+    const auto identityDeclaration = declaration;
+    ContentManifest removed;
+    ASSERT_TRUE(decodeCourseBinding(hal.files.at(COURSE_BINDING_PATH), removed));
+    declaration.manifest.logicalIdentity[0] = 8;
+    bytes[12] ^= 2;
+    sealPack();
+    {
+      Transfer transfer(initial, scratch);
+      receive(transfer, false);
+      ASSERT_FALSE(HasFatalFailure());
+      authorize(initial, transfer, removed);
+      ASSERT_FALSE(HasFatalFailure());
+      ASSERT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+    }
+    const auto current = declaration.manifest;
+    const auto currentBytes = bytes;
+    ASSERT_EQ(archive.open(removed.logicalIdentity, removed.contentHash), CourseArchiveResult::Ok);
+    const std::string redundantCache = archive.path(), redundantReference = archive.referencePath();
+    ASSERT_TRUE(archive.closeReaders());
+    hal.files.erase(redundantCache);
+    hal.files.erase(redundantCache + ".owner");
+    hal.files.erase(redundantReference);
+    char oldState[COURSE_STATE_PATH_SIZE], currentState[COURSE_STATE_PATH_SIZE];
+    ASSERT_TRUE(courseStatePath(removed.logicalIdentity, "items.bin", oldState));
+    ASSERT_TRUE(courseStatePath(current.logicalIdentity, "items.bin", currentState));
+    hal.files[currentState] = {31};
+    const auto baseline = hal;
+    for (unsigned fault = 0; fault < 5; ++fault) {
+      SCOPED_TRACE(fault);
+      hal = baseline;
+      declaration = identityDeclaration;
+      bytes = identityBytes;
+      if (fault == 1 || fault == 2) {
+        bytes.back() ^= 1;
+        sealPack();
+        if (fault == 1) {
+          hal.files["/conflicting.pack"] = bytes;
+          ASSERT_EQ(archive.publish(declaration.manifest, "/conflicting.pack"), CourseArchiveResult::Ok);
+          ASSERT_TRUE(archive.closeReaders());
+        } else {
+          hal = {};
+          hal.enumerateFileMap = true;
+          removeInstalledCourse(73);
+          const auto conflicting = hal.files;
+          hal = baseline;
+          for (const auto& [path, data] : conflicting) {
+            if (path.starts_with("/.crosspoint/companion/removal-done-") ||
+                path.starts_with("/.crosspoint/companion/removal-course-plan-") ||
+                path.starts_with("/.crosspoint/companion/course-removed-")) {
+              hal.files.insert({path, data});
+            }
+          }
+        }
+      }
+      std::string retainedCache;
+      if (fault == 3 || fault == 4) {
+        for (const auto& [path, data] : hal.files) {
+          if (path.starts_with("/.crosspoint/companion/course-removed-")) retainedCache = path;
+        }
+        ASSERT_FALSE(retainedCache.empty());
+      }
+      declaration = identityDeclaration;
+      declaration.state.transaction[0] = 5;
+      bytes = identityBytes;
+      static constexpr char TRANSLATION[] = "house";
+      auto text = std::search(bytes.begin(), bytes.end(), TRANSLATION, TRANSLATION + 5);
+      ASSERT_NE(text, bytes.end());
+      text[4] = 'E';
+      sealPack();
+      HalTransferStorage reopened;
+      Transfer transfer(reopened, scratch);
+      receive(transfer, false);
+      ASSERT_FALSE(HasFatalFailure());
+      authorize(reopened, transfer, current);
+      ASSERT_FALSE(HasFatalFailure());
+      if (fault == 3) hal.readErrorPath = retainedCache;
+      if (fault == 4) hal.failClosePath = retainedCache;
+      const auto result = transfer.commit(declaration.state.transaction, declaration.state.owner);
+      ContentManifest installed;
+      ASSERT_TRUE(decodeCourseBinding(hal.files.at(COURSE_BINDING_PATH), installed));
+      if (fault) {
+        EXPECT_NE(result, TransferResult::Ok);
+        EXPECT_EQ(installed, current);
+        EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), currentBytes);
+      } else {
+        EXPECT_EQ(result, TransferResult::Ok);
+        EXPECT_EQ(installed, declaration.manifest);
+        EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+      }
+      EXPECT_EQ(hal.files.at(oldState), std::vector<uint8_t>({17}));
+      EXPECT_EQ(hal.files.at(currentState), std::vector<uint8_t>({31}));
+      if (fault == 3 || fault == 4) {
+        ASSERT_NE(transfer.current(), nullptr);
+        EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+        hal.readErrorPath.clear();
+        hal.failClosePath.clear();
+        EXPECT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+        EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+        EXPECT_EQ(hal.files.at(oldState), std::vector<uint8_t>({17}));
+        EXPECT_EQ(hal.files.at(currentState), std::vector<uint8_t>({31}));
+      }
+    }
+  }
+}
+
 TEST_F(HalCourseTransferTest, RemovedCourseUpdateRequiresHistoricalReaderHeapAdmissionAndRetries) {
   addIdentityHistory();
   auto& hal = inventory_hal_test::state;
@@ -4229,4 +4392,381 @@ TEST_F(HalCourseTransferTest, HistoricalReceiptValidationRejectsRetiredIdentityA
               HistoricalCourseHistoryResult::Incompatible);
     EXPECT_EQ(hal.files, before);
   }
+}
+
+TEST_F(HalCourseTransferTest, BaselineReviewCapturesFullIsolatedStateAndGlobalAuthorityWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  hal.files["/tinta/starred.bin"] = {23};
+  removeInstalledCourse();
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  char state[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "custom.bin", state));
+  hal.files[state] = {31};
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  const auto before = hal.files;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  ASSERT_NE(review->hash(), nullptr);
+  const auto legacyHash = *review->hash();
+  const auto encoded = std::vector<uint8_t>(review->bytes().begin(), review->bytes().end());
+  CourseBaselineReviewView view;
+  ASSERT_TRUE(view.decode(encoded));
+  EXPECT_EQ(view.count(), 10u);
+  Digest actual{};
+  SHA256(encoded.data(), encoded.size(), actual.data());
+  EXPECT_EQ(actual, legacyHash);
+  EXPECT_EQ(hal.files, before);
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_EQ(*review->hash(), legacyHash);
+  EXPECT_EQ(std::vector<uint8_t>(review->bytes().begin(), review->bytes().end()), encoded);
+  const auto ordinary = hal;
+  for (auto& [directory, entries] : hal.directories) {
+    entries.clear();
+    entries.reserve(hal.files.size() + hal.directories.size());
+    const auto prefix = directory == "/" ? directory : directory + "/";
+    for (const auto& [path, data] : hal.files) {
+      if (path.starts_with(prefix) && path.find('/', prefix.size()) == std::string::npos)
+        entries.push_back({path.substr(prefix.size()), false});
+    }
+    for (const auto& [path, children] : hal.directories) {
+      if (path != directory && path.starts_with(prefix) && path.find('/', prefix.size()) == std::string::npos)
+        entries.push_back({path.substr(prefix.size()), true});
+    }
+    std::reverse(entries.begin(), entries.end());
+  }
+  hal.enumerateFileMap = false;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_EQ(*review->hash(), legacyHash);
+  hal = ordinary;
+  auto upper = std::string(state);
+  std::transform(upper.end() - 10, upper.end(), upper.end() - 10,
+                 [](unsigned char value) { return value >= 'a' && value <= 'z' ? value - ('a' - 'A') : value; });
+  hal.files[upper] = hal.files.at(state);
+  hal.files.erase(state);
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_EQ(*review->hash(), legacyHash);
+  hal = ordinary;
+  hal.files[state][0] ^= 1;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_NE(*review->hash(), legacyHash);
+  hal.files[state][0] ^= 1;
+  hal.directories[TINTA_JOURNAL_DIRECTORY] = {};
+  hal.files[TINTA_JOURNAL_EVENTS] = {1, 2};
+  hal.files[TINTA_JOURNAL_HEADER_A] = {3};
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  const auto authoritativeHash = *review->hash();
+  EXPECT_NE(authoritativeHash, legacyHash);
+  hal.files[TINTA_JOURNAL_EVENTS][0] ^= 1;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_NE(*review->hash(), authoritativeHash);
+  const auto saved = hal.files;
+  const auto priorReaderHash = *review->hash();
+  nativeReader[0] ^= 1;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_EQ(hal.files, saved);
+  EXPECT_NE(*review->hash(), priorReaderHash);
+}
+
+TEST_F(HalCourseTransferTest, BaselineReviewRejectsStagesAmbiguousNamesAndReaderFailuresWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  removeInstalledCourse();
+  const auto baseline = hal;
+  char state[COURSE_STATE_PATH_SIZE], stage[COURSE_STATE_PATH_SIZE], directory[COURSE_STATE_DIRECTORY_SIZE];
+  ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "items.bin", state));
+  ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "items.bin.tmp", stage));
+  ASSERT_TRUE(courseStateDirectory(declaration.manifest.logicalIdentity, directory));
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    if (fault == 0) hal.files[stage] = {1};
+    if (fault == 1) {
+      auto duplicate = std::string(state);
+      duplicate[duplicate.size() - 9] = 'I';
+      hal.files[duplicate] = {1};
+    }
+    if (fault == 2) hal.directoryErrorPath = directory;
+    if (fault == 3) hal.readErrorPath = state;
+    if (fault == 4) hal.failClosePath = state;
+    if (fault == 5) hal.failSyncPath = state;
+    if (fault == 6) hal.files[COURSE_STATE_MIGRATION_DONE][0] ^= 1;
+    const auto before = hal.files;
+    const auto result = review->capture(nativeReader, generation, declaration.manifest.logicalIdentity);
+    EXPECT_NE(result, CourseBaselineReviewResult::Ok);
+    EXPECT_EQ(review->hash(), nullptr);
+    EXPECT_TRUE(review->bytes().empty());
+    EXPECT_EQ(hal.files, before);
+  }
+  hal = baseline;
+  EXPECT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+}
+
+TEST_F(HalCourseTransferTest, BaselineReviewRefusesIncompleteJournalAndLatchesLoanPermissionLoss) {
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  removeInstalledCourse();
+  hal.directories[TINTA_JOURNAL_DIRECTORY] = {};
+  hal.files[TINTA_JOURNAL_EVENTS] = {1};
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  bool permitted = true;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(
+      scratch, [](void* context) { return *static_cast<bool*>(context); }, &permitted);
+  ASSERT_TRUE(review);
+  const auto before = hal.files;
+  EXPECT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Corrupt);
+  EXPECT_EQ(hal.files, before);
+  hal.files[TINTA_JOURNAL_HEADER_B] = {2};
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  ASSERT_NE(review->hash(), nullptr);
+  permitted = false;
+  EXPECT_EQ(review->hash(), nullptr);
+  EXPECT_TRUE(review->bytes().empty());
+  permitted = true;
+  EXPECT_EQ(review->hash(), nullptr);
+  EXPECT_TRUE(review->bytes().empty());
+  EXPECT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_TRUE(review->closeReaders());
+  EXPECT_EQ(review->hash(), nullptr);
+}
+
+TEST_F(HalCourseTransferTest, BaselineReviewRejectsOversizedCohortsWithoutTruncatingEvidence) {
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  removeInstalledCourse();
+  char path[COURSE_STATE_PATH_SIZE], name[24];
+  for (unsigned at = 0; at < 57; ++at) {
+    snprintf(name, sizeof(name), "state%02u.bin", at);
+    ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, name, path));
+    hal.files[path] = {static_cast<uint8_t>(at)};
+  }
+  const auto before = hal.files;
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  EXPECT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::TooManyFiles);
+  EXPECT_TRUE(review->bytes().empty());
+  EXPECT_EQ(review->hash(), nullptr);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, SealedBaselineReviewRoundTripsAndRepeatedPublicationDoesNotWrite) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  const auto before = hal.files;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  ASSERT_NE(store->path(), nullptr);
+  const std::string path = store->path();
+  EXPECT_EQ(hal.files.at(path), encoded);
+  EXPECT_EQ(hal.files.size(), before.size() + 1);
+  for (const auto& [name, bytes] : before) EXPECT_EQ(hal.files.at(name), bytes);
+  const auto saved = hal.files;
+  const auto renames = hal.renames;
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  EXPECT_EQ(hal.files, saved);
+  EXPECT_EQ(hal.renames, renames);
+  ASSERT_EQ(store->open(hash, reader, generation, declaration.manifest.logicalIdentity,
+                        std::span(scratch).first(COURSE_BASELINE_REVIEW_MAX_SIZE)),
+            CourseBaselineReviewStoreResult::Ok);
+  EXPECT_EQ(hal.files.at(store->path()), encoded);
+  EXPECT_TRUE(std::equal(encoded.begin(), encoded.end(), scratch.begin()));
+}
+
+TEST_F(HalCourseTransferTest, SealedBaselineReviewRecoversBothRenameBoundariesAndMatchingPrefixes) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  const auto baseline = hal;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  const std::string path = store->path();
+  for (bool after : {false, true}) {
+    hal = baseline;
+    if (after)
+      hal.failRenameAfter = hal.renames + 1;
+    else
+      hal.failRename = hal.renames + 1;
+    EXPECT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::IoError);
+    hal.failRename = hal.failRenameAfter = 0;
+    EXPECT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(hal.files.at(path), encoded);
+  }
+  for (size_t length : {size_t{0}, size_t{1}, encoded.size() / 2, encoded.size()}) {
+    SCOPED_TRACE(length);
+    hal = baseline;
+    hal.files[path + ".tmp"] = {encoded.begin(), encoded.begin() + length};
+    ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(hal.files.at(path), encoded);
+    EXPECT_FALSE(hal.files.contains(path + ".tmp"));
+    for (const auto& [name, data] : baseline.files) EXPECT_EQ(hal.files.at(name), data);
+  }
+}
+
+TEST_F(HalCourseTransferTest, SealedBaselineReviewPreservesForeignCorruptAndDuplicateFiles) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  const auto baseline = hal;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  const std::string path = store->path();
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    if (fault == 0) {
+      hal.files[path] = encoded;
+      hal.files[path].back() ^= 1;
+    }
+    if (fault == 1) {
+      hal.files[path + ".tmp"] = {encoded.begin(), encoded.begin() + 16};
+      hal.files[path + ".tmp"][0] ^= 1;
+    }
+    if (fault == 2) {
+      hal.files[path + ".tmp"] = encoded;
+      hal.files[path + ".tmp"].push_back(0);
+    }
+    if (fault == 3) {
+      hal.files[path] = encoded;
+      hal.files[path + ".tmp"] = encoded;
+    }
+    if (fault == 4) {
+      hal.files[path] = encoded;
+      auto duplicate = path;
+      duplicate[std::string(TRANSFER_DIRECTORY).size() + 1] = 'C';
+      hal.files[duplicate] = encoded;
+    }
+    const auto before = hal.files;
+    EXPECT_NE(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(store->path(), nullptr);
+    EXPECT_EQ(hal.files, before);
+  }
+}
+
+TEST_F(HalCourseTransferTest, SealedBaselineReviewRejectsForeignContextAndCorruptLoads) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  const std::string path = store->path();
+  const auto baseline = hal;
+  for (unsigned fault = 0; fault < 10; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    auto expectedReader = reader, expectedGeneration = generation,
+         expectedCourse = declaration.manifest.logicalIdentity;
+    if (fault == 0) expectedReader[0] ^= 1;
+    if (fault == 1) expectedGeneration[0] ^= 1;
+    if (fault == 2) expectedCourse[0] ^= 1;
+    if (fault == 3) hal.files[path].back() ^= 1;
+    if (fault == 4) hal.files[path + ".tmp"] = {1};
+    if (fault == 5) hal.readErrorPath = path;
+    if (fault == 6) hal.failSyncPath = path;
+    if (fault == 7) hal.failClosePath = path;
+    if (fault == 8) hal.statErrorPath = path;
+    if (fault == 9) hal.files.erase(path);
+    const auto before = hal.files;
+    EXPECT_NE(store->open(hash, expectedReader, expectedGeneration, expectedCourse,
+                          std::span(scratch).first(COURSE_BASELINE_REVIEW_MAX_SIZE)),
+              CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(store->path(), nullptr);
+    EXPECT_EQ(hal.files, before);
+  }
+  hal = baseline;
+  struct AliasedContext {
+    std::array<uint8_t, 8> prefix{};
+    Identity reader{}, generation{}, course{};
+    std::array<uint8_t, COURSE_BASELINE_REVIEW_MAX_SIZE - 56> rest{};
+  } aliased;
+  static_assert(sizeof(aliased) == COURSE_BASELINE_REVIEW_MAX_SIZE);
+  aliased.reader = reader;
+  aliased.reader[0] ^= 1;
+  EXPECT_EQ(store->open(hash, aliased.reader, generation, declaration.manifest.logicalIdentity,
+                        {reinterpret_cast<uint8_t*>(&aliased), sizeof(aliased)}),
+            CourseBaselineReviewStoreResult::Corrupt);
+}
+
+TEST_F(HalCourseTransferTest, SealedBaselineReviewPublicationRetriesIoFailuresAndRevokesLoans) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  bool permitted = true;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE),
+      [](void* context) { return *static_cast<bool*>(context); }, &permitted);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  const std::string path = store->path();
+  hal.files.erase(path);
+  const auto baseline = hal;
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    hal = baseline;
+    if (fault == 0) {
+      hal.failWritePath = path + ".tmp";
+      hal.failMatchingWrite = 1;
+      hal.matchingWrites = 0;
+    }
+    if (fault == 1) hal.failSyncPath = path + ".tmp";
+    if (fault == 2) hal.failClosePath = path + ".tmp";
+    EXPECT_NE(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(store->path(), nullptr);
+    hal.failWritePath.clear();
+    hal.failSyncPath.clear();
+    hal.failClosePath.clear();
+    ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    EXPECT_EQ(hal.files.at(path), encoded);
+    for (const auto& [name, data] : baseline.files) EXPECT_EQ(hal.files.at(name), data);
+  }
+  permitted = false;
+  EXPECT_EQ(store->path(), nullptr);
+  permitted = true;
+  EXPECT_EQ(store->path(), nullptr);
+  EXPECT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  EXPECT_TRUE(store->closeReaders());
+  EXPECT_EQ(store->path(), nullptr);
 }

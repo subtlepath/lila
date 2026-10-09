@@ -10,6 +10,8 @@
 #endif
 
 namespace companion {
+class HalHistoricalCourseHistory;
+class HalCoursePackHistory;
 struct CourseSwitchRequest;
 
 class HalTransferStorage final : public TransferStorage {
@@ -59,7 +61,8 @@ class HalTransferStorage final : public TransferStorage {
   bool validateArchivedCourse(const ContentManifest& manifest, const char* candidate, const Identity& generation,
                               std::span<uint8_t> workspace);
   bool validateHistoricalCourse(const ContentManifest& manifest, const char* candidate, const Identity& generation,
-                                std::span<uint8_t> workspace, bool required);
+                                HalHistoricalCourseHistory& history, HalCoursePackHistory& archives,
+                                std::span<uint8_t> workspace);
   bool archiveInstalledCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace);
   bool validateCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace,
                       char* locale = nullptr);
