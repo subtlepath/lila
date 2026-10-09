@@ -62,6 +62,9 @@ class TransferStorage {
     return verify(stage == FileStatus::Present ? TRANSFER_STAGE : destination, manifest.length, manifest.contentHash,
                   scratch);
   }
+  virtual bool verifyCourseSwitchSource(const ContentManifest& previous, const Identity&, std::span<uint8_t> scratch) {
+    return verify("/tinta/course.pack", previous.length, previous.contentHash, scratch);
+  }
   virtual bool verify(const char* path, uint64_t length, const Digest& hash, std::span<uint8_t> workspace) = 0;
 };
 

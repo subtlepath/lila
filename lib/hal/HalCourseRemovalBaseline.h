@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompanionCourseRemovalProof.h"
+#include "CompanionCourseSwitchRequest.h"
 #include "HalInventoryFileHash.h"
 #include "HalInventoryPathLookup.h"
 #include "HalRemovalCohortAddress.h"
@@ -60,6 +61,19 @@ class HalCourseRemovalBaseline final {
     if (!validCourseBinding(replacement) || replacement.formatVersion != 1 ||
         replacement.logicalIdentity != proof.request.manifest.logicalIdentity)
       return fail("replacement identity");
+    return verifyCompletedContent(proof, completed, proof.request.manifest, generation, &replacement);
+  }
+
+  bool verifySwitched(const ContentRemovalRecord& proof, const ContentRemovalRecord& completed,
+                      const ContentManifest& replacement, const Identity& generation,
+                      const CourseSwitchRequest& consent) {
+    verified = false;
+    if (!validCourseSwitchRequest(consent) || consent.generation != generation ||
+        consent.previousCourse != proof.request.manifest.logicalIdentity ||
+        consent.previousHash != proof.request.manifest.contentHash ||
+        consent.nextCourse != replacement.logicalIdentity || consent.nextHash != replacement.contentHash ||
+        !validCourseBinding(replacement) || replacement.formatVersion != 1)
+      return fail("switch consent");
     return verifyCompletedContent(proof, completed, proof.request.manifest, generation, &replacement);
   }
 

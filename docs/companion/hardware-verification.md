@@ -398,3 +398,27 @@ been recorded.
       firmware receives no font-removal request.
 - [ ] Record free/largest internal heap, stack watermarks and repeated-session
       memory during font removal, including refused low/fragmented-heap admission.
+
+### Removed-course switch acceptance (pending capability enablement)
+
+These steps remain pending on both C3 and S3, with the iPhone and native Mac app.
+Run them after the course-context/removal capabilities are enabled for acceptance.
+
+- [ ] Preserve a learning backup, then remove the bound course. Installed content
+      omits the pack; authenticated context reports the original identity/hash as
+      removed, and scoped learner files remain byte-identical.
+- [ ] Queue a different course only after explicit switch confirmation. Refresh
+      or replace the card before confirming; the old review must not queue a
+      retargeted switch.
+- [ ] Abort a confirmed switch, disconnect and reboot. The original removed
+      context, cached pack, receipt and learner files remain available.
+- [ ] Switch to a compatible-format pack in another language. Confirm that it
+      selects separate learner state and preserves the old scope/cache/receipt.
+- [ ] Interrupt binding publication, old-proof retirement and consent retirement
+      separately. Reconnect/reboot and retry; confirm a single replacement
+      binding and preserved learner files, without duplicate learning events.
+- [ ] Corrupt a retained cache/proof or substitute a foreign generation. Consent
+      and commit must refuse without deleting or rewriting the evidence.
+- [ ] Repeat remove, reinstall and switch sessions while monitoring free/largest
+      heap and task stack watermarks through debug logs. Require over 50 KiB free
+      heap, adequate stack margin and no accumulating loss across sessions.

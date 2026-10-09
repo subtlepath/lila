@@ -10,8 +10,8 @@ retry pass the native SdFat checker. Native Apple and physical acceptance remain
 unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
 native activity owner and authenticated routing are connected, including Tinta
-state preparation and same-course reinstall. Switching from a removed course and
-native switch authorization remain incomplete, so course removal is not advertised. Dictionary removal
+state preparation, same-course reinstall and removed-source switch authorization.
+Complete course-flow verification remains pending, so course removal is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
 Font cohort routing and recovery pass the native host checker and all five
@@ -1231,3 +1231,37 @@ The Apple inventory/confirmation checkpoint passes all 515 Swift package tests
 and parses the app source. Firmware remains the validated query checkpoint;
 this change adds no embedded allocation or compiled firmware source. Native
 Apple typechecking/UI execution and physical-reader verification remain pending.
+
+Native switch consent and precommit preparation now verify either the live
+course or the completed removed-course baseline. Removed-source validation
+rechecks binding, generation, sealed plan, receipt, cached SHA and old state
+isolation; it does not attempt legacy migration from a missing pack. Aborts
+retain that baseline and learner files. Committed different-course switches
+reload exact durable consent and retire only the matching old removed proof,
+before deleting consent. The old cached pack, sealed plan, receipt and learner
+files remain preserved. The replacement bytes and both state directories are
+verified, and applied proof/consent deletion failures recover idempotently.
+
+The C3 local-frame checks pass for the actual activity with Tinta on/off and the
+storage translation unit with Tinta on/off. Individual stack usage is 144 bytes
+for source inspection, 208 for state preparation, 224 for metadata finalization
+and 128 for proof retirement. These compiler figures do not establish runtime
+stack watermarks or heap headroom. The installed-SdFat checks pass with the new
+switched-baseline checks. All 1,775 host tests and the default firmware build
+pass; native Apple builds, physical acceptance and completion of the full companion plan
+remain unverified.
+
+Before enabling course removal/context, verify continuity when switching back to
+an already-used destination course with different pack bytes. The current switch
+preparation verifies its source and creates/selects the destination state
+folder (`HalTransferStorage.cpp`, `prepareCourseSwitch`); the stored item-history
+comparison is in the ordinary same-course update path. Source authorization and
+state isolation tests do not establish destination-course UID/language
+continuity. This requirement remains open alongside final target builds and
+physical acceptance.
+
+The removed-source switch firmware is 6493024 bytes (SHA-256
+`60f86503bf394d1d9a116b649ebc520e3be6477eaf6d460db000ca2859d649a6`). Its x4/chip-5
+tag, segments, checksum, SHA trailer and OTA partition fit pass the release
+validator. This is a default-target checkpoint, not final validation of all
+firmware targets or runtime resource headroom.

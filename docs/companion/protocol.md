@@ -910,8 +910,8 @@ The reader must independently verify the later consent and source before commit.
 
 Shared C++/Swift fixtures define the body format. The Swift helper validates
 command, response flag and request ID, and the encrypted handoff helper binds the
-request to its transaction and card generation. Automatic Apple discovery/use
-and removed-source switch authorization remain unconnected; no capability is
+request to its transaction and card generation. Apple discovery/use is capability
+gated and native removed-source authorization is connected; no capability is
 advertised for this query yet.
 
 Course-context discovery reserves capability bit 15 (`0x00008000`), alongside
@@ -928,5 +928,32 @@ or a removal candidate. Apple course admission compares against its bound
 manifest; a different identity requires the same immutable explicit switch
 confirmation used for live courses. Confirmation review includes the context,
 and a changed hash cannot retarget a retained job. The native reader does not
-yet advertise bit 15; removed-source switch authorization and proof retirement
-across a different course remain required before enabling the complete flow.
+yet advertise bit 15; complete course-flow verification remains required before
+enabling discovery and course removal.
+
+Removed-course switch source authorization uses the same read-only provider as
+command 19. It checks the exact retained binding against consent, the storage
+generation, completed removal receipt, sealed plan, cached pack SHA and learner
+state isolation. Both initial consent and precommit validation perform these
+checks independently; command-19 context alone never authorizes publication.
+The portable storage default verifies only the live pack; the native HAL adds
+removed-source verification while state writers remain excluded.
+
+Aborting a switch verifies the old source before retiring consent and retains
+its binding, removed proof, cache, receipt and learner files. Committing a switch
+publishes the replacement binding recoverably, then retires the old removed
+proof before retiring switch consent. Proof retirement reloads the exact durable
+consent and matches both old identity/hash and the committed replacement's
+identity/hash, generation and transaction. It verifies the replacement bytes,
+completed old receipt/plan/cache and both course state directories. Recovery
+accepts a checked deletion that applied before reporting failure; neither cached
+packs nor learner files are deleted during this retirement. Same-course proof
+retirement remains separate and cannot authorize a different identity.
+
+Real-pack HAL tests cover removed-source consent, foreign generation/hash,
+abort preservation, every publication rename boundary, metadata/journal sync
+failures and before/after proof deletion. Applied consent deletion failure also
+retries without touching preserved content. The installed-SdFat suite checks
+explicit switched baseline verification and rejects a mismatched previous hash.
+Course-context/removal capabilities remain unadvertised while the complete
+course flow and hardware acceptance are being checked.

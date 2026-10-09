@@ -50,6 +50,9 @@ bool HalTransferStorage::verifyDictionaryArchive(const char*, const ContentManif
                                                  std::span<uint8_t>) {
   return false;
 }
+bool HalTransferStorage::verifyCourseSwitchSource(const ContentManifest&, const Identity&, std::span<uint8_t>) {
+  return false;
+}
 bool HalTransferStorage::verify(const char*, uint64_t, const Digest&, std::span<uint8_t>) { return false; }
 }  // namespace companion
 namespace {

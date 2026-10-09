@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompanionCourseContext.h"
+#include "CompanionCourseSwitchIntent.h"
 #include "CompanionTransferDeclaration.h"
 #include "HalCompletedContentRemovals.h"
 #include "HalContentRemovalJournalStorage.h"
@@ -100,13 +101,22 @@ class HalRemovedCourseBaseline final {
     source = selected;
     return CourseContextResult::Ok;
   }
-  bool retireInstalled(const ContentManifest& installed, const TransferState& state) {
+  bool retireInstalled(const ContentManifest& installed, const TransferState& state,
+                       const CourseSwitchRequest* switchConsent = nullptr) {
     ready = false;
     if (!closeReaders() || !guard() || generation == Identity{} || state.storageGeneration != generation ||
         !validCourseBinding(installed) || installed.formatVersion != 1 || !matchesTransferManifest(installed, state) ||
         state.owner == Identity{} || state.transaction == Identity{} || state.phase != TransferPhase::Committed ||
         state.durableOffset != state.length || io.size() < COURSE_BINDING_SIZE)
       return fail("retirement admission");
+    if (switchConsent) {
+      CourseSwitchIntent intent(metadata, io);
+      uint64_t size = 0;
+      if (!matchesCourseSwitchTransfer(*switchConsent, installed, state) ||
+          intent.load(consent) != CourseSwitchIntentResult::Ok || consent != *switchConsent || !guard() ||
+          metadata.stat(COURSE_SWITCH_INTENT_STAGE, size) != FileStatus::Missing || !guard())
+        return fail("retirement consent");
+    }
     bool present = false;
     if (readCourseBinding(metadata, COURSE_BINDING_PATH, io, binding, present) != CourseBindingResult::Ok || !present ||
         binding != installed || !guard())
@@ -121,11 +131,16 @@ class HalRemovedCourseBaseline final {
     if (!guard()) return fail("retirement permission");
     if (result == CourseRemovalProofStorageResult::Missing) return closeReaders() && guard();
     if (result != CourseRemovalProofStorageResult::Ok ||
-        proof.request.manifest.logicalIdentity != installed.logicalIdentity ||
+        (switchConsent ? proof.request.manifest.logicalIdentity != switchConsent->previousCourse ||
+                             proof.request.manifest.contentHash != switchConsent->previousHash
+                       : proof.request.manifest.logicalIdentity != installed.logicalIdentity) ||
         completions.load(proof.request, completed) != CompletedRemovalResult::Ok || !guard() ||
         plans.load(proof.planHash, planBytes, plan) != CourseRemovalPlanStorageResult::Ok ||
-        plan.request != proof.request || !guard() || !isolation.verify(installed.logicalIdentity) || !guard() ||
-        !baseline.verifyReinstalled(proof, completed, installed, generation) || !guard() || !closeReaders() || !guard())
+        plan.request != proof.request || !guard() || !isolation.verify(proof.request.manifest.logicalIdentity) ||
+        !guard() || (switchConsent && (!isolation.verify(installed.logicalIdentity) || !guard())) ||
+        !(switchConsent ? baseline.verifySwitched(proof, completed, installed, generation, *switchConsent)
+                        : baseline.verifyReinstalled(proof, completed, installed, generation)) ||
+        !guard() || !closeReaders() || !guard())
       return fail("retirement evidence");
     // The serialized owner excludes proof writers until checked deletion completes.
     if (!Storage.remove(COURSE_REMOVAL_PROOF_PATH) || !guard() ||
@@ -177,6 +192,7 @@ class HalRemovedCourseBaseline final {
   ContentManifest binding;
   ContentRemovalRecord proof, completed;
   CourseRemovalPlan plan;
+  CourseSwitchRequest consent;
   mutable bool ready = false;
   bool verifyInstalled(const ContentManifest& installed) {
     uint64_t size = 0, length = 0;

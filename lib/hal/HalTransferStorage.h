@@ -36,6 +36,8 @@ class HalTransferStorage final : public TransferStorage {
                               std::span<uint8_t> workspace) override;
   bool finalizeContentMetadata(const char* destination, const ContentManifest& manifest, const TransferState& state,
                                std::span<uint8_t> workspace) override;
+  bool verifyCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
+                                std::span<uint8_t> workspace) override;
   bool verify(const char* path, uint64_t length, const Digest& hash, std::span<uint8_t> workspace) override;
   bool verifyDictionaryArchive(const char* destination, const ContentManifest& manifest, const TransferState& state,
                                std::span<uint8_t> workspace) override;
@@ -46,6 +48,8 @@ class HalTransferStorage final : public TransferStorage {
   bool (*firmwareValidator)(const char*) = nullptr;
   HalDictionaryTransferInstaller* dictionaryInstaller = nullptr;
 #if LILA_TINTA
+  bool inspectCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
+                                 std::span<uint8_t> workspace, bool& removed);
   bool verifyTerminalCourseSwitch(const CourseSwitchRequest& request, const ContentManifest& manifest,
                                   TransferPhase phase, std::span<uint8_t> workspace);
   bool prepareCourseSwitch(const CourseSwitchRequest& request, const ContentManifest& manifest,

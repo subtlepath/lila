@@ -13,7 +13,7 @@ inline bool authorize(TransferStorage& storage, const CourseSwitchRequest& reque
          present && current.logicalIdentity == request.previousCourse && current.contentHash == request.previousHash &&
          storage.stat(COURSE_BINDING_STAGE, size) == FileStatus::Missing &&
          storage.stat(COURSE_BINDING_BACKUP, size) == FileStatus::Missing &&
-         storage.verify(ACTIVE_COURSE_PATH, current.length, current.contentHash, scratch);
+         storage.verifyCourseSwitchSource(current, request.generation, scratch);
 }
 }  // namespace course_switch_detail
 // Caller authenticates the connection and excludes all other state writers.

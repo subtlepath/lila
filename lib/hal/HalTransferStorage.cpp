@@ -146,7 +146,33 @@ bool HalTransferStorage::rename(const char* from, const char* to) {
 }
 bool HalTransferStorage::remove(const char* path) { return Storage.remove(path) || failure("remove", path); }
 
+bool HalTransferStorage::verifyCourseSwitchSource([[maybe_unused]] const ContentManifest& previous,
+                                                  [[maybe_unused]] const Identity& generation,
+                                                  [[maybe_unused]] std::span<uint8_t> workspace) {
 #if LILA_TINTA
+  bool removed = false;
+  return inspectCourseSwitchSource(previous, generation, workspace, removed);
+#else
+  return false;
+#endif
+}
+
+#if LILA_TINTA
+bool HalTransferStorage::inspectCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
+                                                   std::span<uint8_t> workspace, bool& removed) {
+  // Fixed proof banks and HAL handles exceed the task-local stack budget.
+  if (!admitCompanionHeap(sizeof(HalRemovedCourseBaseline), sizeof(HalRemovedCourseBaseline)))
+    return failure("course switch source heap admission", ACTIVE_COURSE_PATH);
+  auto source = makeUniqueNoThrow<HalRemovedCourseBaseline>(
+      generation, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!source) return failure("OOM: course switch source", ACTIVE_COURSE_PATH);
+  ContentManifest found;
+  CourseContextSource selected = CourseContextSource::None;
+  if (source->inspectCurrentCourse(found, selected) != CourseContextResult::Ok || found != previous)
+    return failure("course switch source verification", ACTIVE_COURSE_PATH);
+  removed = selected == CourseContextSource::Removed;
+  return true;
+}
 bool HalTransferStorage::verifyTerminalCourseSwitch(const CourseSwitchRequest& request, const ContentManifest& manifest,
                                                     TransferPhase phase, std::span<uint8_t> workspace) {
   ContentManifest binding;
@@ -160,18 +186,19 @@ bool HalTransferStorage::verifyTerminalCourseSwitch(const CourseSwitchRequest& r
           ? binding != manifest
           : binding.logicalIdentity != request.previousCourse || binding.contentHash != request.previousHash)
     return false;
-  return verify(ACTIVE_COURSE_PATH, binding.length, binding.contentHash, workspace);
+  return phase == TransferPhase::Committed ? verify(ACTIVE_COURSE_PATH, binding.length, binding.contentHash, workspace)
+                                           : verifyCourseSwitchSource(binding, request.generation, workspace);
 }
 bool HalTransferStorage::prepareCourseSwitch(const CourseSwitchRequest& request, const ContentManifest& manifest,
                                              std::span<uint8_t> workspace) {
   ContentManifest previous;
   Identity selected{};
-  bool present = false, stateBound = false;
+  bool present = false, stateBound = false, removed = false;
   if (readCourseBinding(*this, COURSE_BINDING_PATH, workspace, previous, present) != CourseBindingResult::Ok ||
       !present || previous.logicalIdentity != request.previousCourse || previous.contentHash != request.previousHash ||
-      !verify(ACTIVE_COURSE_PATH, previous.length, previous.contentHash, workspace) ||
-      !selectActiveCourseState(*this, workspace, selected, stateBound) || !stateBound ||
-      selected != previous.logicalIdentity) {
+      !inspectCourseSwitchSource(previous, request.generation, workspace, removed) ||
+      (!removed && (!selectActiveCourseState(*this, workspace, selected, stateBound) || !stateBound ||
+                    selected != previous.logicalIdentity))) {
     LOG_ERR("COMPANION", "Course switch previous state unavailable");
     return false;
   }
@@ -243,6 +270,14 @@ bool HalTransferStorage::finalizeContentMetadata([[maybe_unused]] const char* de
         !verifyTerminalCourseSwitch(request, manifest, state.phase, workspace)) {
       LOG_ERR("COMPANION", "Cannot retire course switch consent");
       return false;
+    }
+    if (state.phase == TransferPhase::Committed) {
+      if (!admitCompanionHeap(sizeof(HalRemovedCourseBaseline), sizeof(HalRemovedCourseBaseline)))
+        return failure("switched course retirement heap admission", destination);
+      auto retirement = makeUniqueNoThrow<HalRemovedCourseBaseline>(
+          state.storageGeneration, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+      if (!retirement) return failure("OOM: switched course retirement", destination);
+      if (!retirement->retireInstalled(manifest, state, &request)) return false;
     }
     return remove(COURSE_SWITCH_INTENT_PATH);
   }
