@@ -135,7 +135,9 @@ TEST(CompletedContentRemovals, InterruptedReleaseUsesReceiptToReleaseSurvivingOl
     ContentRemovalJournal recovered(storage, journalScratch);
     const auto discovered = recovered.recover(record.request.generation);
     if (discovered == ContentRemovalJournalResult::Ok) {
-      if (fault == 2) EXPECT_EQ(recovered.current()->phase, ContentRemovalPhase::Committed);
+      if (fault == 2) {
+        EXPECT_EQ(recovered.current()->phase, ContentRemovalPhase::Committed);
+      }
       HalCompletedRemovalJournalRelease retry(recovered, storage, completions, releaseScratch);
       EXPECT_EQ(retry.release(), CompletedRemovalResult::Ok);
     } else {

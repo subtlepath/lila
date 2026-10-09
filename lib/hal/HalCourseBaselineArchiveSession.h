@@ -57,7 +57,8 @@ class HalCourseBaselineArchiveSession final {
     bool verified = (!recovering || intent()) && evidence() && noReceipts();
     if (verified) {
       const auto result =
-          archive.open(selected.request.manifest.logicalIdentity, selected.request.manifest.contentHash);
+          recovering ? archive.inspectPrepared(selected.request.manifest)
+                     : archive.open(selected.request.manifest.logicalIdentity, selected.request.manifest.contentHash);
       if (result == CourseArchiveResult::Missing) {
         verified = backups.verifyCurrent(selected.request.reviewHash, reader, generation,
                                          selected.request.manifest.logicalIdentity);

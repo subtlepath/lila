@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "CompanionCourseBaselineTransfer.h"
 #include "CompanionCourseBinding.h"
 #include "CompanionCourseSwitchPublication.h"
 #include "CompanionDictionaryInstallationPlan.h"
@@ -374,6 +375,10 @@ bool HalTransferStorage::validateContent(const char* destination, const char* ca
             dictionaryInstaller->prepare(destination, candidate, manifest, state, workspace)) ||
            failure("dictionary preparation", destination ? destination : "");
 #if LILA_TINTA
+  if (manifest.kind == ContentKind::Course && std::strcmp(destination, COURSE_BASELINE_DESTINATION) == 0)
+    return (baselineInstaller && baselineInstaller->prepare(destination, candidate, manifest, state, workspace)) ||
+           failure("baseline preparation", destination);
+
   if (manifest.kind == ContentKind::Course && std::strcmp(destination, ACTIVE_COURSE_PATH) == 0) {
     CourseSwitchIntent intent(*this, workspace);
     CourseSwitchRequest request;
@@ -410,6 +415,10 @@ bool HalTransferStorage::installContentMetadata(const char* destination, const C
            failure("dictionary metadata", destination ? destination : "");
   }
 #if LILA_TINTA
+  if (manifest.kind == ContentKind::Course && std::strcmp(destination, COURSE_BASELINE_DESTINATION) == 0)
+    return (baselineInstaller && baselineInstaller->metadata(destination, manifest, state, workspace)) ||
+           failure("baseline metadata", destination);
+
   if (manifest.kind == ContentKind::Course && std::strcmp(destination, ACTIVE_COURSE_PATH) == 0) {
     if (!matchesTransferManifest(manifest, state) || !inventory_detail::nonzero(state.owner) ||
         !inventory_detail::nonzero(state.transaction) || !inventory_detail::nonzero(state.storageGeneration) ||

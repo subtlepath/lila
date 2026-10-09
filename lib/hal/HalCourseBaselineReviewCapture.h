@@ -60,6 +60,8 @@ class HalCourseBaselineReviewCapture final {
           strnlen(reference, referencePath.size()) == referencePath.size())
         return finish(CourseBaselineReviewResult::Invalid);
       referenceManifest = *manifest;
+      referencePending = ownedArchive->referenceIsPending();
+      referenceLength = ownedArchive->referenceLength();
       std::copy_n(reference, std::strlen(reference) + 1, referencePath.begin());
     }
     if (!guard()) return finish(CourseBaselineReviewResult::Busy);
@@ -125,7 +127,8 @@ class HalCourseBaselineReviewCapture final {
   Digest reviewHash{};
   std::array<char, COURSE_ARCHIVE_PATH_SIZE> referencePath{};
   ContentManifest referenceManifest;
-  bool referencePresent = false, referenceSeen = false;
+  uint64_t referenceLength = 0;
+  bool referencePresent = false, referenceSeen = false, referencePending = false;
   size_t count = 0;
   bool journalPresent = false, capturing = false;
   mutable bool ready = false;
@@ -159,8 +162,18 @@ class HalCourseBaselineReviewCapture final {
   }
   bool referenceMatches() {
     uint64_t size = 0;
-    if (!guard() || metadata.stat(referencePath.data(), size) != FileStatus::Present || size != COURSE_BINDING_SIZE ||
-        !guard() || !metadata.read(referencePath.data(), 0, io().first(COURSE_BINDING_SIZE)) || !guard())
+    if (!guard() || metadata.stat(referencePath.data(), size) != FileStatus::Present || size != referenceLength ||
+        size > COURSE_BINDING_SIZE || !guard())
+      return false;
+    if (referencePending) {
+      const auto expected = io().first(COURSE_BINDING_SIZE);
+      if (encodeCourseBinding(referenceManifest, expected) != expected.size()) return false;
+      const auto saved = io().subspan(COURSE_BINDING_SIZE, static_cast<size_t>(size));
+      return (!size || metadata.read(referencePath.data(), 0, saved)) && guard() &&
+             std::equal(saved.begin(), saved.end(), expected.begin());
+    }
+    if (size != COURSE_BINDING_SIZE || !metadata.read(referencePath.data(), 0, io().first(COURSE_BINDING_SIZE)) ||
+        !guard())
       return false;
     ContentManifest observed;
     return decodeCourseBinding(io().first(COURSE_BINDING_SIZE), observed) && observed == referenceManifest && guard();

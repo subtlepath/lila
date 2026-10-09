@@ -61,6 +61,8 @@ class CoursePackArchive final {
   }
   CourseArchiveResult open(const Identity& course, const Digest& hash) {
     ready = false;
+    pendingReference = false;
+    referenceSize = COURSE_BINDING_SIZE;
     if (scratch.size() < 2 * COURSE_BINDING_SIZE || course == Identity{} || hash == Digest{} || !paths(course, hash))
       return CourseArchiveResult::Invalid;
     if (!guard()) return CourseArchiveResult::Busy;
@@ -84,6 +86,48 @@ class CoursePackArchive final {
     ready = guard();
     return ready ? CourseArchiveResult::Ok : CourseArchiveResult::Busy;
   }
+  // Read-only Prepared evidence: a matching reference prefix is meaningful only
+  // with the exact owner and a fully verified, immutable cache. Caller proves
+  // native Prepared intent/consent and live state before resuming publication.
+  CourseArchiveResult inspectPrepared(const ContentManifest& manifest) {
+    ready = false;
+    pendingReference = false;
+    referenceSize = COURSE_BINDING_SIZE;
+    if (!valid(manifest) || scratch.size() < 2 * COURSE_BINDING_SIZE) return CourseArchiveResult::Invalid;
+    current = manifest;
+    if (!paths(current.logicalIdentity, current.contentHash) || !guard()) return CourseArchiveResult::Busy;
+    uint64_t size = 0;
+    const auto canonical = status(reference.data(), size);
+    const auto staged = status(referenceStage.data(), referenceSize);
+    if (canonical == FileStatus::Error || staged == FileStatus::Error) return CourseArchiveResult::IoError;
+    if (canonical == FileStatus::Present && staged != FileStatus::Missing) return CourseArchiveResult::Conflict;
+    bool present = false;
+    if (canonical == FileStatus::Present) {
+      auto result = record(reference.data(), observed, present);
+      if (result != CourseArchiveResult::Ok) return result;
+      if (!present || observed != current) return CourseArchiveResult::Conflict;
+      referenceSize = COURSE_BINDING_SIZE;
+    } else {
+      if (staged == FileStatus::Missing) return CourseArchiveResult::Missing;
+      if (referenceSize > COURSE_BINDING_SIZE) return CourseArchiveResult::Corrupt;
+      const auto expected = scratch.first(COURSE_BINDING_SIZE);
+      if (encodeCourseBinding(current, expected) != expected.size()) return CourseArchiveResult::Invalid;
+      const auto saved = scratch.subspan(COURSE_BINDING_SIZE, static_cast<size_t>(referenceSize));
+      if (referenceSize && (!storage.read(referenceStage.data(), 0, saved) || !guard()))
+        return CourseArchiveResult::IoError;
+      if (!std::equal(saved.begin(), saved.end(), expected.begin())) return CourseArchiveResult::Conflict;
+      pendingReference = true;
+    }
+    const auto result = record(ownerPath.data(), owner, present);
+    if (result != CourseArchiveResult::Ok) return result;
+    if (!present || owner != current) return CourseArchiveResult::Conflict;
+    const auto copying = status(cacheStage.data(), size);
+    if (copying == FileStatus::Error) return CourseArchiveResult::IoError;
+    if (copying != FileStatus::Missing) return CourseArchiveResult::Busy;
+    if (!verify(cache.data())) return CourseArchiveResult::Corrupt;
+    ready = guard();
+    return ready ? CourseArchiveResult::Ok : CourseArchiveResult::Busy;
+  }
   void close() { ready = false; }
   const char* path() const {
     if (!ready) return nullptr;
@@ -94,7 +138,11 @@ class CoursePackArchive final {
     return cache.data();
   }
   const ContentManifest* manifest() const { return path() ? &current : nullptr; }
-  const char* referencePath() const { return path() ? reference.data() : nullptr; }
+  const char* referencePath() const {
+    return path() ? (pendingReference ? referenceStage.data() : reference.data()) : nullptr;
+  }
+  bool referenceIsPending() const { return path() && pendingReference; }
+  uint64_t referenceLength() const { return path() ? referenceSize : 0; }
 
  private:
   TransferStorage& storage;
@@ -104,6 +152,8 @@ class CoursePackArchive final {
   std::array<char, COURSE_ARCHIVE_PATH_SIZE> cache{}, cacheStage{}, ownerPath{}, reference{}, referenceStage{},
       sourcePath{};
   ContentManifest current{}, observed{}, owner{};
+  uint64_t referenceSize = COURSE_BINDING_SIZE;
+  bool pendingReference = false;
   mutable bool ready = false;
   static bool valid(const ContentManifest& manifest) {
     return validCourseBinding(manifest) && manifest.formatVersion == 1 && manifest.contentHash != Digest{};

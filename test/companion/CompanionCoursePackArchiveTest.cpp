@@ -228,3 +228,61 @@ TEST(CompanionCoursePackArchive, PermissionLossDuringCopyWithholdsLoanAndCanResu
   EXPECT_EQ(archive.publish(f.manifest, archive.path()), CourseArchiveResult::Ok);
   EXPECT_EQ(f.storage.files, cached);
 }
+
+TEST(CompanionCoursePackArchive, PreparedInspectionProvesEveryReferencePrefixWithoutMutation) {
+  Fixture f;
+  auto archive = f.owner();
+  ASSERT_EQ(archive.publish(f.manifest, "/tinta/course.pack"), CourseArchiveResult::Ok);
+  const std::string reference = archive.referencePath();
+  const auto pending = reference.substr(0, reference.size() - 4) + ".tmp";
+  const auto complete = f.storage.files;
+  const auto encoded = complete.at(reference);
+  for (size_t length = 0; length <= encoded.size(); ++length) {
+    SCOPED_TRACE(length);
+    f.storage.files = complete;
+    f.storage.files.erase(reference);
+    f.storage.files[pending] = {encoded.begin(), encoded.begin() + length};
+    const auto evidence = f.storage.files;
+    const auto mutations = f.storage.mutations;
+    ASSERT_EQ(archive.inspectPrepared(f.manifest), CourseArchiveResult::Ok);
+    ASSERT_NE(archive.path(), nullptr);
+    EXPECT_EQ(*archive.manifest(), f.manifest);
+    EXPECT_TRUE(archive.referenceIsPending());
+    EXPECT_EQ(archive.referenceLength(), length);
+    EXPECT_EQ(std::string(archive.referencePath()), pending);
+    EXPECT_EQ(f.storage.files, evidence);
+    EXPECT_EQ(f.storage.mutations, mutations);
+    EXPECT_EQ(archive.open(f.manifest.logicalIdentity, f.manifest.contentHash), CourseArchiveResult::Busy);
+    EXPECT_EQ(archive.path(), nullptr);
+  }
+  f.storage.files = complete;
+  ASSERT_EQ(archive.inspectPrepared(f.manifest), CourseArchiveResult::Ok);
+  EXPECT_FALSE(archive.referenceIsPending());
+  EXPECT_EQ(archive.referenceLength(), COURSE_BINDING_SIZE);
+}
+
+TEST(CompanionCoursePackArchive, PreparedInspectionRefusesForeignIncompleteAndAmbiguousArchiveEvidence) {
+  Fixture f;
+  auto archive = f.owner();
+  ASSERT_EQ(archive.publish(f.manifest, "/tinta/course.pack"), CourseArchiveResult::Ok);
+  const std::string reference = archive.referencePath();
+  const auto pending = reference.substr(0, reference.size() - 4) + ".tmp";
+  const auto complete = f.storage.files;
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    SCOPED_TRACE(fault);
+    f.storage.files = complete;
+    f.storage.files[pending] = complete.at(reference);
+    if (fault != 0) f.storage.files.erase(reference);
+    if (fault == 1) f.storage.files[pending][0] ^= 1;
+    if (fault == 2) f.storage.files[pending].push_back(0);
+    if (fault == 3) f.storage.files.erase(f.cache() + ".owner");
+    if (fault == 4) f.storage.files[f.cache()][0] ^= 1;
+    if (fault == 5) f.storage.files[f.cache() + ".tmp"] = {};
+    const auto evidence = f.storage.files;
+    const auto mutations = f.storage.mutations;
+    EXPECT_NE(archive.inspectPrepared(f.manifest), CourseArchiveResult::Ok);
+    EXPECT_EQ(archive.path(), nullptr);
+    EXPECT_EQ(f.storage.files, evidence);
+    EXPECT_EQ(f.storage.mutations, mutations);
+  }
+}

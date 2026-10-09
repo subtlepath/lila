@@ -30,6 +30,11 @@ class HalCoursePackArchive final {
     return finish(archive.publish(manifest, source));
   }
   CourseArchiveResult open(const Identity& course, const Digest& hash) { return finish(archive.open(course, hash)); }
+  CourseArchiveResult inspectPrepared(const ContentManifest& manifest) {
+    return finish(archive.inspectPrepared(manifest));
+  }
+  bool referenceIsPending() const { return archive.referenceIsPending(); }
+  uint64_t referenceLength() const { return archive.referenceLength(); }
   const char* path() const { return archive.path(); }
   const ContentManifest* manifest() const { return archive.manifest(); }
   const char* referencePath() const { return archive.referencePath(); }

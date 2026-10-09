@@ -87,7 +87,7 @@ class HalCompanionFileLookup final {
     if (!directoryClosed) failure("lookup directory close");
     return entryClosed && directoryClosed;
   }
-  bool failure(const char* operation) {
+  bool failure([[maybe_unused]] const char* operation) {
     LOG_ERR("COMPANION", "%s failed", operation);
     return false;
   }

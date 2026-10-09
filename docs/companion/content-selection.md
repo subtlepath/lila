@@ -2074,8 +2074,7 @@ All 1,865 host tests pass. Native tests use actual consent, copied review files,
 archived pack bytes and the
 production parser, including repeated verification after newer learner writes,
 removed upload source, missing/corrupt evidence, archive sync/close failures and a
-malformed pack whose SHA-256 matches its manifest. The command path remains unconnected. Prepared recovery with staged archive
-references still requires further work. On hardware after integration,
+malformed pack whose SHA-256 matches its manifest. The command path remains unconnected. On hardware after integration,
 verify completed recovery without the original upload, compare newer learner
 bytes before/after, inspect archive and copy hashes, and monitor free/largest heap
 and parser task stack. Hardware acceptance remains unverified.
@@ -2153,12 +2152,144 @@ an import-only static pool would retain memory outside the session. Including
 session, parser (720), phase store (2,144) and receipt reader, the fixed peak is
 19,632 bytes before lazy HAL handles, shared workspace and parent transfer state.
 
-This closes the canonical-reference recovery case. Staged archive reference
-recovery, initial item compatibility, parent transfer/command/capability wiring
-and Apple review/queue UI still remain. Pending or corrupt reference stages are
-preserved and refused; they are not silently treated as missing history. Hardware
+Initial item compatibility, parent transfer/command/capability wiring and Apple
+review/queue UI still remain. The staged-reference extension below adds verified
+prefix recovery; foreign or corrupt stages remain preserved and refused. Hardware
 acceptance remains unverified. After integration, cut power after canonical
 reference publication and verify Prepared recovery before reading resumes;
 compare learner bytes/review hash and monitor free/largest heap and stack.
 
 All 1,868 host tests pass after the canonical-reference Prepared recovery changes.
+
+
+### Prepared recovery with a pending archive reference
+
+`CoursePackArchive::inspectPrepared` is read-only. It recognizes a canonical
+reference or an exact pending binding prefix only when the archive owner matches
+the complete requested manifest, the canonical cache passes its full length and
+SHA-256 checks, and no cache stage exists. A canonical reference plus a pending
+reference is a conflict. Oversized or foreign prefixes, torn/foreign owners,
+missing/corrupt caches, errors and permission loss withhold all archive loans.
+Ordinary `open` still refuses pending references; the inspection loan is
+specifically for caller-proved Prepared recovery and cannot prove publication.
+
+The native wrapper offers this inspection with checked reader closes. Prepared
+verification proves exact native intent/consent/review copies and receipt absence
+first. It validates the full cached pack and recaptures the live reviewed cohort,
+omitting only the proved pending reference. The capture snapshots its exact
+length and expected binding prefix, checks them before and after the scan and
+requires exactly one matching entry. A changed or foreign reference, alias or
+another staged reference cannot silently disappear from the review. Publication
+then uses the existing byte-proved reference-stage resume; no learner state or
+immutable evidence is rewritten during verification.
+
+Portable tests inspect every prefix length without writes and keep ordinary open
+refused. Native integration resumes empty, one-byte, half and complete pending
+references through the actual phase workflow, preserving learner bytes. Foreign
+prefixes, duplicate canonical/staged reference evidence and reference close
+failures refuse unchanged. Initial item compatibility, parent transfer and
+command/capability/Apple wiring remain required. Hardware acceptance is unverified;
+after integration, cut power during each reference-stage write/rename and verify
+recovery before reading resumes, learner hashes and free/largest heap.
+
+Forced C3 compilation passes the 256-byte frame gate: Prepared inspection is
+80 bytes and reference comparison 144. Revised fixed owners are capture 2,360,
+backup 6,144, consent 1,936 and archive session 12,288 bytes. The added stage flag
+and snapshot length use fixed members and existing borrowed comparison workspace;
+there are no new buffers or per-file allocations.
+
+All 1,871 host tests pass with this extension. The measured receipt reader remains
+4,496 bytes and native archive owner is 2,312; session, parser, phase store and
+receipt reader total 19,648 fixed bytes, excluding borrowed workspace, parent
+transfer state and lazy HAL handles. The affected default firmware image passed validation as recorded below;
+host/frame results do not prove hardware behavior.
+
+### Native baseline transfer installer adapter
+
+`HalCourseBaselineNativeInstaller` implements a borrowed serialized installer
+interface for the generic transfer's preparation and metadata callbacks. It
+freezes transfer/manifest bindings before consent I/O, requires native reader,
+card generation and authenticated companion owner, and accepts only the dedicated
+baseline destination with the complete transaction length and hash. Preparation
+accepts only the transfer stage in Receiving, validates its complete SHA-256 and
+pack structure, requires explicit item-compatibility verification against the
+immutable review, and checks the live reviewed cohort without publishing files.
+
+Installing validates the canonical upload and compatibility again, then drives
+the native Prepared/archive/Published workflow. A repeated Installing call uses
+that workflow's durable recovery. Committed metadata checks both exact canonical
+phase records, absence of both stages and historical archive/consent/review-copy
+artifacts. It cannot synthesize missing publication evidence or require new
+compatibility approval; newer learner progress remains untouched. The canonical
+upload must remain until the parent transfer no longer depends on it during its
+own recovery. Neither the installed active pack nor its course binding is changed
+by this baseline adapter.
+
+The factory checks permission, requires a compatibility function and admits the
+entire 18,888-byte C3 owner plus its contiguous block while preserving the 50 KiB
+reserve before `makeUniqueNoThrow`. It logs admission/allocation failure. The
+owner retains the parser, consent reader, archive session, phase store and strict
+source/phase lookup handles outside the stack; it borrows session workspace and
+allocates no buffer per chunk. Prepared verification additionally admits a
+4,496-byte receipt reader, so its fixed peak is 23,384 bytes before SDK/lazy handles,
+parent transfer and compatibility-callback resources. A stack object would exceed
+the local limit; a static pool would keep those resources after sync mode exits.
+C3 preparation is 48 bytes, metadata 64, source validation 112 and phase checking
+64. Caller must detach the borrowed interface before destruction.
+
+The adapter test uses actual native approval, source bytes, phase records and
+archive validation, while the compatibility callback is modeled. It checks
+read-only preparation, owner/card/transaction/offset refusals, explicit callback
+refusal, Installing publication and Committed verification after learner progress
+changes without another compatibility call. Missing completion evidence refuses
+without repairs. Admission coverage checks permission, missing compatibility,
+reserve and largest-block constraints. The HAL attachment below connects this interface to
+`HalTransferStorage`; native item compatibility, command/capability wiring and
+Apple review/queue/UI still remain. The concrete installer remains unconnected to firmware session/startup ownership;
+the HAL-attachment image validation below does not prove that ownership.
+Hardware acceptance remains unverified.
+
+All 1,873 host tests passed after installer-admission coverage. The final validation
+below includes the subsequent HAL attachment and parent recovery cases.
+
+
+### HAL attachment and parent transfer recovery
+
+`HalTransferStorage::setCourseBaselineInstaller` lends a serialized installer owner
+for the dedicated baseline destination. The state-aware validation callback routes
+Receiving preparation to it; Installing and Committed metadata route publication
+and historical verification to it. An unattached owner refuses baseline commit
+and recovery. The generic unstated callbacks still do not grant baseline
+installation. Caller attaches before parent recovery and detaches before owner
+destruction; the HAL adds one borrowed pointer (4 bytes on C3) and no allocation.
+No command/capability is advertised by this attachment.
+
+Native integration tests use real `Transfer`, `HalTransferStorage`, consent,
+source validation and phase/archive persistence with a modeled item-compatibility
+callback. Full commit preserves the active pack and course binding. Repeated
+commit and reconstructed Committed recovery preserve newer learner bytes without
+another compatibility call or file writes. Detaching the installer refuses
+metadata without altering evidence. Installing recovery covers destination
+rename failure before/after application and complete Prepared/Published stage
+sync failures; reconstructed native owners resume to Committed without replacing
+reviewed learner files. This does not prove native item compatibility or firmware
+session/startup owner attachment, which remain required before command exposure.
+
+Whole-source C3 compilation passes the 256-byte frame gate with Tinta enabled and
+disabled. Enabled state-aware validation and metadata each use 192 bytes; disabled
+variants each use 48. The previous pending-reference default image also passed its
+firmware build (552.95 seconds, no warnings/errors) and official x4/chip-5 validator:
+6,507,600 bytes, SHA-256
+`2f36572b57cb3b5b9e15d6095424d1fc43c5ead233b40b3c4bb6af8fcfb79a35`,
+with 46,000 bytes remaining in the 6,553,600-byte OTA partition. It was retained
+before the HAL-attachment build; it does not prove the subsequent attachment.
+The affected HAL-attachment default build passed in 81.30 seconds with no warnings
+or errors. Its official x4/chip-5 image validation passed: 6,507,808 bytes, SHA-256
+`44dd46c9b7b4c6ee14903de74292449a78268630e6f1fd2c8ca4476ee3672d27`,
+with 45,792 bytes remaining in the OTA partition. The image was retained before
+further changes. Hardware acceptance, other final affected targets and Apple
+builds remain unverified.
+
+Final host rebuild has no warnings or errors; all 1,875 tests pass. The default
+firmware image and enabled/disabled C3 HAL frame checks passed after the final
+firmware source edits. Later test-only brace fixes do not alter that image.

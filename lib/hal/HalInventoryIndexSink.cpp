@@ -6,7 +6,7 @@
 
 namespace companion {
 namespace {
-bool inventoryFailure(const char* operation) {
+bool inventoryFailure([[maybe_unused]] const char* operation) {
   LOG_ERR("COMPANION", "Inventory publication failed: %s", operation);
   return false;
 }

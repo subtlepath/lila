@@ -42,6 +42,7 @@
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportConsentStore.h"
 #include "lib/hal/HalCourseBaselineImportPreparation.h"
+#include "lib/hal/HalCourseBaselineNativeInstaller.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
@@ -6018,4 +6019,297 @@ TEST_F(HalCourseTransferTest, PreparedBaselineRecoveryRecognizesOnlyOwnArchiveAn
   ASSERT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::Ok);
   ASSERT_NE(publication->published(), nullptr);
   EXPECT_EQ(hal.files.at(items.data()), interrupted.at(items.data()));
+}
+
+TEST_F(HalCourseTransferTest, PreparedBaselineRecoveryResumesProvenPendingReferencePrefixes) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  auto archive = makeUniqueNoThrow<HalCoursePackArchive>(scratch, permission, nullptr);
+  ASSERT_TRUE(archive);
+  ASSERT_EQ(archive->publish(record.request.manifest, "/tinta/original.pack"), CourseArchiveResult::Ok);
+  const auto reference = std::string(archive->referencePath());
+  const auto pending = reference.substr(0, reference.size() - 4) + ".tmp";
+  archive.reset();
+  const auto intentPath = consentPath.substr(0, consentPath.size() - 8) + ".prepared";
+  hal.files[intentPath].resize(COURSE_BASELINE_PUBLICATION_SIZE);
+  ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, hal.files.at(intentPath)));
+  const auto complete = hal;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto session = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                    scratch, *parser, permission, nullptr);
+  ASSERT_TRUE(session);
+  CourseBaselinePublicationHooks hooks{session.get(), HalCourseBaselineArchiveSession::verifyPreparation,
+                                       [](void* context, const CourseBaselinePublicationRecord& request) {
+                                         return static_cast<HalCourseBaselineArchiveSession*>(context)->publishArchive(
+                                             request, "/tinta/original.pack");
+                                       },
+                                       HalCourseBaselineArchiveSession::verifyPublication};
+  auto publication = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, record.request.owner, scratch, permission, nullptr);
+  ASSERT_TRUE(publication);
+  for (const size_t length : {size_t{0}, size_t{1}, COURSE_BINDING_SIZE / 2, COURSE_BINDING_SIZE}) {
+    SCOPED_TRACE(length);
+    hal = complete;
+    hal.files.erase(reference);
+    const auto& encoded = complete.files.at(reference);
+    hal.files[pending] = {encoded.begin(), encoded.begin() + length};
+    const auto evidence = hal.files;
+    ASSERT_TRUE(session->verifyPrepared(record, true));
+    EXPECT_FALSE(session->verifyPrepared(record, false));
+    EXPECT_EQ(hal.files, evidence);
+    ASSERT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::Ok);
+    EXPECT_NE(publication->published(), nullptr);
+    EXPECT_FALSE(hal.files.contains(pending));
+    EXPECT_EQ(hal.files.at(reference), encoded);
+    for (const auto& [path, data] : complete.files) EXPECT_EQ(hal.files.at(path), data);
+  }
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    hal = complete;
+    hal.files.erase(reference);
+    hal.files[pending] = complete.files.at(reference);
+    if (fault == 0) hal.files[pending][0] ^= 1;
+    if (fault == 1) hal.files[reference] = complete.files.at(reference);
+    if (fault == 2) hal.failClosePath = pending;
+    const auto evidence = hal.files;
+    EXPECT_FALSE(session->verifyPrepared(record, true));
+    EXPECT_EQ(hal.files, evidence);
+  }
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselineInstallerValidatesBeforeInstallingAndRechecksCommittedEvidenceReadOnly) {
+  CourseBaselineImportRequest request;
+  Identity reader{};
+  std::string consentPath;
+  prepareBaselineApproval(request, reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  struct Compatibility {
+    bool approved = true;
+    unsigned calls = 0;
+  } compatibility;
+  auto check = [](void* context, const CourseBaselinePublicationRecord&, const char*, std::span<uint8_t>) {
+    auto& compatibility = *static_cast<Compatibility*>(context);
+    ++compatibility.calls;
+    return compatibility.approved;
+  };
+  auto installer = createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission,
+                                                          nullptr, check, &compatibility);
+  ASSERT_TRUE(installer);
+  auto state = declaration.state;
+  state.durableOffset = state.length;
+  hal.files[TRANSFER_STAGE] = bytes;
+  const auto unapproved = hal.files;
+  EXPECT_FALSE(installer->prepare(COURSE_BASELINE_DESTINATION, TRANSFER_STAGE, request.manifest, state, scratch));
+  EXPECT_EQ(hal.files, unapproved);
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(reader, generation, request.owner, scratch,
+                                                                        permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  const auto approved = hal.files;
+  compatibility.approved = false;
+  EXPECT_FALSE(installer->prepare(COURSE_BASELINE_DESTINATION, TRANSFER_STAGE, request.manifest, state, scratch));
+  EXPECT_EQ(hal.files, approved);
+  compatibility.approved = true;
+  ASSERT_TRUE(installer->prepare(COURSE_BASELINE_DESTINATION, TRANSFER_STAGE, request.manifest, state, scratch));
+  EXPECT_EQ(hal.files, approved);
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    auto foreign = state;
+    if (fault == 0) foreign.owner[0] ^= 0x80;
+    if (fault == 1) foreign.storageGeneration[0] ^= 0x80;
+    if (fault == 2) foreign.transaction[0] ^= 0x80;
+    if (fault == 3) --foreign.durableOffset;
+    EXPECT_FALSE(installer->prepare(COURSE_BASELINE_DESTINATION, TRANSFER_STAGE, request.manifest, foreign, scratch));
+    EXPECT_EQ(hal.files, approved);
+  }
+  ASSERT_TRUE(Storage.rename(TRANSFER_STAGE, COURSE_BASELINE_DESTINATION));
+  state.phase = TransferPhase::Installing;
+  ASSERT_TRUE(installer->metadata(COURSE_BASELINE_DESTINATION, request.manifest, state, scratch));
+  EXPECT_EQ(hal.files.at(COURSE_BASELINE_DESTINATION), bytes);
+  state.phase = TransferPhase::Committed;
+  std::array<char, COURSE_STATE_PATH_SIZE> items{};
+  ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", items));
+  hal.files[items.data()] = {89};
+  const auto committed = hal.files;
+  const auto calls = compatibility.calls;
+  compatibility.approved = false;
+  ASSERT_TRUE(installer->metadata(COURSE_BASELINE_DESTINATION, request.manifest, state, scratch));
+  EXPECT_EQ(compatibility.calls, calls);
+  EXPECT_EQ(hal.files, committed);
+  const auto published = consentPath.substr(0, consentPath.size() - 8) + ".published";
+  hal.files.erase(published);
+  const auto missing = hal.files;
+  EXPECT_FALSE(installer->metadata(COURSE_BASELINE_DESTINATION, request.manifest, state, scratch));
+  EXPECT_EQ(hal.files, missing);
+  EXPECT_EQ(compatibility.calls, calls);
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselineInstallerAdmissionRequiresPermissionCompatibilityAndHeapReserve) {
+  Identity reader{};
+  reader[0] = 1;
+  const auto original = inventory_hal_test::state.files;
+  bool permitted = false;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  auto compatible = [](void*, const CourseBaselinePublicationRecord&, const char*, std::span<uint8_t>) { return true; };
+  EXPECT_FALSE(createHalCourseBaselineNativeInstaller(reader, generation, declaration.state.owner, scratch, permission,
+                                                      &permitted, compatible, nullptr));
+  permitted = true;
+  EXPECT_FALSE(createHalCourseBaselineNativeInstaller(reader, generation, declaration.state.owner, scratch, permission,
+                                                      &permitted, nullptr, nullptr));
+  const auto available = companion_memory_test::internal;
+  companion_memory_test::internal.freeBytes = 50 * 1024 + sizeof(HalCourseBaselineNativeInstaller);
+  EXPECT_FALSE(createHalCourseBaselineNativeInstaller(reader, generation, declaration.state.owner, scratch, permission,
+                                                      &permitted, compatible, nullptr));
+  companion_memory_test::internal = available;
+  companion_memory_test::internal.largestBlockBytes = sizeof(HalCourseBaselineNativeInstaller) - 1;
+  EXPECT_FALSE(createHalCourseBaselineNativeInstaller(reader, generation, declaration.state.owner, scratch, permission,
+                                                      &permitted, compatible, nullptr));
+  companion_memory_test::internal = available;
+  EXPECT_TRUE(createHalCourseBaselineNativeInstaller(reader, generation, declaration.state.owner, scratch, permission,
+                                                     &permitted, compatible, nullptr));
+  EXPECT_EQ(inventory_hal_test::state.files, original);
+}
+
+TEST_F(HalCourseTransferTest, BaselineParentTransferCommitsThroughNativeInstallerAndRecoversNewerLearnerState) {
+  CourseBaselineImportRequest request;
+  Identity reader{};
+  std::string consentPath;
+  prepareBaselineApproval(request, reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  const auto active = hal.files.at(ACTIVE_COURSE_PATH), activeBinding = hal.files.at(COURSE_BINDING_PATH);
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(reader, generation, request.owner, scratch,
+                                                                        permission, nullptr);
+  ASSERT_TRUE(consent);
+  auto approve = [](void* context, const CourseBaselineImportRequest& request, const TransferDeclaration& declaration) {
+    return static_cast<HalCourseBaselineImportConsentStore*>(context)->approve(request, declaration) ==
+           CourseBaselineConsentResult::Ok;
+  };
+  Transfer transfer(storage, scratch);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  ASSERT_EQ(beginCourseBaselineTransfer(transfer, request, generation, request.owner, approve, consent.get()),
+            TransferResult::Ok);
+  consent.reset();
+  for (size_t offset = 0; offset < bytes.size();) {
+    const auto count = std::min(size_t{1000}, bytes.size() - offset);
+    ASSERT_EQ(transfer.append(request.transaction, request.owner, offset, std::span(bytes).subspan(offset, count)),
+              TransferResult::Ok);
+    offset += count;
+  }
+  EXPECT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Invalid);
+  EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+  EXPECT_FALSE(hal.files.contains(COURSE_BASELINE_DESTINATION));
+  unsigned compatibilityCalls = 0;
+  auto compatible = [](void* context, const CourseBaselinePublicationRecord&, const char*, std::span<uint8_t>) {
+    ++*static_cast<unsigned*>(context);
+    return true;
+  };
+  auto installer = createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission,
+                                                          nullptr, compatible, &compatibilityCalls);
+  ASSERT_TRUE(installer);
+  storage.setCourseBaselineInstaller(installer.get());
+  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  ASSERT_EQ(transfer.current()->phase, TransferPhase::Committed);
+  EXPECT_EQ(hal.files.at(COURSE_BASELINE_DESTINATION), bytes);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), active);
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), activeBinding);
+  std::array<char, COURSE_STATE_PATH_SIZE> items{};
+  ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", items));
+  hal.files[items.data()] = {97};
+  const auto complete = hal.files;
+  const auto calls = compatibilityCalls;
+  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  HalTransferStorage reopened;
+  reopened.setCourseBaselineInstaller(installer.get());
+  Transfer restored(reopened, scratch);
+  ASSERT_EQ(restored.recover(generation), TransferResult::Ok);
+  EXPECT_EQ(restored.current()->phase, TransferPhase::Committed);
+  EXPECT_EQ(compatibilityCalls, calls);
+  EXPECT_EQ(hal.files, complete);
+  storage.setCourseBaselineInstaller(nullptr);
+  reopened.setCourseBaselineInstaller(nullptr);
+  EXPECT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::IoError);
+  EXPECT_EQ(hal.files, complete);
+}
+
+TEST_F(HalCourseTransferTest, BaselineParentInstallingRecoversRenameAndPhaseAcknowledgementFailures) {
+  CourseBaselineImportRequest request;
+  Identity reader{};
+  std::string consentPath;
+  prepareBaselineApproval(request, reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(reader, generation, request.owner, scratch,
+                                                                        permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  Transfer initial(storage, scratch);
+  ASSERT_EQ(initial.recover(generation), TransferResult::Ok);
+  ASSERT_EQ(initial.begin(declaration, COURSE_BASELINE_DESTINATION), TransferResult::Ok);
+  for (size_t offset = 0; offset < bytes.size();) {
+    const auto count = std::min(size_t{1000}, bytes.size() - offset);
+    ASSERT_EQ(initial.append(request.transaction, request.owner, offset, std::span(bytes).subspan(offset, count)),
+              TransferResult::Ok);
+    offset += count;
+  }
+  const auto uploaded = hal;
+  const auto prefix = consentPath.substr(0, consentPath.size() - 8);
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = uploaded;
+    auto compatible = [](void*, const CourseBaselinePublicationRecord&, const char*, std::span<uint8_t>) {
+      return true;
+    };
+    auto installer = createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission,
+                                                            nullptr, compatible, nullptr);
+    ASSERT_TRUE(installer);
+    HalTransferStorage native;
+    native.setCourseBaselineInstaller(installer.get());
+    Transfer transfer(native, scratch);
+    ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+    if (fault == 0) hal.failRename = hal.renames + 1;
+    if (fault == 1) hal.failRenameAfter = hal.renames + 1;
+    if (fault == 2) hal.failSyncPath = prefix + ".prepared.tmp";
+    if (fault == 3) hal.failSyncPath = prefix + ".published.tmp";
+    EXPECT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::IoError);
+    EXPECT_EQ(transfer.current()->phase, TransferPhase::Installing);
+    for (const auto& [path, data] : uploaded.files) {
+      if (path != TRANSFER_STAGE && !path.starts_with("/.crosspoint/companion/transfer-")) {
+        EXPECT_EQ(hal.files.at(path), data);
+      }
+    }
+    native.setCourseBaselineInstaller(nullptr);
+    installer.reset();
+    hal.failRename = hal.failRenameAfter = 0;
+    hal.failSyncPath.clear();
+    installer = createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission, nullptr,
+                                                       compatible, nullptr);
+    ASSERT_TRUE(installer);
+    HalTransferStorage recoveredStorage;
+    recoveredStorage.setCourseBaselineInstaller(installer.get());
+    Transfer recovered(recoveredStorage, scratch);
+    ASSERT_EQ(recovered.recover(generation), TransferResult::Ok);
+    EXPECT_EQ(recovered.current()->phase, TransferPhase::Committed);
+    EXPECT_EQ(hal.files.at(COURSE_BASELINE_DESTINATION), bytes);
+    recoveredStorage.setCourseBaselineInstaller(nullptr);
+  }
 }

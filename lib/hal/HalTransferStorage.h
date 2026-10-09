@@ -2,6 +2,7 @@
 
 #include "CompanionTransfer.h"
 #include "HalCompanionFileLookup.h"
+#include "HalCourseBaselineTransferInstaller.h"
 #include "HalDictionaryTransferInstaller.h"
 #if LILA_TINTA
 #include <memory>
@@ -20,6 +21,7 @@ class HalTransferStorage final : public TransferStorage {
   // Callback validates only and must never flash. It borrows the file path for the call.
   void setFirmwareValidator(bool (*validator)(const char*)) { firmwareValidator = validator; }
   void setDictionaryInstaller(HalDictionaryTransferInstaller* installer) { dictionaryInstaller = installer; }
+  void setCourseBaselineInstaller(HalCourseBaselineTransferInstaller* installer) { baselineInstaller = installer; }
   bool installDictionaryMembers(const char*, const ContentManifest&, const TransferState&, std::span<uint8_t>) override;
   bool prepare() override;
   FileStatus stat(const char* path, uint64_t& size) override;
@@ -49,6 +51,7 @@ class HalTransferStorage final : public TransferStorage {
   HalCompanionFileLookup companionLookup;
   bool (*firmwareValidator)(const char*) = nullptr;
   HalDictionaryTransferInstaller* dictionaryInstaller = nullptr;
+  HalCourseBaselineTransferInstaller* baselineInstaller = nullptr;
 #if LILA_TINTA
   bool inspectCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
                                  std::span<uint8_t> workspace, bool& removed);
