@@ -9,25 +9,6 @@
 #include "HalTransferStorage.h"
 
 namespace companion {
-namespace {
-bool completedMigrationOrigin(HalTransferStorage& storage, std::span<uint8_t> scratch, Identity& origin) {
-  static constexpr const char* STATE_FILES[] = {"items.bin",   "items.bin.tmp",   "reviews.log", "reviews.log.tmp",
-                                                "profile.bin", "profile.bin.tmp", "days.bin",    "days.bin.tmp",
-                                                "session.bin", "session.bin.tmp"};
-  static constexpr const char* MARK_FILES[] = {"starred.bin", "starred.bin.tmp", "read.bin", "read.bin.tmp"};
-  static constexpr CourseMigrationPaths STATE_PATHS{COURSE_STATE_MIGRATION, COURSE_STATE_MIGRATION_STAGE,
-                                                    COURSE_STATE_MIGRATION_DONE, COURSE_STATE_MIGRATION_DONE_STAGE};
-  Identity stateOrigin{}, markOrigin{};
-  if (completedCourseMigration(storage, STATE_PATHS, STATE_FILES, scratch, stateOrigin) !=
-          CourseStateMigrationResult::Ok ||
-      completedCourseMigration(storage, COURSE_MARK_MIGRATION_PATHS, MARK_FILES, scratch, markOrigin) !=
-          CourseStateMigrationResult::Ok ||
-      stateOrigin != markOrigin)
-    return false;
-  origin = stateOrigin;
-  return true;
-}
-}  // namespace
 bool selectActiveCourseState(HalTransferStorage& storage, std::span<uint8_t> scratch, Identity& course, bool& bound) {
   ContentManifest manifest;
   bool present = false;
@@ -51,7 +32,8 @@ bool selectActiveCourseState(HalTransferStorage& storage, std::span<uint8_t> scr
     return true;
   }
   Identity originalCourse{};
-  if (completedMigrationOrigin(storage, scratch, originalCourse) && originalCourse != manifest.logicalIdentity) {
+  if (completedCourseStateIsolation(storage, scratch, originalCourse) == CourseStateMigrationResult::Ok &&
+      originalCourse != manifest.logicalIdentity) {
     char directory[COURSE_STATE_DIRECTORY_SIZE];
     if (!storage.verify(ACTIVE_COURSE_PATH, manifest.length, manifest.contentHash, scratch) ||
         !courseStateDirectory(manifest.logicalIdentity, directory) ||

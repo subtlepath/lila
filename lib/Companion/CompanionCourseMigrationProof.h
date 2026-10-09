@@ -49,4 +49,19 @@ inline CourseStateMigrationResult completedCourseMigration(TransferStorage& stor
   output = origin;
   return CourseStateMigrationResult::Ok;
 }
+// Both migrations must name the same original course. This does not prove that
+// the current course directory exists; the caller checks that separately.
+inline CourseStateMigrationResult completedCourseStateIsolation(TransferStorage& storage, std::span<uint8_t> scratch,
+                                                                Identity& output) {
+  Identity stateOrigin{}, markOrigin{};
+  auto result = completedCourseMigration(storage, COURSE_STATE_MIGRATION_PATHS, COURSE_STATE_MIGRATION_FILES, scratch,
+                                         stateOrigin);
+  if (result != CourseStateMigrationResult::Ok) return result;
+  result =
+      completedCourseMigration(storage, COURSE_MARK_MIGRATION_PATHS, COURSE_MARK_MIGRATION_FILES, scratch, markOrigin);
+  if (result != CourseStateMigrationResult::Ok) return result;
+  if (stateOrigin != markOrigin) return CourseStateMigrationResult::Conflict;
+  output = stateOrigin;
+  return CourseStateMigrationResult::Ok;
+}
 }  // namespace companion

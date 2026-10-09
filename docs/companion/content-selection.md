@@ -7,7 +7,10 @@ BLE and encrypted Wi-Fi commands. A retained owner prepares complete-path plans 
 metadata before retiring quarantined bytes. Resource admission covers its owner,
 JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
-unverified. Course removal still needs its own participant. Dictionary removal
+unverified. Course removal has a portable participant, sealed-plan publication,
+removal-proof publication and verified baseline retention. Its production
+reference/state adapter, routing and replacement flow remain incomplete, so it
+is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
 Font cohort routing and recovery pass the native host checker and all five
@@ -884,3 +887,26 @@ explicit different-course switching after removal still require integration.
 Apple switch confirmation currently derives its previous course from installed
 inventory; an uninstalled course's retained binding/baseline needs an authenticated
 context before that confirmation can be offered. Course removal is unadvertised.
+
+The reader and course-removal recovery now share `completedCourseStateIsolation`.
+It checks the complete state and mark migration file lists and requires both
+receipts to name the same original course. It reads metadata and checks legacy
+root-file absence without requiring an installed pack or writing learner state.
+Migration and proof verification use the same constant file lists. The caller
+must separately verify the current course directory; this helper alone does
+not establish complete removal admission.
+
+The regression migrates all 14 legacy state/mark filenames, removes the active
+pack, verifies the original-course proof, and rejects each reappearing root
+file, unfinished/missing/corrupt receipts, and CRC-valid crossed origins. Files,
+mutation counts and failure outputs remain unchanged. All 1,749 host tests and
+the installed-SdFat native checker pass.
+A portable ESP32-C3 compiler probe reports individual frames of 96 bytes for the
+aggregate check and 144 bytes for the receipt check, with 256-byte frame errors
+enabled. This is not a runtime task-stack or heap measurement.
+
+The default C3 firmware build passes after this shared-check edit. Its image
+passes the release validator for board/chip, segment bounds, checksum, SHA-256
+trailer and OTA partition size. The saved checkpoint image/proof are under
+`/tmp/lila-course-isolation-images/`. Other board images recorded above predate
+this edit; final affected-board builds remain required after course integration.

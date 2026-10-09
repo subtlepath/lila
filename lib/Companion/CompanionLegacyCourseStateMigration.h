@@ -21,6 +21,14 @@ struct CourseMigrationPaths {
 inline constexpr CourseMigrationPaths COURSE_MARK_MIGRATION_PATHS{
     "/.crosspoint/companion/course-mark-migration", "/.crosspoint/companion/course-mark-migration.tmp",
     "/.crosspoint/companion/course-mark-migration.done", "/.crosspoint/companion/course-mark-migration.done.tmp"};
+inline constexpr CourseMigrationPaths COURSE_STATE_MIGRATION_PATHS{COURSE_STATE_MIGRATION, COURSE_STATE_MIGRATION_STAGE,
+                                                                   COURSE_STATE_MIGRATION_DONE,
+                                                                   COURSE_STATE_MIGRATION_DONE_STAGE};
+inline constexpr const char* COURSE_STATE_MIGRATION_FILES[] = {
+    "items.bin",       "items.bin.tmp", "reviews.log",  "reviews.log.tmp", "profile.bin",
+    "profile.bin.tmp", "days.bin",      "days.bin.tmp", "session.bin",     "session.bin.tmp"};
+inline constexpr const char* COURSE_MARK_MIGRATION_FILES[] = {"starred.bin", "starred.bin.tmp", "read.bin",
+                                                              "read.bin.tmp"};
 // Caller creates the course directory and excludes all state writers throughout this operation.
 inline CourseStateMigrationResult migrateLegacyCourseFiles(TransferStorage& storage, const Identity& course,
                                                            std::span<uint8_t> scratch,
@@ -108,16 +116,10 @@ inline CourseStateMigrationResult migrateLegacyCourseFiles(TransferStorage& stor
 }
 inline CourseStateMigrationResult migrateLegacyCourseState(TransferStorage& storage, const Identity& course,
                                                            std::span<uint8_t> scratch) {
-  static constexpr const char* FILES[] = {"items.bin",   "items.bin.tmp",   "reviews.log", "reviews.log.tmp",
-                                          "profile.bin", "profile.bin.tmp", "days.bin",    "days.bin.tmp",
-                                          "session.bin", "session.bin.tmp"};
-  static constexpr CourseMigrationPaths PATHS{COURSE_STATE_MIGRATION, COURSE_STATE_MIGRATION_STAGE,
-                                              COURSE_STATE_MIGRATION_DONE, COURSE_STATE_MIGRATION_DONE_STAGE};
-  return migrateLegacyCourseFiles(storage, course, scratch, FILES, PATHS);
+  return migrateLegacyCourseFiles(storage, course, scratch, COURSE_STATE_MIGRATION_FILES, COURSE_STATE_MIGRATION_PATHS);
 }
 inline CourseStateMigrationResult migrateLegacyCourseMarks(TransferStorage& storage, const Identity& course,
                                                            std::span<uint8_t> scratch) {
-  static constexpr const char* FILES[] = {"starred.bin", "starred.bin.tmp", "read.bin", "read.bin.tmp"};
-  return migrateLegacyCourseFiles(storage, course, scratch, FILES, COURSE_MARK_MIGRATION_PATHS);
+  return migrateLegacyCourseFiles(storage, course, scratch, COURSE_MARK_MIGRATION_FILES, COURSE_MARK_MIGRATION_PATHS);
 }
 }  // namespace companion

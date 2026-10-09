@@ -273,3 +273,87 @@ TEST(CompanionCourseMigrationProof, CompletedOriginalMigrationIsReadOnlyAndRejec
     EXPECT_EQ(storage.mutations, mutations);
   }
 }
+
+TEST(CompanionCourseMigrationProof, StateAndMarksRequireOneOriginWithoutMutatingHistory) {
+  Storage storage;
+  std::array<uint8_t, 512> scratch{};
+  const auto consent = request();
+  companion::ContentManifest binding;
+  binding.kind = companion::ContentKind::Course;
+  binding.length = 6;
+  binding.formatVersion = 1;
+  binding.logicalIdentity = consent.previousCourse;
+  binding.contentHash = consent.previousHash;
+  ASSERT_EQ(companion::encodeCourseBinding(binding, std::span(scratch).first(companion::COURSE_BINDING_SIZE)),
+            companion::COURSE_BINDING_SIZE);
+  storage.files[companion::COURSE_BINDING_PATH] = {scratch.begin(), scratch.begin() + companion::COURSE_BINDING_SIZE};
+  storage.files[companion::ACTIVE_COURSE_PATH] = std::vector<uint8_t>(6, 5);
+  for (const auto* name : companion::COURSE_STATE_MIGRATION_FILES)
+    storage.files[std::string("/tinta/") + name] = {8, 9};
+  for (const auto* name : companion::COURSE_MARK_MIGRATION_FILES)
+    storage.files[std::string("/tinta/") + name] = {10, 11};
+  ASSERT_EQ(companion::migrateLegacyCourseState(storage, consent.previousCourse, scratch),
+            companion::CourseStateMigrationResult::Ok);
+  ASSERT_EQ(companion::migrateLegacyCourseMarks(storage, consent.previousCourse, scratch),
+            companion::CourseStateMigrationResult::Ok);
+  // Removal recovery cannot depend on the active pack still being installed.
+  storage.files.erase(companion::ACTIVE_COURSE_PATH);
+  const auto migrated = storage.files;
+  const auto mutations = storage.mutations;
+  companion::Identity origin = consent.nextCourse;
+  ASSERT_EQ(companion::completedCourseStateIsolation(storage, scratch, origin),
+            companion::CourseStateMigrationResult::Ok);
+  EXPECT_EQ(origin, consent.previousCourse);
+  EXPECT_EQ(storage.files, migrated);
+  EXPECT_EQ(storage.mutations, mutations);
+
+  auto refuse = [&] {
+    origin = consent.nextCourse;
+    const auto before = storage.files;
+    EXPECT_NE(companion::completedCourseStateIsolation(storage, scratch, origin),
+              companion::CourseStateMigrationResult::Ok);
+    EXPECT_EQ(origin, consent.nextCourse);
+    EXPECT_EQ(storage.files, before);
+    EXPECT_EQ(storage.mutations, mutations);
+  };
+  for (const auto* name : companion::COURSE_STATE_MIGRATION_FILES) {
+    storage.files = migrated;
+    storage.files[std::string("/tinta/") + name] = {1};
+    refuse();
+  }
+  for (const auto* name : companion::COURSE_MARK_MIGRATION_FILES) {
+    storage.files = migrated;
+    storage.files[std::string("/tinta/") + name] = {1};
+    refuse();
+  }
+  for (const auto& paths : {companion::COURSE_STATE_MIGRATION_PATHS, companion::COURSE_MARK_MIGRATION_PATHS}) {
+    for (const auto* path : {paths.stage, paths.doneStage}) {
+      storage.files = migrated;
+      storage.files[path] = {1};
+      refuse();
+    }
+    for (const auto* path : {paths.intent, paths.done}) {
+      storage.files = migrated;
+      storage.files.erase(path);
+      refuse();
+      storage.files = migrated;
+      storage.files[path][0] ^= 1;
+      refuse();
+    }
+  }
+  storage.files = migrated;
+  for (const auto* path :
+       {companion::COURSE_MARK_MIGRATION_PATHS.intent, companion::COURSE_MARK_MIGRATION_PATHS.done}) {
+    auto& bytes = storage.files[path];
+    std::copy(consent.nextCourse.begin(), consent.nextCourse.end(), bytes.begin() + 4);
+    const auto crcOffset = bytes.size() - 4;
+    const auto crc = companion::courseBindingCrc(std::span(bytes).first(crcOffset));
+    for (size_t i = 0; i < 4; ++i) bytes[crcOffset + i] = static_cast<uint8_t>(crc >> (8 * i));
+  }
+  refuse();
+  storage.files = migrated;
+  origin = consent.nextCourse;
+  EXPECT_EQ(companion::completedCourseStateIsolation(storage, std::span(scratch).first(27), origin),
+            companion::CourseStateMigrationResult::InvalidBinding);
+  EXPECT_EQ(origin, consent.nextCourse);
+}
