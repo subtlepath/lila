@@ -12,6 +12,7 @@ class HalCompletedContentRemovals final {
  public:
   explicit HalCompletedContentRemovals(std::span<uint8_t> scratch) : scratch(scratch) {}
   ~HalCompletedContentRemovals() { close(); }
+  bool closeReaders() { return close(); }
   CompletedRemovalResult load(const ContentRemovalRequest& request, ContentRemovalRecord& output) {
     if (!validContentRemovalRequest(request) || scratch.size() < CONTENT_REMOVAL_RECORD_SIZE)
       return CompletedRemovalResult::Invalid;

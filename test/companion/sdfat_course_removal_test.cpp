@@ -13,6 +13,7 @@
 #include "lib/hal/HalCourseRemovalReferences.h"
 #include "lib/hal/HalCourseRemovalSession.h"
 #include "lib/hal/HalCourseRemovalStorage.h"
+#include "lib/hal/HalRemovedCourseBaseline.h"
 using namespace companion;
 namespace {
 bool permitted(void* context) { return !context || *static_cast<bool*>(context); }
@@ -412,14 +413,104 @@ int main() {
     assert(state.files == retained);
     const auto completed = *recovered.current();
     assert(!restoredBaseline.verifyCompleted(proofRecord, completed, request.manifest, request.generation));
+    HalRemovedCourseBaseline removedSource(request.generation, metadataScratch, permitted, &allowed);
+    assert(!removedSource.open(request.manifest));
+    assert(!removedSource.path() && !removedSource.manifest());
     HalCompletedContentRemovals completions(receiptScratch);
     assert(completions.persist(completed, recovered) == CompletedRemovalResult::Ok);
     HalCompletedRemovalJournalRelease release(recovered, journalStorage, completions, releaseScratch);
     assert(release.release() == CompletedRemovalResult::Ok);
     assert(restoredBaseline.verifyCompleted(proofRecord, completed, request.manifest, request.generation));
     assert(std::string(restoredBaseline.path()) == cachePath.data());
+    auto candidate = request.manifest;
+    candidate.contentHash[0] ^= 1;
+    ++candidate.length;
+    const auto beforeLoan = state.files;
+    assert(removedSource.open(candidate));
+    assert(std::string(removedSource.path()) == cachePath.data());
+    assert(*removedSource.manifest() == request.manifest);
+    assert(state.files == beforeLoan);
+    assert(removedSource.closeReaders());
+    assert(!removedSource.path() && !removedSource.manifest());
+    auto different = candidate;
+    different.logicalIdentity[0] ^= 1;
+    assert(!removedSource.open(different));
+    assert(!removedSource.path() && !removedSource.manifest());
+    assert(removedSource.open(candidate));
+    allowed = false;
+    assert(!removedSource.path() && !removedSource.manifest());
+    allowed = true;
+    assert(!removedSource.path() && !removedSource.manifest());
+    assert(removedSource.closeReaders());
+    const auto baselineFiles = state.files;
+    std::string receiptPath = "/.crosspoint/companion/removal-done-";
+    receiptPath.reserve(128);
+    static constexpr char HEX_DIGITS[] = "0123456789abcdef";
+    for (const auto byte : request.transaction) {
+      receiptPath.push_back(HEX_DIGITS[byte >> 4]);
+      receiptPath.push_back(HEX_DIGITS[byte & 15]);
+    }
+    for (unsigned refusal = 0; refusal < 12; ++refusal) {
+      state.files = baselineFiles;
+      switch (refusal) {
+        case 0:
+          state.files[ACTIVE_COURSE_PATH] = pack;
+          break;
+        case 1:
+          state.files[cachePath.data()][0] ^= 1;
+          break;
+        case 2:
+          state.files[COURSE_BINDING_STAGE] = {1};
+          break;
+        case 3:
+          state.files[COURSE_REMOVAL_PROOF_STAGE] = {1};
+          break;
+        case 4:
+          state.files[plans.publishedPath()][0] ^= 1;
+          break;
+        case 5:
+          state.files["/tinta/items.bin"] = {1};
+          break;
+        case 6:
+          state.files[COURSE_REMOVAL_PROOF_PATH][0] ^= 1;
+          break;
+        case 7:
+          state.files[receiptPath][0] ^= 1;
+          break;
+        case 8:
+          state.files.erase(receiptPath);
+          break;
+        case 9: {
+          auto foreign = completed;
+          foreign.request.owner[0] ^= 1;
+          std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> bytes{};
+          assert(encodeContentRemovalRecord(foreign, bytes) == bytes.size());
+          state.files[receiptPath] = {bytes.begin(), bytes.end()};
+          break;
+        }
+        case 10:
+          state.files[COURSE_BINDING_BACKUP] = {1};
+          break;
+        case 11: {
+          auto changed = request.manifest;
+          changed.contentHash[0] ^= 1;
+          std::array<uint8_t, COURSE_BINDING_SIZE> bytes{};
+          assert(encodeCourseBinding(changed, bytes) == bytes.size());
+          state.files[COURSE_BINDING_PATH] = {bytes.begin(), bytes.end()};
+          break;
+        }
+      }
+      const auto before = state.files;
+      assert(!removedSource.open(candidate));
+      assert(!removedSource.path() && !removedSource.manifest());
+      assert(state.files == before);
+    }
+    state.files = baselineFiles;
     auto replaced = request.generation;
     replaced[0] ^= 1;
+    HalRemovedCourseBaseline replacedSource(replaced, metadataScratch, permitted, &allowed);
+    assert(!replacedSource.open(candidate));
+    assert(!replacedSource.path() && !replacedSource.manifest());
     assert(!restoredBaseline.verifyCompleted(proofRecord, completed, request.manifest, replaced));
     assert(!restoredBaseline.path());
     state.files[ACTIVE_COURSE_PATH] = pack;

@@ -1055,3 +1055,29 @@ owner scans or hashing loops. The new owner remains unconnected to the native
 activity; its actual Tinta preparation callback, reinstall/switch handling and
 BLE/Wi-Fi routing still need integration before advertising course removal.
 The linked firmware checkpoint remains the startup-dispatch build above.
+
+`HalRemovedCourseBaseline` now verifies a removed pack before lending its path
+and original manifest to same-course update validation. It requires the current
+card generation, exact retained binding, completed Retired receipt, full sealed
+plan and independently hashed cached bytes. The active pack and owned quarantine
+backup must be absent, binding/proof stages must be absent, and read-only state
+isolation must still pass. Different course identities are refused. Its fixed
+records, decoder banks and handles stay off stack; hashing borrows caller IO.
+The loan is invalidated by close, another open or observed permission loss.
+
+All 1,755 host tests and the installed-SdFat suite pass. The 24 native removal
+scenarios now check the selector before journal release and after completed
+receipt publication/release. Each exercises same-course candidate selection and
+12 refusal cases covering active-pack reappearance, corrupt cache/plan/proof,
+unfinished publications, legacy-state reappearance, missing/corrupt/foreign
+receipts and a changed binding. Failure preserves files and exposes no old path
+or manifest; wrong-generation and different-course selection also refuse.
+These are synthetic pack/in-memory HAL tests, not installed Tinta update tests.
+
+The actual C3 project-header/construction probe passes 256-byte frame errors:
+construction is 96 bytes and `open` is 144 bytes individually, with a 256-byte
+maximum imported frame. The selector remains unconnected to the transfer
+validator. Locale/item-continuity validation against its verified source and
+recoverable retirement of the old removal proof after installation remain
+required, along with the native activity callback, routing and explicit switch
+flow. The linked firmware checkpoint is unchanged from startup dispatch above.
