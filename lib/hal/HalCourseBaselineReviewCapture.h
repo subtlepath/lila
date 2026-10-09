@@ -4,6 +4,7 @@
 
 #include "CompanionCourseBaselineReview.h"
 #include "CompanionTintaJournalPaths.h"
+#include "HalCoursePackArchive.h"
 #include "HalCourseRemovalMetadata.h"
 #include "HalCourseStateIsolation.h"
 #include "HalInventoryFileHash.h"
@@ -30,7 +31,10 @@ class HalCourseBaselineReviewCapture final {
   }
   HalCourseBaselineReviewCapture(const HalCourseBaselineReviewCapture&) = delete;
   HalCourseBaselineReviewCapture& operator=(const HalCourseBaselineReviewCapture&) = delete;
-  CourseBaselineReviewResult capture(const Identity& reader, const Identity& generation, const Identity& course) {
+  // An owned archive must already be fully verified for Prepared recovery. Only
+  // its exact immutable reference is omitted from the reviewed learner cohort.
+  CourseBaselineReviewResult capture(const Identity& reader, const Identity& generation, const Identity& course,
+                                     HalCoursePackArchive* ownedArchive = nullptr) {
     if (capturing) {
       LOG_DBG("COMPANION", "Course baseline review already running");
       return CourseBaselineReviewResult::Busy;
@@ -47,8 +51,20 @@ class HalCourseBaselineReviewCapture final {
     selectedGeneration = generation;
     selectedCourse = course;
     count = 0;
+    referencePresent = ownedArchive != nullptr;
+    referenceSeen = false;
+    if (referencePresent) {
+      const auto* manifest = ownedArchive->manifest();
+      const auto* reference = ownedArchive->referencePath();
+      if (!manifest || !reference || manifest->logicalIdentity != selectedCourse ||
+          strnlen(reference, referencePath.size()) == referencePath.size())
+        return finish(CourseBaselineReviewResult::Invalid);
+      referenceManifest = *manifest;
+      std::copy_n(reference, std::strlen(reference) + 1, referencePath.begin());
+    }
     if (!guard()) return finish(CourseBaselineReviewResult::Busy);
-    if (!closeReaders() || !isolation.verify(course)) return finish(CourseBaselineReviewResult::Corrupt);
+    if (!closeReaders() || (referencePresent && !referenceMatches()) || !isolation.verify(course))
+      return finish(CourseBaselineReviewResult::Corrupt);
     auto result = scanScope();
     if (result != CourseBaselineReviewResult::Ok) return finish(result);
     result = captureJournal();
@@ -61,7 +77,7 @@ class HalCourseBaselineReviewCapture final {
       result = captureFile(CourseBaselineReviewDomain::Isolation, PROOF_NAMES[at], PROOF_PATHS[at], false);
       if (result != CourseBaselineReviewResult::Ok) return finish(result);
     }
-    if (!isolation.verify(selectedCourse) || !closeReaders() || !guard())
+    if (!isolation.verify(selectedCourse) || (referencePresent && !referenceMatches()) || !closeReaders() || !guard())
       return finish(CourseBaselineReviewResult::Corrupt);
     auto bytes = scratch.first(64 + count * COURSE_BASELINE_REVIEW_ENTRY_SIZE);
     std::fill_n(bytes.begin(), COURSE_BASELINE_REVIEW_HEADER_SIZE, 0);
@@ -107,6 +123,9 @@ class HalCourseBaselineReviewCapture final {
   std::array<char, COURSE_STATE_PATH_SIZE> path{};
   CourseBaselineReviewFile file;
   Digest reviewHash{};
+  std::array<char, COURSE_ARCHIVE_PATH_SIZE> referencePath{};
+  ContentManifest referenceManifest;
+  bool referencePresent = false, referenceSeen = false;
   size_t count = 0;
   bool journalPresent = false, capturing = false;
   mutable bool ready = false;
@@ -138,6 +157,14 @@ class HalCourseBaselineReviewCapture final {
     output = std::string_view(name.data(), length);
     return true;
   }
+  bool referenceMatches() {
+    uint64_t size = 0;
+    if (!guard() || metadata.stat(referencePath.data(), size) != FileStatus::Present || size != COURSE_BINDING_SIZE ||
+        !guard() || !metadata.read(referencePath.data(), 0, io().first(COURSE_BINDING_SIZE)) || !guard())
+      return false;
+    ContentManifest observed;
+    return decodeCourseBinding(io().first(COURSE_BINDING_SIZE), observed) && observed == referenceManifest && guard();
+  }
   CourseBaselineReviewResult scanScope() {
     if (!openDirectory(scope.data())) return CourseBaselineReviewResult::IoError;
     unsigned steps = 0;
@@ -148,8 +175,19 @@ class HalCourseBaselineReviewCapture final {
       if (next == HalDirectoryResult::Error) return CourseBaselineReviewResult::IoError;
       if (next == HalDirectoryResult::End) break;
       std::string_view filename;
-      if (!entryName(filename) || entry.isDirectory() || filename.size() >= file.name.size())
-        return CourseBaselineReviewResult::Corrupt;
+      if (!entryName(filename) || entry.isDirectory()) return CourseBaselineReviewResult::Corrupt;
+      if (referencePresent) {
+        const std::string_view reference(referencePath.data());
+        const auto wanted = reference.substr(reference.find_last_of('/') + 1);
+        const auto match = hal_filename::compare(wanted, filename, fold);
+        if (match == hal_filename::Comparison::Invalid) return CourseBaselineReviewResult::Corrupt;
+        if (match == hal_filename::Comparison::Equal) {
+          if (referenceSeen) return CourseBaselineReviewResult::Corrupt;
+          referenceSeen = true;
+          continue;
+        }
+      }
+      if (filename.size() >= file.name.size()) return CourseBaselineReviewResult::Corrupt;
       file.name.fill(0);
       for (size_t at = 0; at < filename.size(); ++at) {
         const auto value = static_cast<unsigned char>(filename[at]);
@@ -167,6 +205,7 @@ class HalCourseBaselineReviewCapture final {
         vTaskDelay(1);
       }
     }
+    if (referencePresent && !referenceSeen) return CourseBaselineReviewResult::Corrupt;
     if (!count) return CourseBaselineReviewResult::Missing;
     return (!entry.isOpen() || entry.close()) && directory.close() && guard() ? CourseBaselineReviewResult::Ok
                                                                               : CourseBaselineReviewResult::IoError;

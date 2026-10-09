@@ -39,6 +39,7 @@
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
+#include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportConsentStore.h"
 #include "lib/hal/HalCourseBaselineImportPreparation.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
@@ -5754,4 +5755,267 @@ TEST_F(HalCourseTransferTest, NativeBaselinePublicationRejectsDuplicateAndIncomp
     EXPECT_EQ(artifacts.verifications, calls);
     EXPECT_EQ(hal.files, evidence);
   }
+}
+
+TEST_F(HalCourseTransferTest, PublishedBaselineVerifierChecksActualArtifactsAndPreservesNewerLearnerState) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  bool permitted = true;
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, &permitted);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  auto archive = makeUniqueNoThrow<HalCoursePackArchive>(scratch, permission, &permitted);
+  ASSERT_TRUE(archive);
+  ASSERT_EQ(archive->publish(record.request.manifest, "/tinta/original.pack"), CourseArchiveResult::Ok);
+  ASSERT_NE(archive->path(), nullptr);
+  const auto archivePath = std::string(archive->path());
+  archive.reset();
+  std::array<char, COURSE_STATE_PATH_SIZE> items{};
+  ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, "items.bin", items));
+  hal.files[items.data()] = {31, 37};
+  hal.files.erase("/tinta/original.pack");
+  const auto completed = hal;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto verifier = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                     scratch, *parser, permission, &permitted);
+  ASSERT_TRUE(verifier);
+  ASSERT_TRUE(verifier->verify(record));
+  record.phase = CourseBaselinePublicationPhase::Published;
+  ASSERT_TRUE(HalCourseBaselineArchiveSession::verifyPublication(verifier.get(), record));
+  EXPECT_EQ(hal.files, completed.files);
+  EXPECT_EQ(hal.renames, completed.renames);
+  for (unsigned fault = 0; fault < 9; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = completed;
+    auto input = record;
+    if (fault == 0) hal.files.erase(consentPath);
+    if (fault == 1) hal.files[consentPath].back() ^= 1;
+    if (fault == 2) hal.files[archivePath][0] ^= 1;
+    if (fault == 3) hal.failSyncPath = archivePath;
+    if (fault == 4) hal.failClosePath = archivePath;
+    if (fault == 5) {
+      for (auto iterator = hal.files.begin(); iterator != hal.files.end(); ++iterator) {
+        if (iterator->first.starts_with("/.crosspoint/companion/course-review-state-")) {
+          hal.files.erase(iterator);
+          break;
+        }
+      }
+    }
+    if (fault == 6) input.reader[0] ^= 0x80;
+    if (fault == 7) input.request.owner[0] ^= 0x80;
+    if (fault == 8) permitted = false;
+    const auto evidence = hal.files;
+    EXPECT_FALSE(verifier->verify(input));
+    EXPECT_EQ(hal.files, evidence);
+    permitted = true;
+  }
+  hal = completed;
+  EXPECT_TRUE(verifier->verify(record));
+  EXPECT_EQ(hal.files.at(items.data()), std::vector<uint8_t>({31, 37}));
+}
+
+TEST_F(HalCourseTransferTest, PublishedBaselineVerifierRejectsHashMatchedMalformedPack) {
+  // The archive's SHA proves the bytes, while the parser must prove their format.
+  bytes[0] ^= 1;
+  hashBytes();
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  auto archive = makeUniqueNoThrow<HalCoursePackArchive>(scratch, permission, nullptr);
+  ASSERT_TRUE(archive);
+  ASSERT_EQ(archive->publish(record.request.manifest, "/tinta/original.pack"), CourseArchiveResult::Ok);
+  archive.reset();
+  const auto evidence = hal.files;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto verifier = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                     scratch, *parser, permission, nullptr);
+  ASSERT_TRUE(verifier);
+  EXPECT_FALSE(verifier->verify(record));
+  EXPECT_EQ(hal.files, evidence);
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselineArchivePublicationRequiresIntentAndCompletesPersistedWorkflow) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  const auto initial = hal.files;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto session = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                    scratch, *parser, permission, nullptr);
+  ASSERT_TRUE(session);
+  EXPECT_FALSE(session->publishArchive(record, "/tinta/original.pack"));
+  EXPECT_EQ(hal.files, initial);
+  CourseBaselinePublicationHooks hooks{session.get(),
+                                       // Fresh native approval above runs with no intervening state writer.
+                                       [](void*, const CourseBaselinePublicationRecord&, bool) { return true; },
+                                       [](void* context, const CourseBaselinePublicationRecord& request) {
+                                         return static_cast<HalCourseBaselineArchiveSession*>(context)->publishArchive(
+                                             request, "/tinta/original.pack");
+                                       },
+                                       HalCourseBaselineArchiveSession::verifyPublication};
+  auto publication = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, record.request.owner, scratch, permission, nullptr);
+  ASSERT_TRUE(publication);
+  ASSERT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::Ok);
+  ASSERT_NE(publication->published(), nullptr);
+  hal.files.erase("/tinta/original.pack");
+  std::array<char, COURSE_STATE_PATH_SIZE> items{};
+  ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, "items.bin", items));
+  hal.files[items.data()] = {43};
+  const auto completed = hal.files;
+  hooks.verifyPrepared = [](void*, const CourseBaselinePublicationRecord&, bool) { return false; };
+  hooks.publishArchive = [](void*, const CourseBaselinePublicationRecord&) { return false; };
+  ASSERT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::Ok);
+  EXPECT_EQ(hal.files, completed);
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselineArchivePublicationRefusesUnverifiedSourcesAndIntentWithoutMutation) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  const auto intentPath = consentPath.substr(0, consentPath.size() - 8) + ".prepared";
+  hal.files[intentPath].resize(COURSE_BASELINE_PUBLICATION_SIZE);
+  ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, hal.files.at(intentPath)));
+  hal.files["/tinta/original.pack"] = bytes;
+  const auto initial = hal;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto session = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                    scratch, *parser, permission, nullptr);
+  ASSERT_TRUE(session);
+  for (unsigned fault = 0; fault < 9; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = initial;
+    auto input = record;
+    if (fault == 0) hal.files[intentPath + ".tmp"] = hal.files.at(intentPath);
+    if (fault == 1) hal.files[intentPath].pop_back();
+    if (fault == 2) {
+      auto foreign = record;
+      foreign.request.reviewHash[0] ^= 1;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(foreign, hal.files.at(intentPath)));
+    }
+    if (fault == 3) hal.files["/tinta/original.pack"].back() ^= 1;
+    if (fault == 4) hal.files["/tinta/original.pack"].pop_back();
+    if (fault == 5) hal.failSyncPath = "/tinta/original.pack";
+    if (fault == 6) hal.failClosePath = "/tinta/original.pack";
+    if (fault == 7) {
+      // Deliberately construct matching immutable evidence for malformed bytes.
+      auto& malformed = hal.files.at("/tinta/original.pack");
+      malformed[0] ^= 1;
+      SHA256(malformed.data(), malformed.size(), input.request.manifest.contentHash.data());
+      ASSERT_TRUE(encodeCourseBaselineImportRequest(input.request, hal.files.at(consentPath)));
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(input, hal.files.at(intentPath)));
+    }
+    if (fault == 8) input.request.owner[0] ^= 0x80;
+    const auto evidence = hal.files;
+    const auto renames = hal.renames;
+    EXPECT_FALSE(session->publishArchive(input, "/tinta/original.pack"));
+    EXPECT_EQ(hal.files, evidence);
+    EXPECT_EQ(hal.renames, renames);
+  }
+  hal = initial;
+  EXPECT_TRUE(session->publishArchive(record, "/tinta/original.pack"));
+  EXPECT_TRUE(session->verify(record));
+}
+
+TEST_F(HalCourseTransferTest, PreparedBaselineRecoveryRecognizesOnlyOwnArchiveAndUnchangedReviewedState) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, nullptr);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto session = makeUniqueNoThrow<HalCourseBaselineArchiveSession>(record.reader, generation, record.request.owner,
+                                                                    scratch, *parser, permission, nullptr);
+  ASSERT_TRUE(session);
+  struct ArchiveCut {
+    HalCourseBaselineArchiveSession* session;
+    bool stop = true;
+  } cut{session.get()};
+  CourseBaselinePublicationHooks hooks{
+      &cut,
+      [](void* context, const CourseBaselinePublicationRecord& request, bool recovering) {
+        return static_cast<ArchiveCut*>(context)->session->verifyPrepared(request, recovering);
+      },
+      [](void* context, const CourseBaselinePublicationRecord& request) {
+        auto& cut = *static_cast<ArchiveCut*>(context);
+        return cut.session->publishArchive(request, "/tinta/original.pack") && !cut.stop;
+      },
+      [](void* context, const CourseBaselinePublicationRecord& request) {
+        return static_cast<ArchiveCut*>(context)->session->verify(request);
+      }};
+  auto publication = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, record.request.owner, scratch, permission, nullptr);
+  ASSERT_TRUE(publication);
+  EXPECT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::IoError);
+  EXPECT_EQ(publication->published(), nullptr);
+  const auto interrupted = hal.files;
+  EXPECT_FALSE(session->verifyPrepared(record, false));
+  ASSERT_TRUE(session->verifyPrepared(record, true));
+  std::array<char, COURSE_STATE_PATH_SIZE> items{};
+  ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, "items.bin", items));
+  hal.files[items.data()] = {71};
+  const auto changed = hal.files;
+  EXPECT_FALSE(session->verifyPrepared(record, true));
+  EXPECT_EQ(hal.files, changed);
+  hal.files = interrupted;
+  auto foreign = std::find_if(hal.files.begin(), hal.files.end(), [](const auto& file) {
+    return file.first.starts_with("/tinta/courses/") && file.first.ends_with(".ref");
+  });
+  ASSERT_NE(foreign, hal.files.end());
+  auto foreignPath = foreign->first;
+  foreignPath[foreignPath.size() - 5] = foreignPath[foreignPath.size() - 5] == '0' ? '1' : '0';
+  hal.files[foreignPath] = foreign->second;
+  const auto conflicting = hal.files;
+  EXPECT_FALSE(session->verifyPrepared(record, true));
+  EXPECT_EQ(hal.files, conflicting);
+  hal.files = interrupted;
+  cut.stop = false;
+  ASSERT_EQ(publication->publish(record, hooks), CourseBaselinePublicationResult::Ok);
+  ASSERT_NE(publication->published(), nullptr);
+  EXPECT_EQ(hal.files.at(items.data()), interrupted.at(items.data()));
 }

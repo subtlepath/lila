@@ -2040,3 +2040,125 @@ native full-pack or archive validation. This header is not yet connected to the
 firmware command path. After integration, verify both phase files and their CRCs,
 cut power around each stage/rename and archive publication, and confirm recovery
 preserves newer learner state while checking free/largest heap through Serial.
+
+### Native completed-publication evidence
+
+`HalCourseBaselineArchiveSession` supplies the read-only `verifyPublished`
+callback for the publication workflow. It binds the input to native reader,
+storage generation and authenticated owner, copies the request before scratch
+reuse, loads the exact immutable consent, checks every historical review copy and
+opens the exact retained archive. Archive opening verifies its full SHA-256 and
+matching manifest; the production `validateStagedCourse` parser then validates
+all pack sections and checks the declared format version. Missing, ambiguous,
+corrupt or pending evidence, permission loss and checked-close failures refuse
+verification. The original upload is not needed once the archive is retained.
+
+Historical verification never recaptures or modifies live learner state, creates consent,
+repairs files or offers fresh approval. Its callback can accept the workflow's
+copied Prepared request while proving historical artifacts; it does not establish
+that a Published phase record exists. The publication store separately proves
+those phase records. Caller-owned writer exclusion and journal readiness remain
+required, as do initial full-pack/item compatibility checks and Prepared recovery.
+
+Forced C3 compilation passes the 256-byte frame gate: verification and the
+construction probe each use 64 bytes. The fixed off-stack archive session is 12,064
+bytes, including retained consent, backup and archive owners. Its borrowed parser
+is another 720 bytes; consent loading transiently admits a 1,568-byte review
+reader, totaling 14,352 fixed bytes before lazy HAL handles and borrowed session
+workspace. A single retained owner avoids per-file allocation and repeated child
+owner allocation during final verification; a stack/static owner would violate
+the local limit or retain this memory outside the import lifecycle. Admit owner
+and parser with `makeUniqueNoThrow`, check failures and retain the 50 KiB reserve.
+
+All 1,865 host tests pass. Native tests use actual consent, copied review files,
+archived pack bytes and the
+production parser, including repeated verification after newer learner writes,
+removed upload source, missing/corrupt evidence, archive sync/close failures and a
+malformed pack whose SHA-256 matches its manifest. The command path remains unconnected. Prepared recovery with staged archive
+references still requires further work. On hardware after integration,
+verify completed recovery without the original upload, compare newer learner
+bytes before/after, inspect archive and copy hashes, and monitor free/largest heap
+and parser task stack. Hardware acceptance remains unverified.
+
+
+### Native archive publication
+
+The archive session also supplies `publishArchive(request, source)`. Before any
+archive mutation, it checks the exact canonical Prepared intent through complete
+HAL namespace lookup, requires its stage to be absent, verifies native immutable
+consent and every retained review copy, and checks source length and SHA-256. It
+then validates the full source pack with the production parser before publishing
+through `HalCoursePackArchive`. The request and bounded source path are copied
+before scratch reuse. Checked source sync/close and final closes are mandatory.
+The existing upload and learner files are preserved; no fallback archive is made
+from unverifiable input.
+
+This does not grant fresh approval or prove live learner compatibility. The
+publication workflow must still supply honest fresh and Prepared recovery
+verification, including recognition of only its own archive reference after an
+interrupted publication. Initial item compatibility and parent transfer commit
+remain required before command wiring. The session reuses its existing archive,
+consent, backup and parser owners, adding fixed metadata, source handle and path
+members rather than per-file buffers. C3 publication is 96 bytes, intent checking
+80 and source hashing 96; the revised fixed footprint below includes these fields.
+
+An integration test combines actual native consent/copies, phase persistence,
+full-pack archive publication and historical verification. It refuses publication
+without Prepared intent, then completes and replays after removal of the upload
+and a newer learner write while fresh/publication callbacks are disabled. This test now uses the native fresh verification callback. Hardware and
+command-path acceptance remain unverified.
+
+A source-refusal matrix checks complete-stage conflicts, torn/foreign Prepared
+records, source length/hash mismatch, source sync/close failures, wrong owner and
+matching immutable intent/consent for a malformed source. Every refusal preserves
+all file bytes and rename counts. Restoring valid evidence permits publication
+and subsequent historical verification through the same retained session.
+
+All 1,867 host tests pass after the native publication integration and refusal
+matrix. With the 2,144-byte native phase store retained alongside the session,
+parser and transient review reader, the combined fixed peak is 16,496 bytes,
+excluding shared workspace, caller-owned transfer state and lazy HAL handles.
+
+
+### Prepared recovery after canonical archive publication
+
+`HalCourseBaselineArchiveSession::verifyPrepared` checks native consent, immutable
+review copies, absence of retained removal receipts and the current reviewed
+learner/journal/isolation cohort. Fresh verification refuses an existing archive.
+Recovery first proves the exact canonical Prepared intent, then accepts only its
+matching archive manifest, full hash and full pack validation. The capture accepts
+the verified native archive handle and omits only its exact immutable reference
+from learner hashing. It checks that reference through complete HAL lookup and
+exact binding decode before and after enumeration, requires exactly one matching
+entry and rejects other references/stages or ambiguous names. All learner bytes,
+file membership and isolation/journal evidence must still produce the approved
+review SHA-256. The read-only comparison never offers a backup-complete loan.
+
+An integration test stops after actual archive publication with only Prepared
+intent durable, then exercises native recovery. Fresh verification refuses the
+archive; changed learner bytes or a foreign reference refuse recovery and retain
+all evidence; restoring the cohort permits idempotent publication and completion.
+The ordinary completion test now uses native fresh verification rather than a
+modeled preparation callback. Completed recovery still uses historical evidence
+and preserves newer learner state.
+
+C3 compilation passes the 256-byte frame limit: Prepared verification 80 bytes,
+receipt admission 48, capture 112, scope enumeration 112 and reference comparison
+144. Capture's fixed owner is now 2,352 bytes; the backup owner is 6,136, consent
+1,936 and archive session 12,272. The extra 208 bytes in capture hold a copied
+reference path/manifest and flags, avoiding borrowed names that scratch reuse
+could invalidate. Prepared verification admits a 4,496-byte receipt reader once
+per operation with `makeUniqueNoThrow`; its size exceeds the local stack limit and
+an import-only static pool would retain memory outside the session. Including
+session, parser (720), phase store (2,144) and receipt reader, the fixed peak is
+19,632 bytes before lazy HAL handles, shared workspace and parent transfer state.
+
+This closes the canonical-reference recovery case. Staged archive reference
+recovery, initial item compatibility, parent transfer/command/capability wiring
+and Apple review/queue UI still remain. Pending or corrupt reference stages are
+preserved and refused; they are not silently treated as missing history. Hardware
+acceptance remains unverified. After integration, cut power after canonical
+reference publication and verify Prepared recovery before reading resumes;
+compare learner bytes/review hash and monitor free/largest heap and stack.
+
+All 1,868 host tests pass after the canonical-reference Prepared recovery changes.

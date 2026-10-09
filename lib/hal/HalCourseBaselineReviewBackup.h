@@ -99,6 +99,22 @@ class HalCourseBaselineReviewBackup final {
     }
     return finish(true, false);
   }
+  // Read-only live cohort comparison. Owned reference omission requires a fully
+  // verified native archive; this operation never offers a backup-complete loan.
+  bool verifyCurrent(const Digest& reviewHash, const Identity& reader, const Identity& generation,
+                     const Identity& course, HalCoursePackArchive* ownedArchive = nullptr) {
+    if (operating) return failure("reentry");
+    ready = false;
+    if (scratch.size() < COURSE_BASELINE_REVIEW_MAX_SIZE + 512 ||
+        course_baseline_detail::overlaps(scratch.data(), scratch.size(), this, sizeof(*this)))
+      return failure("workspace");
+    selectedHash = reviewHash;
+    selectedReader = reader;
+    selectedGeneration = generation;
+    selectedCourse = course;
+    operating = true;
+    return finish(closeReaders() && currentReview(ownedArchive), false);
+  }
   bool complete() const {
     if (!guard()) ready = false;
     return ready;
@@ -135,9 +151,10 @@ class HalCourseBaselineReviewBackup final {
                                                             : std::span<uint8_t>{};
   }
   bool guard() const { return permitted && permitted(context); }
-  bool currentReview() {
+  bool currentReview(HalCoursePackArchive* ownedArchive = nullptr) {
     return guard() &&
-           capture.capture(selectedReader, selectedGeneration, selectedCourse) == CourseBaselineReviewResult::Ok &&
+           capture.capture(selectedReader, selectedGeneration, selectedCourse, ownedArchive) ==
+               CourseBaselineReviewResult::Ok &&
            capture.hash() && *capture.hash() == selectedHash;
   }
   void paths(size_t index) {
