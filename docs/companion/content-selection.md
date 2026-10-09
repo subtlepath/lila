@@ -9,7 +9,7 @@ JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
 unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
-reference/state adapter, routing and replacement flow remain incomplete, so it
+admission/session/boot owners, routing and replacement flow remain incomplete, so it
 is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
@@ -910,3 +910,40 @@ passes the release validator for board/chip, segment bounds, checksum, SHA-256
 trailer and OTA partition size. The saved checkpoint image/proof are under
 `/tmp/lila-course-isolation-images/`. Other board images recorded above predate
 this edit; final affected-board builds remain required after course integration.
+
+`HalCourseStateIsolation` now verifies those receipts together with the actual
+current course directory. It requires a permission callback and scans the whole
+parent directory, rejecting regular-file collisions, duplicate case-equivalent
+names, malformed names/aliases, enumeration errors and failed closes. Its name
+buffer and two handles are members of a retained owner; verification allocates
+no heap and writes no learner state.
+
+`HalCourseRemovalReferences` composes that check with the exact retained course
+binding, absent binding stage/backup, removal-proof publication and independently
+verified cached pack baseline. Fresh/prepared admission refuses an existing or
+unfinished removal proof. Later checkpoints preserve the binding and learner
+files while retaining the verified old pack, and refuse mismatched journals or
+proofs. The proof store now accepts the same permission callback used by the
+session, including cancellation checks during lookup and before publication.
+The eventual session owner must lend disjoint scratch and pass its permission
+callback consistently to the reference, state, proof and baseline owners.
+
+The installed-SdFat checker passes with 19 native removal scenarios using this
+production reference adapter rather than unconditional state isolation. They
+cover missing/corrupt/mismatched bindings, missing scoped directories, legacy
+root files, crossed migration receipts, binding/proof stages and revoked
+permission in addition to quarantine/baseline recovery faults. A separate native
+test checks every isolation permission checkpoint, checked closes, duplicates,
+malformed siblings, and yields across a 65-entry parent. These run against an
+in-memory HAL fixture; physical SD and actual Tinta replay remain unverified.
+All 1,750 host tests pass, including cancellation at every observed proof
+publication/load permission check, safe retry, and unchanged failure outputs.
+
+An actual C3 project-header probe compiles all reference entry points with
+256-byte frame errors enabled: state directory verification is 128 bytes,
+binding/state verification is 80 bytes and the reference operations are at most
+32 bytes individually. The maximum imported frame is the existing 256-byte
+removal-record decoder. This is not an aggregate task stack-watermark result.
+These new classes are not yet dispatched by firmware; the last linked default
+firmware image remains the shared-proof checkpoint described above. Final
+firmware builds are still required after admission/recovery/routing integration.

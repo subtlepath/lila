@@ -9,14 +9,18 @@ enum class CourseRemovalProofStorageResult { Ok, Missing, Invalid, Conflict, Cor
 // This store publishes proof metadata; pack/state verification belongs to its caller.
 class HalCourseRemovalProofStorage final {
  public:
-  explicit HalCourseRemovalProofStorage(std::span<uint8_t> scratch) : scratch(scratch) {}
+  using Permission = bool (*)(void*);
+  explicit HalCourseRemovalProofStorage(std::span<uint8_t> scratch, Permission permitted = nullptr,
+                                        void* context = nullptr)
+      : scratch(scratch), permitted(permitted), context(context), lookup(progress, this) {}
   ~HalCourseRemovalProofStorage() { close(); }
   bool closeReaders() { return close(); }
   CourseRemovalProofStorageResult load(const Identity& generation, ContentRemovalRecord& output) {
     if (scratch.size() < CONTENT_REMOVAL_RECORD_SIZE || generation == Identity{})
       return CourseRemovalProofStorageResult::Invalid;
-    if (!prepare()) return error("load preparation");
+    if (!allowed() || !prepare()) return error("load preparation");
     const auto result = read(COURSE_REMOVAL_PROOF_PATH);
+    if (!allowed()) return CourseRemovalProofStorageResult::Conflict;
     if (result != CourseRemovalProofStorageResult::Ok) return result;
     if (decoded.request.generation != generation) return CourseRemovalProofStorageResult::Conflict;
     output = decoded;
@@ -63,13 +67,19 @@ class HalCourseRemovalProofStorage final {
 
  private:
   std::span<uint8_t> scratch;
+  Permission permitted;
+  void* context;
   ContentRemovalRecord expected, decoded;
   ContentRemovalJournal* owner = nullptr;
   HalCompanionFileLookup lookup;
   HalFile file;
-  bool guard() const { return owner && owner->current() && *owner->current() == expected; }
+  bool allowed() const { return !permitted || permitted(context); }
+  static bool progress(void* context) { return static_cast<HalCourseRemovalProofStorage*>(context)->allowed(); }
+  bool guard() const { return allowed() && owner && owner->current() && *owner->current() == expected; }
   bool close() { return !file.isOpen() || file.close() || failure("close"); }
-  bool prepare() { return close() && Storage.ready() && Storage.ensureDirectoryExists(TRANSFER_DIRECTORY); }
+  bool prepare() {
+    return close() && allowed() && Storage.ready() && Storage.ensureDirectoryExists(TRANSFER_DIRECTORY) && allowed();
+  }
   CourseRemovalProofStorageResult read(const char* path) {
     if (!close()) return error("read close");
     const auto presence = lookup.inspect(path);

@@ -113,3 +113,49 @@ TEST_F(CourseProofStorageTest, SyncAndCloseFailuresCannotReturnVerifiedProof) {
   }
   EXPECT_TRUE(proofs.closeReaders());
 }
+
+TEST_F(CourseProofStorageTest, RevokedPublicationOwnerResumesAndNeverReturnsAnUncheckedProof) {
+  struct Permission {
+    unsigned calls = 0, revoke = 0;
+    static bool check(void* context) {
+      auto& permission = *static_cast<Permission*>(context);
+      ++permission.calls;
+      return !permission.revoke || permission.calls < permission.revoke;
+    }
+  } permission;
+  auto& state = inventory_hal_test::state;
+  const auto before = state;
+  {
+    HalCourseRemovalProofStorage guarded(proofBytes, Permission::check, &permission);
+    ASSERT_EQ(guarded.persist(published, journal), CourseRemovalProofStorageResult::Ok);
+  }
+  const auto publicationChecks = permission.calls;
+  for (unsigned revoke = 1; revoke <= publicationChecks; ++revoke) {
+    state = before;
+    permission = {0, revoke};
+    HalCourseRemovalProofStorage guarded(proofBytes, Permission::check, &permission);
+    EXPECT_NE(guarded.persist(published, journal), CourseRemovalProofStorageResult::Ok);
+    ASSERT_TRUE(journal.current());
+    EXPECT_EQ(*journal.current(), published);
+    ASSERT_TRUE(guarded.closeReaders());
+    HalCourseRemovalProofStorage reopened(proofBytes);
+    ASSERT_EQ(reopened.persist(published, journal), CourseRemovalProofStorageResult::Ok);
+    auto loaded = seed;
+    ASSERT_EQ(reopened.load(seed.request.generation, loaded), CourseRemovalProofStorageResult::Ok);
+    EXPECT_EQ(loaded, published);
+  }
+  permission = {};
+  HalCourseRemovalProofStorage guarded(proofBytes, Permission::check, &permission);
+  auto loaded = seed;
+  ASSERT_EQ(guarded.load(seed.request.generation, loaded), CourseRemovalProofStorageResult::Ok);
+  const auto loadChecks = permission.calls;
+  const auto files = state.files;
+  for (unsigned revoke = 1; revoke <= loadChecks; ++revoke) {
+    permission = {0, revoke};
+    loaded = seed;
+    EXPECT_NE(guarded.load(seed.request.generation, loaded), CourseRemovalProofStorageResult::Ok);
+    EXPECT_EQ(loaded, seed);
+    EXPECT_EQ(state.files, files);
+    EXPECT_TRUE(guarded.closeReaders());
+  }
+}
