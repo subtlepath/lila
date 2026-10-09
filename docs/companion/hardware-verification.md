@@ -422,3 +422,26 @@ Run them after the course-context/removal capabilities are enabled for acceptanc
 - [ ] Repeat remove, reinstall and switch sessions while monitoring free/largest
       heap and task stack watermarks through debug logs. Require over 50 KiB free
       heap, adequate stack margin and no accumulating loss across sessions.
+
+### Installed-course archive acceptance
+
+These checks are pending on C3 and S3. Keep a learning-state backup and record
+firmware/image identity alongside the results.
+
+- [ ] Install a fully validated course through the authenticated companion
+      transfer. Before success, confirm its cache and permanent owner under
+      `/.crosspoint/companion/course-pack-<hash>` and matching
+      `/tinta/courses/<course-id>/pack-<hash>.ref` are present and hash-correct.
+- [ ] Cut power during cache-owner publication, cache copy, cache rename,
+      reference staging and reference rename. Reboot and retry the same transfer;
+      verify its original pack bytes, learner state and immutable archives remain
+      usable. An incomplete owned prefix may resume only after byte comparison.
+- [ ] Install a second compatible version, remove the active pack, and verify
+      both archived versions remain intact with their separate references.
+      This does not yet establish return-to-course compatibility enforcement.
+- [ ] Corrupt a cache, owner or reference, and force low/fragmented heap admission.
+      Commit must refuse and preserve the evidence; restore the backup before
+      retrying. Do not overwrite or delete foreign/torn archive ownership.
+- [ ] Record free/largest internal heap and stack watermarks during copying,
+      recovery and repeated transfers. Require over 50 KiB free heap throughout
+      accepted operations and no accumulating loss across sessions.

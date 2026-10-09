@@ -40,6 +40,7 @@
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCoursePackHistory.h"
+#include "lib/hal/HalCoursePackHistoryValidator.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
 #include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
@@ -3303,5 +3304,186 @@ TEST_F(HalCourseTransferTest, CourseHistoryRejectsDuplicateFoldedCourseDirectori
                 &visits),
             CourseHistoryResult::IoError);
   EXPECT_EQ(visits, 0u);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, InstalledCourseMetadataRetainsArchiveBeforeCompletionAndRetriesCloseFailure) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  declaration.state.phase = TransferPhase::Installing;
+  declaration.state.durableOffset = declaration.state.length;
+  ASSERT_TRUE(storage.installContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, declaration.state, scratch));
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.open(declaration.manifest.logicalIdentity, declaration.manifest.contentHash),
+            CourseArchiveResult::Ok);
+  const std::string cached = archive.path();
+  const std::string reference = archive.referencePath();
+  ASSERT_TRUE(archive.closeReaders());
+  const auto complete = hal.files;
+  hal.failClosePath = cached;
+  EXPECT_FALSE(storage.installContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, complete);
+  hal.failClosePath.clear();
+  EXPECT_TRUE(storage.installContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, complete);
+  EXPECT_EQ(hal.files.at(cached), bytes);
+  EXPECT_TRUE(hal.files.contains(reference));
+  hal.files.erase(ACTIVE_COURSE_PATH);
+  const auto retained = hal.files;
+  struct HistoryCheck {
+    HalTransferStorage* storage;
+    std::span<uint8_t> scratch;
+    const ContentManifest* expected;
+    unsigned count = 0;
+  } check{&storage, scratch, &declaration.manifest};
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(history.visit(
+                declaration.manifest.logicalIdentity,
+                [](void* context, const ContentManifest& manifest, const char* path) {
+                  auto& check = *static_cast<HistoryCheck*>(context);
+                  ++check.count;
+                  return manifest == *check.expected &&
+                         check.storage->verify(path, manifest.length, manifest.contentHash, check.scratch);
+                },
+                &check),
+            CourseHistoryResult::Ok);
+  EXPECT_EQ(check.count, 1u);
+  EXPECT_EQ(hal.files, retained);
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryVisitsEveryFullyValidatedPackVersionAfterActiveRemoval) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  const auto previous = declaration.manifest;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(previous, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  bytes[12] ^= 1;  // Build timestamp changes without altering item meaning.
+  sealPack();
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  const auto next = declaration.manifest;
+  ASSERT_NE(previous.contentHash, next.contentHash);
+  ASSERT_EQ(archive.publish(next, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  hal.files.erase(ACTIVE_COURSE_PATH);
+  const auto retained = hal.files;
+  auto pack = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(pack);
+  struct Check {
+    tinta::core::pack::Pack* pack;
+    std::span<uint8_t> scratch;
+    const ContentManifest* previous;
+    const ContentManifest* next;
+    unsigned previousCount = 0, nextCount = 0;
+  } check{pack.get(), scratch, &previous, &next};
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(history.visit(
+                previous.logicalIdentity,
+                [](void* context, const ContentManifest& manifest, const char* path) {
+                  auto& check = *static_cast<Check*>(context);
+                  CourseCandidateDetails details;
+                  if (!validateStagedCourse(path, *check.pack, check.scratch, details)) return false;
+                  if (manifest == *check.previous)
+                    ++check.previousCount;
+                  else if (manifest == *check.next)
+                    ++check.nextCount;
+                  else
+                    return false;
+                  return details.major == manifest.formatVersion;
+                },
+                &check),
+            CourseHistoryResult::Ok);
+  EXPECT_EQ(check.previousCount, 1u);
+  EXPECT_EQ(check.nextCount, 1u);
+  EXPECT_EQ(hal.files, retained);
+}
+
+TEST_F(HalCourseTransferTest, CourseMetadataRejectsIncompleteOrForeignTransferContextWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  const auto before = hal.files;
+  const auto directoryCount = hal.directories.size();
+  for (unsigned fault = 0; fault < 8; ++fault) {
+    SCOPED_TRACE(fault);
+    auto state = declaration.state;
+    state.phase = TransferPhase::Installing;
+    state.durableOffset = state.length;
+    switch (fault) {
+      case 0:
+        state.contentHash[0] ^= 1;
+        break;
+      case 1:
+        state.owner = {};
+        break;
+      case 2:
+        state.transaction = {};
+        break;
+      case 3:
+        state.storageGeneration = {};
+        break;
+      case 4:
+        --state.durableOffset;
+        break;
+      case 5:
+        state.phase = TransferPhase::Verified;
+        break;
+      case 6:
+        state.phase = TransferPhase::Receiving;
+        break;
+      case 7:
+        state.phase = TransferPhase::Aborted;
+        break;
+    }
+    EXPECT_FALSE(storage.installContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, state, scratch));
+    EXPECT_EQ(hal.files, before);
+    EXPECT_EQ(hal.directories.size(), directoryCount);
+  }
+}
+
+TEST_F(HalCourseTransferTest, ArchivedHistoryValidatorAcceptsTimestampUpdateAndRejectsRetiredUidReinterpretation) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  const auto previous = declaration.manifest;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(previous, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  bytes[12] ^= 1;
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch);
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Ok);
+  bytes.back() ^= 1;  // Change the retained meaning of the retired UID.
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  const auto before = hal.files;
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Incompatible);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, ArchivedLegacyHistoryRequiresSameRecordsAndLanguage) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch);
+  bytes[12] ^= 1;
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Ok);
+  constexpr auto localeOffset = offsetof(tinta::core::pack::Header, locale);
+  bytes[localeOffset] = bytes[localeOffset] == 'e' ? 'f' : 'e';
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  const auto before = hal.files;
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Incompatible);
   EXPECT_EQ(hal.files, before);
 }

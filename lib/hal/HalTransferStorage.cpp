@@ -25,6 +25,7 @@
 #include "CompanionStoredCourseContinuity.h"
 #include "CompanionTintaJournalPaths.h"
 #include "HalCompanionHeapAdmission.h"
+#include "HalCoursePackArchive.h"
 #include "HalCourseValidation.h"
 #include "HalRemovedCourseBaseline.h"
 #endif
@@ -209,6 +210,17 @@ bool HalTransferStorage::prepareCourseSwitch(const CourseSwitchRequest& request,
   }
   return true;
 }
+bool HalTransferStorage::archiveInstalledCourse(const char* path, const ContentManifest& manifest,
+                                                std::span<uint8_t> workspace) {
+  // The retained archive owner exceeds the stack budget; release it after publication.
+  if (!admitCompanionHeap(sizeof(HalCoursePackArchive), sizeof(HalCoursePackArchive)))
+    return failure("course archive heap admission", path);
+  auto archive =
+      makeUniqueNoThrow<HalCoursePackArchive>(workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!archive) return failure("OOM: course archive", path);
+  if (archive->publish(manifest, path) != CourseArchiveResult::Ok) return failure("course archive publication", path);
+  return archive->closeReaders() || failure("course archive close", path);
+}
 bool HalTransferStorage::validateCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace,
                                         char* locale) {
   if (!courseValidator) {
@@ -332,6 +344,11 @@ bool HalTransferStorage::installContentMetadata(const char* destination, const C
   }
 #if LILA_TINTA
   if (manifest.kind == ContentKind::Course && std::strcmp(destination, ACTIVE_COURSE_PATH) == 0) {
+    if (!matchesTransferManifest(manifest, state) || !inventory_detail::nonzero(state.owner) ||
+        !inventory_detail::nonzero(state.transaction) || !inventory_detail::nonzero(state.storageGeneration) ||
+        state.durableOffset != state.length ||
+        (state.phase != TransferPhase::Installing && state.phase != TransferPhase::Committed))
+      return failure("course metadata transfer context", destination);
     CourseSwitchIntent intent(*this, workspace);
     CourseSwitchRequest request;
     const auto result = intent.load(request);
@@ -343,8 +360,10 @@ bool HalTransferStorage::installContentMetadata(const char* destination, const C
         LOG_ERR("COMPANION", "Course switch binding publication failed");
         return false;
       }
-      return true;
+      return archiveInstalledCourse(destination, manifest, workspace);
     }
+    if (!installContentMetadata(destination, manifest, workspace)) return false;
+    return archiveInstalledCourse(destination, manifest, workspace);
   }
 #endif
   return installContentMetadata(destination, manifest, workspace);

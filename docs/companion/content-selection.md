@@ -1326,3 +1326,38 @@ is 2,696 bytes, excluding lazy HAL handle allocations; callers must admit it
 on the heap rather than use stack or permanent static storage. It is not yet
 wired into native transfer preparation, so this checkpoint does not establish
 return-to-course safety in firmware or on hardware.
+
+### Native metadata archive publication
+
+The authenticated transfer metadata overload now retains the installed course
+as an immutable archive before the parent transfer can become committed.
+It requires a complete matching Installing/Committed transfer context and
+uses checked heap admission for the temporary archive owner. Explicit switch
+binding publication and ordinary binding publication remain recoverable when
+archiving fails; retry verifies the same cache/reference without overwriting it.
+The four-argument metadata helper remains available for existing local callers.
+
+All 1,795 host tests pass, including archive-close failure, unchanged-file
+retry, invalid transfer context without writes, and validation of every archived
+pack version after active-pack removal. The C3 compilation of `HalTransferStorage.cpp`, with Tinta enabled and disabled,
+passes the 256-byte
+frame limit: archive publication uses 64 bytes and authenticated metadata uses
+192 bytes. The default firmware build and image validation pass. This establishes retention
+of newly installed versions; outgoing legacy baseline retention and destination
+history compatibility checks are still required before return-to-course safety
+is complete.
+
+
+The native publication checkpoint image is 6,498,112 bytes (SHA-256
+`b4f92321b7aa6786aa1d2794dd5d9035d83bc739948f3540e6989cca8a9e2aae`). Its x4/chip-5
+tag, segments, checksum, SHA trailer and OTA partition fit are verified. These
+checks do not establish physical recovery or runtime heap headroom.
+
+`HalCoursePackHistoryValidator` borrows a caller-owned parser and scratch,
+validates the candidate's hash/format, parses every verified archived version,
+checks language and compares stable item histories. Missing identity history
+requires identical legacy records regardless of current learner-file presence.
+Host tests accept timestamp-only updates and reject changed retired identity
+meaning and changed language without writes. The C3 helper is 36 bytes and its
+visitor frame is 176 bytes. It remains separate from transfer preparation;
+return-to-course compatibility enforcement is not complete.
