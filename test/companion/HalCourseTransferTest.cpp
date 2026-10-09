@@ -41,6 +41,7 @@
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCourseBaselineImportConsentStore.h"
 #include "lib/hal/HalCourseBaselineImportPreparation.h"
+#include "lib/hal/HalCourseBaselinePublicationStore.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
 #include "lib/hal/HalCourseBaselineReviewStore.h"
@@ -5592,4 +5593,165 @@ TEST_F(HalCourseTransferTest, ReviewedBaselineStoredCopyVerificationRefusesIncom
   hal = baseline;
   ASSERT_TRUE(backups->verifyStored(request.reviewHash, reader, generation, request.manifest.logicalIdentity));
   EXPECT_FALSE(backups->complete());
+}
+
+namespace {
+struct NativePublicationArtifacts {
+  bool permitted = true, archive = false, fresh = true, verified = true;
+  unsigned preparations = 0, publications = 0, verifications = 0;
+  CourseBaselinePublicationHooks hooks() {
+    return {this,
+            [](void* context, const CourseBaselinePublicationRecord&, bool recovering) {
+              auto& state = *static_cast<NativePublicationArtifacts*>(context);
+              ++state.preparations;
+              return state.fresh || (recovering && state.archive);
+            },
+            [](void* context, const CourseBaselinePublicationRecord&) {
+              auto& state = *static_cast<NativePublicationArtifacts*>(context);
+              ++state.publications;
+              state.archive = true;
+              return true;
+            },
+            [](void* context, const CourseBaselinePublicationRecord&) {
+              auto& state = *static_cast<NativePublicationArtifacts*>(context);
+              ++state.verifications;
+              return state.archive && state.verified;
+            }};
+  }
+  static bool allowed(void* context) { return static_cast<NativePublicationArtifacts*>(context)->permitted; }
+};
+}  // namespace
+
+TEST_F(HalCourseTransferTest, NativeBaselinePublicationChecksContextAndReplaysWithoutFreshApproval) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  const auto original = hal.files;
+  NativePublicationArtifacts artifacts;
+  auto store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
+  ASSERT_TRUE(store);
+  for (unsigned identity = 0; identity < 3; ++identity) {
+    auto foreign = record;
+    if (identity == 0) foreign.reader[0] ^= 0x80;
+    if (identity == 1) foreign.request.generation[0] ^= 0x80;
+    if (identity == 2) foreign.request.owner[0] ^= 0x80;
+    EXPECT_EQ(store->publish(foreign, artifacts.hooks()), CourseBaselinePublicationResult::Conflict);
+    EXPECT_EQ(hal.files, original);
+    EXPECT_EQ(artifacts.preparations, 0u);
+  }
+  artifacts.permitted = false;
+  EXPECT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Busy);
+  EXPECT_EQ(hal.files, original);
+  artifacts.permitted = true;
+  ASSERT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+  ASSERT_NE(store->published(), nullptr);
+  EXPECT_EQ(store->published()->phase, CourseBaselinePublicationPhase::Published);
+  for (const auto& [path, data] : original) EXPECT_EQ(hal.files.at(path), data);
+  const auto completed = hal.files;
+  const auto renames = hal.renames;
+  artifacts.fresh = false;
+  store.reset();
+  store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+  EXPECT_EQ(artifacts.preparations, 1u);
+  EXPECT_EQ(artifacts.publications, 1u);
+  EXPECT_EQ(hal.files, completed);
+  EXPECT_EQ(hal.renames, renames);
+  artifacts.permitted = false;
+  EXPECT_EQ(store->published(), nullptr);
+  artifacts.permitted = true;
+  EXPECT_EQ(store->published(), nullptr);
+  artifacts.verified = false;
+  EXPECT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::VerificationFailed);
+  EXPECT_EQ(store->published(), nullptr);
+  EXPECT_EQ(hal.files, completed);
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselinePublicationRecoversCheckedCloseAndRenameBoundaries) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  const auto prefix = consentPath.substr(0, consentPath.size() - std::string(".consent").size());
+  auto& hal = inventory_hal_test::state;
+  const auto initial = hal;
+  for (unsigned phase = 0; phase < 2; ++phase) {
+    for (unsigned fault = 0; fault < 6; ++fault) {
+      SCOPED_TRACE(phase);
+      SCOPED_TRACE(fault);
+      hal = initial;
+      const auto path = prefix + (phase == 0 ? ".prepared" : ".published");
+      NativePublicationArtifacts artifacts;
+      auto store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+          record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
+      ASSERT_TRUE(store);
+      if (fault == 0) hal.failSyncPath = path + ".tmp";
+      if (fault == 1) hal.failClosePath = path + ".tmp";
+      if (fault == 2) hal.failRename = hal.renames + phase + 1;
+      if (fault == 3) hal.failRenameAfter = hal.renames + phase + 1;
+      if (fault == 4) {
+        hal.failWritePath = path + ".tmp";
+        hal.failMatchingWrite = 1;
+        hal.matchingWrites = 0;
+      }
+      if (fault == 5) hal.corruptWritePath = path + ".tmp";
+      EXPECT_NE(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+      EXPECT_EQ(store->published(), nullptr);
+      for (const auto& [name, data] : initial.files) EXPECT_EQ(hal.files.at(name), data);
+      hal.failSyncPath.clear();
+      hal.failClosePath.clear();
+      hal.failWritePath.clear();
+      hal.corruptWritePath.clear();
+      hal.failRename = hal.failRenameAfter = 0;
+      store.reset();
+      store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+          record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
+      ASSERT_TRUE(store);
+      if (fault < 4) {
+        if (phase == 1) artifacts.fresh = false;
+        ASSERT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+        ASSERT_NE(store->published(), nullptr);
+      } else {
+        const auto torn = hal.files;
+        EXPECT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Corrupt);
+        EXPECT_EQ(hal.files, torn);
+      }
+    }
+  }
+}
+
+TEST_F(HalCourseTransferTest, NativeBaselinePublicationRejectsDuplicateAndIncompleteNamespaceEvidence) {
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  NativePublicationArtifacts artifacts;
+  auto store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
+      record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+  const auto completed = hal;
+  const auto path = consentPath.substr(0, consentPath.size() - 8) + ".prepared";
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    hal = completed;
+    if (fault == 0) {
+      auto duplicate = path;
+      duplicate[std::string(TRANSFER_DIRECTORY).size() + 1] = 'C';
+      hal.files[duplicate] = hal.files.at(path);
+    }
+    if (fault == 1) hal.files[path + ".tmp"] = hal.files.at(path);
+    if (fault == 2) hal.statErrorPath = path;
+    const auto evidence = hal.files;
+    const auto calls = artifacts.verifications;
+    EXPECT_NE(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
+    EXPECT_EQ(store->published(), nullptr);
+    EXPECT_EQ(artifacts.verifications, calls);
+    EXPECT_EQ(hal.files, evidence);
+  }
 }

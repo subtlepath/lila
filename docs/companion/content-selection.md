@@ -1940,7 +1940,7 @@ The fixed C3 backup owner remains 5,928 bytes and borrows the same 8 KiB workspa
 stored verification adds no owner or buffer allocation and has an 80-byte frame.
 The publication record object is 176 bytes, with no codec heap allocation. Forced
 C3 compilation passes the 256-byte frame limit: encoding 48 bytes and decoding
-240. Publication persistence, validated state transitions, native full-pack
+240. Native publication persistence and wiring, native full-pack
 validation, archive/completion recovery, command wiring and Apple review/queue/UI
 remain required. These headers remain unconnected to firmware commands; no new
 capability or completed import is claimed, and physical acceptance is unverified.
@@ -1955,3 +1955,88 @@ On hardware after publication recovery is connected, advance learner progress
 after a completed import, reboot and verify immutable review/copies and the exact
 archive receipt while preserving that newer progress; a receipt alone must never
 become a fresh approval.
+
+### Persisted publication workflow
+
+`CourseBaselinePublicationStore` persists immutable Prepared and Published `TCBP`
+records under `/.crosspoint/companion/course-baseline-<transaction>.prepared` and
+`.published`, each with a private `.tmp` stage. Initial native verification runs
+before Prepared is saved. Its canonical readback must succeed before the archive
+publisher runs; artifact verification must succeed before Published is saved and
+again afterward before the completed loan is offered. The copied request and
+hooks remain outside borrowed scratch throughout callbacks.
+
+Complete staged writes and lost rename acknowledgements resume with exact
+reader/request/phase matches. Prepared recovery allows the native verifier to
+recognize only the exact archive owned by that intent. Published recovery requires
+the matching canonical Prepared record and read-only verification of consent,
+immutable review/copies and archive; it does not call fresh preparation or archive
+publication. It can therefore preserve newer learner state. Orphan Published
+records, foreign requests, wrong phases, torn/corrupt stages and canonical-plus-stage
+conflicts refuse without deleting evidence. Read failures never fall back to a
+fresh publication. Permission loss, close and a new operation revoke completed
+loans; reentry refuses.
+
+The generic store allocates nothing internally, borrows at least 183 bytes of
+existing workspace and copies records into fixed members. Its C3 fixed owner is
+784 bytes and must be heap-admitted off stack rather than occupy a permanent pool.
+Forced C3 compilation passes the 256-byte frame limit: publication 48 bytes,
+record read 80, immutable save 48 and finalization 16. Callbacks are function
+pointers with borrowed context rather than heap-allocated closures.
+
+All 1,860 host tests pass. Faulting portable storage and modeled archive callbacks
+cover write/rename failure before and after every phase mutation, applied archive
+publication before completion, repeated completed recovery with changed learner
+bytes and no fresh approval, foreign/orphan/torn phase evidence, permission/read
+failure, input reuse and reentry. A final verification failure leaves completion
+evidence intact but offers no loan; retry rechecks historical artifacts without
+rewriting records or advancing publication again.
+
+This verifies workflow ordering and recovery with portable fixtures, not a complete
+native import. The native storage adapter below supplies checked HAL persistence. The caller
+still must supply native full-pack, consent, review/copy and archive verifiers,
+hold writer exclusion and finish parent transfer recovery before reading resumes.
+Archive integration, command/capability wiring and Apple review/queue/UI remain
+required.
+No new command is advertised, and these unconnected headers do not alter the
+previously verified firmware image. On hardware after integration, cut power at
+both record stages and archive publication, recover before entering reading mode,
+and verify original/newer learner bytes, archive hashes and native identities.
+Physical acceptance remains unverified.
+
+
+### Native publication persistence
+
+`HalCourseBaselinePublicationStore` binds publication to the native reader,
+current card generation and authenticated companion owner before storage or
+artifact callbacks run. It copies the selected request before scratch reuse and
+only accepts the Prepared request form. The private HAL adapter restricts reads
+to this transaction's Prepared/Published canonical files and stages, restricts
+writes to a missing corresponding stage and checks the encoded transaction and
+phase. Renames must keep the phase and cannot replace a canonical file.
+
+Every lookup uses `HalCourseRemovalMetadata` to finish the parent scan and reject
+ambiguous names. Writes require exact length, sync and checked close; namespace
+publication requires checked reader closes, complete source/destination lookups
+and a missing destination. Resize, removal and generic verification are refused.
+A failed final close or permission check withholds the published loan. Observed
+permission loss revokes it until another successful operation.
+
+The adapter borrows workspace and allocates no buffer or owner per file. Its
+fixed C3 owner is 2,144 bytes, including the portable publication store and strict
+metadata reader; admit it off stack with `makeUniqueNoThrow`, retaining the 50 KiB
+heap reserve. A stack owner would exceed the 256-byte local limit and a static
+pool would retain memory outside the import lifecycle. Forced C3 compilation
+passes the frame gate: native publish 32 bytes, write 64, rename 48, path checking
+128 and the off-stack construction probe 48. Lazy HAL handles and caller-supplied
+artifact verifiers are additional resources.
+
+All 1,863 host tests pass. Native tests exercise context refusal, permission
+revocation, completed replay
+without fresh approval, both phases' sync/close/write/rename failures including
+applied rename acknowledgements, corrupt/torn evidence, duplicate names and
+lookup errors. Their artifact callbacks model archive state; they do not prove
+native full-pack or archive validation. This header is not yet connected to the
+firmware command path. After integration, verify both phase files and their CRCs,
+cut power around each stage/rename and archive publication, and confirm recovery
+preserves newer learner state while checking free/largest heap through Serial.

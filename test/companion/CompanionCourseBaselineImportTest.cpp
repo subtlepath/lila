@@ -7,6 +7,7 @@
 
 #include "lib/Companion/CompanionCourseBaselineImportConsent.h"
 #include "lib/Companion/CompanionCourseBaselinePublication.h"
+#include "lib/Companion/CompanionCourseBaselinePublicationStore.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
 
 using namespace companion;
@@ -475,4 +476,273 @@ TEST(CompanionCourseBaselinePublication, ResignedMalformedRecordsAndAliasedBuffe
   record.reader = {};
   EXPECT_FALSE(encodeCourseBaselinePublicationRecord(record, encoded));
   EXPECT_EQ(encoded, untouched);
+}
+
+namespace {
+struct PublicationFixture {
+  Fixture base;
+  CourseBaselinePublicationRecord record;
+  bool fresh = true, archive = false, copiesValid = true, failArchive = false, applyArchiveBeforeFailure = false;
+  unsigned preparationCalls = 0, publicationCalls = 0, verificationCalls = 0;
+  unsigned rejectVerification = 0;
+  bool recoveredPreparation = false;
+  PublicationFixture() {
+    record.reader.fill(7);
+    record.request = base.request;
+  }
+  std::string prepared() const {
+    auto path = base.canonical();
+    path.replace(path.size() - 8, 8, ".prepared");
+    return path;
+  }
+  std::string published() const {
+    auto path = base.canonical();
+    path.replace(path.size() - 8, 8, ".published");
+    return path;
+  }
+  CourseBaselinePublicationHooks hooks() {
+    return {this,
+            [](void* context, const CourseBaselinePublicationRecord& record, bool recovering) {
+              auto& f = *static_cast<PublicationFixture*>(context);
+              ++f.preparationCalls;
+              f.recoveredPreparation = recovering;
+              EXPECT_EQ(record, f.record);
+              return f.fresh && f.copiesValid && (!f.archive || recovering);
+            },
+            [](void* context, const CourseBaselinePublicationRecord& record) {
+              auto& f = *static_cast<PublicationFixture*>(context);
+              ++f.publicationCalls;
+              EXPECT_EQ(record, f.record);
+              EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+              EXPECT_FALSE(f.base.storage.files.contains(f.prepared() + ".tmp"));
+              if (f.failArchive && !f.applyArchiveBeforeFailure) return false;
+              f.archive = true;
+              return !f.failArchive;
+            },
+            [](void* context, const CourseBaselinePublicationRecord& record) {
+              auto& f = *static_cast<PublicationFixture*>(context);
+              ++f.verificationCalls;
+              EXPECT_EQ(record, f.record);
+              return f.archive && f.copiesValid && f.verificationCalls != f.rejectVerification;
+            }};
+  }
+  CourseBaselinePublicationStore store() {
+    return CourseBaselinePublicationStore(base.storage, base.scratch, Fixture::permitted, &base.storage);
+  }
+};
+}  // namespace
+
+TEST(CompanionCourseBaselinePublicationStore, OrdersIntentArchiveAndCompletionThenReplaysWithoutFreshApproval) {
+  PublicationFixture f;
+  const auto original = f.base.storage.files;
+  auto store = f.store();
+  ASSERT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+  ASSERT_NE(store.published(), nullptr);
+  EXPECT_EQ(store.published()->phase, CourseBaselinePublicationPhase::Published);
+  EXPECT_EQ(store.published()->request, f.record.request);
+  EXPECT_EQ(f.preparationCalls, 1u);
+  EXPECT_EQ(f.publicationCalls, 1u);
+  EXPECT_EQ(f.verificationCalls, 2u);
+  CourseBaselinePublicationRecord decoded;
+  ASSERT_TRUE(decodeCourseBaselinePublicationRecord(f.base.storage.files.at(f.prepared()), decoded));
+  EXPECT_EQ(decoded, f.record);
+  ASSERT_TRUE(decodeCourseBaselinePublicationRecord(f.base.storage.files.at(f.published()), decoded));
+  EXPECT_EQ(decoded.phase, CourseBaselinePublicationPhase::Published);
+  for (const auto& [path, data] : original) EXPECT_EQ(f.base.storage.files.at(path), data);
+  f.base.storage.files["/tinta/courses/04040404040404040404040404040404/items.bin"] = {31};
+  f.fresh = false;
+  const auto files = f.base.storage.files;
+  const auto mutations = f.base.storage.mutations;
+  auto restarted = f.store();
+  ASSERT_EQ(restarted.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+  EXPECT_EQ(f.preparationCalls, 1u);
+  EXPECT_EQ(f.publicationCalls, 1u);
+  EXPECT_EQ(f.base.storage.files, files);
+  EXPECT_EQ(f.base.storage.mutations, mutations);
+  f.copiesValid = false;
+  EXPECT_EQ(restarted.publish(f.record, f.hooks()), CourseBaselinePublicationResult::VerificationFailed);
+  EXPECT_EQ(restarted.published(), nullptr);
+  EXPECT_EQ(f.base.storage.files, files);
+}
+
+TEST(CompanionCourseBaselinePublicationStore, RecoversEveryRecordWriteAndRenameBoundary) {
+  for (unsigned mutation = 1; mutation <= 4; ++mutation) {
+    for (const bool after : {false, true}) {
+      SCOPED_TRACE(mutation);
+      SCOPED_TRACE(after);
+      PublicationFixture f;
+      f.base.storage.fail = mutation;
+      f.base.storage.after = after;
+      auto store = f.store();
+      EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::IoError);
+      EXPECT_EQ(store.published(), nullptr);
+      f.base.storage.fail = 0;
+      // Complete Published bytes are historical evidence even before the rename.
+      if (f.base.storage.files.contains(f.published()) || f.base.storage.files.contains(f.published() + ".tmp"))
+        f.fresh = false;
+      auto restored = f.store();
+      ASSERT_EQ(restored.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+      EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+      EXPECT_TRUE(f.base.storage.files.contains(f.published()));
+      EXPECT_FALSE(f.base.storage.files.contains(f.prepared() + ".tmp"));
+      EXPECT_FALSE(f.base.storage.files.contains(f.published() + ".tmp"));
+    }
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, ResumesAppliedArchiveBeforeCompletionAndRefusesUnverifiedPublication) {
+  for (const bool applied : {false, true}) {
+    PublicationFixture f;
+    f.failArchive = true;
+    f.applyArchiveBeforeFailure = applied;
+    auto store = f.store();
+    EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::IoError);
+    EXPECT_EQ(store.published(), nullptr);
+    EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+    EXPECT_FALSE(f.base.storage.files.contains(f.published()));
+    f.failArchive = false;
+    auto restored = f.store();
+    ASSERT_EQ(restored.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+    EXPECT_TRUE(f.recoveredPreparation);
+    EXPECT_TRUE(f.archive);
+  }
+  PublicationFixture f;
+  f.fresh = false;
+  const auto files = f.base.storage.files;
+  auto store = f.store();
+  EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::VerificationFailed);
+  EXPECT_EQ(f.base.storage.files, files);
+  EXPECT_EQ(f.publicationCalls, 0u);
+}
+
+TEST(CompanionCourseBaselinePublicationStore, RefusesOrphanForeignTornAndDuplicatePhaseEvidence) {
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    PublicationFixture f;
+    std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+    auto record = f.record;
+    if (fault == 0) {
+      record.phase = CourseBaselinePublicationPhase::Published;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.published()] = {bytes.begin(), bytes.end()};
+    } else if (fault == 1) {
+      f.base.storage.files[f.prepared() + ".tmp"] = {1};
+    } else if (fault == 2) {
+      f.base.storage.files[f.published() + ".tmp"] = {1};
+    } else if (fault == 3) {
+      record.request.reviewHash[0] ^= 1;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+    } else if (fault == 4) {
+      record.phase = CourseBaselinePublicationPhase::Published;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+    } else if (fault == 5) {
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+      f.base.storage.files[f.prepared() + ".tmp"] = {bytes.begin(), bytes.end()};
+    } else {
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.prepared() + ".tmp"] = {bytes.begin(), bytes.end()};
+      record.phase = CourseBaselinePublicationPhase::Published;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      f.base.storage.files[f.published() + ".tmp"] = {bytes.begin(), bytes.end()};
+    }
+    const auto files = f.base.storage.files;
+    auto store = f.store();
+    EXPECT_NE(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+    EXPECT_EQ(store.published(), nullptr);
+    EXPECT_EQ(f.base.storage.files, files);
+    EXPECT_EQ(f.preparationCalls, 0u);
+    EXPECT_EQ(f.publicationCalls, 0u);
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, PermissionLossRetainsEvidenceAndRevokesPublishedLoan) {
+  PublicationFixture f;
+  auto store = f.store();
+  f.base.storage.revokeWrite = true;
+  EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Busy);
+  EXPECT_EQ(store.published(), nullptr);
+  EXPECT_FALSE(f.archive);
+  f.base.storage.revokeWrite = false;
+  f.base.storage.allowed = true;
+  ASSERT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+  ASSERT_NE(store.published(), nullptr);
+  f.base.storage.allowed = false;
+  EXPECT_EQ(store.published(), nullptr);
+  f.base.storage.allowed = true;
+  EXPECT_EQ(store.published(), nullptr);
+  ASSERT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+  store.close();
+  EXPECT_EQ(store.published(), nullptr);
+}
+
+TEST(CompanionCourseBaselinePublicationStore, CopiesInputsBeforeScratchReuseAndRefusesReentry) {
+  PublicationFixture f;
+  auto store = f.store();
+  struct Context {
+    PublicationFixture* fixture;
+    CourseBaselinePublicationStore* store;
+    CourseBaselinePublicationRecord* caller;
+    CourseBaselinePublicationResult reentry = CourseBaselinePublicationResult::Ok;
+  } context{&f, &store, &f.record};
+  const auto original = f.record;
+  auto hooks = f.hooks();
+  hooks.context = &context;
+  hooks.verifyPrepared = [](void* raw, const CourseBaselinePublicationRecord& expected, bool) {
+    auto& ctx = *static_cast<Context*>(raw);
+    ctx.reentry = ctx.store->publish(*ctx.caller, ctx.fixture->hooks());
+    *ctx.caller = {};
+    EXPECT_NE(expected.reader, Identity{});
+    return true;
+  };
+  hooks.publishArchive = [](void* raw, const CourseBaselinePublicationRecord&) {
+    static_cast<Context*>(raw)->fixture->archive = true;
+    return true;
+  };
+  hooks.verifyPublished = [](void* raw, const CourseBaselinePublicationRecord&) {
+    return static_cast<Context*>(raw)->fixture->archive;
+  };
+  ASSERT_EQ(store.publish(f.record, hooks), CourseBaselinePublicationResult::Ok);
+  EXPECT_EQ(context.reentry, CourseBaselinePublicationResult::Busy);
+  ASSERT_NE(store.published(), nullptr);
+  EXPECT_EQ(store.published()->request, original.request);
+  EXPECT_EQ(store.published()->reader, original.reader);
+}
+
+TEST(CompanionCourseBaselinePublicationStore, FinalVerificationFailureRetainsCompletionButWithholdsLoan) {
+  PublicationFixture f;
+  f.rejectVerification = 2;
+  auto store = f.store();
+  EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::VerificationFailed);
+  EXPECT_EQ(store.published(), nullptr);
+  EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+  EXPECT_TRUE(f.base.storage.files.contains(f.published()));
+  const auto files = f.base.storage.files;
+  const auto mutations = f.base.storage.mutations;
+  f.rejectVerification = 0;
+  f.fresh = false;
+  auto restored = f.store();
+  ASSERT_EQ(restored.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+  EXPECT_EQ(f.preparationCalls, 1u);
+  EXPECT_EQ(f.publicationCalls, 1u);
+  EXPECT_EQ(f.base.storage.mutations, mutations);
+  EXPECT_EQ(f.base.storage.files, files);
+}
+
+TEST(CompanionCourseBaselinePublicationStore, ReadOrPermissionFailuresCannotFallBackToFreshPublication) {
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    PublicationFixture f;
+    auto store = f.store();
+    ASSERT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+    const auto files = f.base.storage.files;
+    const auto calls = f.publicationCalls;
+    if (fault == 0) f.base.storage.statError = true;
+    if (fault == 1) f.base.storage.readError = true;
+    if (fault == 2) f.base.storage.revokeRead = true;
+    EXPECT_NE(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+    EXPECT_EQ(store.published(), nullptr);
+    EXPECT_EQ(f.publicationCalls, calls);
+    EXPECT_EQ(f.base.storage.files, files);
+  }
 }
