@@ -9,7 +9,7 @@ JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
 unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
-native activity/boot owners, routing and replacement flow remain incomplete, so it
+native activity owner, routing and replacement flow remain incomplete, so it
 is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
@@ -1004,3 +1004,28 @@ intact. The actual C3 project-header probe passes 256-byte frame errors: boot
 worker construction is 96 bytes, metadata scan is 128 bytes and metadata read
 is 80 bytes individually; maximum imported frame is 256 bytes. Physical SD,
 runtime watermarks, and dispatch from the parent startup owner remain pending.
+
+Startup dispatch now recognizes retained course-removal journals before reader
+or Tinta activities open. `HalContentRemovalStartupRecovery` admits one checked
+heap allocation for a fixed metadata/recovery owner, borrows its existing IO
+bank, completes the matching journal, publishes the completed receipt and only
+then releases the journal. Its worker is freed before normal reading stores and
+fonts load. No inventory or migration is required after quarantine.
+
+All 1,755 host tests and the installed-SdFat suite pass with this dispatch. Across
+the retained native course scenarios, parent startup rejects a wrong generation,
+refuses insufficient heap and learner-state conflicts, then completes valid
+recovery and leaves a durable receipt with no pending journal. Repeated startup
+preserves files. Conflict checks allow recovery to repair only its own journal
+slots while requiring the same recovered checkpoint and unchanged pack, binding
+and learner files. They do not assume that journal confirmation performs no SD
+writes. These tests use in-memory HAL state and synthetic pack bytes.
+
+The actual C3 project-header probe compiles full startup dispatch with 256-byte
+frame errors: `recoverCourse` is 48 bytes and `run` is 96 bytes individually;
+maximum imported frame is 256 bytes. Hardware watermarks and physical recovery
+remain unverified. The default firmware build and release image validation pass;
+the saved checkpoint image/proof are under `/tmp/lila-course-startup-images/`.
+Course removal remains
+unadvertised until its native activity owner, reinstall/switch flow and transport
+routing are ready. Final affected-board builds are required after that integration.

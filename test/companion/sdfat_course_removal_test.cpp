@@ -4,6 +4,7 @@
 
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalContentRemovalJournalStorage.h"
+#include "lib/hal/HalContentRemovalStartupRecovery.h"
 #include "lib/hal/HalCourseRemovalBaseline.h"
 #include "lib/hal/HalCourseRemovalBoundParticipant.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
@@ -298,6 +299,49 @@ int main() {
     const auto recoveredResult = recovered.recover(request.generation);
     if (recoveredResult == ContentRemovalJournalResult::Ok) {
       const auto checkpoint = *recovered.current();
+      const auto beforeStartup = state;
+      {
+        HalContentRemovalStartupRecovery startup;
+        bool pending = false;
+        assert(startup.pending(pending) && pending);
+        auto wrongGeneration = request.generation;
+        wrongGeneration[0] ^= 1;
+        assert(!startup.run(wrongGeneration));
+        assert(state.files == beforeStartup.files);
+        if (checkpoint.phase != ContentRemovalPhase::Retired) {
+          state.files["/tinta/items.bin"] = {99};
+          auto conflicted = state.files;
+          assert(!startup.run(request.generation));
+          auto afterConflict = state.files;
+          for (const auto* path : CONTENT_REMOVAL_JOURNALS) {
+            conflicted.erase(path);
+            afterConflict.erase(path);
+          }
+          assert(afterConflict == conflicted);
+          ContentRemovalJournal confirmed(journalStorage, journalScratch);
+          assert(confirmed.recover(request.generation) == ContentRemovalJournalResult::Ok);
+          assert(*confirmed.current() == checkpoint);
+          state.files = beforeStartup.files;
+          const auto heap = companion_memory_test::internal;
+          companion_memory_test::internal.freeBytes = 50 * 1024;
+          assert(!startup.run(request.generation));
+          assert(state.files == beforeStartup.files);
+          companion_memory_test::internal = heap;
+        }
+        assert(startup.run(request.generation));
+        assert(startup.pending(pending) && !pending);
+        assert(!state.files.contains(ACTIVE_COURSE_PATH));
+        assert(state.files.at(history) == std::vector<uint8_t>({90, 91}));
+        assert(state.files.at(cachePath.data()) == pack);
+        HalCompletedContentRemovals startupReceipts(receiptScratch);
+        ContentRemovalRecord startupReceipt;
+        assert(startupReceipts.load(request, startupReceipt) == CompletedRemovalResult::Ok);
+        assert(startupReceipt.phase == ContentRemovalPhase::Retired);
+        const auto completedFiles = state.files;
+        assert(startup.run(request.generation));
+        assert(state.files == completedFiles);
+      }
+      state = beforeStartup;
       HalCourseRemovalRecovery recovery(recovered, metadata, metadataScratch, permitted, &allowed);
       assert(recovery.run(checkpoint));
       assert(recovery.closeReaders());

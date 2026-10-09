@@ -4,6 +4,8 @@
 #include <Memory.h>
 
 #include "HalContentRemovalTransactions.h"
+#include "HalCourseRemovalMetadata.h"
+#include "HalCourseRemovalRecovery.h"
 #include "HalDictionaryCacheStorage.h"
 #include "HalDictionaryRemovalCohortParticipant.h"
 #include "HalDictionaryRemovalReferences.h"
@@ -58,6 +60,13 @@ class HalContentRemovalStartupRecovery final {
         return failure("dictionary completion publication");
       return release.release() == CompletedRemovalResult::Ok || failure("dictionary release");
     }
+    if (checkpoint.request.manifest.kind == ContentKind::Course) {
+      if (!recoverCourse()) return false;
+      checkpoint = *journal.current();
+      if (completions.persist(checkpoint, journal) != CompletedRemovalResult::Ok)
+        return failure("course completion publication");
+      return release.release() == CompletedRemovalResult::Ok || failure("course release");
+    }
     const bool font = checkpoint.request.manifest.kind == ContentKind::Font;
     if (!font && checkpoint.request.manifest.kind != ContentKind::Epub) return failure("unsupported participant");
     const auto loaded = plans.load(checkpoint.planHash, planBytes, plan);
@@ -111,6 +120,25 @@ class HalContentRemovalStartupRecovery final {
   }
 
  private:
+  struct CourseRecovery {
+    HalCourseRemovalMetadata metadata;
+    HalCourseRemovalRecovery worker;
+    static bool permitted(void*) { return admitCompanionHeap(); }
+    CourseRecovery(ContentRemovalJournal& journal, std::span<uint8_t> io)
+        : metadata(permitted, nullptr), worker(journal, metadata, io, permitted, nullptr) {}
+  };
+  bool recoverCourse() {
+    // Fixed metadata buffers and retained handles exceed the boot stack budget.
+    if (!admitCompanionHeap(sizeof(CourseRecovery), sizeof(CourseRecovery)))
+      return failure("course recovery heap admission");
+    auto recovery = makeUniqueNoThrow<CourseRecovery>(journal, io);
+    if (!recovery) return failure("OOM: course recovery");
+    if (!unchanged() || !recovery->metadata.prepare() || !unchanged() || !recovery->worker.run(checkpoint))
+      return failure("course recovery checkpoint");
+    const bool workerClosed = recovery->worker.closeReaders();
+    const bool metadataClosed = recovery->metadata.closeReaders();
+    return (workerClosed && metadataClosed) || failure("course recovery close");
+  }
   struct DictionaryRecovery {
     std::array<uint8_t, DICTIONARY_BINDING_SIZE> io{};
     HalDictionaryCacheStorage cache;
