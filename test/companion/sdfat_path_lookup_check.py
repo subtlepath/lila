@@ -161,6 +161,8 @@ def main():
             str(repo / "lib/Companion/CompanionRecords.cpp"),
             str(repo / "lib/Companion/CompanionEpubReferenceJson.cpp"),
             str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(repo / "lib/hal/HalInventoryIndexStorage.cpp"),
+            str(repo / "lib/hal/HalInventoryPublicationValidator.cpp"),
             str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
             "-lcrypto", "-o", str(binary),
         ], check=True)

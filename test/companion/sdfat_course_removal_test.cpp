@@ -8,6 +8,7 @@
 #include "lib/hal/HalCourseRemovalBaseline.h"
 #include "lib/hal/HalCourseRemovalBoundParticipant.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
+#include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalRecovery.h"
 #include "lib/hal/HalCourseRemovalReferences.h"
 #include "lib/hal/HalCourseRemovalSession.h"
@@ -45,7 +46,7 @@ struct Snapshot final : InventoryIndexStorage {
 };
 struct SessionContext {
   ContentManifest manifest;
-  bool allowed = true, inventoryReady = true, stateReady = true, refreshReady = true;
+  bool allowed = true, inventoryReady = true, stateReady = true, refreshReady = true, changeBinding = false;
   unsigned inventories = 0, preparations = 0, refreshes = 0;
   static bool permission(void* ctx) { return static_cast<SessionContext*>(ctx)->allowed; }
   static bool inventory(void* ctx, uint64_t& revision) {
@@ -58,6 +59,16 @@ struct SessionContext {
     auto& self = *static_cast<SessionContext*>(ctx);
     ++self.preparations;
     return self.stateReady && self.manifest == manifest;
+  }
+  static bool prepareNative(void* ctx, const ContentManifest& manifest, std::span<uint8_t> scratch) {
+    if (scratch.size() < 512 || !prepare(ctx, manifest)) return false;
+    if (static_cast<SessionContext*>(ctx)->changeBinding) {
+      auto other = manifest;
+      ++other.length;
+      assert(encodeCourseBinding(other, scratch) == COURSE_BINDING_SIZE);
+      inventory_hal_test::state.files[COURSE_BINDING_PATH] = {scratch.begin(), scratch.begin() + COURSE_BINDING_SIZE};
+    }
+    return true;
   }
   static bool refresh(void* ctx) {
     auto& self = *static_cast<SessionContext*>(ctx);
@@ -101,20 +112,23 @@ void sessionRoundTrip() {
   InventoryIndexHeader header{request.generation, 9, 1,
                               inventoryIndexCrc(std::span(snapshot.bytes).subspan(INVENTORY_INDEX_HEADER_SIZE))};
   assert(encodeInventoryPathsHeader(header, snapshot.bytes) == INVENTORY_INDEX_HEADER_SIZE);
-  std::array<uint8_t, INVENTORY_PATH_MAX_RECORD> pathBytes{};
-  InventoryPaths paths(snapshot, pathBytes);
+  state.files[InventoryPublication::PATHS] = snapshot.bytes;
+  std::vector<uint8_t> index(INVENTORY_INDEX_HEADER_SIZE + INVENTORY_PATH_MAX_RECORD);
+  const auto entrySize =
+      encodeInventoryIndexEntry(request.manifest, std::span(index).subspan(INVENTORY_INDEX_HEADER_SIZE));
+  index.resize(INVENTORY_INDEX_HEADER_SIZE + entrySize);
+  InventoryIndexHeader indexHeader{request.generation, 9, 1,
+                                   inventoryIndexCrc(std::span(index).subspan(INVENTORY_INDEX_HEADER_SIZE))};
+  assert(encodeInventoryIndexHeader(indexHeader, index) == INVENTORY_INDEX_HEADER_SIZE);
+  state.files[InventoryPublication::INDEX] = index;
   SessionContext context;
   context.manifest = request.manifest;
-  HalCourseRemovalMetadata metadata(SessionContext::permission, &context);
-  std::array<uint8_t, 512> io{};
-  uint64_t revision = 9;
   std::array<uint8_t, CONTENT_REMOVAL_REQUEST_SIZE> command{};
   assert(encodeContentRemovalRequest(request, command) == command.size());
   std::array<uint8_t, CONTENT_REMOVAL_REPLY_SIZE> reply{};
   {
-    HalCourseRemovalSession session(request.generation, paths, revision, metadata, io, SessionContext::permission,
-                                    SessionContext::refresh, &context, SessionContext::inventory,
-                                    SessionContext::prepare);
+    HalCourseRemovalNativeOwner session(request.generation, SessionContext::permission, SessionContext::refresh,
+                                        &context, SessionContext::inventory, SessionContext::prepareNative);
     assert(session.handle(true, request.owner, command, reply) == 0);
     assert(session.prepare());
     const auto before = state.files;
@@ -126,6 +140,47 @@ void sessionRoundTrip() {
     assert(session.handle(true, foreign, command, reply) == reply.size());
     assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Unauthorized));
     assert(state.files == before);
+    assert(!session.openInventory(8));
+    state.files[InventoryPublication::PATHS].back() ^= 1;
+    assert(session.handle(true, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+    assert(context.preparations == 0);
+    state.files[InventoryPublication::PATHS] = snapshot.bytes;
+    context.inventories = 0;
+    context.stateReady = false;
+    const auto beforePreparation = state.files;
+    assert(session.handle(true, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+    assert(state.files == beforePreparation);
+    context.inventories = context.preparations = 0;
+    context.stateReady = true;
+    for (const auto* path : {COURSE_BINDING_STAGE, COURSE_BINDING_BACKUP}) {
+      state.files[path] = {88};
+      const auto blocked = state.files;
+      assert(session.handle(true, request.owner, command, reply) == reply.size());
+      assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+      assert(context.preparations == 0);
+      assert(state.files == blocked);
+      state.files.erase(path);
+    }
+    auto other = request.manifest;
+    ++other.length;
+    std::array<uint8_t, COURSE_BINDING_SIZE> otherBinding{};
+    assert(encodeCourseBinding(other, otherBinding) == otherBinding.size());
+    state.files[COURSE_BINDING_PATH] = {otherBinding.begin(), otherBinding.end()};
+    assert(session.handle(true, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+    assert(context.preparations == 0);
+    state.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+    context.changeBinding = true;
+    assert(session.handle(true, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+    assert(state.files.at(ACTIVE_COURSE_PATH) == pack);
+    assert(state.files.at(history) == std::vector<uint8_t>({31, 32}));
+    for (const auto* path : CONTENT_REMOVAL_JOURNALS) assert(!state.files.contains(path));
+    context.changeBinding = false;
+    state.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+    context.inventories = context.preparations = 0;
     context.refreshReady = false;
     assert(session.handle(true, request.owner, command, reply) == reply.size());
     assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
@@ -134,13 +189,13 @@ void sessionRoundTrip() {
     assert(state.files.at(COURSE_BINDING_PATH) == std::vector<uint8_t>(binding.begin(), binding.end()));
     assert(session.closeReaders());
   }
-  const auto removed = state.files;
-  snapshot.fail = true;
+  state.files[InventoryPublication::INDEX].back() ^= 1;
+  state.files[InventoryPublication::PATHS].back() ^= 1;
   context.inventoryReady = context.stateReady = false;
   context.refreshReady = true;
-  HalCourseRemovalSession reopened(request.generation, paths, revision, metadata, io, SessionContext::permission,
-                                   SessionContext::refresh, &context, SessionContext::inventory,
-                                   SessionContext::prepare);
+  const auto removed = state.files;
+  HalCourseRemovalNativeOwner reopened(request.generation, SessionContext::permission, SessionContext::refresh,
+                                       &context, SessionContext::inventory, SessionContext::prepareNative);
   assert(reopened.prepare());
   assert(reopened.handle(true, request.owner, command, reply) == reply.size());
   assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Ok));

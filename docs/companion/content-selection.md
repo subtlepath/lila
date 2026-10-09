@@ -1029,3 +1029,29 @@ the saved checkpoint image/proof are under `/tmp/lila-course-startup-images/`.
 Course removal remains
 unadvertised until its native activity owner, reinstall/switch flow and transport
 routing are ready. Final affected-board builds are required after that integration.
+
+`HalCourseRemovalNativeOwner` now wraps the retained session with complete
+inventory-pair validation and its read-only metadata owner. Its fixed IO bank
+includes a 64-byte coverage bitmap beyond the maximum inventory record; the
+existing pair validator checks larger catalogs in bounded windows. The owner
+checks the exact bound manifest and missing binding stage/backup before and
+after the mandatory state-preparation callback. That callback must validate the
+active pack and prepare scoped learner files while all state writers are closed.
+
+The installed-SdFat native round trip uses this owner with actual published
+index/path files. It rejects wrong revisions and corrupt pairs before state
+preparation, refuses unfinished binding stages/backups and mismatched bindings,
+preserves pack/history when preparation fails or changes the binding, and retries
+a durable completed removal after reconstruction with both inventory files
+corrupt and preparation unavailable. The remaining 24 removal/startup scenarios
+continue using the production retained-plan, metadata and recovery adapters.
+These fixtures use synthetic pack bytes and a preparation callback, not the
+actual Tinta selection engine or physical SD.
+
+The actual C3 project-header/construction probe passes 256-byte frame errors:
+native inventory opening is 32 bytes, binding validation is 64 bytes, and the
+maximum imported individual frame is 240 bytes. No allocation occurs inside
+owner scans or hashing loops. The new owner remains unconnected to the native
+activity; its actual Tinta preparation callback, reinstall/switch handling and
+BLE/Wi-Fi routing still need integration before advertising course removal.
+The linked firmware checkpoint remains the startup-dispatch build above.
