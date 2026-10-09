@@ -59,7 +59,7 @@ byte. Schema-39 interrupted imports can acquire their first authenticated
 filename without losing phase or offset. See protocol.md for wire formats,
 resource ownership, binding checks, and recovery details.
 
-All 506 Swift tests and 1,733 host entries pass. All five dictionary-enabled
+All 506 Swift tests and 1,748 host entries pass. All five dictionary-enabled
 firmware profiles build, and their saved images pass chip, board, segment bounds,
 checksum, SHA-256 trailer and OTA-size checks through the release validator.
 These images do not include the unconnected course-removal components.
@@ -785,3 +785,102 @@ effect, remove-after-effect, corrupt pack and read/sync/close failures. Recovery
 removes only the proven pack and preserves an unrelated learner-state file.
 The reference owner remains a test substitute; native state isolation, removal
 proof publication, reinstallation and dispatcher wiring are still required.
+
+
+`HalCourseRemovalPlanStorage` now publishes fixed course plans under their complete
+SHA-256 and reloads them for journal recovery. Fresh staging persists a full-request,
+nonzero-inventory-revision claim first. Claimed partial stages may be rebuilt;
+valid foreign stages, oversized/directory collisions and corrupt immutable targets
+remain untouched. Publication reopens the complete staged bytes, reloads the claim,
+renames only to a missing target and verifies the final file. Existing exact plans
+return without another payload or marker write. Typed load output changes only
+after exact length, SHA, codec, sync and close checks; callers must release borrowed
+plan bytes before reusing the load buffer, including after failed loads.
+
+Course claims retain the bound logical identity and cannot reuse dictionary marker
+authority. Five storage tests plus the claim regression cover publication/reload,
+partial versus foreign stages, interrupted rename before/after effect, corrupt
+published targets, directory collisions, overlapping buffers and preserved typed
+outputs on read/corruption failures. The complete 1,739-entry CTest suite passes.
+The store retains fixed off-stack codec/claim/path state and borrows comparison
+scratch of at least 135 bytes; it allocates no heap. Native course reference
+publication, state-preserving reinstallation, boot dispatch and command admission
+remain unfinished. The earlier five-board dictionary image table is the committed
+checkpoint; the extended claim contract passes a default firmware build and release-image validation. Its saved image is under `/tmp/lila-course-claim-images`; the other four dictionary checkpoint images predate this claim edit.
+
+
+### Removed course baseline proof
+
+Course replacement currently checks the installed pack's locale and stable item
+identities. Removal therefore needs a verified private baseline, not just the
+retained binding. `CompanionCourseRemovalProof.h` defines metadata matching for
+that baseline: a valid Quarantined publication checkpoint must match the complete
+Retired receipt, sealed plan hash, unchanged course binding and current storage
+generation. Prepared or merely Committed records cannot authorize reinstallation.
+The cache address derives only from the sealed plan hash under the private root.
+Native callers must also load/verify the sealed plan and independently verify
+baseline length and SHA-256 before using those bytes for continuity checks.
+
+Three portable proof tests cover phase progression, altered transaction/owner/card/
+content/course/length/version/hash/revision, a replaced current card, changed
+binding, bounded cache-path construction and unchanged path output on refusal.
+The full 1,742-entry CTest suite passes; the C3 compiler frame probe passes the
+256-byte gate with a 32-byte maximum individual frame. The helpers allocate no heap.
+Native publication and baseline retention, startup recovery, replacement and
+state-selection integration remain unfinished; course removal is unadvertised.
+
+
+`HalCourseRemovalProofStorage` now publishes the Quarantined checkpoint at the
+fixed course-removal proof path while the exact journal owner remains current.
+It synchronizes staged bytes, reads them back, requires a missing publication
+target, renames and verifies the final file. Exact retries perform no metadata
+rewrite. Valid foreign or wrong-phase staged records and corrupt published proofs
+remain untouched; a partial owned stage can resume under the same journal.
+Loads require the current storage generation and leave typed output unchanged on
+failure. The publisher borrows a separate 168-byte workspace and retains fixed
+record/lookup state off stack, without heap allocation or payload deletion.
+
+Six host storage tests cover owner/phase admission, idempotent reopen, replaced-card
+refusal, rename failures before/after effect, foreign/wrong-phase stages, partial
+stage recovery, corrupt publication and sync/close failure. All 1,748 CTest entries
+pass. This publisher is not linked into native course removal yet; its caller must
+verify course-state isolation and retain/hash the old pack baseline before backup
+retirement. The reference adapter, startup dispatch, replacement validation and
+state selection still require integration. Course removal remains unadvertised.
+
+
+`HalCourseRemovalBaseline` now retains the proven pack backup under the sealed
+plan's private cache address during Committed reference retirement. It verifies
+length/SHA and synchronizes/closes the backup before rename, then verifies the
+cache. An existing cache is accepted only when its bytes match; a surviving
+backup must match too before the payload participant can retire that duplicate.
+Foreign/corrupt caches are preserved and stop recovery. Rename-after-effect can
+resume from the verified cache without deleting learner-state files.
+
+Completed-baseline admission requires the exact proof/Retired receipt/binding/card
+match, checked absence of an active removal journal, absent active pack and absent
+owned backup, followed by independent cache length/SHA verification. The verified
+path is unavailable after failed admission. A caller-supplied permission guard is
+checked around lookup/hash/mutation; fixed lookup/path/hash/checkpoint state stays
+off stack and borrows the existing IO buffer without allocating heap memory.
+The caller must independently verify the sealed course plan before admission.
+
+The installed-SdFat course checker now composes real proof publication and baseline
+retention with payload removal and completion-receipt journal release. Eleven fault
+scenarios cover quarantine and baseline rename failures before/after effect,
+corrupt cache preservation, source read/sync/close failures, restart, repeated
+completion, exact cached bytes and preserved unrelated learner-state bytes.
+Completed admission rejects a pending journal, changed card, unexpected active
+pack and corrupt cache. The full installed-SdFat checker and all 1,748 CTest
+entries pass. The actual C3 project-header/frame probe passes: baseline retention,
+selection, hashing and completed admission use 48-byte individual frames; the
+existing imported record decoder reaches 256 bytes. Runtime task headroom remains
+unmeasured. Native compilation also caught and corrected an Arduino HEX macro
+collision in the proof-path helper.
+
+The production reference adapter must still verify actual state isolation, load
+bindings/proofs and connect these owners. Startup, compatible replacement and
+explicit different-course switching after removal still require integration.
+Apple switch confirmation currently derives its previous course from installed
+inventory; an uninstalled course's retained binding/baseline needs an authenticated
+context before that confirmation can be offered. Course removal is unadvertised.

@@ -22,7 +22,7 @@ class CourseRemovalReferences {
   virtual bool verifyPlan(const ContentRemovalRecord&, const CourseRemovalPlan&) = 0;
   virtual bool publish(const ContentRemovalRecord&, const CourseRemovalPlan&) = 0;
   virtual bool verify(const ContentRemovalRecord&, const CourseRemovalPlan&) = 0;
-  // Retain learner state and enough bound removal proof for reinstallation.
+  // Retain learner state, the verified pack baseline and bound removal proof.
   virtual bool retire(const ContentRemovalRecord&, const CourseRemovalPlan&) = 0;
   virtual bool verifyRetired(const ContentRemovalRecord&, const CourseRemovalPlan&) = 0;
 };

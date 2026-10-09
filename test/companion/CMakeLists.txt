@@ -737,6 +737,25 @@ add_executable(CompanionCourseRemovalParticipantTest CompanionCourseRemovalParti
 target_link_libraries(CompanionCourseRemovalParticipantTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionCourseRemovalParticipantTest)
 
+add_executable(HalCourseRemovalPlanStorageTest HalCourseRemovalPlanStorageTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_include_directories(HalCourseRemovalPlanStorageTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${REPO_ROOT}/lib/Companion)
+target_link_libraries(HalCourseRemovalPlanStorageTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(HalCourseRemovalPlanStorageTest)
+
+add_executable(CompanionCourseRemovalProofTest CompanionCourseRemovalProofTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionCourseRemovalProofTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionCourseRemovalProofTest)
+
+add_executable(HalCourseRemovalProofStorageTest HalCourseRemovalProofStorageTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_include_directories(HalCourseRemovalProofStorageTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${REPO_ROOT}/lib/Companion)
+target_link_libraries(HalCourseRemovalProofStorageTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(HalCourseRemovalProofStorageTest)
+
 add_executable(CompanionDictionaryRemovalPlanTest CompanionDictionaryRemovalPlanTest.cpp
   ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
 target_link_libraries(CompanionDictionaryRemovalPlanTest PRIVATE crosspoint_test_common GTest::gtest_main)

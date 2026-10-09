@@ -254,3 +254,26 @@ TEST_F(RemovalStageClaimTest, DictionaryClaimsRetainKindAndRefuseForeignMarkerCo
   EXPECT_EQ(store.planStagePath(), nullptr);
   EXPECT_EQ(inventory_hal_test::state.files.at(dictionaryMarker), epubBytes);
 }
+
+TEST_F(RemovalStageClaimTest, BoundCourseClaimsRetainIdentityAndCannotReuseDictionaryAuthority) {
+  claim.request.manifest.kind = ContentKind::Dictionary;
+  ASSERT_EQ(store.persist(claim), RemovalStageClaimResult::Ok);
+  const auto dictionaryBytes = bytes(claim);
+  const auto dictionaryMarker = marker();
+  claim.request.manifest.kind = ContentKind::Course;
+  EXPECT_FALSE(validRemovalStageClaim(claim));
+  claim.request.manifest.logicalIdentity.fill(5);
+  ASSERT_TRUE(validRemovalStageClaim(claim));
+  const auto courseBytes = bytes(claim);
+  RemovalStageClaim decoded;
+  ASSERT_TRUE(decodeRemovalStageClaim(courseBytes, decoded));
+  EXPECT_EQ(decoded, claim);
+  ASSERT_EQ(store.persist(claim), RemovalStageClaimResult::Ok);
+  const auto courseMarker = marker();
+  EXPECT_NE(courseMarker, dictionaryMarker);
+  EXPECT_EQ(inventory_hal_test::state.files.at(dictionaryMarker), dictionaryBytes);
+  inventory_hal_test::state.files[courseMarker] = dictionaryBytes;
+  EXPECT_EQ(store.load(claim), RemovalStageClaimResult::Conflict);
+  EXPECT_EQ(store.planStagePath(), nullptr);
+  EXPECT_EQ(inventory_hal_test::state.files.at(courseMarker), dictionaryBytes);
+}

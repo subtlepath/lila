@@ -302,7 +302,7 @@ and S3; command tests and source parsing do not satisfy this acceptance section.
 ## Current portable software evidence
 
 The full CompanionKit Linux suite passes 506 tests. The complete configured CTest
-suite passes 1,733 entries. These cover the selected portable implementations,
+suite passes 1,748 entries. These cover the selected portable implementations,
 including inventory, persistence, migration, synchronization, transfers, removal,
 export codecs and shared fixtures, source verification, encrypted imports,
 restart/fallback, in-flight deletion, immutable filenames, cancellation, and
