@@ -7,6 +7,9 @@
 #include "../tinta/fakes.h"
 #include "HalTintaCompletionSetView.h"
 #include "HalTintaDayLogValidation.h"
+#include "HalTintaLegacyItemCatalogValidation.h"
+#include "HalTintaLegacyItemView.h"
+#include "HalTintaLegacyReviewValidation.h"
 #include "HalTintaNativeDerivedPreparation.h"
 #include "HalTintaNativeLessonRecovery.h"
 #include "HalTintaNativeReadingRecovery.h"
@@ -683,4 +686,190 @@ TEST(HalTintaDayLogValidationTest, ResolvedPreferencesValidateWholeBatchAndPersi
   store.present = false;
   EXPECT_FALSE(companion::persistResolvedTintaPreferences(store, profile, batch));
   EXPECT_EQ(store.calls, calls);
+}
+
+namespace {
+void legacyItemHeaders(std::vector<uint8_t>& bytes, uint32_t records, uint32_t pendingSlot) {
+  bytes.assign(1024 + records * 16, 0);
+  for (unsigned copy = 0; copy < 2; ++copy) {
+    auto* header = bytes.data() + copy * 512;
+    std::memcpy(header, "TIS1", 4);
+    binary_record::putU16(header + 4, 1);
+    binary_record::putU16(header + 6, 80);
+    binary_record::putU32(header + 8, copy + 1);
+    binary_record::putU32(header + 12, records);
+    binary_record::putU16(header + 26, 1);
+    binary_record::putU32(header + 28, pendingSlot);
+    tinta::core::ItemState::fresh(101).encode(header + 32);
+    binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+  }
+  for (uint32_t i = 0; i < records; ++i) tinta::core::ItemState::fresh(200 + i).encode(bytes.data() + 1024 + i * 16);
+}
+}  // namespace
+
+TEST(HalTintaLegacyItemView, PendingRecordIsInspectedWithoutRepairingReviewedBytes) {
+  inventory_hal_test::state = {};
+  auto& bytes = inventory_hal_test::state.files["/reviewed-items"];
+  legacyItemHeaders(bytes, 2, 1);
+  const auto original = bytes;
+  HalFile file("/reviewed-items");
+  HalTintaLegacyItemView view(file);
+  std::array<uint8_t, 160> scratch{};
+  ASSERT_TRUE(view.begin(scratch));
+  ASSERT_NE(view.header(), nullptr);
+  EXPECT_EQ(view.header()->seq, 2u);
+  EXPECT_EQ(view.count(), 2u);
+  tinta::core::ItemState item;
+  ASSERT_TRUE(view.record(0, item));
+  EXPECT_EQ(item.uid, 200u);
+  ASSERT_TRUE(view.record(1, item));
+  EXPECT_EQ(item.uid, 101u);
+  EXPECT_EQ(bytes, original);
+  EXPECT_TRUE(file.isOpen());
+}
+
+TEST(HalTintaLegacyItemView, CanInspectRecoverableMissingFinalPendingRecord) {
+  inventory_hal_test::state = {};
+  auto& bytes = inventory_hal_test::state.files["/reviewed-items"];
+  legacyItemHeaders(bytes, 2, 1);
+  bytes.resize(1040);
+  const auto original = bytes;
+  HalFile file("/reviewed-items");
+  HalTintaLegacyItemView view(file);
+  std::array<uint8_t, 160> scratch{};
+  ASSERT_TRUE(view.begin(scratch));
+  tinta::core::ItemState item;
+  ASSERT_TRUE(view.record(1, item));
+  EXPECT_EQ(item.uid, 101u);
+  EXPECT_EQ(bytes, original);
+}
+
+TEST(HalTintaLegacyItemView, CorruptHeaderFallbackAndAmbiguityAreReadOnly) {
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    inventory_hal_test::state = {};
+    auto& bytes = inventory_hal_test::state.files["/reviewed-items"];
+    legacyItemHeaders(bytes, 2, 1);
+    if (fault == 0) bytes[0] ^= 1;
+    if (fault == 1) bytes[512] ^= 1;
+    if (fault == 2) bytes[0] = bytes[512] = 0;
+    if (fault == 3) {
+      binary_record::putU32(bytes.data() + 512 + 8, 1);
+      binary_record::putU32(bytes.data() + 512 + 16, 99);
+      binary_record::putU32(bytes.data() + 512 + 76, binary_record::crc32(bytes.data() + 512, 76));
+    }
+    const auto original = bytes;
+    HalFile file("/reviewed-items");
+    HalTintaLegacyItemView view(file);
+    std::array<uint8_t, 160> scratch{};
+    EXPECT_EQ(view.begin(scratch), fault < 2);
+    if (fault < 2)
+      EXPECT_EQ(view.header()->seq, fault == 0 ? 2u : 1u);
+    else
+      EXPECT_EQ(view.header(), nullptr);
+    EXPECT_EQ(bytes, original);
+  }
+}
+
+TEST(HalTintaLegacyItemView, ReadFaultExtentChangeAndCancellationInvalidateView) {
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& bytes = state.files["/reviewed-items"];
+    legacyItemHeaders(bytes, 2, 1);
+    HalFile file("/reviewed-items");
+    HalTintaLegacyItemView view(file);
+    std::array<uint8_t, 160> scratch{};
+    bool allowed = true;
+    ASSERT_TRUE(view.begin(scratch, [](void* context) { return *static_cast<bool*>(context); }, &allowed));
+    if (fault == 0) state.failRead = state.reads + 1;
+    if (fault == 1) bytes.push_back(0);
+    if (fault == 2) allowed = false;
+    if (fault == 3) bytes[1024 + 11] = 0x80;
+    const auto original = bytes;
+    tinta::core::ItemState item = tinta::core::ItemState::fresh(777);
+    EXPECT_FALSE(view.record(fault == 4 ? 2 : 0, item));
+    EXPECT_EQ(item.uid, 777u);
+    EXPECT_EQ(view.header(), nullptr);
+    EXPECT_EQ(bytes, original);
+  }
+}
+
+TEST(HalTintaLegacyItemCatalog, RealPackKeepsRetiredStatesAndRejectsDuplicatesWithoutMutations) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(packBytes.data(), packBytes.size());
+  auto pack = std::make_unique<tinta::core::pack::Pack>();
+  ASSERT_EQ(pack->open(source), tinta::core::pack::PackStatus::Ok);
+  ASSERT_GT(pack->itemCount(), 0u);
+  CourseUidLookup catalog(source);
+  for (unsigned duplicate = 0; duplicate < 2; ++duplicate) {
+    ASSERT_TRUE(catalog.begin());
+    inventory_hal_test::state = {};
+    auto& bytes = inventory_hal_test::state.files["/reviewed-items"];
+    legacyItemHeaders(bytes, 3, 2);
+    for (unsigned copy = 0; copy < 2; ++copy) {
+      auto* header = bytes.data() + copy * 512;
+      tinta::core::ItemState::fresh(UINT32_MAX).encode(header + 32);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    tinta::core::ItemState::fresh(pack->uidAt(0)).encode(bytes.data() + 1024);
+    tinta::core::ItemState::fresh(duplicate ? pack->uidAt(0) : 0xfffffffe).encode(bytes.data() + 1040);
+    const auto original = bytes;
+    HalFile file("/reviewed-items");
+    std::array<uint8_t, 4256> scratch{};
+    LegacyItemCatalogReport report{777, 888, 999};
+    EXPECT_EQ(inspectTintaLegacyItemCatalog(file, catalog, scratch, report), !duplicate);
+    if (duplicate) {
+      EXPECT_EQ(report.mapped, 777u);
+      EXPECT_EQ(report.retired, 888u);
+      EXPECT_EQ(report.tombstones, 999u);
+    } else {
+      EXPECT_EQ(report.mapped, 1u);
+      EXPECT_EQ(report.retired, 1u);
+      EXPECT_EQ(report.tombstones, 1u);
+    }
+    EXPECT_EQ(bytes, original);
+  }
+}
+
+TEST(HalTintaLegacyReviews, AuditsRetiredReviewUndoAndZeroTailWithoutReplaying) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(packBytes.data(), packBytes.size());
+  CourseUidLookup catalog(source);
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    ASSERT_TRUE(catalog.begin());
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& bytes = state.files["/reviewed-reviews"];
+    bytes.assign(36 + 5, 0);
+    binary_record::putU32(bytes.data(), 0xfffffffe);
+    bytes[10] = 3;
+    binary_record::putU32(bytes.data() + 12, 0xfffffffe);
+    bytes[22] = 8;
+    if (fault == 1) bytes[22] = 0;
+    if (fault == 2) bytes[23] = 1;
+    if (fault == 3) bytes[12] ^= 1;
+    if (fault == 4) bytes.back() = 1;
+    if (fault == 5) state.failRead = state.reads + 2;
+    const auto original = bytes;
+    HalFile file("/reviewed-reviews");
+    std::array<uint8_t, 12> scratch{};
+    LegacyReviewReport report{777, 888, 999, 666};
+    EXPECT_EQ(inspectTintaLegacyReviews(file, catalog, fault == 6 ? 3 : 2, scratch, report), fault == 0);
+    if (fault == 0) {
+      EXPECT_EQ(report.records, 2u);
+      EXPECT_EQ(report.mapped, 0u);
+      EXPECT_EQ(report.retired, 2u);
+      EXPECT_EQ(report.zeroTailBytes, 17u);
+    } else {
+      EXPECT_EQ(report.records, 777u);
+      EXPECT_EQ(report.mapped, 888u);
+      EXPECT_EQ(report.retired, 999u);
+      EXPECT_EQ(report.zeroTailBytes, 666u);
+    }
+    EXPECT_EQ(bytes, original);
+  }
 }

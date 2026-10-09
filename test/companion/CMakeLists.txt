@@ -811,3 +811,8 @@ add_executable(CompanionCourseBaselineImportTest CompanionCourseBaselineImportTe
 target_link_libraries(CompanionCourseBaselineImportTest PRIVATE crosspoint_test_common GTest::gtest_main)
 target_compile_definitions(CompanionCourseBaselineImportTest PRIVATE COURSE_BASELINE_IMPORT_FIXTURE="${REPO_ROOT}/protocol/fixtures/CourseBaselineImportRequest-v1.fixture" COURSE_BASELINE_REVIEW_FIXTURE="${REPO_ROOT}/protocol/fixtures/CourseBaselineReview-v1.fixture" COURSE_BASELINE_PUBLICATION_FIXTURE="${REPO_ROOT}/protocol/fixtures/CourseBaselinePublication-v1.fixture")
 gtest_discover_tests(CompanionCourseBaselineImportTest)
+
+add_executable(CompanionProgressHeaderTest CompanionProgressHeaderTest.cpp ../../lib/Tinta/src/core/srs/ItemState.cpp)
+target_include_directories(CompanionProgressHeaderTest PRIVATE ${REPO_ROOT}/lib/Tinta/src)
+target_link_libraries(CompanionProgressHeaderTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionProgressHeaderTest)

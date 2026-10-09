@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "lib/Companion/CompanionCourseUidLookup.h"
 #include "lib/Companion/CompanionTintaBody.h"
 #include "lib/Companion/CompanionTintaCompletionSet.h"
 #include "lib/Companion/CompanionTintaDayLog.h"
@@ -521,4 +522,64 @@ TEST(CompanionTintaBody, EnvelopeDigestConfigurationAndUndoAncestry) {
   event.ancestorCount = 2;
   event.ancestors[1] = event.ancestors[0];
   EXPECT_FALSE(validateTintaEnvelope(event, undo, event.bodyHash, wrong));
+}
+
+namespace {
+class UidFaultSource final : public tinta::core::pack::PackSource {
+ public:
+  std::vector<uint8_t> bytes;
+  unsigned reads = 0, fail = 0;
+  uint32_t size() const override { return bytes.size(); }
+  bool read(uint32_t offset, void* output, uint32_t length) override {
+    if (++reads == fail || offset > bytes.size() || length > bytes.size() - offset) return false;
+    std::memcpy(output, bytes.data() + offset, length);
+    return true;
+  }
+};
+}  // namespace
+TEST(CourseUidLookup, RealPackLookupSeparatesAbsentUidFromEveryReadFailure) {
+  UidFaultSource source;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  source.bytes.assign(std::istreambuf_iterator<char>(input), {});
+  auto pack = std::make_unique<tinta::core::pack::Pack>();
+  ASSERT_EQ(pack->open(source.bytes.data(), source.bytes.size()), tinta::core::pack::PackStatus::Ok);
+  CourseUidLookup lookup(source);
+  ASSERT_TRUE(lookup.begin());
+  EXPECT_EQ(lookup.count(), pack->itemCount());
+  for (uint32_t i = 0; i < pack->itemCount(); ++i) {
+    int32_t found = -2;
+    ASSERT_TRUE(lookup.find(pack->uidAt(i), found));
+    EXPECT_EQ(found, static_cast<int32_t>(i));
+  }
+  int32_t found = -2;
+  ASSERT_TRUE(lookup.find(UINT32_MAX, found));
+  EXPECT_EQ(found, -1);
+  const auto before = source.reads;
+  ASSERT_TRUE(lookup.find(pack->uidAt(0), found));
+  const auto count = source.reads - before;
+  for (unsigned cut = 1; cut <= count; ++cut) {
+    source.fail = 0;
+    ASSERT_TRUE(lookup.begin());
+    source.fail = source.reads + cut;
+    found = 777;
+    EXPECT_FALSE(lookup.find(pack->uidAt(0), found)) << cut;
+    EXPECT_EQ(found, 777);
+    source.fail = 0;
+    EXPECT_FALSE(lookup.find(pack->uidAt(0), found));
+  }
+}
+TEST(CourseUidLookup, ExtentChangesInvalidateAndPreserveOutput) {
+  UidFaultSource source;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  source.bytes.assign(std::istreambuf_iterator<char>(input), {});
+  CourseUidLookup lookup(source);
+  ASSERT_TRUE(lookup.begin());
+  source.bytes.push_back(0);
+  int32_t found = 777;
+  EXPECT_FALSE(lookup.find(1, found));
+  EXPECT_EQ(found, 777);
+  source.bytes.pop_back();
+  EXPECT_FALSE(lookup.find(1, found));
 }

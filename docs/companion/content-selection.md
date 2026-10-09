@@ -2293,3 +2293,80 @@ builds remain unverified.
 Final host rebuild has no warnings or errors; all 1,875 tests pass. The default
 firmware image and enabled/disabled C3 HAL frame checks passed after the final
 firmware source edits. Later test-only brace fixes do not alter that image.
+
+The native baseline compatibility work now shares the local `ProgressStore`
+header decoder through `core/srs/ProgressHeader.h`. `HalTintaLegacyItemView`
+borrows a hash-verified immutable reviewed file and 160 bytes of workspace. It
+selects the newest valid header and presents its pending record without writing
+local recovery back into the reviewed evidence. A missing final pending record
+can be inspected from its header; other missing records, ambiguous equal-sequence
+headers, failed reads, changed extents, invalid item records, and cancellation
+invalidate the view. One corrupt header can fall back to the other valid header.
+The caller must exclude writers and verify the complete reviewed file hash.
+This is a record inspection component, not a complete compatibility decision:
+UID meaning, duplicate detection, review-log replay, and the remaining learner
+formats still require validation before replacing the modeled installer callback.
+
+This view adds no allocation and occupies 104 bytes on ESP32-C3. Forced C3
+compilation reports 128 bytes for `begin`, 32 bytes for the record probe, and
+112 bytes for the shared header decoder, each below the 256-byte frame limit.
+All 1,883 host tests pass, including corruption of every header bit, pending and
+undo evidence, torn final-record inspection, read faults, and cancellation. The
+default firmware build for the shared decoder refactor has passed;
+the standalone view is not yet included in the production import path. These
+checks do not establish item compatibility or physical power-cut acceptance.
+
+`CourseUidLookup` now provides read-checked lookup in a previously fully
+validated immutable pack. Binary search reads the IUID records directly and
+checks a found index against the ITEM UID. Successful absence returns index -1;
+read failure, extent change, or an inconsistent index invalidates the lookup
+without changing the caller's output. This avoids treating `Pack::indexOfUid`'s
+shared absent/read-failure return as evidence that an item was retired.
+
+`inspectTintaLegacyItemCatalog` combines that lookup with the reviewed-item
+view. A borrowed bitmap detects repeated active UIDs, and a report distinguishes
+mapped, retired, and tombstone records. Retired records are preserved as in local
+`ProgressStore`; their absence is not proof of compatible meaning. The retained
+undo before-image must name the UID of its logical slot. Original-pack consent,
+identity continuity, review-log replay, and other learner formats remain separate
+gates; the production baseline installer still uses its required compatibility
+callback and does not yet create these inspectors itself.
+
+The lookup occupies 44 bytes on C3 and allocates nothing. Its forced C3 frames
+are 128 bytes for directory loading and 64 bytes for lookup. The item audit uses
+at most 4,256 borrowed workspace bytes (160-byte header workspace plus a bitmap
+for 32,767 catalog entries), with a 256-byte C3 frame. No new heap or static
+workspace is introduced. All 1,886 host tests pass, including actual fixture-pack
+UID lookup, every read-failure position in a selected search, extent changes,
+and duplicate versus retired reviewed records. This does not establish the
+remaining baseline integration or physical acceptance gates.
+
+`inspectTintaLegacyReviews` now streams an immutable hash-verified reviewed
+`reviews.log` through the existing `LegacyTintaJournalDecoder`. It checks review,
+flags, and undo syntax; retains the decoder's zero-tail rules; distinguishes
+mapped and retired UIDs using the read-checked course lookup; and refuses fewer
+valid records than the item header's committed count. Failed reads, malformed
+undo references, nonzero data after the tail, changed extents, and cancellation
+withhold the report. Caller-owned handles and workspace remain borrowed; no
+learner files are replayed, truncated, or replaced. This is syntax and catalog
+inspection, not proof that replay yields the retained snapshot or that legacy
+records have distributed provenance.
+
+All 1,887 host tests pass after this addition. Its forced C3 probe has a 128-byte
+frame and introduces no allocation. The default firmware build passed
+for the shared local header-decoder refactor; these inspection helpers are still
+outside the production baseline installer until the remaining learner formats
+and full native compatibility composition are implemented.
+
+
+The completed default C3 build took 557.11 seconds with no warnings or errors.
+The official release-image validator accepts the resulting X4/chip-5 image:
+6,507,808 bytes, SHA-256
+`7210283c248689c81b259f05e3596af19ce2a4fc74f9f90c48d4683937b3791f`,
+with 45,792 bytes left in its 6,553,600-byte OTA partition. The retained binary
+and validation metadata are `/tmp/lila-progress-header-images/default.bin` and
+`default.json`. This image includes the shared decoder refactor and existing HAL
+baseline attachment, but the new standalone inspection helpers are not yet wired
+into the production baseline installer. The host suite (1,887 tests), forced C3
+helper probes, and this default build cover separate scopes; they do not prove
+other board builds, complete native compatibility, or physical acceptance.

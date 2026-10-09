@@ -7,6 +7,7 @@
 #include "core/StateStore.h"
 #include "core/srs/Fsrs.h"
 #include "core/srs/ItemState.h"
+#include "core/srs/ProgressHeader.h"
 #include "core/srs/Review.h"
 
 namespace tinta::core {
@@ -221,23 +222,7 @@ class ProgressStore {
   enum class Plan : uint8_t { Ok, Invalid, NoRoom, IoError };
   enum class Map : uint8_t { Ok, Salvaged, Corrupt, IoError };
 
-  struct Header {
-    uint32_t seq = 0;
-    uint32_t recordCount = 0;
-    uint32_t journalCount = 0;
-    DayNumber statDay = 0;
-    uint16_t statNew = 0;
-    uint16_t statReviews = 0;
-    bool pendingValid = false;
-    bool undoValid = false;
-    uint32_t pendingSlot = 0;
-    ItemState pending;
-    uint32_t undoSlot = 0;
-    ItemState undoBefore;
-    DayNumber undoStatDay = 0;
-    uint16_t undoStatNew = 0;
-    uint16_t undoStatReviews = 0;
-  };
+  using Header = ProgressHeader;
 
   struct Change {
     Header next;
