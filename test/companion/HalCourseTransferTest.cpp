@@ -46,6 +46,7 @@
 #include "lib/hal/HalCourseRemovalPreparation.h"
 #include "lib/hal/HalCourseRemovalRecovery.h"
 #include "lib/hal/HalHistoricalCourseBaseline.h"
+#include "lib/hal/HalHistoricalCourseHistory.h"
 #include "lib/hal/HalRemovedCourseBaseline.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "platform/StateFiles.h"
@@ -3853,4 +3854,149 @@ TEST_F(HalCourseTransferTest, OrdinaryUpdateAdmitsBothHistoryReadersBeforeValida
     EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
     EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
   }
+}
+
+TEST_F(HalCourseTransferTest, HistoricalCourseHistoryVisitsEveryRetainedRemovalVersionWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  const auto previous = declaration.manifest;
+  removeInstalledCourse(71);
+  const auto first = hal.files;
+  bytes[12] ^= 1;
+  sealPack();
+  const auto next = declaration.manifest;
+  hal = {};
+  hal.enumerateFileMap = true;
+  removeInstalledCourse(72);
+  hal.files.insert(first.begin(), first.end());
+  const auto before = hal.files;
+  struct Check {
+    const ContentManifest* previous;
+    const ContentManifest* next;
+    unsigned oldCount = 0, newCount = 0;
+  } check{&previous, &next};
+  HalHistoricalCourseHistory history(
+      generation, previous.logicalIdentity, scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(history.visit(
+                [](void* ctx, const ContentManifest& manifest, const char* path) {
+                  auto& check = *static_cast<Check*>(ctx);
+                  if (!path || !inventory_hal_test::state.files.contains(path)) return false;
+                  if (manifest == *check.previous)
+                    ++check.oldCount;
+                  else if (manifest == *check.next)
+                    ++check.newCount;
+                  else
+                    return false;
+                  return true;
+                },
+                &check),
+            HistoricalCourseHistoryResult::Ok);
+  EXPECT_EQ(check.oldCount, 1u);
+  EXPECT_EQ(check.newCount, 1u);
+  EXPECT_EQ(hal.files, before);
+  EXPECT_EQ(history.visit([](void*, const ContentManifest&, const char*) { return false; }, nullptr),
+            HistoricalCourseHistoryResult::Incompatible);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalCourseHistoryRefusesStagesCorruptionAndIncompleteEnumerationBeforeVisits) {
+  auto& hal = inventory_hal_test::state;
+  const auto course = declaration.manifest.logicalIdentity;
+  removeInstalledCourse();
+  std::string receiptPath;
+  for (const auto& [path, content] : hal.files)
+    if (path.starts_with("/.crosspoint/companion/removal-done-")) receiptPath = path;
+  ASSERT_FALSE(receiptPath.empty());
+  const auto baseline = hal;
+  unsigned visits = 0;
+  auto visitor = [](void* ctx, const ContentManifest&, const char*) {
+    ++*static_cast<unsigned*>(ctx);
+    return true;
+  };
+  HalHistoricalCourseHistory history(generation, course, scratch, [](void*) { return true; }, nullptr);
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    if (fault == 0) hal.files[receiptPath + ".tmp"] = {1};
+    if (fault == 1) hal.files.at(receiptPath)[0] ^= 1;
+    if (fault == 2) hal.directoryErrorPath = TRANSFER_DIRECTORY;
+    if (fault == 3) hal.files["/.crosspoint/companion/removal-done-bad"] = {1};
+    const auto before = hal.files;
+    const auto result = history.visit(visitor, &visits);
+    EXPECT_NE(result, HistoricalCourseHistoryResult::Ok);
+    EXPECT_NE(result, HistoricalCourseHistoryResult::Missing);
+    EXPECT_EQ(visits, 0u);
+    EXPECT_EQ(hal.files, before);
+  }
+  hal = baseline;
+  EXPECT_EQ(history.visit(visitor, &visits), HistoricalCourseHistoryResult::Ok);
+  EXPECT_EQ(visits, 1u);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalCourseHistoryDistinguishesMissingCourseAndRejectsForeignGeneration) {
+  auto& hal = inventory_hal_test::state;
+  const auto course = declaration.manifest.logicalIdentity;
+  removeInstalledCourse();
+  const auto before = hal.files;
+  unsigned visits = 0;
+  auto visitor = [](void* ctx, const ContentManifest&, const char*) {
+    ++*static_cast<unsigned*>(ctx);
+    return true;
+  };
+  auto unknown = course;
+  unknown[0] ^= 8;
+  HalHistoricalCourseHistory missing(generation, unknown, scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(missing.visit(visitor, &visits), HistoricalCourseHistoryResult::Missing);
+  auto foreign = generation;
+  foreign[0] ^= 2;
+  HalHistoricalCourseHistory changedCard(foreign, course, scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(changedCard.visit(visitor, &visits), HistoricalCourseHistoryResult::Corrupt);
+  EXPECT_EQ(visits, 0u);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalCourseHistoryRejectsDuplicateReceiptsAndLostPermissionWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  const auto course = declaration.manifest.logicalIdentity;
+  removeInstalledCourse();
+  std::string receiptPath;
+  for (const auto& [path, content] : hal.files)
+    if (path.starts_with("/.crosspoint/companion/removal-done-")) receiptPath = path;
+  ASSERT_FALSE(receiptPath.empty());
+  const auto baseline = hal.files;
+  auto duplicate = receiptPath;
+  duplicate[std::string(TRANSFER_DIRECTORY).size() + 1] = 'R';
+  hal.files[duplicate] = hal.files.at(receiptPath);
+  const auto conflicting = hal.files;
+  bool allowed = true;
+  unsigned visits = 0;
+  HalHistoricalCourseHistory history(
+      generation, course, scratch, [](void* ctx) { return *static_cast<bool*>(ctx); }, &allowed);
+  EXPECT_EQ(history.visit(
+                [](void* ctx, const ContentManifest&, const char*) {
+                  ++*static_cast<unsigned*>(ctx);
+                  return true;
+                },
+                &visits),
+            HistoricalCourseHistoryResult::Corrupt);
+  EXPECT_EQ(visits, 0u);
+  EXPECT_EQ(hal.files, conflicting);
+  hal.files = baseline;
+  EXPECT_EQ(history.visit(
+                [](void* ctx, const ContentManifest&, const char*) {
+                  *static_cast<bool*>(ctx) = false;
+                  return true;
+                },
+                &allowed),
+            HistoricalCourseHistoryResult::Busy);
+  EXPECT_EQ(hal.files, baseline);
+  allowed = true;
+  EXPECT_EQ(history.visit(
+                [](void* ctx, const ContentManifest&, const char*) {
+                  ++*static_cast<unsigned*>(ctx);
+                  return true;
+                },
+                &visits),
+            HistoricalCourseHistoryResult::Ok);
+  EXPECT_EQ(visits, 1u);
+  EXPECT_EQ(hal.files, baseline);
 }

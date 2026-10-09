@@ -1465,3 +1465,28 @@ admission tests reject insufficient combined reader headroom and an undersized
 largest block while preserving the installed pack, binding and learner files;
 retry succeeds after restoring admission. These mocks and compiler frame checks
 do not establish physical runtime heap or recovery acceptance.
+
+### Complete retained-removal history enumeration
+
+`HalHistoricalCourseHistory` now performs two read-only scans of the receipt
+namespace. The first rejects malformed/staged receipts and verifies canonical
+transaction names, complete record decoding and matching course/generation
+before callbacks. The second visits every matching sealed-plan/cache/isolation
+baseline through the historical selector and checks its count against the first
+scan. Visitors borrow manifest/path loans only until return and must remain
+read-only; the final result must succeed before authorizing learner-state reuse.
+
+All 1,809 host tests pass, including two retained versions, missing course,
+foreign generation, duplicate folded names, incomplete enumeration, unfinished
+stages, corrupted receipts, permission loss and unchanged files. The C3
+constructor/visit probe passes the frame limit. The retained owner is 4,496 bytes,
+excluding lazy HAL handle allocations; classification uses 96 bytes and scanning
+144 bytes. Future callers must heap-admit the owner rather than put it on the
+stack or reserve it permanently. Its streaming scans keep no growing version
+list and do not allocate owners inside callbacks.
+
+The enumerator is not yet connected to transfer validation. Native legacy return
+still refuses a used scope without archived references; historical receipt
+validation/import and the no-evidence conflict workflow remain to be integrated.
+No new firmware image or physical recovery result is claimed for this unconnected
+header; the C3 probe forces its constructor and visit implementation directly.
