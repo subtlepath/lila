@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "lib/Companion/CompanionCourseRemovalProof.h"
+#include "lib/Companion/CompanionHistoricalCourseBaseline.h"
 
 using namespace companion;
 namespace {
@@ -100,5 +101,73 @@ TEST(CourseRemovalProof, CacheAddressIsBoundToSealedPlanAndRefusalPreservesOutpu
   other.phase = ContentRemovalPhase::Prepared;
   other.revision = 1;
   EXPECT_FALSE(courseRemovalCachePath(other, path));
+  EXPECT_EQ(path, unchanged);
+}
+
+TEST(CourseRemovalProof, HistoricalCacheAddressUsesCompletedReceiptAndExactSealedPlan) {
+  auto completed = proof();
+  completed.phase = ContentRemovalPhase::Retired;
+  completed.revision = 4;
+  CourseRemovalPlan plan{completed.request};
+  std::array<char, COURSE_REMOVAL_CACHE_PATH_CAPACITY> historical{}, original{};
+  ASSERT_TRUE(historicalCourseRemovalCachePath(completed, plan, completed.planHash, completed.request.generation,
+                                               completed.request.manifest.logicalIdentity, historical));
+  ASSERT_TRUE(courseRemovalCachePath(proof(), original));
+  EXPECT_EQ(historical, original);
+  // A historical address does not change the current-course proof requirement.
+  EXPECT_FALSE(validCourseRemovalProof(completed));
+}
+
+TEST(CourseRemovalProof, HistoricalCacheRefusesForeignOrUnfinishedEvidenceWithoutChangingOutput) {
+  auto completed = proof();
+  completed.phase = ContentRemovalPhase::Retired;
+  completed.revision = 4;
+  const auto original = completed;
+  std::array<char, COURSE_REMOVAL_CACHE_PATH_CAPACITY> path;
+  path.fill('!');
+  const auto unchanged = path;
+  for (unsigned fault = 0; fault < 8; ++fault) {
+    SCOPED_TRACE(fault);
+    completed = original;
+    CourseRemovalPlan plan{completed.request};
+    auto digest = completed.planHash;
+    auto generation = completed.request.generation;
+    auto course = completed.request.manifest.logicalIdentity;
+    switch (fault) {
+      case 0:
+        completed.phase = ContentRemovalPhase::Committed;
+        completed.revision = 3;
+        break;
+      case 1:
+        plan.request.owner[0] ^= 1;
+        break;
+      case 2:
+        digest[0] ^= 1;
+        break;
+      case 3:
+        generation[0] ^= 1;
+        break;
+      case 4:
+        course[0] ^= 1;
+        break;
+      case 5:
+        completed.request.manifest.formatVersion = 2;
+        plan.request = completed.request;
+        break;
+      case 6:
+        completed.request.manifest.kind = ContentKind::Epub;
+        plan.request = completed.request;
+        break;
+      case 7:
+        completed.revision = 3;
+        break;
+    }
+    EXPECT_FALSE(historicalCourseRemovalCachePath(completed, plan, digest, generation, course, path));
+    EXPECT_EQ(path, unchanged);
+  }
+  CourseRemovalPlan plan{original.request};
+  EXPECT_FALSE(historicalCourseRemovalCachePath(original, plan, original.planHash, original.request.generation,
+                                                original.request.manifest.logicalIdentity,
+                                                std::span(path).first(path.size() - 1)));
   EXPECT_EQ(path, unchanged);
 }

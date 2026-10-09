@@ -445,3 +445,19 @@ firmware/image identity alongside the results.
 - [ ] Record free/largest internal heap and stack watermarks during copying,
       recovery and repeated transfers. Require over 50 KiB free heap throughout
       accepted operations and no accumulating loss across sessions.
+
+### Archived return-to-course acceptance
+
+- [ ] Switch from course A to B and back to a compatible version of A. Confirm
+      both scopes keep their learner files and all outgoing versions retain
+      verified archives before active-pack replacement.
+- [ ] Offer a returned pack that changes a retired UID meaning or language.
+      Confirm commit refuses while preserving the installed pack, binding and
+      both learner scopes; abort/reboot must leave the current course usable.
+- [ ] Try a used legacy scope without archived baseline references. Confirm the
+      current checkpoint refuses and preserves evidence. Repeat after the future
+      verified baseline-import/conflict flow is implemented; that workflow is
+      required before legacy return acceptance is complete.
+- [ ] Interrupt outgoing-cache retention and incoming history validation, then
+      retry/reboot. Measure the combined baseline/archive heap peak and confirm
+      history admission happens after outgoing owners are released.

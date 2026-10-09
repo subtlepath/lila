@@ -1361,3 +1361,71 @@ Host tests accept timestamp-only updates and reject changed retired identity
 meaning and changed language without writes. The C3 helper is 36 bytes and its
 visitor frame is 176 bytes. It remains separate from transfer preparation;
 return-to-course compatibility enforcement is not complete.
+
+### Explicit switch preparation with archived history
+
+Native explicit-switch preparation now retains the verified outgoing pack before
+replacement. A removed-course cache loan remains open and permission-valid while
+its bytes are copied. Archive and baseline owners use checked heap admission;
+the outgoing owners are released before destination-history admission.
+
+The target's archived versions are completely parsed and checked for language
+and stable item continuity before learner state is reused. A used scope without
+an archived baseline refuses pending authoritative legacy-baseline migration.
+This does not silently assign existing learner files to a different pack.
+
+All 1,797 host tests pass, including unchanged active/binding/learner bytes when
+a returned course reinterprets a retired UID or lacks a historical baseline, and
+recovery through every switch rename boundary. The C3 frame check passes: source retention uses 64 bytes,
+history validation 144 bytes and switch preparation 208 bytes. The default
+firmware build and image validation pass. Ordinary same-course updates still need all-version
+history integration, and historical scopes from older firmware need a verified
+baseline import path; the full course-history requirement remains incomplete.
+
+Legacy baseline recovery must distinguish an absent archive from absent evidence.
+Completed removal receipts retain the full request and sealed plan hash after the
+active binding changes (`HalCompletedContentRemovals.h`). Their plan-addressed
+caches remain available after proof retirement. A future historical reader must
+check the receipt's canonical transaction name, Retired phase, generation,
+course/manifest, sealed plan request/hash, cache length/SHA and scope-isolation
+proof before lending pack bytes. It must scan the complete receipt namespace and
+validate every matching version without allocating a growing list.
+
+The existing completed-removal loader creates its parent directory and the
+current-course baseline verifier requires the active pack to be absent (or an
+explicitly verified replacement). Neither is a historical, read-only baseline
+selector. Do not relax those current-course guards to implement legacy return.
+Older switched scopes with no retained receipt/cache need an explicit verified
+baseline-import/conflict flow; the directory name alone cannot establish earlier
+item meaning. These paths remain to be implemented.
+
+`CompanionHistoricalCourseBaseline.h` now provides address selection for a
+Retired receipt with an exact matching plan, verified plan hash, generation and
+course identity. Refusal leaves the output buffer unchanged. This helper does
+not reconstruct a current-course proof or authorize learner-state reuse; its
+future caller still needs checked receipt enumeration, sealed-plan hashing,
+cache validation and state isolation. All 1,799 host tests pass, including
+foreign/unfinished evidence and output-preservation cases. Its C3 frame is
+64 bytes and it adds no heap allocation. Complete receipt enumeration and transfer integration remain
+unimplemented; address selection alone does not enable legacy return.
+
+
+The explicit-switch checkpoint image is 6,501,696 bytes (SHA-256
+`1bfb97db4b915fc346b929db5817b46f702e2e989609b54da8161a76483e2a3d`). Its x4/chip-5
+tag, segments, checksum, SHA trailer and OTA partition fit are verified.
+
+`HalHistoricalCourseBaseline` now inspects one supplied Retired receipt without
+creating directories or writing files. It checks the canonical receipt against
+the supplied record, hashes and decodes its sealed plan, verifies missing removal
+journals/cohort backup, proves state isolation and verifies cache length/SHA.
+A different active binding or retired current-course proof does not invalidate
+this historical loan. Close, reopen or lost permission invalidates it.
+
+All 1,801 host tests pass, including changed binding/proof retirement, corrupt
+receipt/plan/cache, failed sync/close/enumeration, unfinished removal and permission
+loss with unchanged files. The C3 constructor/open probe passes the frame limit;
+the retained owner is 2,792 bytes excluding lazy HAL handle allocations, opening
+uses 160 bytes and hashing uses 64 bytes. Future callers must heap-admit this
+owner. It is not yet used by transfer preparation, and complete receipt scanning,
+legacy baseline import/conflict handling and ordinary-update history checks
+remain unfinished. Physical recovery and runtime memory acceptance are pending.

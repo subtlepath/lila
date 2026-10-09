@@ -26,6 +26,7 @@
 #include "CompanionTintaJournalPaths.h"
 #include "HalCompanionHeapAdmission.h"
 #include "HalCoursePackArchive.h"
+#include "HalCoursePackHistoryValidator.h"
 #include "HalCourseValidation.h"
 #include "HalRemovedCourseBaseline.h"
 #endif
@@ -191,7 +192,7 @@ bool HalTransferStorage::verifyTerminalCourseSwitch(const CourseSwitchRequest& r
                                            : verifyCourseSwitchSource(binding, request.generation, workspace);
 }
 bool HalTransferStorage::prepareCourseSwitch(const CourseSwitchRequest& request, const ContentManifest& manifest,
-                                             std::span<uint8_t> workspace) {
+                                             const char* candidate, std::span<uint8_t> workspace) {
   ContentManifest previous;
   Identity selected{};
   bool present = false, stateBound = false, removed = false;
@@ -203,12 +204,40 @@ bool HalTransferStorage::prepareCourseSwitch(const CourseSwitchRequest& request,
     LOG_ERR("COMPANION", "Course switch previous state unavailable");
     return false;
   }
+  if (!archiveCourseSwitchSource(previous, request.generation, removed, workspace)) return false;
   char directory[COURSE_STATE_DIRECTORY_SIZE];
   if (!courseStateDirectory(manifest.logicalIdentity, directory) || !Storage.ensureDirectoryExists(directory)) {
     LOG_ERR("COMPANION", "Cannot prepare switched course state");
     return false;
   }
-  return true;
+  return validateArchivedCourse(manifest, candidate, workspace);
+}
+bool HalTransferStorage::archiveCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
+                                                   bool removed, std::span<uint8_t> workspace) {
+  if (!removed)
+    return validateCourse(ACTIVE_COURSE_PATH, previous, workspace) &&
+           archiveInstalledCourse(ACTIVE_COURSE_PATH, previous, workspace);
+  if (!admitCompanionHeap(sizeof(HalRemovedCourseBaseline), sizeof(HalRemovedCourseBaseline)))
+    return failure("switch archive source heap admission", ACTIVE_COURSE_PATH);
+  auto source = makeUniqueNoThrow<HalRemovedCourseBaseline>(
+      generation, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!source) return failure("OOM: switch archive source", ACTIVE_COURSE_PATH);
+  if (!source->open(previous) || !source->path() || !validateCourse(source->path(), previous, workspace) ||
+      !archiveInstalledCourse(source->path(), previous, workspace) || !source->path())
+    return false;
+  return source->closeReaders() || failure("switch archive source close", ACTIVE_COURSE_PATH);
+}
+bool HalTransferStorage::validateArchivedCourse(const ContentManifest& manifest, const char* candidate,
+                                                std::span<uint8_t> workspace) {
+  if (!courseValidator || !admitCompanionHeap(sizeof(HalCoursePackHistory), sizeof(HalCoursePackHistory)))
+    return failure("course history heap admission", candidate);
+  auto history =
+      makeUniqueNoThrow<HalCoursePackHistory>(workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!history) return failure("OOM: course history", candidate);
+  HalCoursePackHistoryValidator validator(*this, *courseValidator, workspace);
+  if (validator.validate(*history, manifest, candidate) != CourseHistoryResult::Ok)
+    return failure("course history compatibility", candidate);
+  return history->closeReaders() || failure("course history close", candidate);
 }
 bool HalTransferStorage::archiveInstalledCourse(const char* path, const ContentManifest& manifest,
                                                 std::span<uint8_t> workspace) {
@@ -317,7 +346,7 @@ bool HalTransferStorage::validateContent(const char* destination, const char* ca
         LOG_ERR("COMPANION", "Course switch consent or candidate invalid");
         return false;
       }
-      return prepareCourseSwitch(request, manifest, workspace);
+      return prepareCourseSwitch(request, manifest, candidate, workspace);
     }
     const bool retainedContext = matchesTransferManifest(manifest, state) && inventory_detail::nonzero(state.owner) &&
                                  inventory_detail::nonzero(state.transaction) &&

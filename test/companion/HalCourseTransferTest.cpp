@@ -45,6 +45,7 @@
 #include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
 #include "lib/hal/HalCourseRemovalRecovery.h"
+#include "lib/hal/HalHistoricalCourseBaseline.h"
 #include "lib/hal/HalRemovedCourseBaseline.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "platform/StateFiles.h"
@@ -2265,6 +2266,10 @@ TEST_F(HalCourseTransferTest, CourseSwitchRecoversEveryRenameAndMetadataSyncInte
     hal.files["/tinta/starred.bin"] = {23};
     char nextPath[COURSE_STATE_PATH_SIZE];
     EXPECT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "items.bin", nextPath));
+    hal.files["/historical-target.pack"] = bytes;
+    HalCoursePackArchive targetArchive(scratch, [](void*) { return true; }, nullptr);
+    EXPECT_EQ(targetArchive.publish(declaration.manifest, "/historical-target.pack"), CourseArchiveResult::Ok);
+    EXPECT_TRUE(targetArchive.closeReaders());
     hal.files[nextPath] = {31};
     Transfer transfer(initialStorage, scratch);
     receive(transfer, false);
@@ -3486,4 +3491,205 @@ TEST_F(HalCourseTransferTest, ArchivedLegacyHistoryRequiresSameRecordsAndLanguag
   const auto before = hal.files;
   EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Incompatible);
   EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, ExplicitReturnToCourseRejectsChangedHistoricalUidBeforePackReplacement) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/"] = {};
+  const auto previous = declaration.manifest;
+  const auto oldPack = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(previous, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  hal.files["/tinta/items.bin"] = {17};
+  bytes[12] ^= 1;
+  sealPack();
+  auto historical = declaration.manifest;
+  historical.logicalIdentity[0] = 8;
+  hal.files["/historical-target.pack"] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(historical, "/historical-target.pack"), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  char targetState[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(historical.logicalIdentity, "items.bin", targetState));
+  hal.files[targetState] = {31};
+  declaration.manifest.logicalIdentity = historical.logicalIdentity;
+  bytes.back() ^= 1;  // Retired UID meaning conflicts with the earlier target pack.
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  declaration.state.phase = TransferPhase::Receiving;
+  CourseSwitchRequest request;
+  request.generation = generation;
+  request.transaction = declaration.state.transaction;
+  request.previousCourse = previous.logicalIdentity;
+  request.previousHash = previous.contentHash;
+  request.nextCourse = declaration.manifest.logicalIdentity;
+  request.nextHash = declaration.manifest.contentHash;
+  CourseSwitchIntent intent(storage, scratch);
+  ASSERT_EQ(intent.persist(request), CourseSwitchIntentResult::Ok);
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), oldPack);
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), std::vector<uint8_t>(binding.begin(), binding.end()));
+  EXPECT_EQ(hal.files.at(targetState), std::vector<uint8_t>({31}));
+  char oldState[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(previous.logicalIdentity, "items.bin", oldState));
+  EXPECT_EQ(hal.files.at(oldState), std::vector<uint8_t>({17}));
+  ASSERT_EQ(archive.open(previous.logicalIdentity, previous.contentHash), CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files.at(archive.path()), oldPack);
+}
+
+TEST_F(HalCourseTransferTest, ExplicitReturnToCoursePreservesUsedScopeWithoutHistoricalBaseline) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/"] = {};
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  const auto previous = declaration.manifest;
+  const auto oldPack = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(previous, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  hal.files["/tinta/items.bin"] = {17};
+  bytes[12] ^= 1;
+  sealPack();
+  auto historical = declaration.manifest;
+  historical.logicalIdentity[0] = 8;
+  char targetState[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(historical.logicalIdentity, "items.bin", targetState));
+  hal.files[targetState] = {31};
+  declaration.manifest.logicalIdentity = historical.logicalIdentity;
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  declaration.state.phase = TransferPhase::Receiving;
+  CourseSwitchRequest request;
+  request.generation = generation;
+  request.transaction = declaration.state.transaction;
+  request.previousCourse = previous.logicalIdentity;
+  request.previousHash = previous.contentHash;
+  request.nextCourse = declaration.manifest.logicalIdentity;
+  request.nextHash = declaration.manifest.contentHash;
+  CourseSwitchIntent intent(storage, scratch);
+  ASSERT_EQ(intent.persist(request), CourseSwitchIntentResult::Ok);
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), oldPack);
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), std::vector<uint8_t>(binding.begin(), binding.end()));
+  EXPECT_EQ(hal.files.at(targetState), std::vector<uint8_t>({31}));
+  char oldState[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(previous.logicalIdentity, "items.bin", oldState));
+  ASSERT_TRUE(hal.files.contains(oldState));
+  EXPECT_EQ(hal.files.at(oldState), std::vector<uint8_t>({17}));
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.open(previous.logicalIdentity, previous.contentHash), CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files.at(archive.path()), oldPack);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalRemovedCourseBaselineSurvivesDifferentActiveBindingAndProofRetirement) {
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  const auto previous = declaration.manifest;
+  const auto original = bytes;
+  removeInstalledCourse();
+  ContentRemovalRecord completed;
+  bool found = false;
+  for (const auto& [path, record] : hal.files) {
+    if (path.starts_with("/.crosspoint/companion/removal-done-") && decodeContentRemovalRecord(record, completed)) {
+      found = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(found);
+  hal.files.erase(COURSE_REMOVAL_PROOF_PATH);
+  declaration.manifest.logicalIdentity[0] = 8;
+  bytes[12] ^= 1;
+  sealPack();
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  const auto before = hal.files;
+  bool allowed = true;
+  HalHistoricalCourseBaseline source(
+      generation, previous.logicalIdentity, scratch, [](void* ctx) { return *static_cast<bool*>(ctx); }, &allowed);
+  ASSERT_TRUE(source.open(completed));
+  ASSERT_NE(source.path(), nullptr);
+  const std::string cached = source.path();
+  EXPECT_EQ(*source.manifest(), previous);
+  EXPECT_EQ(hal.files.at(cached), original);
+  EXPECT_EQ(hal.files, before);
+  allowed = false;
+  EXPECT_EQ(source.path(), nullptr);
+  allowed = true;
+  EXPECT_EQ(source.path(), nullptr);
+  ASSERT_TRUE(source.open(completed));
+  ASSERT_TRUE(source.closeReaders());
+  hal.files.at(cached)[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_FALSE(source.open(completed));
+  EXPECT_EQ(source.path(), nullptr);
+  EXPECT_EQ(hal.files, corrupt);
+  auto foreign = completed;
+  foreign.request.generation[0] ^= 1;
+  EXPECT_FALSE(source.open(foreign));
+  EXPECT_EQ(hal.files, corrupt);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalCourseBaselineRefusesCorruptEvidenceAndIoFailuresWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  const auto previous = declaration.manifest;
+  removeInstalledCourse();
+  ContentRemovalRecord completed;
+  std::string receiptPath, planPath, cached;
+  for (const auto& [path, record] : hal.files) {
+    if (path.starts_with("/.crosspoint/companion/removal-done-") && decodeContentRemovalRecord(record, completed))
+      receiptPath = path;
+    if (path.starts_with("/.crosspoint/companion/removal-course-plan-")) planPath = path;
+    if (path.starts_with(COURSE_REMOVAL_CACHE_PREFIX)) cached = path;
+  }
+  ASSERT_FALSE(receiptPath.empty());
+  ASSERT_FALSE(planPath.empty());
+  ASSERT_FALSE(cached.empty());
+  const auto baseline = hal;
+  HalHistoricalCourseBaseline source(
+      generation, previous.logicalIdentity, scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(source.open(completed));
+  ASSERT_TRUE(source.closeReaders());
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    switch (fault) {
+      case 0:
+        hal.files.at(planPath)[0] ^= 1;
+        break;
+      case 1:
+        hal.files.at(receiptPath)[0] ^= 1;
+        break;
+      case 2:
+        hal.failSyncPath = cached;
+        break;
+      case 3:
+        hal.failClosePath = cached;
+        break;
+      case 4:
+        hal.directoryErrorPath = TRANSFER_DIRECTORY;
+        break;
+      case 5:
+        hal.files[CONTENT_REMOVAL_JOURNALS[0]] = {1};
+        break;
+    }
+    const auto before = hal.files;
+    EXPECT_FALSE(source.open(completed));
+    EXPECT_EQ(source.path(), nullptr);
+    EXPECT_EQ(source.manifest(), nullptr);
+    EXPECT_EQ(hal.files, before);
+  }
+  hal = baseline;
+  EXPECT_TRUE(source.open(completed));
+  EXPECT_EQ(hal.files, baseline.files);
 }
