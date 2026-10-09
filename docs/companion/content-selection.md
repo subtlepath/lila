@@ -11,7 +11,7 @@ unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
 native activity owner and authenticated routing are connected, including Tinta
 state preparation and same-course reinstall. Switching from a removed course and
-the matching Apple context flow remain incomplete, so course removal is not advertised. Dictionary removal
+native switch authorization remain incomplete, so course removal is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
 Font cohort routing and recovery pass the native host checker and all five
@@ -1203,14 +1203,31 @@ helper matches command, response flag and request ID; its Wi-Fi helper checks
 transaction/card binding before sending and uses encrypted replies. The complete
 activity C3 probes pass with Tinta on and off: query handling uses 192 bytes and
 source inspection 208 bytes individually. The default firmware build passes.
-Apple automatic query/discovery and removed-source switching remain unconnected,
+Apple query/discovery is capability gated; native removed-source switching remains unconnected,
 and course removal/context capabilities remain unadvertised.
 
 The query checkpoint passes all 1,772 host tests, 511 Swift package tests and
 the installed-SdFat suite. Default firmware image verification passes;
-physical acceptance and automatic Apple context/switch integration remain pending.
+physical acceptance and native removed-source switch integration remain pending.
 
 The query firmware checkpoint is 6491536 bytes (SHA-256
 `bbc2d72523ec9bd5ff85aec511567796bf2d543bb69e19ff4fd7dba0fce129ae`); its x4/chip-5 tag,
 segments, checksum, SHA trailer and OTA partition fit are checked. This does
 not establish runtime heap headroom or physical acceptance.
+
+Apple complete inventories now carry optional checked bound-course context
+separately from installed content. The capability-gated collector accepts live
+context only when it matches the inventoried course and removed context only
+when that inventory contains no course. Busy, corrupt, unauthorized and other
+failures withhold the snapshot; wrong-card responses require reader reopening.
+Ordinary admission still rejects a different removed course identity. Explicit
+switch confirmation persists its exact previous identity/hash, survives library
+reopening and refuses retargeting. The confirmation screen checks the reviewed
+context as well as the installed inventory. Native removed-source switch
+validation and advertising remain pending; native Apple SDK/UI validation and
+physical acceptance are still unverified.
+
+The Apple inventory/confirmation checkpoint passes all 515 Swift package tests
+and parses the app source. Firmware remains the validated query checkpoint;
+this change adds no embedded allocation or compiled firmware source. Native
+Apple typechecking/UI execution and physical-reader verification remain pending.

@@ -905,6 +905,36 @@ final class TransferRunnerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(after, before); XCTAssertEqual(afterCount, count + 1)
     }
 
+    func testRemovedCourseStillRequiresImmutableExplicitSwitchConsent() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (library, vault, job, _) = try await setupCourse(root)
+        let old = try ContentManifest(content: ContentID(String(repeating: "a", count: 64)), kind: .course,
+            length: 100, formatVersion: 1, logicalIdentity: Data(repeating: 9, count: 16))
+        let context = try ReaderCourseContext(generation: job.storageGeneration, source: .removed, manifest: old)
+        let inventory = try ReaderInventory(reader: job.reader, generation: job.storageGeneration,
+            contents: [], complete: true, courseContext: context)
+        do { _ = try await library.admitCourseTransfer(job.content, inventory: inventory, vault: vault); XCTFail() }
+        catch CourseTransferAdmissionError.differentCourse {}
+        let queued = try await library.queueCourseSwitch(content: job.content, inventory: inventory, installation: job.installation)
+        XCTAssertEqual(queued.id, job.id)
+        let savedConsent = try await library.courseSwitchConfirmation(job.id)
+        let consent = try XCTUnwrap(savedConsent)
+        XCTAssertEqual(consent.previousCourse, old.logicalIdentity)
+        XCTAssertEqual(consent.previousHash, old.content.digest)
+        let reopened = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
+        let admission = try await reopened.admitCourseTransfer(job.content, inventory: inventory,
+            vault: vault, confirmedSwitchJob: job.id)
+        XCTAssertEqual(admission, .explicitSwitch)
+        let foreign = try ContentManifest(content: ContentID(String(repeating: "b", count: 64)), kind: .course,
+            length: old.length, formatVersion: 1, logicalIdentity: old.logicalIdentity)
+        let changed = try ReaderInventory(reader: job.reader, generation: job.storageGeneration, contents: [], complete: true,
+            courseContext: ReaderCourseContext(generation: job.storageGeneration, source: .removed, manifest: foreign))
+        do { _ = try await reopened.confirmCourseSwitch(job.id, inventory: changed); XCTFail() }
+        catch StoreError.conflictingJob {}
+        let retained = try await reopened.courseSwitchConfirmation(job.id)
+        XCTAssertEqual(retained, consent)
+    }
     func testConfirmedSwitchSurvivesRestartAndResendsConsentBeforeResume() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

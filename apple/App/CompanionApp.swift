@@ -1263,13 +1263,15 @@ final class CompanionModel {
               inventory.reader == session.device.identity, inventory.generation == session.device.storageGeneration,
               let course = courseIdentities[content], verifiedCourses.contains(content) else { return nil }
         let active = inventory.contents.filter { $0.kind == .course }
-        guard active.count == 1, active[0].logicalIdentity.contains(where: { $0 != 0 }),
-              active[0].logicalIdentity != course else { return nil }
+        guard active.count <= 1, let bound = inventory.boundCourse,
+              bound.logicalIdentity.contains(where: { $0 != 0 }),
+              bound.logicalIdentity != course else { return nil }
         return inventory
     }
     func queueCourseSwitch(_ content: ContentID, reviewed: ReaderInventory) async -> Bool {
         guard let current = switchInventory(content), current.reader == reviewed.reader,
               current.generation == reviewed.generation, current.contents == reviewed.contents,
+              current.courseContext == reviewed.courseContext,
               let session = authenticated, let library, let contentVault else { return false }
         let operation = connectionOperation
         transferBusy = true

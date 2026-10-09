@@ -20,7 +20,7 @@ public extension LibraryStore {
               try coursePackDetails(candidate) == CoursePackDetails(metadata) else { throw VaultError.integrity }
         let installed = inventory.contents.filter { $0.kind == .course }
         guard installed.count <= 1 else { throw CourseTransferAdmissionError.multipleActiveCourses }
-        guard let current = installed.first else { return .readerValidationRequired }
+        guard let current = inventory.boundCourse else { return .readerValidationRequired }
         if current.logicalIdentity.contains(where: { $0 != 0 }), current.logicalIdentity != proposed.logicalIdentity {
             if let id = confirmedSwitchJob, let job = try job(id),
                let consent = try courseSwitchConfirmation(id), job.content == candidate,

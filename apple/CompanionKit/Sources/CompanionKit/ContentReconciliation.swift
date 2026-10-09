@@ -33,12 +33,26 @@ public struct ReaderInventory: Equatable, Sendable {
     public let generation: Data
     public let contents: [ContentManifest]
     public let complete: Bool
-    public init(reader: Data, generation: Data, contents: [ContentManifest], complete: Bool) throws {
+    public let courseContext: ReaderCourseContext?
+    public var boundCourse: ContentManifest? { courseContext?.manifest ?? contents.first(where: { $0.kind == .course }) }
+    public init(reader: Data, generation: Data, contents: [ContentManifest], complete: Bool,
+                courseContext: ReaderCourseContext? = nil) throws {
         guard [reader, generation].allSatisfy({ $0.count == 16 && $0.contains(where: { $0 != 0 }) }) else { throw ProtocolError.value }
         var seen: [ContentID: ContentManifest] = [:]; seen.reserveCapacity(contents.count)
         for entry in contents {
             if let previous = seen.updateValue(entry, forKey: entry.content), previous != entry { throw StoreError.invalidValue }
         }
+        if let courseContext {
+            guard complete, courseContext.generation == generation else { throw InventoryError.changedSnapshot }
+            let courses = seen.values.filter { $0.kind == .course }
+            switch courseContext.source {
+            case .live:
+                guard courses.count == 1, courses.first == courseContext.manifest else { throw InventoryError.changedSnapshot }
+            case .removed:
+                guard courses.isEmpty else { throw InventoryError.changedSnapshot }
+            }
+        }
+        self.courseContext = courseContext
         self.reader = reader; self.generation = generation; self.complete = complete
         self.contents = seen.values.sorted { $0.content.hex < $1.content.hex }
     }

@@ -2581,8 +2581,8 @@ public actor LibraryStore {
               inventory.generation == job.storageGeneration,
               job.phase == .queued || job.phase == .paused else { throw StoreError.invalidTransition }
         let courses = inventory.contents.filter { $0.kind == .course }
-        guard courses.count == 1 else { throw CourseTransferAdmissionError.multipleActiveCourses }
-        let old = courses[0], next = try courseManifest(job.content)
+        guard courses.count <= 1, let old = inventory.boundCourse else { throw CourseTransferAdmissionError.multipleActiveCourses }
+        let next = try courseManifest(job.content)
         guard old.length > 0, old.formatVersion > 0 else { throw StoreError.invalidValue }
         let consent = try CourseSwitchRequest(generation: job.storageGeneration,
             transaction: withUnsafeBytes(of: id.uuid) { Data($0) }, previousCourse: old.logicalIdentity,

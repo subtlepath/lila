@@ -913,3 +913,20 @@ command, response flag and request ID, and the encrypted handoff helper binds th
 request to its transaction and card generation. Automatic Apple discovery/use
 and removed-source switch authorization remain unconnected; no capability is
 advertised for this query yet.
+
+Course-context discovery reserves capability bit 15 (`0x00008000`), alongside
+course-transfer support. The Apple inventory collector sends command 19 only
+when both bits are present, after complete inventory paging. Successful context
+must agree with that card generation and snapshot: a live context matches the
+single inventoried course exactly; a removed context requires no inventoried
+course. A missing reply requires no inventoried course. Other statuses withhold
+the snapshot, and wrong storage requires reopening the reader. Readers without
+this capability receive only the existing inventory requests.
+
+The context stays separate from installed content: it is not an exportable pack
+or a removal candidate. Apple course admission compares against its bound
+manifest; a different identity requires the same immutable explicit switch
+confirmation used for live courses. Confirmation review includes the context,
+and a changed hash cannot retarget a retained job. The native reader does not
+yet advertise bit 15; removed-source switch authorization and proof retirement
+across a different course remain required before enabling the complete flow.

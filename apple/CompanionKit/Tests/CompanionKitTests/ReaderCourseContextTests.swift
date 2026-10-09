@@ -56,6 +56,26 @@ final class ReaderCourseContextTests: XCTestCase {
             XCTAssertThrowsError(try ReaderCourseContextReply.decode(frame, request: request))
         }
     }
+    func testInventoryContextMustAgreeWithCompleteCardSnapshot() throws {
+        let generation = Data(repeating: 0x11, count: 16), reader = Data(repeating: 1, count: 16)
+        let request = try ReaderCourseContextRequest(generation: generation)
+        let removed = try XCTUnwrap(ReaderCourseContextReply(decoding:
+            fixture("ReaderCourseContextRemoved-v1.fixture"), request: request).context)
+        let live = try ReaderCourseContext(generation: generation, source: .live, manifest: removed.manifest)
+        XCTAssertEqual(try ReaderInventory(reader: reader, generation: generation, contents: [],
+            complete: true, courseContext: removed).boundCourse, removed.manifest)
+        XCTAssertEqual(try ReaderInventory(reader: reader, generation: generation, contents: [live.manifest],
+            complete: true, courseContext: live).boundCourse, live.manifest)
+        for (card, contents, complete, context) in [
+            (generation, [], false, removed),
+            (Data(repeating: 2, count: 16), [], true, removed),
+            (generation, [removed.manifest], true, removed),
+            (generation, [], true, live)
+        ] {
+            XCTAssertThrowsError(try ReaderInventory(reader: reader, generation: card, contents: contents,
+                complete: complete, courseContext: context))
+        }
+    }
     func testFailureRepliesHaveNoContextAndBindGeneration() throws {
         let request = try ReaderCourseContextRequest(generation: Data(repeating: 0x11, count: 16))
         for result in ReaderCourseContextResult.allCases where result != .ok {

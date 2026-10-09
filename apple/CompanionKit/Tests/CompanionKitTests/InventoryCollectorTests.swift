@@ -33,6 +33,27 @@ private actor InventoryReaderFixture: CompanionTransport {
         return try ControlFrame(command: .inventory, response: true, requestID: request.requestID + (wrongID ? 1 : 0), payload: page)
     }
 }
+private actor ContextInventoryReaderFixture: CompanionTransport {
+    private let inventory = InventoryReaderFixture()
+    private let result: ReaderCourseContextResult
+    private var queries = 0
+    init(result: ReaderCourseContextResult = .ok) { self.result = result }
+    func queryCount() -> Int { queries }
+    func exchange(_ request: ControlFrame) async throws -> ControlFrame {
+        guard request.command == .courseContext else { return try await inventory.exchange(request) }
+        queries += 1
+        let query = try ReaderCourseContextRequest(decoding: request.payload)
+        var generation = query.generation
+        if result == .wrongStorage { generation[0] ^= 4 }
+        var bytes = Data([0x4c, 0x43, 0x58, 1, result.rawValue, result == .ok ? 2 : 0]); bytes.append(generation)
+        if result == .ok {
+            let manifest = try ContentManifest(content: ContentID(String(repeating: "a", count: 64)), kind: .course,
+                length: 4097, formatVersion: 1, logicalIdentity: Data(repeating: 3, count: 16))
+            bytes.append(manifest.encoded)
+        }
+        return try ControlFrame(command: .courseContext, response: true, requestID: request.requestID, payload: bytes)
+    }
+}
 final class InventoryCollectorTests: XCTestCase, @unchecked Sendable {
     func testInvalidatedReaderInventoryReturnsNoPartialSnapshotAndCanCollectAfterReconnect() async throws {
         let collector = InventoryCollector()
@@ -54,15 +75,44 @@ final class InventoryCollectorTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(recovered.complete)
         XCTAssertEqual(recovered.contents.count, 2)
     }
-    private func device() throws -> DeviceDescriptor {
+    private func device(context: Bool = false) throws -> DeviceDescriptor {
         var bytes = Data([1, 1]); bytes.append(Data(repeating: 1, count: 16)); bytes.append(Data(repeating: 2, count: 16))
-        bytes.append(contentsOf: [1, 0, 0, 0, 0, 80, 1, 1]); bytes.append(Data(count: 32))
+        bytes.append(1); bytes.appendLittleEndian(context ? UInt64(ReaderCapabilities.courseTransfers.rawValue | ReaderCapabilities.courseContexts.rawValue) : 0, count: 4)
+        bytes.append(contentsOf: [80, 1, 1]); bytes.append(Data(count: 32))
         return try DeviceDescriptor(decoding: bytes)
     }
     func testRequestsFollowAcceptedSnapshotAndReturnCompleteInventory() async throws {
         let inventory = try await InventoryCollector().collect(device: device(), transport: InventoryReaderFixture(), maximumEntries: 2)
         XCTAssertTrue(inventory.complete); XCTAssertEqual(inventory.contents.count, 2)
         XCTAssertEqual(inventory.reader, Data(repeating: 1, count: 16))
+    }
+    func testContextDiscoveryIsCapabilityGatedAndPreservesRemovedBaseline() async throws {
+        let oldReader = ContextInventoryReaderFixture()
+        let old = try await InventoryCollector().collect(device: device(), transport: oldReader, maximumEntries: 2)
+        let oldQueries = await oldReader.queryCount()
+        XCTAssertEqual(oldQueries, 0); XCTAssertNil(old.courseContext)
+        let inventory = try await InventoryCollector().collect(device: device(context: true),
+            transport: ContextInventoryReaderFixture(), maximumEntries: 2)
+        XCTAssertEqual(inventory.contents.count, 2)
+        XCTAssertEqual(inventory.courseContext?.source, .removed)
+        XCTAssertEqual(inventory.boundCourse?.kind, .course)
+        XCTAssertFalse(inventory.contents.contains(where: { $0.kind == .course }))
+    }
+    func testContextFailureCannotReturnAnApparentlyEmptyCourseBaseline() async throws {
+        let collector = InventoryCollector()
+        for result in ReaderCourseContextResult.allCases where result != .ok && result != .missing {
+            do {
+                _ = try await collector.collect(device: device(context: true),
+                    transport: ContextInventoryReaderFixture(result: result), maximumEntries: 2)
+                XCTFail("failed context must withhold inventory")
+            } catch let error as InventoryCollectorError {
+                XCTAssertEqual(error, .courseContext(result))
+                XCTAssertEqual(error.requiresReaderReopen, result == .wrongStorage)
+            }
+        }
+        let missing = try await collector.collect(device: device(context: true),
+            transport: ContextInventoryReaderFixture(result: .missing), maximumEntries: 2)
+        XCTAssertNil(missing.boundCourse)
     }
     func testBrokenRepliesAndInterruptedScansReturnNoInventory() async throws {
         let collector = InventoryCollector()

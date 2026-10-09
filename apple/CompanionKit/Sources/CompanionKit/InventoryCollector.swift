@@ -2,7 +2,8 @@ import Foundation
 
 public enum InventoryCollectorError: Error, Equatable, Sendable {
     case busy, invalidResponse, control(UInt8), remote(UInt8), requestIDsExhausted
-    public var requiresReaderReopen: Bool { self == .remote(4) }
+    case courseContext(ReaderCourseContextResult)
+    public var requiresReaderReopen: Bool { self == .remote(4) || self == .courseContext(.wrongStorage) }
 }
 public actor InventoryCollector {
     private var busy = false
@@ -35,6 +36,22 @@ public actor InventoryCollector {
             try scan.append(InventoryPage(decoding: Data(response.payload.dropFirst())))
         }
         try Task.checkCancellation()
-        return try scan.inventory()
+        let inventory = try scan.inventory()
+        guard device.readerCapabilities.supportsCourseContext else { return inventory }
+        guard requestID < UInt32.max else { throw InventoryCollectorError.requestIDsExhausted }
+        requestID += 1
+        let request = try ReaderCourseContextRequest(generation: device.storageGeneration).frame(requestID: requestID)
+        let response = try await transport.exchange(request)
+        let reply = try ReaderCourseContextReply.decode(response, request: request)
+        try Task.checkCancellation()
+        switch reply.result {
+        case .ok:
+            return try ReaderInventory(reader: inventory.reader, generation: inventory.generation,
+                                       contents: inventory.contents, complete: true, courseContext: reply.context)
+        case .missing:
+            guard !inventory.contents.contains(where: { $0.kind == .course }) else { throw InventoryError.changedSnapshot }
+            return inventory
+        default: throw InventoryCollectorError.courseContext(reply.result)
+        }
     }
 }
