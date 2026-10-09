@@ -778,3 +778,10 @@ target_include_directories(HalDictionaryRemovalPlanAssemblyTest BEFORE PRIVATE
 target_compile_definitions(HalDictionaryRemovalPlanAssemblyTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures")
 target_link_libraries(HalDictionaryRemovalPlanAssemblyTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
 gtest_discover_tests(HalDictionaryRemovalPlanAssemblyTest)
+
+add_executable(HalCourseRemovalAdmissionTest HalCourseRemovalAdmissionTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_include_directories(HalCourseRemovalAdmissionTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${REPO_ROOT}/lib/Companion)
+target_link_libraries(HalCourseRemovalAdmissionTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(HalCourseRemovalAdmissionTest)

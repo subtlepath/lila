@@ -9,7 +9,7 @@ JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
 unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
-admission/session/boot owners, routing and replacement flow remain incomplete, so it
+native activity/boot owners, routing and replacement flow remain incomplete, so it
 is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
@@ -947,3 +947,60 @@ removal-record decoder. This is not an aggregate task stack-watermark result.
 These new classes are not yet dispatched by firmware; the last linked default
 firmware image remains the shared-proof checkpoint described above. Final
 firmware builds are still required after admission/recovery/routing integration.
+
+`HalCourseRemovalAdmission` now validates a fresh request against the complete
+inventory-path snapshot, requiring one exact manifest at `/tinta/course.pack`.
+Wrong-card, foreign-owner, duplicate-path and mismatched-manifest requests refuse
+without changing the output record. A mandatory state-preparation callback runs
+before sealing the plan and before the parent removal journal is created.
+Matching retained journals load their sealed plan without requiring a live
+inventory or running state migration again; retired journals use the completed
+receipt path. The native callback still needs to be connected to the reader's
+actual active-course selection/migration owner.
+
+`HalCourseRemovalBoundParticipant` reloads the immutable SHA-addressed plan at
+every checkpoint, compares its full request, and lends fixed retained bytes to
+the payload participant only while the matching journal remains current.
+`HalCourseRemovalSession` composes admission, references, payload recovery,
+completed receipts, refresh and the authenticated command handler. Fixed owners
+and encoding banks stay off stack; IO is borrowed from the eventual sync owner.
+The admission interface is now shared portable code rather than requiring the
+EPUB plan implementation to declare its contract.
+
+All 1,755 host tests and the installed-SdFat native suite pass. The native course
+fixture exercises this retained-plan participant in all 19 removal scenarios.
+It also executes a full session command: unauthorized requests preserve files,
+removal retains scoped learner history and binding, failed inventory refresh
+returns a failure after a durable completion, and a reconstructed session retries
+that exact command through its receipt with live inventory/state preparation
+unavailable. These are in-memory HAL checks, not physical radio/SD acceptance.
+
+The actual C3 project-header probe includes session construction and command
+handling with 256-byte individual-frame errors enabled. Session construction is
+128 bytes and admission is 192 bytes; the maximum imported frame in this probe
+is 240 bytes. Runtime task watermarks and heap admission remain to be measured
+when the native activity/boot owners are connected. The default firmware build
+for the shared admission-header edit passes; its image passes the release
+validator and is saved with its proof under `/tmp/lila-course-session-images/`.
+These course classes
+remain unadvertised pending the remaining integration and reinstall/switch flow.
+
+`HalCourseRemovalRecovery` is a retained boot worker that resumes an exact current
+course journal without inventory or migration. Its parent must publish the
+completed receipt and release the journal before allowing reader/state writers.
+`HalCourseRemovalMetadata` supplies its read-only binding/migration access through
+HAL: complete parent scans reject duplicate names/aliases and directory
+collisions, checked end and closes establish absence, and reads check length,
+sync and close. It requires a permission callback and refuses every mutation API.
+Its name/parent buffers and three handles are retained off stack; no allocations
+occur inside a scan. It avoids relying on `Storage.exists()` for absence proof.
+
+The native fixture now uses this production metadata adapter, including with
+false `exists()` results, and resumes retained journals through the boot worker.
+Its 24 course-removal scenarios include metadata enumeration errors, failed
+binding sync/close, duplicate case-equivalent binding names and an unavailable
+legacy-state parent. Invalid fresh admission leaves pack bytes and learner state
+intact. The actual C3 project-header probe passes 256-byte frame errors: boot
+worker construction is 96 bytes, metadata scan is 128 bytes and metadata read
+is 80 bytes individually; maximum imported frame is 256 bytes. Physical SD,
+runtime watermarks, and dispatch from the parent startup owner remain pending.

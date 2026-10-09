@@ -23,6 +23,7 @@ class HalCourseRemovalPlanStorage final {
   }
   HalCourseRemovalPlanStorage(const HalCourseRemovalPlanStorage&) = delete;
   HalCourseRemovalPlanStorage& operator=(const HalCourseRemovalPlanStorage&) = delete;
+  bool closeReaders() { return close(); }
   const char* publishedPath() const { return ready ? target.data() : nullptr; }
   CourseRemovalPlanStorageResult publish(std::span<const uint8_t> bytes, uint64_t inventoryRevision, Digest& output) {
     ready = false;

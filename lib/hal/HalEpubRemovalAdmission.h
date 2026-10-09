@@ -1,27 +1,11 @@
 #pragma once
 
+#include "CompanionContentRemovalAdmission.h"
 #include "HalContentRemovalJournalStorage.h"
 #include "HalMultiPathRemovalPlanStorage.h"
 #include "HalMultiPathRemovalPlanWriter.h"
 
 namespace companion {
-enum class EpubRemovalAdmissionResult {
-  Ready,
-  Retired,
-  Invalid,
-  WrongStorage,
-  Busy,
-  NotFound,
-  Conflict,
-  Corrupt,
-  IoError
-};
-class ContentRemovalAdmission {
- public:
-  virtual ~ContentRemovalAdmission() = default;
-  virtual bool supports(ContentKind kind) const = 0;
-  virtual EpubRemovalAdmissionResult admit(const ContentRemovalRequest&, uint64_t revision, ContentRemovalRecord&) = 0;
-};
 // Off-stack owner. Authentication and completed-receipt lookup precede admission.
 // The caller validates the inventory pair and excludes all logical writers.
 class HalEpubRemovalAdmission final : public ContentRemovalAdmission {

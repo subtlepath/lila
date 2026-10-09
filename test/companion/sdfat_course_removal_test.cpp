@@ -5,35 +5,14 @@
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalContentRemovalJournalStorage.h"
 #include "lib/hal/HalCourseRemovalBaseline.h"
+#include "lib/hal/HalCourseRemovalBoundParticipant.h"
+#include "lib/hal/HalCourseRemovalMetadata.h"
+#include "lib/hal/HalCourseRemovalRecovery.h"
 #include "lib/hal/HalCourseRemovalReferences.h"
+#include "lib/hal/HalCourseRemovalSession.h"
 #include "lib/hal/HalCourseRemovalStorage.h"
 using namespace companion;
 namespace {
-struct Metadata final : TransferStorage {
-  bool prepare() override { return false; }
-  FileStatus stat(const char* path, uint64_t& length) override {
-    const auto& state = inventory_hal_test::state;
-    if (path == state.statErrorPath) return FileStatus::Error;
-    const auto it = state.files.find(path);
-    if (it == state.files.end()) return FileStatus::Missing;
-    length = it->second.size();
-    return FileStatus::Present;
-  }
-  bool read(const char* path, uint64_t offset, std::span<uint8_t> bytes) override {
-    const auto& state = inventory_hal_test::state;
-    if (path == state.readErrorPath) return false;
-    const auto it = state.files.find(path);
-    if (it == state.files.end() || offset > it->second.size() || bytes.size() > it->second.size() - offset)
-      return false;
-    std::copy_n(it->second.begin() + offset, bytes.size(), bytes.begin());
-    return true;
-  }
-  bool write(const char*, uint64_t, std::span<const uint8_t>, bool) override { return false; }
-  bool resize(const char*, uint64_t) override { return false; }
-  bool rename(const char*, const char*) override { return false; }
-  bool remove(const char*) override { return false; }
-  bool verify(const char*, uint64_t, const Digest&, std::span<uint8_t>) override { return false; }
-};
 bool permitted(void* context) { return !context || *static_cast<bool*>(context); }
 void receipt(const CourseMigrationPaths& paths, const Identity& origin) {
   for (const auto* path : {paths.intent, paths.done}) {
@@ -50,9 +29,133 @@ void receipt(const CourseMigrationPaths& paths, const Identity& origin) {
 void digest(std::span<const uint8_t> bytes, Digest& output) {
   assert(EVP_Digest(bytes.data(), bytes.size(), output.data(), nullptr, EVP_sha256(), nullptr));
 }
+struct Snapshot final : InventoryIndexStorage {
+  std::vector<uint8_t> bytes;
+  bool fail = false;
+  bool size(uint64_t& output) override {
+    output = bytes.size();
+    return !fail;
+  }
+  bool read(uint64_t offset, std::span<uint8_t> output) override {
+    if (fail || offset > bytes.size() || output.size() > bytes.size() - offset) return false;
+    std::copy_n(bytes.begin() + offset, output.size(), output.begin());
+    return true;
+  }
+};
+struct SessionContext {
+  ContentManifest manifest;
+  bool allowed = true, inventoryReady = true, stateReady = true, refreshReady = true;
+  unsigned inventories = 0, preparations = 0, refreshes = 0;
+  static bool permission(void* ctx) { return static_cast<SessionContext*>(ctx)->allowed; }
+  static bool inventory(void* ctx, uint64_t& revision) {
+    auto& self = *static_cast<SessionContext*>(ctx);
+    ++self.inventories;
+    revision = 9;
+    return self.inventoryReady;
+  }
+  static bool prepare(void* ctx, const ContentManifest& manifest) {
+    auto& self = *static_cast<SessionContext*>(ctx);
+    ++self.preparations;
+    return self.stateReady && self.manifest == manifest;
+  }
+  static bool refresh(void* ctx) {
+    auto& self = *static_cast<SessionContext*>(ctx);
+    ++self.refreshes;
+    return self.refreshReady;
+  }
+};
+void sessionRoundTrip() {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  state.directories["/"] = {};
+  state.directories["/tinta"] = {};
+  state.directories["/tinta/courses"] = {};
+  ContentRemovalRequest request;
+  request.transaction.fill(21);
+  request.owner.fill(22);
+  request.generation.fill(23);
+  request.manifest.kind = ContentKind::Course;
+  request.manifest.formatVersion = 1;
+  request.manifest.logicalIdentity.fill(24);
+  const std::vector<uint8_t> pack(123, 25);
+  request.manifest.length = pack.size();
+  digest(pack, request.manifest.contentHash);
+  state.files[ACTIVE_COURSE_PATH] = pack;
+  std::array<char, COURSE_STATE_DIRECTORY_SIZE> directory{};
+  assert(courseStateDirectory(request.manifest.logicalIdentity, directory));
+  state.directories[directory.data()] = {};
+  const std::string history = std::string(directory.data()) + "/reviews.log";
+  state.files[history] = {31, 32};
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  assert(encodeCourseBinding(request.manifest, binding) == binding.size());
+  state.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  receipt(COURSE_STATE_MIGRATION_PATHS, request.manifest.logicalIdentity);
+  receipt(COURSE_MARK_MIGRATION_PATHS, request.manifest.logicalIdentity);
+  Snapshot snapshot;
+  snapshot.bytes.resize(INVENTORY_INDEX_HEADER_SIZE + INVENTORY_PATH_MAX_RECORD);
+  const auto recordSize = encodeInventoryPath(request.manifest, ACTIVE_COURSE_PATH,
+                                              std::span(snapshot.bytes).subspan(INVENTORY_INDEX_HEADER_SIZE));
+  snapshot.bytes.resize(INVENTORY_INDEX_HEADER_SIZE + recordSize);
+  InventoryIndexHeader header{request.generation, 9, 1,
+                              inventoryIndexCrc(std::span(snapshot.bytes).subspan(INVENTORY_INDEX_HEADER_SIZE))};
+  assert(encodeInventoryPathsHeader(header, snapshot.bytes) == INVENTORY_INDEX_HEADER_SIZE);
+  std::array<uint8_t, INVENTORY_PATH_MAX_RECORD> pathBytes{};
+  InventoryPaths paths(snapshot, pathBytes);
+  SessionContext context;
+  context.manifest = request.manifest;
+  HalCourseRemovalMetadata metadata(SessionContext::permission, &context);
+  std::array<uint8_t, 512> io{};
+  uint64_t revision = 9;
+  std::array<uint8_t, CONTENT_REMOVAL_REQUEST_SIZE> command{};
+  assert(encodeContentRemovalRequest(request, command) == command.size());
+  std::array<uint8_t, CONTENT_REMOVAL_REPLY_SIZE> reply{};
+  {
+    HalCourseRemovalSession session(request.generation, paths, revision, metadata, io, SessionContext::permission,
+                                    SessionContext::refresh, &context, SessionContext::inventory,
+                                    SessionContext::prepare);
+    assert(session.handle(true, request.owner, command, reply) == 0);
+    assert(session.prepare());
+    const auto before = state.files;
+    assert(session.handle(false, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Unauthorized));
+    assert(state.files == before);
+    auto foreign = request.owner;
+    foreign[0] ^= 1;
+    assert(session.handle(true, foreign, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Unauthorized));
+    assert(state.files == before);
+    context.refreshReady = false;
+    assert(session.handle(true, request.owner, command, reply) == reply.size());
+    assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::IoError));
+    assert(!state.files.contains(ACTIVE_COURSE_PATH));
+    assert(state.files.at(history) == std::vector<uint8_t>({31, 32}));
+    assert(state.files.at(COURSE_BINDING_PATH) == std::vector<uint8_t>(binding.begin(), binding.end()));
+    assert(session.closeReaders());
+  }
+  const auto removed = state.files;
+  snapshot.fail = true;
+  context.inventoryReady = context.stateReady = false;
+  context.refreshReady = true;
+  HalCourseRemovalSession reopened(request.generation, paths, revision, metadata, io, SessionContext::permission,
+                                   SessionContext::refresh, &context, SessionContext::inventory,
+                                   SessionContext::prepare);
+  assert(reopened.prepare());
+  assert(reopened.handle(true, request.owner, command, reply) == reply.size());
+  assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Ok));
+  assert(std::equal(request.transaction.begin(), request.transaction.end(), reply.begin() + 1));
+  assert(state.files == removed);
+  assert(context.inventories == 1 && context.preparations == 1 && context.refreshes == 2);
+  context.allowed = false;
+  assert(reopened.handle(true, request.owner, command, reply) == reply.size());
+  assert(reply[0] == static_cast<uint8_t>(ContentRemovalResult::Busy));
+  assert(state.files == removed);
+  assert(reopened.closeReaders());
+}
 }  // namespace
 int main() {
-  for (unsigned fault = 0; fault < 19; ++fault) {
+  sessionRoundTrip();
+  for (unsigned fault = 0; fault < 24; ++fault) {
     auto& state = inventory_hal_test::state;
     state = {};
     state.enumerateFileMap = true;
@@ -96,12 +199,19 @@ int main() {
     bool allowed = true;
     HalCourseRemovalProofStorage proofs(proofScratch, permitted, &allowed);
     HalCourseRemovalBaseline baseline(journal, scratch, permitted, &allowed);
-    Metadata metadata;
+    HalCourseRemovalMetadata metadata(permitted, &allowed);
     std::array<uint8_t, COURSE_BINDING_SIZE> metadataScratch{};
     HalCourseStateIsolation isolation(metadata, metadataScratch, permitted, &allowed);
     HalCourseRemovalReferences refs(journal, metadata, metadataScratch, isolation, proofs, baseline, permitted,
                                     nullptr);
     CourseRemovalParticipant participant(journal, members, refs);
+    std::array<uint8_t, REMOVAL_STAGE_CLAIM_SIZE> comparisonBytes{};
+    HalCourseRemovalPlanStorage plans(comparisonBytes);
+    Digest publishedHash{};
+    assert(plans.publish(bytes, 9, publishedHash) == CourseRemovalPlanStorageResult::Ok);
+    assert(publishedHash == initial.planHash);
+    const auto initialRenames = state.renames;
+    HalCourseRemovalBoundParticipant bound(journal, plans, refs, scratch, permitted, &allowed);
     HalCourseRemovalStorage overlapping(journal, bytes, bytes);
     assert(!overlapping.verifyPlan(plan, initial.planHash));
     if (fault == 8) {
@@ -112,10 +222,10 @@ int main() {
     assert(participant.bind(plan, initial.planHash));
     assert(members.stat(1, false) == FileStatus::Error);
     assert(!members.quarantine(0));
-    if (fault == 1) state.failRename = 1;
-    if (fault == 2) state.failRenameAfter = 1;
-    if (fault == 3) state.failRenameAfter = 3;
-    if (fault == 10) state.failRename = 3;
+    if (fault == 1) state.failRename = initialRenames + 1;
+    if (fault == 2) state.failRenameAfter = initialRenames + 1;
+    if (fault == 3) state.failRenameAfter = initialRenames + 3;
+    if (fault == 10) state.failRename = initialRenames + 3;
     if (fault == 4) state.files[ACTIVE_COURSE_PATH][0] ^= 1;
     if (fault == 5) state.readErrorPath = ACTIVE_COURSE_PATH;
     if (fault == 6) state.failSyncPath = ACTIVE_COURSE_PATH;
@@ -143,12 +253,17 @@ int main() {
     }
     if (fault == 17) state.files[COURSE_REMOVAL_PROOF_STAGE] = {1};
     if (fault == 18) allowed = false;
-    ContentRemoval removal(journal, participant);
+    if (fault == 19) state.directoryErrorPath = "/.crosspoint/companion";
+    if (fault == 20) state.failClosePath = COURSE_BINDING_PATH;
+    if (fault == 21) state.failSyncPath = COURSE_BINDING_PATH;
+    if (fault == 22) state.files["/.crosspoint/companion/COURSE-BINDING"] = state.files[COURSE_BINDING_PATH];
+    if (fault == 23) state.directories.erase("/tinta");
+    ContentRemoval removal(journal, bound);
     const auto result = removal.remove(initial);
     assert((result == ContentRemovalJournalResult::Ok) == (fault == 0 || fault == 8));
     if ((fault >= 4 && fault <= 7) || fault >= 11) {
       assert(!journal.current());
-      assert(state.renames == 0);
+      assert(state.renames == initialRenames);
       assert(state.files.contains(ACTIVE_COURSE_PATH));
     }
     if (fault == 4) state.files[ACTIVE_COURSE_PATH][0] ^= 1;
@@ -166,6 +281,9 @@ int main() {
       receipt(COURSE_MARK_MIGRATION_PATHS, request.manifest.logicalIdentity);
       state.files.erase(COURSE_BINDING_STAGE);
       state.files.erase(COURSE_REMOVAL_PROOF_STAGE);
+      state.directoryErrorPath.clear();
+      state.files.erase("/.crosspoint/companion/COURSE-BINDING");
+      state.directories["/tinta"] = {};
       allowed = true;
     }
     ContentRemovalJournal recovered(journalStorage, journalScratch);
@@ -175,8 +293,18 @@ int main() {
                                             permitted, &allowed);
     CourseRemovalParticipant restored(recovered, restoredMembers, restoredRefs);
     assert(restored.bind(plan, initial.planHash));
-    ContentRemoval retry(recovered, restored);
-    assert(retry.remove(initial) == ContentRemovalJournalResult::Ok);
+    HalCourseRemovalBoundParticipant restoredBound(recovered, plans, restoredRefs, scratch, permitted, &allowed);
+    ContentRemoval retry(recovered, restoredBound);
+    const auto recoveredResult = recovered.recover(request.generation);
+    if (recoveredResult == ContentRemovalJournalResult::Ok) {
+      const auto checkpoint = *recovered.current();
+      HalCourseRemovalRecovery recovery(recovered, metadata, metadataScratch, permitted, &allowed);
+      assert(recovery.run(checkpoint));
+      assert(recovery.closeReaders());
+    } else {
+      assert(recoveredResult == ContentRemovalJournalResult::Missing);
+      assert(retry.remove(initial) == ContentRemovalJournalResult::Ok);
+    }
     assert(!state.files.contains(ACTIVE_COURSE_PATH));
     assert(state.files.at(history) == std::vector<uint8_t>({90, 91}));
     assert(state.files.at(cachePath.data()) == pack);
