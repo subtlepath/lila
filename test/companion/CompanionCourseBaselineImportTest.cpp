@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "lib/Companion/CompanionCourseBaselineImportConsent.h"
+#include "lib/Companion/CompanionCourseBaselinePublication.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
 
 using namespace companion;
@@ -396,4 +397,82 @@ TEST(CompanionCourseBaselineReview, SharedFixtureRefusesMalformedNoncanonicalAnd
   EXPECT_FALSE(view.decode(invalid));
   EXPECT_FALSE(view.decode(std::span(bytes).first(bytes.size() - 1)));
   EXPECT_TRUE(view.decode(bytes));
+}
+
+TEST(CompanionCourseBaselinePublication, SharedFixtureAndBothPhasesRoundTripWithCorruptionRefusal) {
+  Fixture f;
+  std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{}, encoded{};
+  std::ifstream input(COURSE_BASELINE_PUBLICATION_FIXTURE, std::ios::binary);
+  ASSERT_TRUE(input.read(reinterpret_cast<char*>(bytes.data()), bytes.size()));
+  ASSERT_EQ(input.peek(), std::char_traits<char>::eof());
+  CourseBaselinePublicationRecord expected;
+  expected.reader.fill(7);
+  expected.request = f.request;
+  CourseBaselinePublicationRecord decoded;
+  ASSERT_TRUE(decodeCourseBaselinePublicationRecord(bytes, decoded));
+  EXPECT_EQ(decoded, expected);
+  ASSERT_TRUE(encodeCourseBaselinePublicationRecord(expected, encoded));
+  EXPECT_EQ(encoded, bytes);
+  for (const auto phase : {CourseBaselinePublicationPhase::Prepared, CourseBaselinePublicationPhase::Published}) {
+    expected.phase = phase;
+    ASSERT_TRUE(encodeCourseBaselinePublicationRecord(expected, encoded));
+    ASSERT_TRUE(decodeCourseBaselinePublicationRecord(encoded, decoded));
+    EXPECT_EQ(decoded, expected);
+    for (size_t at = 0; at < encoded.size(); ++at) {
+      auto corrupt = encoded;
+      corrupt[at] ^= 1;
+      const auto previous = decoded;
+      EXPECT_FALSE(decodeCourseBaselinePublicationRecord(corrupt, decoded));
+      EXPECT_EQ(decoded, previous);
+    }
+  }
+}
+
+TEST(CompanionCourseBaselinePublication, ResignedMalformedRecordsAndAliasedBuffersPreserveOutput) {
+  Fixture f;
+  CourseBaselinePublicationRecord record;
+  record.reader.fill(7);
+  record.request = f.request;
+  std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> encoded{};
+  ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, encoded));
+  auto output = record;
+  output.reader.fill(8);
+  const auto previous = output;
+  for (unsigned fault = 0; fault < 8; ++fault) {
+    auto invalid = encoded;
+    if (fault == 0) invalid[5] = 0;
+    if (fault == 1) invalid[5] = 3;
+    if (fault == 2) invalid[6] = 1;
+    if (fault == 3) invalid[7] = 1;
+    if (fault == 4) std::fill_n(invalid.begin() + 8, 16, 0);
+    if (fault == 5) {
+      invalid[29] = 0;
+      seal(std::span(invalid).subspan(24, COURSE_BASELINE_IMPORT_REQUEST_SIZE));
+    }
+    if (fault == 6) {
+      std::fill_n(invalid.begin() + 32, 16, 0);
+      seal(std::span(invalid).subspan(24, COURSE_BASELINE_IMPORT_REQUEST_SIZE));
+    }
+    if (fault == 7) invalid[24 + 151] ^= 1;
+    seal(invalid);
+    EXPECT_FALSE(decodeCourseBaselinePublicationRecord(invalid, output));
+    EXPECT_EQ(output, previous);
+  }
+  EXPECT_FALSE(decodeCourseBaselinePublicationRecord(std::span(encoded).first(encoded.size() - 1), output));
+  EXPECT_EQ(output, previous);
+  struct Aliased {
+    CourseBaselinePublicationRecord record;
+    std::array<uint8_t, 256> tail{};
+  } aliased{record};
+  const auto bytes =
+      std::span(reinterpret_cast<uint8_t*>(&aliased), sizeof(aliased)).first(COURSE_BASELINE_PUBLICATION_SIZE);
+  EXPECT_FALSE(encodeCourseBaselinePublicationRecord(aliased.record, bytes));
+  EXPECT_EQ(aliased.record, record);
+  EXPECT_FALSE(decodeCourseBaselinePublicationRecord(bytes, aliased.record));
+  EXPECT_EQ(aliased.record, record);
+  encoded.fill(0xa5);
+  const auto untouched = encoded;
+  record.reader = {};
+  EXPECT_FALSE(encodeCourseBaselinePublicationRecord(record, encoded));
+  EXPECT_EQ(encoded, untouched);
 }

@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "lib/Companion/CompanionCourseBaselineTransfer.h"
 #include "lib/Companion/CompanionCourseBinding.h"
 #include "lib/Companion/CompanionTransferHandler.h"
 #include "lib/EpdFont/VectorFontSupport.h"
@@ -122,4 +123,33 @@ TEST(CompanionTransferDisabled, VectorFontBeginFollowsBoardCapability) {
   EXPECT_EQ(storage.writes, 0);
   EXPECT_EQ(transfer.current(), nullptr);
 #endif
+}
+
+TEST(CompanionTransferDisabled, BaselineBeginRefusesBeforeApprovalOrStorageMutation) {
+  DisabledStorage storage;
+  std::array<uint8_t, TRANSFER_JOURNAL_SIZE> scratch{};
+  Identity generation{};
+  generation[0] = 1;
+  Transfer transfer(storage, scratch);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  CourseBaselineImportRequest request;
+  request.generation = generation;
+  request.owner[0] = 2;
+  request.transaction[0] = 3;
+  request.reviewHash[0] = 4;
+  request.manifest = {{}, ContentKind::Course, 99, 1, {}};
+  request.manifest.contentHash[0] = 5;
+  request.manifest.logicalIdentity[0] = 6;
+  bool called = false;
+  EXPECT_EQ(beginCourseBaselineTransfer(
+                transfer, request, generation, request.owner,
+                [](void* context, const CourseBaselineImportRequest&, const TransferDeclaration&) {
+                  *static_cast<bool*>(context) = true;
+                  return true;
+                },
+                &called),
+            TransferResult::Invalid);
+  EXPECT_FALSE(called);
+  EXPECT_EQ(storage.writes, 0);
+  EXPECT_EQ(transfer.current(), nullptr);
 }

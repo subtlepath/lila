@@ -1611,10 +1611,10 @@ This component stores consent only. It neither verifies pack bytes nor establish
 compatibility of arbitrary item meanings, applies learning state, changes the
 active binding, publishes a pack archive or grants learner-state reuse. A caller
 must verify a native frozen review and authenticated transfer before saving it.
-The review hash remains an opaque binding until the native complete-cohort review
-format and capture/verification are implemented. That capture, checked snapshot
-preservation, a separate resumable baseline upload destination, archive publication
-and completion recovery, and Apple review/queue/UI integration remain required.
+Native complete-cohort capture, immutable review storage and snapshot preservation
+are described below. Their integration with native preflight, a separate resumable
+baseline upload destination, archive publication and completion recovery, and
+Apple review/queue/UI remains required.
 The current course destination and history guards are unchanged, and no new
 command or capability is advertised for baseline import.
 
@@ -1706,8 +1706,8 @@ forced constructor/publication/load C3 probe passes the 256-byte frame limit:
 publication 96 bytes, load 176, comparison 80 and finalization 16. Integration
 must admit this owner on the heap rather than exceed the stack limit or retain a
 permanent pool. This unconnected store does not change the firmware image or
-advertise baseline import. Reviewed-cohort backups and the native/Apple import
-flow still need implementation and recovery verification.
+advertise baseline import. Reviewed-cohort backup integration and the native/Apple
+import flow still need implementation and recovery verification.
 
 All 1,834 host tests pass. Native store tests use a captured review and cover
 immutable repeated publication, both rename failure boundaries, matching staged
@@ -1717,3 +1717,241 @@ failures, write retry and permission-latched loans. Refused loads and conflicts
 leave the file map unchanged. Physical SD/power-cut acceptance remains unverified;
 when the import route is integrated, interrupt review publication and restart,
 then check the sealed hash/context and unchanged learner files before resuming.
+
+### Backups of the frozen reviewed cohort
+
+`HalCourseBaselineReviewBackup` loads the immutable review against native reader,
+generation and course identities, then recaptures the current state and requires
+the same complete review hash before copying. Each present record gets a private
+file at `/.crosspoint/companion/course-review-state-<review-sha256>-<index-hex>`;
+the sealed review fixes that index's domain, name, length and hash. Absent journal
+roles require missing backup and stage files, without synthetic empty copies.
+Source lookup rejects ambiguous names and retains actual ASCII spelling for
+case-sensitive HALs.
+
+Each new copy checks the complete source hash before and after streaming, syncs
+and checks closes, reads back the complete staged hash, and publishes only when
+the canonical destination is proven absent. Existing canonical copies require
+the exact expected hash and a missing stage. A matching staged prefix is compared
+byte for byte with its fully verified source before appending; foreign, corrupt,
+oversized or duplicate evidence is retained. A lost write/rename acknowledgement
+can be retried using the same sealed review. Successful preservation requires a
+second complete native recapture; changed state or journal files refuse even
+when all previous copies exist. Original files and diagnostic usage remain intact.
+
+The fixed C3 owner is 5,928 bytes excluding lazy HAL handles, comprising retained
+review capture/store, strict metadata readers and bounded copy paths/handles.
+It must be heap-admitted once per operation rather than exceed the stack limit or
+occupy a permanent pool. It allocates no separate copy buffer or per-file owner:
+copy and prefix comparison reuse the 3,776-byte tail of the shared 8 KiB workspace,
+while the bounded review remains in the first 4,416 bytes. The forced C3 probe
+passes the 256-byte frame limit: preservation 176 bytes, copy 128, hash comparison
+96 and canonical verification 32.
+
+This component still requires the caller to close activities, establish journal
+readiness and exclude all namespace/state writers. Its completion loan expires
+on close, another operation or permission loss. It neither authorizes pack reuse
+nor publishes an archive, and is not yet connected to companion commands.
+Native preflight, separate baseline upload, archive/completion recovery and Apple
+review/queue integration remain required. This unconnected header is verified by
+the direct C3 probe; it does not alter the previously verified firmware image.
+Physical heap and SD/power-cut acceptance remain unverified.
+
+All 1,838 host tests pass. New native cases check every present copy's independent
+SHA-256, absent roles, immutable repeated preservation, original file maps,
+12,000-byte copies interrupted at a later chunk, stage sync/close and both rename
+boundaries, changed state or unknown added files, foreign stages/canonical copies,
+duplicate names, wrong native generation, read failures, permission-latched
+completion, source casing and present/absent journal headers. A writer injected
+after the first canonical copy changes source bytes; final recapture refuses
+completion and leaves both the original changed state and verified copy intact.
+Restoring the reviewed state lets the same operation complete. When integrated,
+interrupt each copy on hardware and reboot, verify all original learner files,
+sealed review identity/hash and canonical backup hashes, and measure free/largest
+heap and task stack watermarks before admitting archive publication.
+
+### Native original-baseline preparation
+
+`HalCourseBaselineImportPreparation` binds an original-pack request to native
+reader/storage identities, the authenticated installation owner and an exact
+fresh transfer declaration. It verifies that the selected used scope has no
+retained archive baseline and that no matching retained removal receipt exists.
+Existing history, a fresh empty scope, corrupt records, incomplete directory
+scans and permission loss refuse. Both history readers check closes and are
+reused after preserving the sealed review's complete cohort. A receipt that
+appears during copying prevents preparation from offering a loan.
+
+The operation copies its request before any scratch-backed reads. The prepared
+request loan ends on close, another preparation or observed permission/heap
+admission loss. Repeated preparation checks the same immutable backups without
+rewriting them. By itself it does not save consent, validate incoming pack bytes, mutate
+the active course/binding, publish an archive or authorize learner-state reuse.
+The caller must establish journal readiness and exclude all namespace/state
+writers through subsequent consent and upload admission.
+
+The fixed C3 preparation owner is 224 bytes. Its three checked, nothrow child
+allocations total 13,120 fixed bytes (4,496 receipt history, 2,696 archive history
+and 5,928 reviewed backup), excluding lazy HAL handles and the already borrowed
+8 KiB session workspace. Each allocation checks current free internal heap and
+largest block while retaining the 50 KiB reserve. Children remain off stack,
+are allocated once per preparation rather than during scans, and are reused for
+the final absence checks. A static pool would retain those bytes outside sync
+mode. The forced C3 probe passes the 256-byte frame limit: preparation workflow
+64 bytes, archive absence check 64 and the constructor/prepare probe 96.
+
+Preparation remains unconnected to companion commands. Consent command wiring,
+the separate baseline upload route, full pack validation, archive/completion
+recovery and Apple review/queue/UI integration remain required. Committed transfer
+recovery re-runs metadata installation, so that integration needs durable
+completion evidence before current state can change; a stale frozen review must
+not become a new approval. These unconnected headers are checked by direct C3
+probes rather than a new firmware image. Physical acceptance remains unverified.
+
+All 1,840 host tests pass. Preparation cases cover retained receipts and archives,
+exact owner/generation/transaction/manifest/review bindings, repeated preservation,
+missing sealed review, malformed receipt names, failed history enumeration,
+insufficient free/largest heap and permission-latched loans. Injecting a valid
+receipt after the first backup publication preserves the original state, receipt
+and verified copy while refusing the prepared loan. On hardware, verify these
+refusals before upload admission and monitor free/largest internal heap and task
+stack watermarks across repeated attempts; no active pack or binding should change.
+
+### Native consent after reviewed-state preservation
+
+`HalCourseBaselineImportConsentStore` combines native preparation with the
+immutable `TCBI` consent codec. A prepared-request callback saves consent only
+after native request binding, absence of retained baselines and complete verified
+backups. The same admitted readers then recheck both history sources and the
+same backup owner re-verifies the current full review. A changed cohort or newly
+retained baseline prevents an approved loan even if consent publication already
+completed; the durable record remains evidence of the earlier decision.
+
+Its private HAL storage accepts only the selected transaction's canonical/staged
+consent paths. Reads use complete parent scans to reject duplicate names and
+aliases. Writes require a missing private stage and exactly one encoded record,
+with checked sync/close and readback; rename requires a complete stage and a
+missing canonical destination. It never removes or overwrites existing consent.
+Complete staged writes and lost rename acknowledgements can resume with the same
+request. Torn, corrupt, foreign and duplicate evidence refuse unchanged.
+
+Loading a durable record checks the authenticated owner, native storage generation
+and the immutable review's full hash, native reader and course. Failed loads leave
+caller output unchanged. A successful load offers the earlier request rather
+than an approved-state loan; current learning state may have changed since that
+decision. A fresh approval must pass native preparation again. Approved loans end
+on another operation, close or observed permission/heap admission loss. The
+operation preserves original learning files, active pack/binding and diagnostics.
+
+The fixed C3 store is 1,936 bytes, including its preparation owner and retained
+strict readers/codec state. It must be admitted off stack and borrows the existing
+8 KiB workspace. Approval retains the three 13,120-byte preparation children,
+for 15,056 fixed owner bytes, excluding lazy HAL handles and the borrowed workspace.
+Those children are allocated once and reused across persistence and final checks;
+there is no growing list or per-file allocation. Loading admits one 1,568-byte
+review reader after decoding consent, then releases it. Allocations check current
+internal free/largest heap and retain the 50 KiB reserve. A permanent pool would
+retain this RAM outside connection mode. The forced C3 probe passes the 256-byte
+frame limit: workflow 64 bytes, private record write 64, rename 48, sealed review
+load admission 48, public load 32 and constructor/approve/load probe 112.
+
+This connects consent to the native preparation components, but it is not yet
+called by companion commands. Baseline upload integration, full pack validation,
+archive/completion recovery and Apple review/queue/UI remain required. Loading
+consent never bypasses those gates or grants learner-state reuse. No new capability
+is advertised. The unconnected headers are checked by direct C3 compilation;
+the previously verified firmware image is unchanged. Physical SD/power-cut,
+heap/stack and Apple acceptance remain unverified.
+
+All 1,843 host tests pass. Native consent tests cover permission refusal before
+mutation, complete preparation/persistence/load, repeated approvals without
+writes, output preservation for wrong native reader/generation/owner, lost sync,
+close and both rename acknowledgements, torn/corrupt stages, foreign canonical
+decisions, duplicate names and leftover stages. A learner mutation injected after
+canonical consent publication leaves the original changed state and decision
+intact while refusing approval; loading that decision still gives no approval
+loan. Restoring the exact reviewed state allows the same request to complete.
+When command integration is available, interrupt consent write/rename on hardware,
+reboot and verify owner/generation/reader bindings, all backups and unchanged
+active pack/binding before resuming the upload; repeat with changed learner state.
+
+### Separate resumable original-baseline upload admission
+
+`beginCourseBaselineTransfer` constructs a fresh declared course transfer from
+the exact `TCBI` request and uses `/tinta/course-baseline.pack` as its distinct
+destination. It verifies native generation and authenticated owner, requires an
+explicit native approval callback, and refuses retargeting an existing transaction
+or displacing another active transfer before approval runs. The callback must
+save/re-verify the exact native consent with activities closed and other writers
+excluded. The declaration is copied before that callback can reuse session scratch;
+no request fields are borrowed afterward. The helper allocates no heap buffer;
+its forced C3 compile passes the 256-byte frame limit with a 240-byte frame.
+
+Accepted uploads use the existing parent transaction, durable offsets, chunk
+verification, reconnect recovery and abort. Repeating begin with the same exact
+request keeps the receiving checkpoint and staged bytes. Tinta-disabled builds
+refuse before invoking approval or mutating storage. Ordinary declared begin
+commands continue to reject this destination, so they cannot bypass the callback.
+No protocol command or new capability is advertised for this helper yet.
+
+Native installation remains unfinished. The current HAL rejects committing this
+destination before moving the uploaded payload or modifying active pack/binding.
+Full original-pack validation, verified archive publication and durable completion
+evidence must be connected before offering baseline import. That completion
+evidence is necessary for committed recovery after learner progress changes;
+consent alone cannot replace it. Apple review/queue/UI and reader command wiring
+also remain required. This is upload admission progress, not completed baseline
+import. The unconnected helper is checked by direct C3 compilation; the previously
+verified firmware image is unchanged, and physical acceptance is unverified.
+
+All 1,848 host tests pass. Native upload tests exercise actual preparation and
+durable consent, the 27,104-byte pack fixture streamed in bounded chunks,
+reconstruction at a 13-byte durable checkpoint, repeated begin preserving that
+checkpoint, and abort retaining consent/backups and the valid active pack/binding.
+They also cover absent/refused approval, wrong owner/generation, manifest and
+transaction retargeting, ordinary-begin refusal, and caller-buffer reuse during
+approval without changing the frozen declaration. Both Tinta-disabled host
+variants refuse before approval or storage writes. On hardware after installation
+is connected, interrupt begin/chunks and reconnect, check the same durable offset,
+then verify unchanged active content and all reviewed-state evidence before commit.
+
+### Historical copies and publication record format
+
+`HalCourseBaselineReviewBackup::verifyStored` checks the immutable review's native
+reader/generation/course and every saved copy's full length/hash, including missing
+copies for absent journal roles and missing staging files. It performs no source
+enumeration, repair or publication. This read-only path remains usable after an
+archive reference is added or learner/journal files change, even if a source file
+is removed. It never offers the fresh-preservation completion loan; native consent
+still requires a matching live review. Missing, corrupt, duplicate or staged
+backup evidence and foreign native identities refuse without mutation.
+
+`CourseBaselinePublicationRecord` defines the bounded version-1 `TCBP` publication
+record: eight header bytes (magic, version, Prepared=1 or Published=2, two reserved
+zeros), native reader identity (16 bytes), exact nested `TCBI` request (155 bytes),
+then outer CRC32 (four bytes), totaling 183 bytes. It binds reader, generation,
+owner, transaction, original pack manifest and frozen review hash. Both nested
+and outer CRCs are checked; unknown phases, reserved fields, zero identities,
+invalid requests and overlapping buffers refuse while preserving decode output.
+The shared fixture is `protocol/fixtures/CourseBaselinePublication-v1.fixture`.
+Prepared is intended to precede archive publication; Published must follow native
+archive/copy verification. Decoding either phase grants no publication authority.
+
+The fixed C3 backup owner remains 5,928 bytes and borrows the same 8 KiB workspace;
+stored verification adds no owner or buffer allocation and has an 80-byte frame.
+The publication record object is 176 bytes, with no codec heap allocation. Forced
+C3 compilation passes the 256-byte frame limit: encoding 48 bytes and decoding
+240. Publication persistence, validated state transitions, native full-pack
+validation, archive/completion recovery, command wiring and Apple review/queue/UI
+remain required. These headers remain unconnected to firmware commands; no new
+capability or completed import is claimed, and physical acceptance is unverified.
+
+All 1,852 host tests pass. New native cases verify stored copies after actual
+archive publication and changed/removed learner files, refuse incomplete,
+corrupt, duplicate and staged evidence plus read/sync/close errors, check absent
+roles, and preserve file maps and fresh-approval loan separation. Codec cases
+round-trip the shared fixture and both phases, reject a bit change at every byte,
+re-signed reserved/phase/identity/nested-record errors, truncation and buffer aliasing.
+On hardware after publication recovery is connected, advance learner progress
+after a completed import, reboot and verify immutable review/copies and the exact
+archive receipt while preserving that newer progress; a receipt alone must never
+become a fresh approval.
