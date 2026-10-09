@@ -59,17 +59,61 @@ TEST_F(CompanionFileLookupTest, OpenCloseNameAndParentFailuresNeverReportMissing
   state.failClosePath = TRANSFER_DIRECTORY;
   EXPECT_EQ(lookup.inspect(TARGET), CompanionFilePresence::Error);
   state.failClosePath.clear();
-  state.files["/.crosspoint/companion/" + std::string(256, 'a')] = {};
+  state.files["/.crosspoint/companion/" + std::string(512, 'a')] = {};
   EXPECT_EQ(lookup.inspect(TARGET), CompanionFilePresence::Error);
   state.files.clear();
   state.directories.erase(TRANSFER_DIRECTORY);
   EXPECT_EQ(lookup.inspect(TARGET), CompanionFilePresence::Error);
 }
+TEST_F(CompanionFileLookupTest, FatShortNameAliasProtectsExistingFileAndDirectory) {
+  auto& state = inventory_hal_test::state;
+  constexpr char FILE[] = "/.crosspoint/companion/a long filename.json";
+  constexpr char DIRECTORY[] = "/.crosspoint/companion/a long directory";
+  state.files[FILE] = {1};
+  state.directories[DIRECTORY] = {};
+  state.aliases[FILE] = "ALONGF~1.JSO";
+  state.aliases[DIRECTORY] = "ALONGD~1";
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/alongf~1.jso"), CompanionFilePresence::Present);
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/alongd~1"), CompanionFilePresence::Present);
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/alongf~2.jso"), CompanionFilePresence::Missing);
+}
+TEST_F(CompanionFileLookupTest, FailedAliasReadCannotProveAbsence) {
+  auto& state = inventory_hal_test::state;
+  state.files["/.crosspoint/companion/a long filename.json"] = {1};
+  state.failShortName = true;
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/alongf~1.jso"), CompanionFilePresence::Error);
+  state.failShortName = false;
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/alongf~1.jso"), CompanionFilePresence::Missing);
+}
 TEST_F(CompanionFileLookupTest, InvalidTargetsDoNotBecomeMissing) {
   for (const char* target :
        {static_cast<const char*>(nullptr), "/", "/.crosspoint/companion", "/.crosspoint/companion/", "/elsewhere/file",
-        "/.crosspoint/companion/sub/file", "/.crosspoint/companion/../file", "/.crosspoint/companion/é"})
+        "/.crosspoint/companion/sub/file", "/.crosspoint/companion/../file", "/.crosspoint/companion/\xc0\xaf"})
     EXPECT_EQ(lookup.inspect(target), CompanionFilePresence::Error);
+}
+TEST_F(CompanionFileLookupTest, UnicodeCaseAliasesAndSupplementaryNamesAreRecognized) {
+  auto& state = inventory_hal_test::state;
+  state.files["/.crosspoint/companion/café.json"] = {1};
+  state.files["/.crosspoint/companion/📖-book.json"] = {2};
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/CAFÉ.JSON"), CompanionFilePresence::Present);
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/📖-BOOK.JSON"), CompanionFilePresence::Present);
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/cafe\xcc\x81.json"), CompanionFilePresence::Missing);
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/other-é.json"), CompanionFilePresence::Missing);
+}
+TEST_F(CompanionFileLookupTest, Utf8FilenameBeyondOldBufferLimitIsRecognized) {
+  std::string lower = "/.crosspoint/companion/", upper = lower;
+  for (unsigned at = 0; at < 130; ++at) {
+    lower += "é";
+    upper += "É";
+  }
+  lower += ".json";
+  upper += ".JSON";
+  inventory_hal_test::state.files[lower] = {1};
+  EXPECT_EQ(lookup.inspect(upper.c_str()), CompanionFilePresence::Present);
+}
+TEST_F(CompanionFileLookupTest, MalformedDirectoryNameCannotProveAbsence) {
+  inventory_hal_test::state.files["/.crosspoint/companion/foreign-\xed\xa0\x80"] = {1};
+  EXPECT_EQ(lookup.inspect("/.crosspoint/companion/missing"), CompanionFilePresence::Error);
 }
 TEST_F(CompanionFileLookupTest, CancellationAndLargeScansYieldAndAllowRetry) {
   auto& state = inventory_hal_test::state;

@@ -5,6 +5,7 @@
 #include <FsHelpers.h>
 #include <HalGPIO.h>
 #include <HalStorage.h>
+#include <I18n.h>
 #include <LibraryBuilder.h>
 #include <Logging.h>
 #include <WiFi.h>
@@ -15,6 +16,9 @@
 #include <cctype>
 
 #include "CrossPointSettings.h"
+#if LILA_COMPANION
+#include "CompanionReaderPreferences.h"
+#endif
 #include "FontInstaller.h"
 #include "OpdsServerStore.h"
 #include "SdCardFontSystem.h"
@@ -1963,6 +1967,16 @@ void CrossPointWebServer::handleFontUploadData() {
 void CrossPointWebServer::handleFontUpload() {
   if (fontUpload.valid) {
     sdFontSystem.markRegistryDirty();
+#if LILA_COMPANION
+    if (!companion::captureLocalFontReplacement(fontUpload.familyName, fontUpload.filePath)) {
+      JsonDocument error;
+      error["error"] = tr(STR_FONT_SYNC_SAVE_FAILED);
+      String response;
+      serializeJson(error, response);
+      server->send(500, "application/json", response);
+      return;
+    }
+#endif
     server->send(200, "application/json", "{\"ok\":true}");
     LOG_DBG("WEB", "Font upload complete: %s", fontUpload.filePath.c_str());
   } else {
@@ -1984,12 +1998,16 @@ void CrossPointWebServer::handleFontDelete() {
   FontInstaller installer(sdFontSystem.registry());
   auto result = installer.deleteFamily(familyName);
 
+  sdFontSystem.markRegistryDirty();
   if (result == FontInstaller::Error::OK) {
-    sdFontSystem.markRegistryDirty();
     server->send(200, "application/json", "{\"ok\":true}");
     LOG_DBG("WEB", "Deleted font family: %s", familyName);
   } else {
-    server->send(500, "application/json", "{\"error\":\"Delete failed\"}");
+    doc.clear();
+    doc["error"] = tr(STR_FONT_DELETE_FAILED);
+    String response;
+    serializeJson(doc, response);
+    server->send(500, "application/json", response);
     LOG_ERR("WEB", "Failed to delete font family: %s", familyName);
   }
 }

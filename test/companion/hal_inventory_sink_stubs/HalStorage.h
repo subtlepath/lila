@@ -39,6 +39,7 @@ class HalFile {
   bool prepareDirectoryEntry() { return false; }
   HalDirectoryResult nextEntry(HalFile&) { return HalDirectoryResult::Error; }
   size_t getName(char*, size_t) { return 0; }
+  bool getShortName(char*, size_t) { return false; }
   bool close() {
     opened = false;
     return !inventory_hal_test::state.failClose;
@@ -79,6 +80,9 @@ class HalFile {
 };
 class TestHalStorage {
  public:
+  static uint32_t foldFilenameCodepoint(uint32_t value) {
+    return value >= 'a' && value <= 'z' ? value - ('a' - 'A') : value;
+  }
   bool ready() const { return true; }
   bool openFileForReadReusing(const char* module, const char* path, HalFile& file) {
     return openFileForRead(module, path, file);

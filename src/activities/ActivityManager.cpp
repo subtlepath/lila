@@ -201,7 +201,22 @@ void ActivityManager::loop() {
       // Current activity has requested a new activity to be launched
       RenderLock lock;
 
-      if (pendingAction == PendingAction::Replace) {
+      if (pendingAction == PendingAction::ReplaceForSync) {
+        bool saved = !currentActivity || currentActivity->prepareForBackground(lock);
+        for (const auto& activity : stackActivities) {
+          if (!saved) break;
+          saved = activity->prepareForBackground(lock);
+        }
+        if (!saved) {
+          LOG_ERR("ACT", "Cannot enter sync: activity save failed");
+          pendingActivity.reset();
+          pendingAction = PendingAction::None;
+          if (currentActivity) currentActivity->onBackgroundSaveFailed();
+          continue;
+        }
+      }
+
+      if (pendingAction == PendingAction::Replace || pendingAction == PendingAction::ReplaceForSync) {
         // Destroy the current activity
         exitActivity(lock);
         // Clear the stack
@@ -210,6 +225,14 @@ void ActivityManager::loop() {
           stackActivities.pop_back();
         }
       } else if (pendingAction == PendingAction::Push) {
+        if (currentActivity && !currentActivity->prepareForBackground(lock)) {
+          LOG_ERR("ACT", "Cannot background activity: %s", currentActivity->name.c_str());
+          pendingActivity.reset();
+          pendingAction = PendingAction::None;
+          currentActivity->resultHandler = nullptr;
+          requestUpdate();
+          continue;
+        }
         // Move current activity to stack
         stackActivities.push_back(std::move(currentActivity));
         // The parent's header button rects must not route taps on the pushed
@@ -273,6 +296,7 @@ bool ActivityManager::goToCompanion(bool recovering) {
     return false;
   }
   replaceActivity(std::move(activity));
+  if (pendingAction == PendingAction::Replace) pendingAction = PendingAction::ReplaceForSync;
   return true;
 }
 #endif

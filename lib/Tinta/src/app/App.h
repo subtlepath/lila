@@ -24,6 +24,7 @@ class GfxRenderer;
 
 #include "app/SessionController.h"
 #include "app/View.h"
+#include "core/PendingSave.h"
 #include "core/library/MarkLog.h"
 #include "core/pack/Pack.h"
 #include "core/profile/LessonCompletion.h"
@@ -139,11 +140,11 @@ class App {
   // a session can go on without overwriting anything on the card.
   void reopenProgressAsGuest();
   // Writes session.bin now: the screens to return to and the review session.
-  void saveSession();
+  bool saveSession();
   // Writes everything held in RAM, as going to sleep does: the session's day
   // totals so far, session.bin (with the stack up to the first screen that is
   // not restorable), the profile if it changed and the usage log.
-  void flush();
+  bool flush();
   const platform::BatteryReading& battery() const { return battery_; }
 
   // "Add to my deck" (PLAN.md M6): the uids of recognise items starred from
@@ -245,7 +246,7 @@ class App {
   static uint32_t uptimeMs();
 
   void pollPeriodic();
-  void saveIfDirty();
+  bool saveIfDirty(bool force = false);
   uint8_t loadResumeStack(ScreenId* out, uint8_t cap);
   bool openCourse();
   void closeCourse();
@@ -274,7 +275,7 @@ class App {
   core::LessonCompletion lessonCompletion_;
   ProfileMutationJournal profileJournal_{};
   bool profileAuthorityFailed_ = false;
-  bool profileDirty_ = false;
+  core::PendingSave profileSave_;
   bool firstRun_ = false;
   core::usage::UsageLog usage_{storage_, clock_, uptimeMs};
 

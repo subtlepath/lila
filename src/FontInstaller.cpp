@@ -117,32 +117,33 @@ FontInstaller::Error FontInstaller::deleteFamily(const char* familyName) {
     return Error::INVALID_FAMILY_NAME;
   }
 
-  // A family may exist in either root (or, edge case, both). Remove from both.
-  const char* roots[] = {SdCardFontRegistry::FONTS_DIR_HIDDEN, SdCardFontRegistry::FONTS_DIR_VISIBLE};
-  bool removedAny = false;
-  bool sawAny = false;
-  for (const char* root : roots) {
-    char dirPath[160];
-    snprintf(dirPath, sizeof(dirPath), "%s/%s", root, familyName);
+  char dirPath[160];
+  static constexpr char HIDDEN_PREFIX[] = "/.fonts/";
+  static constexpr char VISIBLE_PREFIX[] = "/fonts/";
+  const int length = snprintf(dirPath, sizeof(dirPath), "%s%s", HIDDEN_PREFIX, familyName);
+  if (length < 0 || static_cast<size_t>(length) >= sizeof(dirPath)) return Error::INVALID_FAMILY_NAME;
+
+  // Save before deletion, including retries after a failed fallback save.
+  const bool saved = strcmp(SETTINGS.sdFontFamilyName, dirPath + sizeof(HIDDEN_PREFIX) - 1) == 0
+                         ? SETTINGS.clearSdFontFamily()
+                         : SETTINGS.saveToFile();
+  if (!saved) {
+    LOG_ERR("FONT", "Font preferences could not be saved before deletion: %s", dirPath);
+    return Error::SD_WRITE_ERROR;
+  }
+
+  for (unsigned root = 0; root < 2; ++root) {
+    if (root == 1) {
+      // Reuse the checked name; the caller may have passed the cleared setting.
+      memmove(dirPath + sizeof(VISIBLE_PREFIX) - 1, dirPath + sizeof(HIDDEN_PREFIX) - 1,
+              static_cast<size_t>(length) - sizeof(HIDDEN_PREFIX) + 2);
+      memcpy(dirPath, VISIBLE_PREFIX, sizeof(VISIBLE_PREFIX) - 1);
+    }
     if (!Storage.exists(dirPath)) continue;
-    sawAny = true;
     if (!Storage.removeDir(dirPath)) {
       LOG_ERR("FONT", "Failed to remove family dir: %s", dirPath);
       return Error::SD_WRITE_ERROR;
     }
-    removedAny = true;
-  }
-
-  if (!sawAny) {
-    LOG_DBG("FONT", "Family not found in any fonts root: %s", familyName);
-    return Error::OK;  // Already gone
-  }
-  (void)removedAny;
-
-  // If this was the active font, clear the setting
-  if (strcmp(SETTINGS.sdFontFamilyName, familyName) == 0) {
-    SETTINGS.clearSdFontFamily();
-    LOG_DBG("FONT", "Cleared active SD font (deleted family: %s)", familyName);
   }
 
   return Error::OK;

@@ -10,7 +10,11 @@ class HalBookmarkBodyStage final {
  public:
   static constexpr char PATH[] = "/.crosspoint/companion/bookmark-bodies-next";
   static constexpr size_t RECORD_SIZE = MAX_BOOKMARK_BODY_SIZE + 2;
-  explicit HalBookmarkBodyStage(std::span<uint8_t> scratch) : stage(scratch) { mbedtls_sha256_init(&readHash); }
+  explicit HalBookmarkBodyStage(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                void* context = nullptr)
+      : stage(scratch, guard, context, TRANSFER_DIRECTORY, guard, context), guard(guard), context(context) {
+    mbedtls_sha256_init(&readHash);
+  }
   ~HalBookmarkBodyStage() {
     cleanup();
     mbedtls_sha256_free(&readHash);
@@ -48,6 +52,7 @@ class HalBookmarkBodyStage final {
     return true;
   }
   BookmarkCursorResult next(std::span<const uint8_t>& output) {
+    if (guard && !guard(context)) return readFailure("read authority");
     if (failed || !sealedOwned || writing) return BookmarkCursorResult::Error;
     if (ended) return BookmarkCursorResult::End;
     if (!reading) {
@@ -66,7 +71,7 @@ class HalBookmarkBodyStage final {
       ended = true;
       return BookmarkCursorResult::End;
     }
-    if (reader.read(bytes.data(), bytes.size()) != bytes.size()) return readFailure("body read");
+    if (reader.read(bytes.data(), bytes.size()) != static_cast<int>(bytes.size())) return readFailure("body read");
     const size_t length = bytes[0] | static_cast<size_t>(bytes[1]) << 8;
     BookmarkBodyView bookmark;
     if (length > MAX_BOOKMARK_BODY_SIZE || !decodeBookmarkBody(std::span(bytes).subspan(2, length), bookmark) ||
@@ -86,6 +91,7 @@ class HalBookmarkBodyStage final {
     if (reader.isOpen() && !reader.close()) return failure("body cleanup close");
     if (!stage.cleanup()) return failure("body writer cleanup");
     if (sealedOwned) {
+      if (guard && !guard(context)) return failure("cleanup authority");
       if (!Storage.ready() || !Storage.remove(PATH)) return failure("body cleanup remove");
       sealedOwned = false;
     }
@@ -103,6 +109,8 @@ class HalBookmarkBodyStage final {
     return BookmarkCursorResult::Error;
   }
   HalVerifiedFileStage stage;
+  InventoryHashProgress guard;
+  void* context;
   HalFile reader;
   mbedtls_sha256_context readHash;
   std::array<uint8_t, RECORD_SIZE> bytes{};

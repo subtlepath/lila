@@ -19,6 +19,8 @@
 #include "lib/Companion/CompanionWorkspace.h"
 // Arduino GPIO headers define HIGH before the installer in native builds.
 #define HIGH 1
+#include <HalMemory.h>
+
 #include "lib/hal/HalCompanionDictionaryInstaller.h"
 #undef HIGH
 #include "lib/hal/HalCourseStateMigration.h"
@@ -51,6 +53,7 @@ class HalCourseTransferTest : public testing::Test {
   HalTransferStorage storage;
   void SetUp() override {
     inventory_hal_test::state = {};
+    companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
     std::ifstream input(COURSE_FIXTURE, std::ios::binary);
     bytes = {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
     ASSERT_FALSE(bytes.empty());
@@ -104,13 +107,12 @@ class HalCourseTransferTest : public testing::Test {
     sealPack();
     return identity;
   }
-  void receive(Transfer& transfer, bool framed = true) {
+  void receive(Transfer& transfer, bool framed = true, std::string_view path = ACTIVE_COURSE_PATH) {
     ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
     std::array<uint8_t, MAX_CONTROL_PAYLOAD> body{};
     std::array<uint8_t, 1 + TRANSFER_STATE_SIZE> response{};
     if (framed) {
       ASSERT_EQ(encodeTransferDeclaration(declaration, body), TRANSFER_DECLARATION_SIZE);
-      constexpr std::string_view path = ACTIVE_COURSE_PATH;
       body[TRANSFER_DECLARATION_SIZE] = path.size();
       std::copy(path.begin(), path.end(), body.begin() + TRANSFER_DECLARATION_SIZE + 1);
       ASSERT_EQ(handleTransfer(transfer, Command::BeginTransfer,
@@ -119,7 +121,7 @@ class HalCourseTransferTest : public testing::Test {
                 response.size());
       ASSERT_EQ(response[0], static_cast<uint8_t>(TransferResult::Ok));
     } else {
-      ASSERT_EQ(transfer.begin(declaration, ACTIVE_COURSE_PATH), TransferResult::Ok);
+      ASSERT_EQ(transfer.begin(declaration, path), TransferResult::Ok);
     }
     for (size_t offset = 0; offset < bytes.size();) {
       const auto chunk = std::span(bytes).subspan(offset, std::min(size_t{1000}, bytes.size() - offset));
@@ -1943,6 +1945,97 @@ TEST_F(HalCourseTransferTest, RetiredDictionaryMetadataVerifiesMembersAndRejects
   EXPECT_EQ(hal.files, saved);
 }
 
+TEST_F(HalCourseTransferTest, AuthenticatedDictionaryCommandsInstallHashScopedBundlesIdempotently) {
+  for (const char* fixture : {"DictionaryBundle-plain.fixture", "DictionaryBundle-dictzip.fixture"}) {
+    SetUp();
+    const auto transferScratch = std::span(scratch).subspan(TRANSFER_OFFSET);
+    std::ifstream input(std::string(COMPANION_FIXTURE_DIR) + fixture, std::ios::binary);
+    bytes = {std::istreambuf_iterator<char>(input), {}};
+    ASSERT_FALSE(bytes.empty());
+    declaration.manifest.kind = ContentKind::Dictionary;
+    declaration.manifest.logicalIdentity.fill(0);
+    declaration.manifest.length = bytes.size();
+    hashBytes();
+    std::string base = "/dictionaries/";
+    base.reserve(96);
+    constexpr char hex[] = "0123456789abcdef";
+    for (const auto byte : declaration.manifest.contentHash) {
+      base.push_back(hex[byte >> 4]);
+      base.push_back(hex[byte & 15]);
+    }
+    base += "/dictionary";
+    inventory_hal_test::state.enumerateFileMap = true;
+    inventory_hal_test::state.directories["/"] = {};
+    Transfer transfer(storage, transferScratch);
+    auto installer = createHalDictionaryTransferInstaller(transfer, generation, transferScratch);
+    ASSERT_TRUE(installer);
+    storage.setDictionaryInstaller(installer.get());
+    receive(transfer, true, base);
+    std::array<uint8_t, 1 + TRANSFER_STATE_SIZE> response{};
+    for (unsigned attempt = 0; attempt < 2; ++attempt) {
+      const auto before = inventory_hal_test::state.files;
+      ASSERT_EQ(
+          handleTransfer(transfer, Command::Commit, declaration.state.transaction, declaration.state.owner, response),
+          response.size());
+      ASSERT_EQ(response[0], static_cast<uint8_t>(TransferResult::Ok));
+      ASSERT_EQ(transfer.current()->phase, TransferPhase::Committed);
+      if (attempt) {
+        EXPECT_EQ(inventory_hal_test::state.files, before);
+      }
+    }
+    auto& files = inventory_hal_test::state.files;
+    EXPECT_TRUE(files.contains(base + ".ifo"));
+    EXPECT_TRUE(files.contains(base + ".idx"));
+    EXPECT_TRUE(files.contains(base + ".syn"));
+    EXPECT_TRUE(files.contains(
+        base + (std::string_view(fixture).find("dictzip") != std::string_view::npos ? ".dict.dz" : ".dict")));
+    for (const auto path : DICTIONARY_INSTALLATION_TEMPORARIES) EXPECT_FALSE(files.contains(path)) << path;
+    for (const auto path : DICTIONARY_RETIREMENT_JOURNALS) EXPECT_FALSE(files.contains(path)) << path;
+    storage.setDictionaryInstaller(nullptr);
+  }
+}
+
+TEST_F(HalCourseTransferTest, ConcreteDictionaryPreparationRejectsLowOrFragmentedHeapWithoutMutation) {
+  for (unsigned mode = 0; mode < 3; ++mode) {
+    SetUp();
+    const auto transferScratch = std::span(scratch).subspan(TRANSFER_OFFSET);
+    std::ifstream input(std::string(COMPANION_FIXTURE_DIR) + "DictionaryBundle-plain.fixture", std::ios::binary);
+    bytes = {std::istreambuf_iterator<char>(input), {}};
+    ASSERT_FALSE(bytes.empty());
+    declaration.manifest.kind = ContentKind::Dictionary;
+    declaration.manifest.logicalIdentity.fill(0);
+    declaration.manifest.length = bytes.size();
+    hashBytes();
+    inventory_hal_test::state.enumerateFileMap = true;
+    inventory_hal_test::state.directories["/"] = {};
+    constexpr const char* base = "/dictionaries/imported/dictionary";
+    Transfer transfer(storage, transferScratch);
+    auto installer = createHalDictionaryTransferInstaller(transfer, generation, transferScratch);
+    ASSERT_TRUE(installer);
+    storage.setDictionaryInstaller(installer.get());
+    ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+    ASSERT_EQ(transfer.begin(declaration, base), TransferResult::Ok);
+    for (size_t offset = 0; offset < bytes.size();) {
+      const auto count = std::min<size_t>(512, bytes.size() - offset);
+      ASSERT_EQ(transfer.append(declaration.state.transaction, declaration.state.owner, offset,
+                                std::span<const uint8_t>(bytes).subspan(offset, count)),
+                TransferResult::Ok);
+      offset += count;
+    }
+    const auto staged = inventory_hal_test::state.files;
+    auto& heap = companion_memory_test::internal;
+    if (mode == 0) heap.freeBytes = 50 * 1024;
+    if (mode == 1) heap.freeBytes = 50 * 1024 + 1;
+    if (mode == 2) heap.largestBlockBytes = 1;
+    EXPECT_FALSE(
+        installer->prepare(base, TRANSFER_STAGE, *transfer.contentManifest(), *transfer.current(), transferScratch))
+        << mode;
+    EXPECT_EQ(inventory_hal_test::state.files, staged) << mode;
+    EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+    storage.setDictionaryInstaller(nullptr);
+  }
+}
+
 TEST_F(HalCourseTransferTest, ConcreteDictionaryInstallerExtractsPublishesAndRetiresPlainAndCompressedBundles) {
   for (const char* fixture : {"DictionaryBundle-plain.fixture", "DictionaryBundle-dictzip.fixture"}) {
     for (unsigned fault = 0; fault < 6; ++fault) {
@@ -2000,6 +2093,19 @@ TEST_F(HalCourseTransferTest, ConcreteDictionaryInstallerExtractsPublishesAndRet
         installer = createHalDictionaryTransferInstaller(transfer, generation, transferScratch);
         ASSERT_TRUE(installer);
         storage.setDictionaryInstaller(installer.get());
+        if (fault <= 2) {
+          const auto interrupted = inventory_hal_test::state.files;
+          const auto phase = transfer.current()->phase;
+          for (unsigned shortage = 0; shortage < 2; ++shortage) {
+            companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+            if (shortage == 0) companion_memory_test::internal.freeBytes = 50 * 1024;
+            if (shortage == 1) companion_memory_test::internal.largestBlockBytes = 1;
+            EXPECT_EQ(transfer.recover(generation), TransferResult::IoError) << fixture << shortage;
+            EXPECT_EQ(inventory_hal_test::state.files, interrupted) << fixture << shortage;
+            EXPECT_EQ(transfer.current()->phase, phase);
+          }
+          companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+        }
         ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
         if (fault >= 3) {
           ASSERT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);

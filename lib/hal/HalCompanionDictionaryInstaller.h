@@ -2,7 +2,10 @@
 
 #include <Memory.h>
 
+#include <algorithm>
+
 #include "CompanionWorkspace.h"
+#include "HalCompanionHeapAdmission.h"
 #include "HalDictionaryAbortCleanup.h"
 #include "HalDictionaryFinalizedContentVerification.h"
 #include "HalDictionaryInstallationPreparation.h"
@@ -25,26 +28,35 @@ class HalCompanionDictionaryInstaller final : public HalDictionaryTransferInstal
         state.durableOffset != state.length ||
         (state.phase != TransferPhase::Receiving && state.phase != TransferPhase::Verified))
       return fail("preparation context");
+    constexpr size_t peak = sizeof(DecodeWorkspace) + sizeof(HalDictionaryIncomingExtraction) +
+                            sizeof(HalDictionaryInstallationPreparation) + sizeof(ReservationOwner);
+    constexpr size_t largest = std::max({sizeof(DecodeWorkspace), sizeof(HalDictionaryIncomingExtraction),
+                                         sizeof(HalDictionaryInstallationPreparation), sizeof(ReservationOwner)});
+    if (!admit(peak, largest)) return false;
     // The decoder/NFC window and retained coordinators exceed the task stack.
     // They are released before publication, which requires no decompression.
     auto decoder = makeUniqueNoThrow<DecodeWorkspace>();
     if (!decoder || !decoder->ready) return fail("OOM: decoder workspace");
+    if (!admit()) return false;
     HalFile file;
     if (!Storage.openFileForReadReusing("COMPANION", candidate, file)) return fail("incoming archive open");
     auto incoming = makeUniqueNoThrow<HalDictionaryIncomingExtraction>(
         file, state, manifest, generation, destination, archiveScratch(), comparisonScratch(), decoder->receipts,
         &decoder->decoder, decoder->window, decoder->names, progress);
     if (!incoming) return fail("OOM: extraction owner");
+    if (!admit()) return false;
     if (!incoming->prepare()) return false;
     auto prepared = makeUniqueNoThrow<HalDictionaryInstallationPreparation>(
         *incoming, file, manifest, comparisonScratch(), &decoder->decoder, decoder->window, progress);
     if (!prepared) return fail("OOM: preparation owner");
+    if (!admit()) return false;
     if (!prepared->prepare(destination)) return false;
     const auto receipt = incoming->receiptParent();
     const auto plan = prepared->current();
     if (!receipt || !plan) return fail("prepared ownership");
     auto reservation = makeUniqueNoThrow<ReservationOwner>(transfer, *receipt, planScratch(), workScratch());
     if (!reservation) return fail("OOM: reservation owner");
+    if (!admit()) return false;
     return reservation->reservation.reserve(*plan) == DictionaryJournalResult::Ok;
   }
   bool install(const char* destination, const ContentManifest& manifest, const TransferState& state,
@@ -64,15 +76,21 @@ class HalCompanionDictionaryInstaller final : public HalDictionaryTransferInstal
     if (!context(destination, manifest, state, wire)) return fail("finalization context");
     if (state.phase == TransferPhase::Aborted) {
       publication.reset();
+      if (!admit(sizeof(HalDictionaryAbortCleanup) + sizeof(HalDictionaryZipAudit),
+                 std::max(sizeof(HalDictionaryAbortCleanup), sizeof(HalDictionaryZipAudit))))
+        return false;
       // Retained journal codecs and HAL handles exceed the task-local budget.
       auto aborted = makeUniqueNoThrow<HalDictionaryAbortCleanup>(transfer, planScratch(), workScratch(), progress);
       if (!aborted) return fail("OOM: abort cleanup owner");
+      if (!admit()) return false;
       return aborted->run();
     }
     if (state.phase != TransferPhase::Committed || state.durableOffset != state.length)
       return fail("finalization context");
+    if (!admit(sizeof(RetirementOwner), sizeof(RetirementOwner))) return false;
     auto retired = makeUniqueNoThrow<RetirementOwner>(transfer, scratch);
     if (!retired) return fail("OOM: retirement owner");
+    if (!admit()) return false;
     const auto resumed = retired->owner.resume();
     if (resumed == DictionaryJournalResult::Ok) {
       publication.reset();
@@ -83,8 +101,11 @@ class HalCompanionDictionaryInstaller final : public HalDictionaryTransferInstal
     const auto recovered = publication->owner.recover();
     if (recovered == DictionaryJournalResult::Missing) {
       publication.reset();
+      if (!admit(sizeof(HalDictionaryFinalizedContentVerification), sizeof(HalDictionaryFinalizedContentVerification)))
+        return false;
       auto verified = makeUniqueNoThrow<HalDictionaryFinalizedContentVerification>(workScratch(), progress);
       if (!verified) return fail("OOM: finalized verification owner");
+      if (!admit()) return false;
       return verified->verifyRetired(destination, manifest, state);
     }
     if (recovered != DictionaryJournalResult::Ok || publication->owner.finalize() != DictionaryJournalResult::Ok)
@@ -180,14 +201,20 @@ class HalCompanionDictionaryInstaller final : public HalDictionaryTransferInstal
            inventory_detail::nonzero(generation);
   }
   bool publicationOwner(const TransferState& state, const ContentManifest& manifest) {
-    if (!publication)
+    if (!publication) {
+      if (!admit(sizeof(PublicationOwner), sizeof(PublicationOwner))) return false;
       publication =
           makeUniqueNoThrow<PublicationOwner>(transfer, state, manifest, generation, planScratch(), workScratch());
-    return publication ? true : fail("OOM: publication owner");
+    }
+    if (!publication) return fail("OOM: publication owner");
+    if (admit()) return true;
+    publication.reset();
+    return false;
   }
+  static bool admit(size_t bytes = 0, size_t largest = 0) { return admitCompanionHeap(bytes, largest); }
   static bool progress(void*) {
     vTaskDelay(1);
-    return true;
+    return admit();
   }
   static bool fail(const char* operation) {
     LOG_ERR("COMPANION", "Dictionary installer %s failed", operation);

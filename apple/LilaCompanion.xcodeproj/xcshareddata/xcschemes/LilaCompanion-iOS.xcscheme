@@ -5,8 +5,21 @@
       <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="28AFDC1F5BF3C7D4A4EC77C9" BuildableName="LilaCompanion-iOS.app" BlueprintName="LilaCompanion-iOS" ReferencedContainer="container:LilaCompanion.xcodeproj" />
       </BuildActionEntry>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A1DE5C98F4825928944A6F93" BuildableName="LilaCompanion-iOS-UITests.xctest" BlueprintName="LilaCompanion-iOS-UITests" ReferencedContainer="container:LilaCompanion.xcodeproj" />
+      </BuildActionEntry>
     </BuildActionEntries>
   </BuildAction>
+  <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
+    <Testables>
+      <TestableReference skipped="NO">
+        <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A1DE5C98F4825928944A6F93" BuildableName="LilaCompanion-iOS-UITests.xctest" BlueprintName="LilaCompanion-iOS-UITests" ReferencedContainer="container:LilaCompanion.xcodeproj" />
+      </TestableReference>
+    </Testables>
+    <MacroExpansion>
+      <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="28AFDC1F5BF3C7D4A4EC77C9" BuildableName="LilaCompanion-iOS.app" BlueprintName="LilaCompanion-iOS" ReferencedContainer="container:LilaCompanion.xcodeproj" />
+    </MacroExpansion>
+  </TestAction>
   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugServiceExtension="internal" allowLocationSimulation="YES">
     <BuildableProductRunnable runnableDebuggingMode="0">
       <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="28AFDC1F5BF3C7D4A4EC77C9" BuildableName="LilaCompanion-iOS.app" BlueprintName="LilaCompanion-iOS" ReferencedContainer="container:LilaCompanion.xcodeproj" />

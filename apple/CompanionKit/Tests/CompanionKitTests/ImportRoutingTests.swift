@@ -33,4 +33,23 @@ final class ImportRoutingTests: XCTestCase, @unchecked Sendable {
         let ids = try await library.libraryContentIDs()
         XCTAssertEqual(ids, [imported.id])
     }
+    func testFontCollectionRoutingPreservesBytesAndCloudDescriptor() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        var repository = URL(fileURLWithPath: #filePath)
+        for _ in 0 ..< 5 { repository.deleteLastPathComponent() }
+        let source = root.appendingPathComponent("Collection.ttc")
+        try FileManager.default.copyItem(at: repository.appendingPathComponent("protocol/fixtures/VectorFont-collection.fixture"), to: source)
+        let library = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
+        let vault = try ContentVault(root: root.appendingPathComponent("vault"))
+        let content = try await ContentImporter(vault: vault, library: library).importFile(source)
+        XCTAssertEqual(content.kind, .font); XCTAssertEqual(content.originalFilename, "Collection.ttc")
+        let stored = try await vault.verifiedObject(content.id)
+        XCTAssertEqual(try Data(contentsOf: stored.url), try Data(contentsOf: source))
+        let descriptor = try CloudContentDescriptor(content: content)
+        XCTAssertEqual(descriptor.originalFilename, "Collection.ttc")
+        let retained = try await library.content(content.id); XCTAssertEqual(retained, content)
+    }
+
 }

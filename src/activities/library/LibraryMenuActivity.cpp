@@ -69,6 +69,11 @@ bool LibraryMenuActivity::handleCustomInput() {
 
 const char* LibraryMenuActivity::headerTitle() const { return tr(STR_HOME_MENU); }
 
+void LibraryMenuActivity::onBackgroundSaveFailed() {
+  syncStartFailed.store(true, std::memory_order_release);
+  requestUpdate();
+}
+
 void LibraryMenuActivity::activateIndex(const int index) {
   if (index < 0 || index >= rowCount) return;
   app.clearTapFlash();
@@ -92,7 +97,7 @@ void LibraryMenuActivity::activateIndex(const int index) {
       break;
     case Entry::Companion:
 #if LILA_COMPANION
-      activityManager.goToCompanion();
+      if (!activityManager.goToCompanion()) onBackgroundSaveFailed();
 #endif
       break;
     case Entry::Settings:
@@ -125,4 +130,7 @@ void LibraryMenuActivity::buildScreen(UiScreen& screen) {
 void LibraryMenuActivity::drawFooter() {
   const auto labels = mappedInput.mapLabels(tr(STR_HOME), tr(STR_OPEN), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
+  if (syncStartFailed.exchange(false, std::memory_order_acq_rel)) {
+    GUI.drawPopup(renderer, tr(STR_COMPANION_START_FAILED));
+  }
 }

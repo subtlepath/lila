@@ -10,12 +10,13 @@ class HalEpubRemovalNativeOwner final {
  public:
   HalEpubRemovalNativeOwner(const Identity& generation, HalEpubRemovalBackend::Callback permitted,
                             HalEpubRemovalBackend::Callback refresh, void* context,
-                            HalEpubRemovalAdmission::InventoryReady inventoryReady)
+                            HalEpubRemovalAdmission::InventoryReady inventoryReady,
+                            FontRemovalSettings* fontSettings = nullptr)
       : generation(generation),
         validator(scratch),
         paths(pathStorage, std::span(scratch).first(INVENTORY_PATH_MAX_RECORD)),
         session(generation, paths, revision, MULTI_PATH_REMOVAL_HEADER_SIZE, permitted, refresh, context,
-                inventoryReady) {}
+                inventoryReady, fontSettings) {}
   bool prepare() { return session.prepare(); }
   bool openInventory(uint64_t requestedRevision) {
     if (!requestedRevision ||

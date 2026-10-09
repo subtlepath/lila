@@ -16,6 +16,7 @@ def main():
         binary = Path(temporary) / "path-lookup"
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             str(repo / "test/companion/sdfat_path_lookup_test.cpp"),
@@ -25,6 +26,37 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            "-I" + str(repo / "lib/Memory"),
+            "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
+            str(repo / "test/companion/sdfat_font_removal_references_test.cpp"),
+            str(repo / "lib/Companion/CompanionEpubReferenceJson.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            "-I" + str(repo / "lib/Memory"),
+            "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
+            str(repo / "test/companion/sdfat_font_removal_cohort_test.cpp"),
+            str(repo / "lib/Companion/CompanionEpubReferenceJson.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             str(repo / "test/companion/sdfat_epub_removal_test.cpp"),
@@ -36,6 +68,7 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             str(repo / "test/companion/sdfat_removal_metadata_test.cpp"),
@@ -47,6 +80,7 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo),
             "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
@@ -60,6 +94,7 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
@@ -73,6 +108,7 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
@@ -87,6 +123,7 @@ def main():
         subprocess.run([str(binary)], check=True)
         subprocess.run([
             args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
             "-I" + str(repo / "test/companion/hal_transfer_stubs"),
             "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
             "-I" + str(repo / "lib/Memory"),

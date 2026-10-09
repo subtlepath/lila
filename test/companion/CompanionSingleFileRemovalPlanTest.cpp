@@ -69,11 +69,11 @@ TEST(SingleFileRemovalPlan, RejectsPrivatePathsTraversalAndUnsupportedContentKin
   course.manifest.logicalIdentity.fill(5);
   EXPECT_FALSE(validSingleFileRemovalPlan({course, "/tinta/course.pack"}));
   EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Dictionary), "/dictionaries/es/dictionary.ifo"}));
-  EXPECT_TRUE(validSingleFileRemovalPlan({request(ContentKind::Font), "/fonts/Font_14.cpfont"}));
-  EXPECT_TRUE(validSingleFileRemovalPlan({request(ContentKind::Font, 2), "/.fonts/Font.ttf"}));
-  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font), "/Books/Font_14.cpfont"}));
-  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font, 2), "/fonts/Font_14.cpfont"}));
-  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font), "/fonts/Font.ttf"}));
+  EXPECT_TRUE(validSingleFileRemovalPlan({request(ContentKind::Font, 4), "/fonts/Font_14.cpfont"}));
+  EXPECT_TRUE(validSingleFileRemovalPlan({request(ContentKind::Font, 1), "/.fonts/Font.ttf"}));
+  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font, 4), "/Books/Font_14.cpfont"}));
+  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font, 1), "/fonts/Font_14.cpfont"}));
+  EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Font, 4), "/fonts/Font.ttf"}));
   EXPECT_TRUE(validSingleFileRemovalPlan({request(ContentKind::Epub, 0), "/Books/book.epub"}));
   EXPECT_FALSE(validSingleFileRemovalPlan({request(ContentKind::Epub, 2), "/Books/book.epub"}));
 }
@@ -105,4 +105,24 @@ TEST(SingleFileRemovalPlan, RejectsMalformedUtf8WithoutNormalizingNativeNames) {
   SingleFileRemovalPlan decoded;
   ASSERT_TRUE(decodeSingleFileRemovalPlan(std::span(bytes).first(size), decoded));
   EXPECT_EQ(decoded.path, decomposed.path);
+}
+
+TEST(SingleFileRemovalPlan, FontExtensionAndManifestFormatMustAgreeAcrossEncodingAndDecoding) {
+  std::array<uint8_t, SINGLE_FILE_REMOVAL_PLAN_MAX_SIZE> bytes{};
+  for (const auto path : {"/fonts/Font.cpfont", "/.fonts/Font.TTF", "/fonts/Font.otf", "/.fonts/Font.ttc"}) {
+    for (const auto format : {0U, 1U, 2U, 3U, 4U, 5U}) {
+      const bool bitmap = std::string_view(path).ends_with(".cpfont");
+      const bool accepted = bitmap ? format == 4 : format == 1;
+      const SingleFileRemovalPlan plan{request(ContentKind::Font, format), path};
+      EXPECT_EQ(validSingleFileRemovalPlan(plan), accepted);
+      const auto length = encodeSingleFileRemovalPlan(plan, bytes);
+      EXPECT_EQ(length != 0, accepted);
+      if (accepted) {
+        SingleFileRemovalPlan decoded;
+        ASSERT_TRUE(decodeSingleFileRemovalPlan(std::span(bytes).first(length), decoded));
+        EXPECT_EQ(decoded.request, plan.request);
+        EXPECT_EQ(decoded.path, plan.path);
+      }
+    }
+  }
 }

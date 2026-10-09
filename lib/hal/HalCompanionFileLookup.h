@@ -7,6 +7,7 @@
 
 #include "CompanionInventoryPaths.h"
 #include "CompanionTransfer.h"
+#include "HalFilenameCodec.h"
 
 namespace companion {
 enum class CompanionFilePresence { Present, Missing, Error };
@@ -34,8 +35,7 @@ class HalCompanionFileLookup final {
         view.substr(prefixSize).find('/') != std::string_view::npos)
       return error("lookup path is not a companion child");
     const auto wanted = view.substr(prefixSize);
-    if (!std::all_of(wanted.begin(), wanted.end(), [](unsigned char byte) { return byte < 128; }))
-      return error("lookup target must be ASCII");
+    if (!hal_filename::valid(wanted)) return error("lookup invalid target name");
     if (!Storage.openFileForReadReusing("COMPANION", parentPath, directory) || !directory.isDirectory() ||
         !entry.prepareDirectoryEntry())
       return error("lookup parent open");
@@ -49,8 +49,20 @@ class HalCompanionFileLookup final {
         return close() ? CompanionFilePresence::Missing : CompanionFilePresence::Error;
       const auto length = entry.getName(name.data(), name.size());
       if (length == 0 || length >= name.size() || name[length] != 0) return error("lookup entry name");
-      if (sameName(wanted, std::string_view(name.data(), length)))
+      const auto comparison = hal_filename::compare(wanted, std::string_view(name.data(), length), &foldName);
+      if (comparison == hal_filename::Comparison::Invalid) return error("lookup invalid entry name");
+      if (comparison == hal_filename::Comparison::Equal)
         return close() ? CompanionFilePresence::Present : CompanionFilePresence::Error;
+      char alias[13]{};
+      if (!entry.getShortName(alias, sizeof(alias))) return error("lookup entry alias");
+      const auto aliasLength = strnlen(alias, sizeof(alias));
+      if (aliasLength == sizeof(alias)) return error("lookup unterminated alias");
+      if (aliasLength != 0) {
+        const auto aliasComparison = hal_filename::compare(wanted, std::string_view(alias, aliasLength), &foldName);
+        if (aliasComparison == hal_filename::Comparison::Invalid) return error("lookup invalid alias");
+        if (aliasComparison == hal_filename::Comparison::Equal)
+          return close() ? CompanionFilePresence::Present : CompanionFilePresence::Error;
+      }
       if (++steps == 32) {
         steps = 0;
         vTaskDelay(1);
@@ -61,17 +73,10 @@ class HalCompanionFileLookup final {
  private:
   HalFile directory, entry;
   const char* parentPath;
-  std::array<char, 256> name{};
+  std::array<char, INVENTORY_PATH_LIMIT + 1> name{};
   Progress progress;
   void* context;
-  static bool sameName(std::string_view wanted, std::string_view found) {
-    if (wanted.size() != found.size()) return false;
-    for (size_t at = 0; at < wanted.size(); ++at) {
-      const auto fold = [](unsigned char byte) { return byte >= 'A' && byte <= 'Z' ? byte + ('a' - 'A') : byte; };
-      if (fold(wanted[at]) != fold(found[at])) return false;
-    }
-    return true;
-  }
+  static uint32_t foldName(uint32_t codepoint) { return Storage.foldFilenameCodepoint(codepoint); }
   bool closeEntry() {
     if (entry.isOpen() && !entry.close()) return failure("lookup entry close");
     return true;

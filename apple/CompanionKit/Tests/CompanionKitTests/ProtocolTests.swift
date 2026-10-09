@@ -19,6 +19,12 @@ final class ProtocolTests: XCTestCase {
         let descriptor = try DeviceDescriptor(decoding: fixture("CourseTransferCapabilities"))
         XCTAssertEqual(descriptor.readerCapabilities, [.declaredTransfers, .courseTransfers])
         XCTAssertTrue(descriptor.readerCapabilities.supportsCourseTransfer)
+        XCTAssertFalse(descriptor.readerCapabilities.supportsCourseSwitch)
+        for capabilities: UInt32 in [0, 1, 2, 3, 16, 17, 18] {
+            XCTAssertFalse(ReaderCapabilities(rawValue: capabilities).supportsCourseSwitch)
+        }
+        XCTAssertTrue(ReaderCapabilities(rawValue: 19).supportsCourseSwitch)
+        XCTAssertTrue(ReaderCapabilities(rawValue: UInt32.max).supportsCourseSwitch)
         XCTAssertTrue(ReaderCapabilities(rawValue: UInt32.max).supportsCourseTransfer)
         for capabilities: UInt32 in [0, 1, 2, 4, UInt32.max & ~UInt32(3)] {
             XCTAssertFalse(ReaderCapabilities(rawValue: capabilities).supportsCourseTransfer)

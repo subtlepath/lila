@@ -19,12 +19,15 @@ class HalVerifiedFileStage final {
  public:
   using Progress = InventoryHashProgress;
   explicit HalVerifiedFileStage(std::span<uint8_t> readbackScratch, Progress progress = nullptr,
-                                void* context = nullptr, const char* parentPath = TRANSFER_DIRECTORY)
+                                void* context = nullptr, const char* parentPath = TRANSFER_DIRECTORY,
+                                Progress cleanupAuthority = nullptr, void* cleanupContext = nullptr)
       : lookup(progress, context, parentPath),
         scratch(readbackScratch),
         progress(progress),
         context(context),
-        parentPath(parentPath) {
+        parentPath(parentPath),
+        cleanupAuthority(cleanupAuthority),
+        cleanupContext(cleanupContext) {
     mbedtls_sha256_init(&digest);
   }
   ~HalVerifiedFileStage() {
@@ -169,6 +172,8 @@ class HalVerifiedFileStage final {
   Progress progress;
   void* context;
   const char* parentPath;
+  Progress cleanupAuthority;
+  void* cleanupContext;
   Digest hash{};
   uint64_t extent = 0, syncedExtent = 0;
   uint8_t writes = 0;
@@ -181,6 +186,7 @@ class HalVerifiedFileStage final {
   bool discard() {
     if (file.isOpen() && !file.close()) return failure("cleanup close");
     if (!owned) return true;
+    if (cleanupAuthority && !cleanupAuthority(cleanupContext)) return failure("cleanup authority");
     if (!Storage.ready()) return failure("cleanup SD unavailable");
     const auto presence = lookup.inspect(path, false);
     if (presence == CompanionFilePresence::Error ||

@@ -113,7 +113,7 @@ class SessionController {
   const core::StudyTotals& summaryTotals() const { return summary_; }
 
   // Sleep: the session stays, its unsaved totals go to days.bin.
-  void setAside();
+  bool setAside();
 
   // session.bin: what serialize() wrote, given back after a wake. Restored:
   // the same card; Rebuilt: the store moved on since (a cut between the
@@ -129,7 +129,7 @@ class SessionController {
   bool begin();
   bool store(core::Grade grade);
   void addTotals(const core::StudyTotals& t);
-  void flushToLog();
+  bool flushToLog();
   void logCard() const;
   void recordStart(bool resumed) const;
   void recordShown() const;

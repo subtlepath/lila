@@ -36,6 +36,22 @@ if old_check in source:
 elif new_check not in source:
     raise RuntimeError("Unsupported pioarduino cache check")
 
+# IDF linker fragments name component object files. LTO merges those objects
+# and can move the RISC-V interrupt handler outside the vector's JAL range.
+espidf_builder = builder.with_name("espidf.py")
+espidf_source = espidf_builder.read_text(encoding="utf-8")
+core_flags_anchor = '        build_env.ProcessUnFlags(default_env.get("BUILD_UNFLAGS"))'
+core_flags_patch = core_flags_anchor + '\n' + '\n'.join([
+    '        if default_env.get("ARDUINO_LIB_COMPILE_FLAG") == "Build":',
+    '            build_env.ProcessUnFlags("-flto -flto=auto")',
+])
+if core_flags_patch not in espidf_source:
+    if espidf_source.count(core_flags_anchor) != 1:
+        raise RuntimeError("Unsupported pioarduino component flag setup")
+    espidf_builder.write_text(
+        espidf_source.replace(core_flags_anchor, core_flags_patch, 1), encoding="utf-8"
+    )
+
 requested = env.GetProjectOption("custom_sdkconfig", "")
 board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")

@@ -6,20 +6,23 @@
 #include "HalContentRemovalTransactions.h"
 #include "HalEpubRemovalCohortParticipant.h"
 #include "HalEpubRemovalReferences.h"
+#include "HalFontRemovalReferences.h"
+#include "HalSingleFileRemovalCohortParticipant.h"
 #include "HalSingleFileRemovalPlanStorage.h"
 
 namespace companion {
 // Boot-only owner: no reader/store writers may run until recovery completes.
 class HalContentRemovalStartupRecovery final {
  public:
-  HalContentRemovalStartupRecovery()
+  explicit HalContentRemovalStartupRecovery(FontRemovalSettings* fontSettings = nullptr)
       : journal(storage, journalBytes),
         completions(completionBytes),
         release(journal, storage, completions, releaseBytes),
         plans(io),
         references(journal, declarationBytes, io),
         participant(journal, references, io),
-        removal(journal, participant) {}
+        removal(journal, participant),
+        fontSettings(fontSettings) {}
   bool pending(bool& output) {
     output = false;
     if (!storage.prepare()) return failure("journal directory");
@@ -43,7 +46,8 @@ class HalContentRemovalStartupRecovery final {
     if (completed == CompletedRemovalResult::Ok)
       return release.release() == CompletedRemovalResult::Ok || failure("release");
     if (completed != CompletedRemovalResult::Missing) return failure("completion receipt");
-    if (checkpoint.request.manifest.kind != ContentKind::Epub) return failure("unsupported participant");
+    const bool font = checkpoint.request.manifest.kind == ContentKind::Font;
+    if (!font && checkpoint.request.manifest.kind != ContentKind::Epub) return failure("unsupported participant");
     const auto loaded = plans.load(checkpoint.planHash, planBytes, plan);
     if (!unchanged()) return failure("persisted plan ownership");
     initial = checkpoint;
@@ -52,14 +56,36 @@ class HalContentRemovalStartupRecovery final {
     if (loaded == RemovalPlanStorageResult::Ok) {
       if (plan.request != checkpoint.request) return failure("persisted request");
       const auto length = SINGLE_FILE_REMOVAL_PLAN_PREFIX + plan.path.size() + 4;
-      if (!participant.bind(std::span(planBytes).first(length), checkpoint.planHash) ||
-          removal.remove(initial) != ContentRemovalJournalResult::Ok)
+      if (font) {
+        if (!fontSettings || !admitCompanionHeap(sizeof(FontRecovery), sizeof(FontRecovery)) || !fontSettings->load())
+          return failure("font settings load");
+        auto worker = makeUniqueNoThrow<FontRecovery>(journal, *fontSettings, io);
+        if (!worker) return failure("OOM: font recovery");
+        if (!admitCompanionHeap() ||
+            !worker->participant.bind(std::span(planBytes).first(length), checkpoint.planHash) ||
+            worker->removal.remove(initial) != ContentRemovalJournalResult::Ok)
+          return failure("font participant recovery");
+      } else if (!participant.bind(std::span(planBytes).first(length), checkpoint.planHash) ||
+                 removal.remove(initial) != ContentRemovalJournalResult::Ok) {
         return failure("participant recovery");
+      }
+    } else if (loaded == RemovalPlanStorageResult::Corrupt && font) {
+      if (!fontSettings || !admitCompanionHeap(sizeof(FontCohortRecovery), sizeof(FontCohortRecovery)) ||
+          !fontSettings->load())
+        return failure("font cohort settings load");
+      auto worker = makeUniqueNoThrow<FontCohortRecovery>(journal, *fontSettings, io);
+      if (!worker) return failure("OOM: font cohort recovery");
+      if (!admitCompanionHeap() ||
+          worker->plans.open(checkpoint.planHash, checkpoint.request) != MultiPathRemovalStorageResult::Ok ||
+          !unchanged() || worker->removal.remove(initial) != ContentRemovalJournalResult::Ok)
+        return failure("font cohort recovery");
     } else if (loaded == RemovalPlanStorageResult::Corrupt) {
       // The LRMP reader independently verifies format, full request and SHA.
       // Allocate its reusable worker/buffers off stack only for cohort recovery.
+      if (!admitCompanionHeap(sizeof(CohortRecovery), sizeof(CohortRecovery))) return false;
       auto cohort = makeUniqueNoThrow<CohortRecovery>(journal, references, io);
       if (!cohort) return failure("OOM: cohort recovery");
+      if (!admitCompanionHeap()) return false;
       if (cohort->plans.open(checkpoint.planHash, checkpoint.request) != MultiPathRemovalStorageResult::Ok ||
           !unchanged() || cohort->removal.remove(initial) != ContentRemovalJournalResult::Ok)
         return failure("cohort recovery");
@@ -73,6 +99,21 @@ class HalContentRemovalStartupRecovery final {
   }
 
  private:
+  struct FontCohortRecovery {
+    HalMultiPathRemovalPlanStorage plans;
+    HalFontRemovalReferences references;
+    HalSingleFileRemovalCohortParticipant participant;
+    ContentRemoval removal;
+    FontCohortRecovery(ContentRemovalJournal& journal, FontRemovalSettings& settings, std::span<uint8_t> io)
+        : references(journal, settings), participant(journal, plans, references, io), removal(journal, participant) {}
+  };
+  struct FontRecovery {
+    HalFontRemovalReferences references;
+    HalSingleFileRemovalParticipant participant;
+    ContentRemoval removal;
+    FontRecovery(ContentRemovalJournal& journal, FontRemovalSettings& settings, std::span<uint8_t> io)
+        : references(journal, settings), participant(journal, references, io), removal(journal, participant) {}
+  };
   struct CohortRecovery {
     HalMultiPathRemovalPlanStorage plans;
     HalEpubRemovalCohortParticipant participant;
@@ -94,6 +135,7 @@ class HalContentRemovalStartupRecovery final {
   ContentRemoval removal;
   ContentRemovalRecord checkpoint, receipt, initial;
   SingleFileRemovalPlan plan;
+  FontRemovalSettings* fontSettings;
   bool unchanged() const { return journal.current() && *journal.current() == checkpoint; }
   static bool failure(const char* stage) {
     LOG_ERR("COMPANION", "Removal startup recovery failed: %s", stage);

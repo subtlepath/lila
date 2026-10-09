@@ -184,6 +184,16 @@ void TintaActivity::onExit() {
   Activity::onExit();
 }
 
+bool TintaActivity::prepareForBackground(const RenderLock&) {
+  if (!app) return true;
+  if ((companionSession && !companionSession->ready) || !app->flush()) {
+    LOG_ERR("TNT", "Cannot leave Tinta: learner persistence failed");
+    saveError = true;
+    return false;
+  }
+  return true;
+}
+
 void TintaActivity::requestFrame() {
   frameRequested.store(true);
   requestUpdate();
@@ -232,6 +242,11 @@ void TintaActivity::render(RenderLock&&) {
     return;
   }
   app->renderFrame(!frameRequested.exchange(false));
+  if (saveError) {
+    saveError = false;
+    GUI.drawPopup(renderer, tr(STR_SAVE_PROGRESS_FAILED));
+    renderer.displayBuffer();
+  }
   const unsigned low = uxTaskGetStackHighWaterMark(nullptr);
   if (low < renderStackLow) renderStackLow = low;
 }

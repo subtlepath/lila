@@ -48,6 +48,12 @@ class DayLog {
   // Adds a session's totals to `day`. Values beyond 16 bits are split over
   // several records.
   bool add(DayNumber day, const DayTotals& delta);
+  // A false result may include committed records. Retain the uncertain delta
+  // until authoritative recovery; appending it again can double-count totals.
+  bool addChecked(DayNumber day, const DayTotals& delta);
+  bool hasUncertainWrite() const { return uncertainWrite_; }
+  DayNumber uncertainDay() const { return uncertainDay_; }
+  const DayTotals& uncertainDelta() const { return uncertainDelta_; }
 
   bool totals(DayNumber day, DayTotals& out);
   // out[i] = totals of day first + i, for i < count.
@@ -66,6 +72,9 @@ class DayLog {
   StateStore& store_;
   DayNumber guestDay_ = 0;
   DayTotals guestTotals_;
+  DayTotals uncertainDelta_;
+  DayNumber uncertainDay_ = 0;
+  bool uncertainWrite_ = false;
 };
 
 }  // namespace tinta::core

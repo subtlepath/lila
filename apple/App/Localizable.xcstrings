@@ -2481,12 +2481,22 @@
         }
       }
     },
-    "This pack belongs to a different course. Switching the reader’s active course is not available yet. The current course and pending work have been retained.": {
+    "This pack belongs to a different course. Refresh installed content, then open this pack in Library to confirm a course switch. The current course and pending work have been retained.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This pack belongs to a different course. Switching the reader’s active course is not available yet. The current course and pending work have been retained."
+            "value": "This pack belongs to a different course. Refresh installed content, then open this pack in Library to confirm a course switch. The current course and pending work have been retained."
+          }
+        }
+      }
+    },
+    "This reader does not support switching courses through the companion. Keep the current course or install compatible firmware before trying again. Pending work has been retained.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This reader does not support switching courses through the companion. Keep the current course or install compatible firmware before trying again. Pending work has been retained."
           }
         }
       }
@@ -2497,16 +2507,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "This removes the selection from all readers and retains files needed for recovery. Reader-side removal is not available yet. Restoring does not select the content again."
-          }
-        }
-      }
-    },
-    "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Reader-side removal is not available yet. Restoring does not select the content again.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Reader-side removal is not available yet. Restoring does not select the content again."
           }
         }
       }
@@ -3151,12 +3151,12 @@
         }
       }
     },
-    "Remove this book from the reader?": {
+    "Remove this content from the reader?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove this book from the reader?"
+            "value": "Remove this content from the reader?"
           }
         }
       }
@@ -3181,12 +3181,12 @@
         }
       }
     },
-    "Finish or cancel this book’s pending transfer before removing it from the reader.": {
+    "Finish or cancel this content’s pending transfer before removing it from the reader.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finish or cancel this book’s pending transfer before removing it from the reader."
+            "value": "Finish or cancel this content’s pending transfer before removing it from the reader."
           }
         }
       }
@@ -4337,6 +4337,186 @@
           "stringUnit": {
             "state": "translated",
             "value": "History is verified. Finish pending content or resolve conflicts to complete sync."
+          }
+        }
+      }
+    },
+    "Reader content was added to your library.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader content was added to your library."
+          }
+        }
+      }
+    },
+    "Reader import paused. Resume it from installed content.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import paused. Resume it from installed content."
+          }
+        }
+      }
+    },
+    "Reader content could not be imported. Refresh installed content and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader content could not be imported. Refresh installed content and try again."
+          }
+        }
+      }
+    },
+    "Resume reader import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume reader import"
+          }
+        }
+      }
+    },
+    "Import into library": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Import into library"
+          }
+        }
+      }
+    },
+    "Pause reader import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause reader import"
+          }
+        }
+      }
+    },
+    "Reader import paused. Reconnect and refresh installed content to resume.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import paused. Reconnect and refresh installed content to resume."
+          }
+        }
+      }
+    },
+    "Reader import cancelled.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import cancelled."
+          }
+        }
+      }
+    },
+    "Reader import cancelled. Temporary files could not be cleared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import cancelled. Temporary files could not be cleared."
+          }
+        }
+      }
+    },
+    "Reader import could not be cancelled. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import could not be cancelled. Try again."
+          }
+        }
+      }
+    },
+    "Reader import pending": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader import pending"
+          }
+        }
+      }
+    },
+    "Bytes saved in companion": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bytes saved in companion"
+          }
+        }
+      }
+    },
+    "This import belongs to a different SD card.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This import belongs to a different SD card."
+          }
+        }
+      }
+    },
+    "Cancel reader import": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel reader import"
+          }
+        }
+      }
+    },
+    "Temporary reader import files could not be cleared.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary reader import files could not be cleared."
+          }
+        }
+      }
+    },
+    "Reader content was added to your library. Reconnect to continue.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader content was added to your library. Reconnect to continue."
+          }
+        }
+      }
+    },
+    "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Supported content is removed from compatible readers during synchronization. Restoring does not select the content again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Supported content is removed from compatible readers during synchronization. Restoring does not select the content again."
+          }
+        }
+      }
+    },
+    "The companion library copy is retained. If this font is in use, the reader switches to a built-in font. An interrupted removal will resume when you synchronize this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The companion library copy is retained. If this font is in use, the reader switches to a built-in font. An interrupted removal will resume when you synchronize this reader."
           }
         }
       }

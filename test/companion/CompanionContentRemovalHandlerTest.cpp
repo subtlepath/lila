@@ -95,3 +95,18 @@ TEST_F(RemovalHandlerTest, OnlyCheckedReceiptAbsenceAllowsRemoval) {
   EXPECT_EQ(run(), ContentRemovalResult::Unsupported);
   EXPECT_EQ(backend.removals, 2U);
 }
+
+TEST_F(RemovalHandlerTest, FontFormatsMatchInstalledVectorAndBitmapManifests) {
+  request.manifest.kind = ContentKind::Font;
+  for (const auto format : {0U, 1U, 2U, 3U, 4U, 5U}) {
+    request.manifest.formatVersion = format;
+    const bool accepted = format == 1 || format == 4;
+    EXPECT_EQ(validContentRemovalRequest(request), accepted);
+    EXPECT_EQ(encodeContentRemovalRequest(request, body), accepted ? body.size() : 0U);
+    if (accepted) {
+      ContentRemovalRequest decoded;
+      ASSERT_TRUE(decodeContentRemovalRequest(body, decoded));
+      EXPECT_EQ(decoded, request);
+    }
+  }
+}

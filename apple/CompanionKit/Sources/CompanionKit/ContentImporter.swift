@@ -26,7 +26,7 @@ public actor ContentImporter {
         case "epub": return try await importEPUB(source).content
         case "pack": return try await importCoursePack(source).content
         case "cpfont": return try await importBitmapFont(source)
-        case "ttf", "otf": return try await importVectorFont(source)
+        case "ttf", "otf", "ttc": return try await importVectorFont(source)
         case "zip": return try await importDictionaryBundle(source).content
         default: throw ImportError.unsupportedEntry
         }
@@ -50,6 +50,64 @@ public actor ContentImporter {
                                      title: URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent,
                                      originalFilename: filename)
         try await library.putFirmware(content, releaseAsset: releaseAsset)
+        return content
+    }
+    public func finishReaderImport(_ id: UUID, storage: ReaderImportStorage) async throws -> LibraryContent {
+        guard let filename = try await library.readerImportFilename(id) else { throw StoreError.invalidTransition }
+        return try await finishReaderImport(id, storage: storage, originalFilename: filename)
+    }
+    public func finishReaderImport(_ id: UUID, storage: ReaderImportStorage,
+                                   originalFilename: String) async throws -> LibraryContent {
+        guard let job = try await library.readerImportJob(id) else { throw StoreError.missingJob }
+        if let bound = try await library.readerImportFilename(id), bound != originalFilename {
+            throw StoreError.conflictingJob
+        }
+        if job.phase == .completed {
+            let object = try await vault.verifiedObject(job.manifest.content)
+            guard object.length == job.manifest.length,
+                  let content = try await library.content(object.id), content.kind == job.manifest.kind,
+                  content.length == object.length else { throw VaultError.integrity }
+            return content
+        }
+        guard job.phase == .verifying else { throw StoreError.invalidTransition }
+        let descriptor = try CloudContentDescriptor(content: LibraryContent(id: job.manifest.content,
+            kind: job.manifest.kind, length: job.manifest.length, title: "", originalFilename: originalFilename))
+        if job.manifest.kind == .font {
+            let bitmap = (originalFilename as NSString).pathExtension.lowercased() == "cpfont"
+            guard bitmap == (job.manifest.formatVersion == 4) else { throw StoreError.invalidValue }
+        }
+        let source = try await storage.completedSource(job)
+        let (object, metadata) = try await vault.importValidatedFile(source, expectedID: descriptor.id,
+            expectedLength: descriptor.length) { url -> CloudAssetMetadata in
+            switch job.manifest.kind {
+            case .epub: return .epub(try EpubInspector.inspect(url))
+            case .course: return .course(try CoursePackInspector.inspect(url))
+            case .font:
+                if job.manifest.formatVersion == 4 { _ = try BitmapFontInspector.inspect(url) }
+                else { _ = try VectorFontInspector.inspect(url) }
+                return .plain(nil)
+            case .dictionary:
+                return .plain(try DictionaryBundleInspector.inspect(url, scratchDirectory: url.deletingLastPathComponent()).info.name)
+            case .firmware: throw ImportError.unsupportedEntry
+            }
+        }
+        try Task.checkCancellation()
+        let basename = (originalFilename as NSString).deletingPathExtension
+        let content: LibraryContent
+        var courseMetadata: CoursePackMetadata?
+        switch metadata {
+        case .epub(let epub):
+            content = LibraryContent(id: object.id, kind: .epub, length: object.length, title: epub.title,
+                originalFilename: originalFilename, authors: epub.authors, identifiers: epub.identifiers, languages: epub.languages)
+        case .course(let course):
+            content = LibraryContent(id: object.id, kind: .course, length: object.length, title: basename,
+                originalFilename: originalFilename, languages: [course.locale])
+            courseMetadata = course
+        case .plain(let title):
+            content = LibraryContent(id: object.id, kind: job.manifest.kind, length: object.length,
+                title: title ?? basename, originalFilename: originalFilename)
+        }
+        try await library.publishReaderImport(job, content: content, courseMetadata: courseMetadata)
         return content
     }
     public func importEPUB(_ source: URL) async throws -> ImportedEPUB {

@@ -4,6 +4,7 @@
 
 #include <optional>
 
+#include "HalCompanionHeapAdmission.h"
 #include "HalEpubReferenceSnapshot.h"
 #include "HalEpubRemovalParticipant.h"
 #include "HalRemovalMetadataAuthorization.h"
@@ -48,8 +49,10 @@ class HalEpubRemovalReferences final : public EpubRemovalReferences {
     if (missing) {
       // The JSON arena/preparer exceed the task stack. Allocate once for both
       // snapshots and release before publication; no allocation per IO buffer.
+      if (!admitCompanionHeap(sizeof(Preparation), sizeof(Preparation))) return false;
       auto preparation = makeUniqueNoThrow<Preparation>(journal, declarations, ioScratch);
       if (!preparation) return failure("OOM: preparation workspace");
+      if (!admitCompanionHeap()) return false;
       for (size_t i = 0; i < 2; ++i)
         if (pending[i] &&
             (!preparation->snapshot.prepareMatching(record, kind(i), match, context, snapshots[i]) || !guard()))
@@ -120,7 +123,7 @@ class HalEpubRemovalReferences final : public EpubRemovalReferences {
     checkpoint = record;
     return true;
   }
-  bool guard() const { return journal.current() && *journal.current() == checkpoint; }
+  bool guard() const { return journal.current() && *journal.current() == checkpoint && admitCompanionHeap(); }
   bool owned(size_t i) const {
     return snapshots[i].request == checkpoint.request && snapshots[i].planHash == checkpoint.planHash &&
            snapshots[i].file == kind(i);

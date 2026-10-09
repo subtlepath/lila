@@ -52,6 +52,15 @@ class ReaderPreferenceChangeCapture final {
     return TintaJournalResult::Ok;
   }
   bool preparedChanges() const { return prepared && preparedMask; }
+  std::span<const uint8_t> preparedBody(uint8_t key) const {
+    if (!prepared || key < 1 || key > 14 || !(preparedMask & (uint16_t{1} << (key - 1)))) return {};
+    return std::span(bodies[key - 1]).first(lengths[key - 1]);
+  }
+  bool omitPreparedKey(uint8_t key) {
+    if (!prepared || key < 1 || key > 14) return false;
+    preparedMask &= ~(uint16_t{1} << (key - 1));
+    return true;
+  }
   TintaJournalResult persistPrepared(uint32_t day, uint64_t timestamp, ClockQuality quality) {
     if (!ready || !writer.available() || !prepared) return TintaJournalResult::Unavailable;
     prepared = false;

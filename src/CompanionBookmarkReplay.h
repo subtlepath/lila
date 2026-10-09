@@ -10,6 +10,7 @@ class NativeBookmarkReplay final {
   using Publisher = bool (*)(void*, std::span<const uint8_t>);
   TintaJournalResult run(const Digest& edition, const Identity& bookmark, uint32_t spineCount, Publisher publish,
                          void* context) {
+    concurrentVersions = false;
     if (!publish || !spineCount || spineCount > 0x10000 || !tinta_body_detail::nonzero(edition) ||
         !tinta_body_detail::nonzero(bookmark))
       return TintaJournalResult::Invalid;
@@ -19,6 +20,7 @@ class NativeBookmarkReplay final {
     const auto recordSize = audit->recordSize();
     size_t length = 0;
     const auto resolved = audit->resolveBookmark(edition, bookmark, body, length);
+    concurrentVersions = resolved == TintaJournalResult::Conflict;
     audit.reset();
     if (resolved != TintaJournalResult::Ok) return resolved;
     BookmarkBodyView decoded;
@@ -31,6 +33,7 @@ class NativeBookmarkReplay final {
     audit.reset();
     return publish(context, std::span(body).first(length)) ? TintaJournalResult::Ok : failure("bookmark publication");
   }
+  bool hasConcurrentVersions() const { return concurrentVersions; }
 
  private:
   static TintaJournalResult failure(const char* stage) {
@@ -39,5 +42,6 @@ class NativeBookmarkReplay final {
   }
   Digest frontier{}, rechecked{};
   std::array<uint8_t, MAX_BOOKMARK_BODY_SIZE> body{};
+  bool concurrentVersions = false;
 };
 }  // namespace companion

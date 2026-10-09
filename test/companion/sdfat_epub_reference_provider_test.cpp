@@ -1,3 +1,4 @@
+#include <HalMemory.h>
 #include <openssl/evp.h>
 
 #include <cassert>
@@ -37,6 +38,17 @@ static void cohortMetadata() {
     matched = path == "/one.epub" || path == "/two.epub";
     return true;
   };
+  const auto before = state.files;
+  for (unsigned shortage = 0; shortage < 3; ++shortage) {
+    companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+    if (shortage == 0) companion_memory_test::internal.freeBytes = 50 * 1024;
+    if (shortage == 1) companion_memory_test::internal.freeBytes = 50 * 1024 + 1;
+    if (shortage == 2) companion_memory_test::internal.largestBlockBytes = 1;
+    assert(!references.publishMatching(*journal.current(), match, nullptr));
+    assert(state.files == before);
+    assert(journal.current()->phase == ContentRemovalPhase::Quarantined);
+  }
+  companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
   assert(references.publishMatching(*journal.current(), match, nullptr));
   assert(references.publishMatching(*journal.current(), match, nullptr));
   const auto& bytes = state.files.at("/.crosspoint/recent.json");

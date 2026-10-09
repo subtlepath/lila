@@ -1018,6 +1018,106 @@ TEST_F(CompanionTransferTest, DeclaredFirmwareRequiresCanonicalPathAndImageForma
   EXPECT_EQ(transfer.contentManifest()->kind, ContentKind::Firmware);
 }
 
+TEST_F(CompanionTransferTest, DeclaredBitmapFontHandlerValidatesDestinationBeforeMutation) {
+  TransferDeclaration declaration;
+  declaration.state = initial;
+  declaration.manifest = {initial.contentHash, ContentKind::Font, initial.length, 4, {}};
+  Transfer transfer(storage, workspace);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  Identity authenticated = initial.owner;
+  auto begin = [&](std::string_view path) {
+    std::array<uint8_t, MAX_CONTROL_PAYLOAD> body{};
+    EXPECT_EQ(encodeTransferDeclaration(declaration, body), TRANSFER_DECLARATION_SIZE);
+    body[TRANSFER_DECLARATION_SIZE] = path.size();
+    std::copy(path.begin(), path.end(), body.begin() + TRANSFER_DECLARATION_SIZE + 1);
+    std::array<uint8_t, 1 + TRANSFER_STATE_SIZE> response{};
+    EXPECT_GT(
+        handleTransfer(transfer, Command::BeginTransfer,
+                       std::span(body).first(TRANSFER_DECLARATION_SIZE + 1 + path.size()), authenticated, response),
+        0);
+    return static_cast<TransferResult>(response[0]);
+  };
+  for (const auto path :
+       {"/Books/Fixture_14.cpfont", "/fonts/../Fixture_14.cpfont", "/fonts/Fixture/Fixture_0.cpfont",
+        "/fonts/Fixture/Fixture_256.cpfont", "/fonts/Fixture/Fixture_14.ttf", "/fonts/Fixture/extra/Fixture_14.cpfont",
+        "/fonts//Fixture_14.cpfont", "/fonts/_Fixture/Fixture_14.cpfont", "/fonts/Fixture/.Fixture_14.cpfont",
+        "/fonts/Fixture/Fixture:14_14.cpfont", "/fonts/Fixture/Fixture\\14_14.cpfont",
+        "/fonts/Fixture/Fixture\x7f_14.cpfont", "/fonts/Fixture/Fixture\xc0\xaf_14.cpfont"}) {
+    EXPECT_EQ(begin(path), TransferResult::Invalid);
+    EXPECT_TRUE(storage.files.empty());
+    EXPECT_EQ(transfer.current(), nullptr);
+  }
+  declaration.manifest.formatVersion = 3;
+  EXPECT_EQ(begin("/fonts/Fixture/Fixture_14.cpfont"), TransferResult::Invalid);
+  declaration.manifest.formatVersion = 1;
+  EXPECT_EQ(begin("/fonts/Fixture.ttf"), TransferResult::Invalid);
+  declaration.manifest.formatVersion = 4;
+  authenticated[0] ^= 0x80;
+  EXPECT_EQ(begin("/fonts/Fixture/Fixture_14.cpfont"), TransferResult::Unauthorized);
+  EXPECT_TRUE(storage.files.empty());
+  EXPECT_EQ(transfer.current(), nullptr);
+  authenticated = initial.owner;
+  EXPECT_EQ(begin("/fonts/Fixture/Fixture_14.cpfont"), TransferResult::Ok);
+  ASSERT_NE(transfer.contentManifest(), nullptr);
+  EXPECT_EQ(*transfer.contentManifest(), declaration.manifest);
+}
+
+TEST_F(CompanionTransferTest, DeclaredDictionaryHandlerRequiresHashScopedDestination) {
+  TransferDeclaration declaration;
+  declaration.state = initial;
+  declaration.state.length = 22;
+  declaration.manifest = {initial.contentHash, ContentKind::Dictionary, 22, 1, {}};
+  Transfer transfer(storage, workspace);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  Identity authenticated = initial.owner;
+  auto begin = [&](std::string_view path) {
+    std::array<uint8_t, MAX_CONTROL_PAYLOAD> body{};
+    EXPECT_EQ(encodeTransferDeclaration(declaration, body), TRANSFER_DECLARATION_SIZE);
+    body[TRANSFER_DECLARATION_SIZE] = path.size();
+    std::copy(path.begin(), path.end(), body.begin() + TRANSFER_DECLARATION_SIZE + 1);
+    std::array<uint8_t, 1 + TRANSFER_STATE_SIZE> response{};
+    EXPECT_GT(
+        handleTransfer(transfer, Command::BeginTransfer,
+                       std::span(body).first(TRANSFER_DECLARATION_SIZE + 1 + path.size()), authenticated, response),
+        0);
+    return static_cast<TransferResult>(response[0]);
+  };
+  for (const auto path :
+       {"/dictionaries/test/dictionary", "/dictionaries/../dictionary",
+        "/dictionaries/0700000000000000000000000000000000000000000000000000000000000000/other",
+        "/dictionaries/0800000000000000000000000000000000000000000000000000000000000000/dictionary"}) {
+    EXPECT_EQ(begin(path), TransferResult::Invalid);
+    EXPECT_TRUE(storage.files.empty());
+    EXPECT_EQ(transfer.current(), nullptr);
+  }
+  constexpr std::string_view destination =
+      "/dictionaries/0700000000000000000000000000000000000000000000000000000000000000/dictionary";
+  for (const uint64_t length : {uint64_t{21}, uint64_t{UINT32_MAX} + 1}) {
+    declaration.state.length = declaration.manifest.length = length;
+    EXPECT_EQ(begin(destination), TransferResult::Invalid);
+    EXPECT_TRUE(storage.files.empty());
+    EXPECT_EQ(transfer.current(), nullptr);
+  }
+  declaration.state.length = declaration.manifest.length = 22;
+  declaration.state.contentHash = declaration.manifest.contentHash = {};
+  EXPECT_EQ(begin("/dictionaries/0000000000000000000000000000000000000000000000000000000000000000/dictionary"),
+            TransferResult::Invalid);
+  EXPECT_TRUE(storage.files.empty());
+  EXPECT_EQ(transfer.current(), nullptr);
+  declaration.state.contentHash = declaration.manifest.contentHash = initial.contentHash;
+  declaration.manifest.formatVersion = 2;
+  EXPECT_EQ(begin(destination), TransferResult::Invalid);
+  declaration.manifest.formatVersion = 1;
+  authenticated[0] ^= 0x80;
+  EXPECT_EQ(begin(destination), TransferResult::Unauthorized);
+  EXPECT_TRUE(storage.files.empty());
+  EXPECT_EQ(transfer.current(), nullptr);
+  authenticated = initial.owner;
+  EXPECT_EQ(begin(destination), TransferResult::Ok);
+  ASSERT_NE(transfer.contentManifest(), nullptr);
+  EXPECT_EQ(*transfer.contentManifest(), declaration.manifest);
+}
+
 TEST_F(CompanionTransferTest, DictionaryMembersResumeWithoutRenamingArchiveToDestination) {
   TransferDeclaration declaration;
   declaration.state = initial;

@@ -414,11 +414,11 @@ int CrossPointSettings::getRefreshFrequency() const {
   }
 }
 
-void CrossPointSettings::clearSdFontFamily() {
+bool CrossPointSettings::clearSdFontFamily() {
   sdFontFamilyName[0] = '\0';
   fontPointSize =
       snapToNearestPointSize(BUILTIN_READER_POINT_SIZES, std::size(BUILTIN_READER_POINT_SIZES), fontPointSize);
-  saveToFile();
+  return saveToFile();
 }
 
 int CrossPointSettings::getReaderFontId() const {

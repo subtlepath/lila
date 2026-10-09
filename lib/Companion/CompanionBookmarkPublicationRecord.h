@@ -34,7 +34,7 @@ inline bool encodeBookmarkPublicationRecord(const BookmarkPublicationClaim& clai
   bytes[1] = 'M';
   bytes[2] = 'P';
   bytes[3] = 'C';
-  bytes[4] = 1;
+  bytes[4] = claim.recordCount ? 1 : 2;
   bytes[5] = claim.hadOriginal;
   std::copy(claim.transaction.begin(), claim.transaction.end(), bytes.begin() + 8);
   std::copy(claim.storageGeneration.begin(), claim.storageGeneration.end(), bytes.begin() + 24);
@@ -51,10 +51,23 @@ inline bool encodeBookmarkPublicationRecord(const BookmarkPublicationClaim& clai
 }
 inline bool decodeBookmarkPublicationRecord(std::span<const uint8_t> bytes, BookmarkPublicationClaim& output) {
   if (bytes.size() != BOOKMARK_PUBLICATION_RECORD_SIZE || bytes[0] != 'B' || bytes[1] != 'M' || bytes[2] != 'P' ||
-      bytes[3] != 'C' || bytes[4] != 1 || bytes[5] > 1 || bytes[6] || bytes[7] || bytes[190] || bytes[191] ||
-      bookmark_record_detail::get(bytes.last(4)) != bookmark_record_detail::checksum(bytes.first(192)))
+      bytes[3] != 'C' || (bytes[4] != 1 && bytes[4] != 2) || bytes[5] > 1 || bytes[6] || bytes[7] || bytes[190] ||
+      bytes[191] || bookmark_record_detail::get(bytes.last(4)) != bookmark_record_detail::checksum(bytes.first(192)))
     return false;
-  BookmarkPublicationClaim claim;
+  const auto nonzero = [](std::span<const uint8_t> field) {
+    return std::any_of(field.begin(), field.end(), [](uint8_t byte) { return byte != 0; });
+  };
+  const auto recordSize = bookmark_record_detail::get(bytes.subspan(188, 2));
+  const auto recordCount = bookmark_record_detail::get(bytes.subspan(184, 4));
+  if (!nonzero(bytes.subspan(8, 16)) || !nonzero(bytes.subspan(24, 16)) || !nonzero(bytes.subspan(40, 32)) ||
+      !nonzero(bytes.subspan(72, 32)) || !nonzero(bytes.subspan(104, 32)) ||
+      !bookmark_record_detail::get(bytes.subspan(168, 8)) || (bytes[4] == 1 ? !recordCount : recordCount != 0) ||
+      (recordSize != 512 && recordSize != 1024) || recordCount > UINT32_MAX / recordSize ||
+      (bytes[5] ? !nonzero(bytes.subspan(136, 32))
+                : nonzero(bytes.subspan(136, 32)) || bookmark_record_detail::get(bytes.subspan(176, 8))))
+    return false;
+  // Validate all fields before writing directly into the caller-owned claim.
+  auto& claim = output;
   std::copy_n(bytes.begin() + 8, 16, claim.transaction.begin());
   std::copy_n(bytes.begin() + 24, 16, claim.storageGeneration.begin());
   std::copy_n(bytes.begin() + 40, 32, claim.edition.begin());
@@ -66,8 +79,6 @@ inline bool decodeBookmarkPublicationRecord(std::span<const uint8_t> bytes, Book
   claim.recordCount = static_cast<uint32_t>(bookmark_record_detail::get(bytes.subspan(184, 4)));
   claim.recordSize = static_cast<uint16_t>(bookmark_record_detail::get(bytes.subspan(188, 2)));
   claim.hadOriginal = bytes[5];
-  if (!validBookmarkPublicationClaim(claim)) return false;
-  output = claim;
   return true;
 }
 }  // namespace companion

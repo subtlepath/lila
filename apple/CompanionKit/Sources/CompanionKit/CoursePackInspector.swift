@@ -42,6 +42,7 @@ public struct CoursePackMetadata: Equatable, Sendable {
 }
 
 public struct CoursePackDetails: Equatable, Sendable {
+    public var requiredReaderCapabilities: ReaderCapabilities { [.declaredTransfers, .courseTransfers] }
     public let major: UInt16
     public let minor: UInt16
     public let contentVersion: UInt32

@@ -63,7 +63,8 @@ receipt sync, partial-stage recovery, wrong source bytes, damaged sealed members
 and preparation feeding semantic validation, canonical cache publication,
 original ZIP retention, and installation-plan construction for plain/dictzip
 bundles. The concrete installer now composes this owner with publication and
-retirement; activity attachment remains pending before dictionary advertisement.
+retirement; the activity attaches it before recovery and advertises dictionary
+transfers when the installer is present.
 `HalDictionaryInstallationPreparation` consumes verified extraction, validates
 StarDict semantics while constructing the canonical ZIP, publishes the canonical
 cache blob, retains the hash-checked original ZIP, and builds the initial plan.
@@ -102,8 +103,8 @@ member verification, and wire scratch remain borrowed; retained HAL handles and
 coordinator state live outside the task stack. The parent host target exercises
 a rename that succeeds while reporting failure, binding-sync failure, unchanged
 Bound retry, restart finalization, and corrupted cache/member rejection through
-this session. The concrete installer composes it with retirement cleanup; activity
-attachment remains pending before dictionary installation is advertised.
+this session. The concrete installer composes it with retirement cleanup and is attached by
+CompanionConnectActivity before recovery.
 `HalDictionaryRetirementSession` orders proof recovery, verified repair of a
 missing proof copy, member-journal cleanup, and retirement completion. Its retained
 state lives outside the task stack while HAL providers, owner guard, and wire
@@ -125,9 +126,9 @@ that succeeds but reports failure preserves both proofs, allowing retry from an
 absent incoming stage. Host tests cover changed bytes, read failure, an unexpected
 backup, and removal failure after its effect without deleting journal evidence.
 Host tests cover failed publication, restart, metadata phase, and committed
-checkpoint writes failing before or after their effect. The native controller
-that binds extraction, member publication, cache verification, and cleanup remains
-to be connected; the reader does not advertise dictionary installation support.
+checkpoint writes failing before or after their effect. The concrete controller binds extraction, member publication, cache verification,
+and cleanup; the activity attaches it before recovery and advertises support
+when the installer is present.
 `HalTransferStorage` now dispatches dictionary preparation, member installation,
 metadata, and finalization through a borrowed `HalDictionaryTransferInstaller`.
 Attach the owner before recovery and detach it before destruction. Dispatch checks
@@ -216,9 +217,10 @@ host include reproduces that macro context. CompanionConnectActivity attaches
 the checked factory before transfer recovery and detaches/destroys it before
 releasing Transfer and workspace. The real ZIP/abort tests use that exact transfer
 slice and check canary bytes across queue/request/reply storage. New dictionary
-Begin commands and capability advertisement remain disabled pending physical
-heap/stack measurement and device acceptance, including power cuts during ZIP
-index creation and cleanup. Private index recovery now has a durable owner. The full installer now fits the C3 OTA
+Begin commands are admitted at their hash-scoped destination, and the activity
+advertises the attached installer. Physical heap/stack measurement and device
+acceptance remain pending, including power cuts during ZIP index creation and
+cleanup. Private index recovery now has a durable owner. The full installer now fits the C3 OTA
 partition with compact Unicode tables and link-time optimization. The default
 image is 6,243,392 bytes against a 6,553,600-byte partition and passes board/chip,
 length, checksum and SHA-trailer validation. Physical rendering/transfer timing
@@ -551,8 +553,40 @@ The Apple dictionary runner requires declared-transfer and dictionary capability
 and uses `/dictionaries/<archive SHA-256>/dictionary`, independent of library titles
 or original filenames. Plain and dictzip bundle tests exercise lost chunk and commit
 replies across database restarts and a library rename. Firmware dictionary Begin
-remains disabled pending device acceptance. The reader inventory resolver verifies
+is admitted at the declared hash-scoped destination; physical device acceptance
+remains pending. The reader inventory resolver verifies
 the installed canonical members and retained original binding before reporting the
 original ZIP manifest. Apple reconciliation tests then check that a selected dictionary
 does not queue a duplicate install and that deselection targets that exact manifest.
 Dictionary inventory matches require format 1 and a zero logical identity.
+
+### Declared font and dictionary admission
+
+The reader command handler now accepts bitmap-font declarations only at validated
+font destinations and vector-font declarations only on PSRAM boards. Admission and
+HAL installation share `CompanionFontDestination.h`, which rejects traversal,
+additional path levels, invalid sizes and mismatched suffixes without allocation.
+Dictionary declarations require format 1 and the exact
+`/dictionaries/<declared SHA-256>/dictionary` destination used by the Apple plan.
+The handler still checks the authenticated owner before starting the transaction.
+Two command-handler regressions reproduce the former rejection and now pass;
+45 transfer tests and the C3/S3 HAL font tests pass. The activity advertises
+dictionary transfer when its concrete installer is attached. All 49 HAL installer
+tests pass, including authenticated Begin/chunk/Commit at the hash-scoped
+destination for plain and dictzip bundles and harmless repeated Commit.
+Physical installation acceptance remains outstanding.
+
+The changed handler also compiles with the actual C3 firmware flags and
+`-Werror=frame-larger-than=256` after removing LTO for frame reporting. Compiler
+stack-usage output reports 96 bytes for font destination validation, 64 bytes
+for hash-scoped destination validation, 80 bytes for admission and 240 bytes
+for declaration decoding. The new validators allocate no heap and borrow the
+command payload as bounded views. These individual-frame checks do not measure
+aggregate task stack, radio allocations, free/largest heap or repeated-session
+loss; those remain physical acceptance requirements.
+
+Dictionary Begin also uses `validDictionaryBindingManifest`, matching the native
+installer and Apple plan: nonzero hash, length 22 through UINT32_MAX, format 1
+and zero logical identity. Handler regressions reject short/oversized and zero-hash manifests
+before any storage mutation. A fresh full host build and all 1,668 CTest cases
+pass after this correction. Firmware verification must use the source after it.

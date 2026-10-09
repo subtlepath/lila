@@ -102,6 +102,9 @@ class InventoryPaths {
     rewind();
     return true;
   }
+  bool belongsTo(const Identity& generation, uint64_t revision) const {
+    return ready && header.generation == generation && header.revision == revision;
+  }
   void rewind() {
     cursor = 0;
     cursorOffset = INVENTORY_INDEX_HEADER_SIZE;

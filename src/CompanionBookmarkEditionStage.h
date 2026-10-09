@@ -9,19 +9,33 @@ namespace companion {
 // through final publication. Reading stages JSON only; End validates the spool.
 class NativeBookmarkEditionStage final {
  public:
-  explicit NativeBookmarkEditionStage(std::span<uint8_t> scratch) : bodies(scratch), scratch(scratch) {}
-  TintaJournalResult prepare(const Digest& edition, uint32_t spineCount) {
+  explicit NativeBookmarkEditionStage(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                      void* context = nullptr)
+      : bodies(scratch, guard, context), scratch(scratch), guard(guard), context(context) {}
+  TintaJournalResult prepare(const Digest& edition, uint32_t spineCount, bool allowEmpty = false) {
     if (used) return TintaJournalResult::Unavailable;
     used = true;
     if (!tinta_body_detail::nonzero(edition) || !spineCount || spineCount > 0x10000) return TintaJournalResult::Invalid;
-    auto ids = makeUniqueNoThrow<NativeBookmarkIdentityEnumeration>(scratch);
+    auto ids = makeUniqueNoThrow<NativeBookmarkIdentityEnumeration>(scratch, guard, context);
     if (!ids) return failure("OOM: ID enumeration");
     const auto enumerated = ids->prepare(edition);
     if (enumerated != TintaJournalResult::Ok) return abort(enumerated, *ids);
     frontier = ids->authorityFrontier();
     count = ids->recordCount();
     stride = ids->recordSize();
-    if (!ids->size()) return abort(TintaJournalResult::Unavailable, *ids);
+    if (!ids->size()) {
+      if (!allowEmpty) return abort(TintaJournalResult::Unavailable, *ids);
+      Identity identity{};
+      if (ids->next(identity) != BookmarkCursorResult::End) return abort(failure("empty ID verification"), *ids);
+      if (!ids->cleanup()) return abort(failure("empty ID cleanup"), *ids);
+      ids.reset();
+      auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+      if (!audit || !audit->run(&rechecked)) return failure("empty authority recheck");
+      if (frontier != rechecked || count != audit->recordCount() || stride != audit->recordSize())
+        return TintaJournalResult::Conflict;
+      ready = empty = true;
+      return TintaJournalResult::Ok;
+    }
     if (!bodies.begin(ids->size())) return abort(failure("body stage begin"), *ids);
     auto replay = makeUniqueNoThrow<NativeBookmarkReplay>();
     if (!replay) return abort(failure("OOM: bookmark replay"), *ids);
@@ -31,7 +45,12 @@ class NativeBookmarkEditionStage final {
       if (next == BookmarkCursorResult::End) break;
       if (next != BookmarkCursorResult::Found) return abort(failure("ID read"), *ids);
       const auto resolved = replay->run(edition, identity, spineCount, append, &bodies);
-      if (resolved != TintaJournalResult::Ok) return abort(resolved, *ids);
+      if (resolved != TintaJournalResult::Ok) {
+        if (resolved == TintaJournalResult::Conflict && replay->hasConcurrentVersions()) conflict = identity;
+        const auto result = abort(resolved, *ids);
+        if (result != TintaJournalResult::Conflict) conflict = {};
+        return result;
+      }
       vTaskDelay(1);
     }
     replay.reset();
@@ -50,6 +69,14 @@ class NativeBookmarkEditionStage final {
   }
   BookmarkCursorResult next(std::span<const uint8_t>& output) {
     if (!ready) return BookmarkCursorResult::Error;
+    if (empty) {
+      if (guard && !guard(context)) {
+        ready = false;
+        failure("empty read authority");
+        return BookmarkCursorResult::Error;
+      }
+      return BookmarkCursorResult::End;
+    }
     const auto result = bodies.next(output);
     if (result == BookmarkCursorResult::Error) ready = false;
     return result;
@@ -62,6 +89,7 @@ class NativeBookmarkEditionStage final {
   const Digest& authorityFrontier() const { return frontier; }
   uint32_t recordCount() const { return count; }
   uint16_t recordSize() const { return stride; }
+  const Identity& conflictIdentity() const { return conflict; }
 
  private:
   static bool append(void* context, std::span<const uint8_t> body) {
@@ -82,9 +110,12 @@ class NativeBookmarkEditionStage final {
   }
   HalBookmarkBodyStage bodies;
   std::span<uint8_t> scratch;
+  InventoryHashProgress guard;
+  void* context;
   Digest frontier{}, rechecked{};
+  Identity conflict{};
   uint32_t count = 0;
   uint16_t stride = 0;
-  bool used = false, ready = false;
+  bool used = false, ready = false, empty = false;
 };
 }  // namespace companion

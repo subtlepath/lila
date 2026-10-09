@@ -57,6 +57,8 @@ class HalStorage {
   HalFile open(const char* path, const oflag_t oflag = O_RDONLY);
   bool mkdir(const char* path, const bool pFlag = true);
   bool exists(const char* path);
+  // Pure filename folding through the same table used by FAT/exFAT lookup.
+  static uint32_t foldFilenameCodepoint(uint32_t codepoint);
   bool remove(const char* path);
   bool rename(const char* oldPath, const char* newPath);
   bool rmdir(const char* path);

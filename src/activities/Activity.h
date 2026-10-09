@@ -30,6 +30,10 @@ class Activity {
   virtual ~Activity() = default;
   virtual void onEnter();
   virtual void onExit();
+  // Called with the render lock held before a child activity is entered.
+  // Returning false keeps this activity active.
+  virtual bool prepareForBackground(const RenderLock&) { return true; }
+  virtual void onBackgroundSaveFailed() { requestUpdate(); }
   virtual void loop() {}
 
   virtual void render(RenderLock&&) {}

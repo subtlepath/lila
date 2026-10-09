@@ -21,6 +21,7 @@ struct State {
   std::string directoryErrorPath;
   unsigned preparations = 0;
   std::map<std::string, std::vector<uint8_t>> files;
+  std::map<std::string, uint32_t> modificationTimes;
   unsigned readOpens = 0;
   bool failSync = false, failWrite = false, failClose = false, corruptWrite = false;
   bool failOpen = false, failTruncate = false, failDirectory = false, failRemove = false;
@@ -159,6 +160,11 @@ class HalFile {
   }
   uint64_t fileSize64() const { return inventory_hal_test::state.files.at(path).size(); }
   size_t size() const { return fileSize64(); }
+  uint32_t modificationTime() const {
+    const auto& times = inventory_hal_test::state.modificationTimes;
+    const auto found = times.find(path);
+    return found == times.end() ? 0 : found->second;
+  }
   bool seekSet(uint32_t offset) { return seek64(offset); }
   void flush() { sync(); }
   bool seek64(uint64_t offset) {
@@ -208,6 +214,12 @@ class HalFile {
 };
 class TestHalStorage {
  public:
+  // Selected fixture mappings; real-table behavior is checked by SdFat image tests.
+  static uint32_t foldFilenameCodepoint(uint32_t codepoint) {
+    if (codepoint >= 'a' && codepoint <= 'z') return codepoint - ('a' - 'A');
+    if ((codepoint >= 0xe0 && codepoint <= 0xf6) || (codepoint >= 0xf8 && codepoint <= 0xfe)) return codepoint - 0x20;
+    return codepoint;
+  }
   bool mkdir(const char* path) {
     if (!ensureDirectoryExists(path)) return false;
     inventory_hal_test::state.directories.try_emplace(path);

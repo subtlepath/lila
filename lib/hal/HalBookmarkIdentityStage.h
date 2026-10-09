@@ -9,7 +9,11 @@ namespace companion {
 class HalBookmarkIdentityStage final {
  public:
   static constexpr char PATH[] = "/.crosspoint/companion/bookmark-ids-next";
-  explicit HalBookmarkIdentityStage(std::span<uint8_t> scratch) : stage(scratch) { mbedtls_sha256_init(&readHash); }
+  explicit HalBookmarkIdentityStage(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                    void* context = nullptr)
+      : stage(scratch, guard, context, TRANSFER_DIRECTORY, guard, context), guard(guard), context(context) {
+    mbedtls_sha256_init(&readHash);
+  }
   ~HalBookmarkIdentityStage() {
     cleanup();
     mbedtls_sha256_free(&readHash);
@@ -43,6 +47,7 @@ class HalBookmarkIdentityStage final {
     return true;
   }
   BookmarkCursorResult next(Identity& output) {
+    if (guard && !guard(context)) return readFailure("read authority");
     if (failed || !sealedOwned || writing) return BookmarkCursorResult::Error;
     if (ended) return BookmarkCursorResult::End;
     if (!reading) {
@@ -79,6 +84,7 @@ class HalBookmarkIdentityStage final {
     if (reader.isOpen() && !reader.close()) return failure("ID cleanup close");
     if (!stage.cleanup()) return failure("ID writer cleanup");
     if (sealedOwned) {
+      if (guard && !guard(context)) return failure("cleanup authority");
       if (!Storage.ready() || !Storage.remove(PATH)) return failure("ID cleanup remove");
       sealedOwned = false;
     }
@@ -96,6 +102,8 @@ class HalBookmarkIdentityStage final {
     return BookmarkCursorResult::Error;
   }
   HalVerifiedFileStage stage;
+  InventoryHashProgress guard;
+  void* context;
   HalFile reader;
   mbedtls_sha256_context readHash;
   Identity previous{};

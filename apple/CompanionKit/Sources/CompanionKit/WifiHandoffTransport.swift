@@ -103,6 +103,17 @@ public actor WifiHandoffTransport: CompanionTransport {
         return budget - (instant - lastActivity)
     }
 
+    public func readContent(_ request: ReaderContentReadRequest, requestID: UInt32) async throws -> ReaderContentReadReply {
+        do {
+            let frame = try ControlFrame(command: .readContent, requestID: requestID, payload: transaction + request.encoded)
+            let response = try await exchange(frame)
+            guard response.command == .readContent else { throw WifiHandoffTransportError.invalidResponse }
+            return try ReaderContentReadReply(decoding: response.payload, request: request)
+        } catch {
+            await close()
+            throw error
+        }
+    }
     public func journalHeaderVersions(requestID: UInt32) async throws -> [UInt8] {
         let request = try ControlFrame(command: .journalFormats, requestID: requestID, payload: transaction)
         return try JournalFormatStatus.decode(await exchange(request), requestID: requestID)
@@ -231,6 +242,11 @@ public actor WifiHandoffTransport: CompanionTransport {
             guard state.transaction == transaction, state.owner == installation, state.storageGeneration == generation else {
                 throw WifiHandoffTransportError.binding
             }
+        case .readContent:
+            guard request.payload.count == 16 + ReaderContentReadRequest.encodedSize,
+                  request.payload.prefix(16) == transaction else { throw WifiHandoffTransportError.binding }
+            let read = try ReaderContentReadRequest(decoding: Data(request.payload.dropFirst(16)))
+            guard read.generation == generation else { throw WifiHandoffTransportError.binding }
         case .transferChunk:
             guard request.payload.count > 24, request.payload.prefix(16) == transaction else {
                 throw WifiHandoffTransportError.binding

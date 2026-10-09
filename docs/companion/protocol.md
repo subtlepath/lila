@@ -37,7 +37,8 @@ payload views borrow the input buffer and expire when it is reused.
 Commands: 1 discovery, 2 inventory, 3 change exchange, 4 begin transfer,
 5 transfer chunk, 6 transfer status, 7 commit, 8 abort, 9 Wi-Fi handoff,
 10 firmware installation, 11 error response, 12 installation registration,
-13 installation authentication, 14 journal format query, 15 content removal.
+13 installation authentication, 14 journal format query, 15 content removal,
+16 content read.
 Unknown versions, commands, flags, truncation, and
 trailing bytes are rejected. Request IDs correlate responses; they do not provide
 durable transaction identity or replay protection.
@@ -398,12 +399,14 @@ The native and Apple codecs share this fixture. Native tests cover unaligned
 output with boundary canaries, all truncated prefixes, invalid ownership,
 unsupported kinds/formats and course-family semantics. Apple tests check the
 same bytes, truncation and manifest contracts; all 361 CompanionKit tests pass.
-The native record remains below 256 bytes and allocates no heap. This codec is
-not a live removal endpoint: firmware advertises no removal capability, and the
-app continues retaining removal work without sending it. Durable intent/recovery,
-authoritative installed-manifest verification, content-specific cleanup, and
-reader dispatch remain required. Course removal must retain isolated learner
-history; removal must not delete the library's copy or recovery evidence early.
+The native record remains below 256 bytes and allocates no heap. The EPUB
+endpoint is wired through authenticated BLE and encrypted Wi-Fi dispatch, with
+complete-path removal plans, durable recovery, and reader-store refresh. The app
+persists and resumes removal jobs and offers confirmed installed-content removal.
+Firmware advertises the EPUB removal capability. Native Apple execution and
+physical power-cut/resource acceptance remain unverified. Other content kinds
+still require their dependency-aware removal participants; course removal must
+retain isolated learner history. Device removal retains the companion library copy.
 
 ### Durable content removal phases
 
@@ -485,9 +488,10 @@ must include this owner when constructing the live removal pipeline.
 
 Two new host tests cover startup discovery, both slot orders for mismatched owners,
 transactions, plans and content, wrong/zero generations, short scratch, and corrupt
-slot preservation. All 17 affected journal/HAL tests pass. The firmware boot path
-still requires the content-specific participant and plan recovery before this can
-be wired into `HalCompanionRecovery`; no removal capability is advertised.
+slot preservation. All 17 affected journal/HAL tests pass. `HalCompanionRecovery`
+now invokes checked EPUB removal startup recovery before mutable reader stores
+load. The native participant and complete-path plan are wired into that recovery;
+the descriptor advertises EPUB removal, and physical acceptance remains pending.
 
 ### Durable single-file removal plans
 
@@ -592,8 +596,16 @@ until the concrete removal participant is connected.
 Command 15 (`RemoveContent` / `removeContent`) carries the exact 115-byte removal
 request. Capability bit 8 (`0x00000100`) is reserved for EPUB removal; it does not
 imply course/font/dictionary removal or depend on the transfer capability bits.
-The native descriptor does not advertise this bit yet. Older readers reject the
-new command; the app must check the explicit capability before sending it.
+The native descriptor advertises this bit. Font removal uses the independent bit
+13 (`0x00002000`) with the same command/request/reply and completed-receipt
+contract. It permits vector format 1 and bitmap format 4, collects every installed
+path with the exact manifest, verifies all copies before quarantine, publishes
+checked fallback settings, and retires backups only after commit. The source
+advertises bit 13; all five target builds/image checks pass. Physical acceptance
+remains pending.
+Neither bit authorizes course or dictionary removal. Older readers reject the
+new command; the app must check the content kind's explicit capability before
+sending it.
 
 `CompanionContentRemovalHandler` requires installation authorization, exact
 request framing, matching authenticated owner, and the measured card generation
@@ -746,6 +758,115 @@ Reproduce host checks with CMake target `HalRemovalStageClaimStorageTest` and
 CTest prefix `RemovalStageClaimTest`. The durable streamed plan writer must still
 verify any existing plan/header against this claim, preserve foreign sealed
 plans, verify intended/stored bytes and the full-file SHA-256, publish a sealed
-LRMP artifact, and bind it into the parent removal journal. Physical alias
-resolution, participant composition, startup routing, in-memory refresh and
-native/Apple removal dispatch remain pending; removal is not advertised.
+LRMP artifact, and bind it into the parent removal journal. Participant composition, startup routing, in-memory refresh and native/Apple
+removal dispatch are wired, and the reader advertises EPUB removal. Physical
+alias and power-cut acceptance remain unverified.
+
+
+## Reader content export
+
+Connect & Sync prepares a retained content-reader owner before enabling BLE and
+advertises content reads (bit 10), metadata (bit 11), and export handoff (bit 12)
+only when that owner is available. All export commands use the bonded peer's
+current installation authorization. Firmware, recovery, competing mutation,
+inventory-revision, card-generation, and heap checks precede source access.
+
+### Wire records
+
+| Command | Request | Reply |
+| --- | --- | --- |
+| 16, ReadContent | `LCR`, version 1, generation 16, full manifest 63, offset u64 LE, maximum u16 LE; 93 bytes | `LCS`, version 1, result, generation 16, SHA-256 32, offset u64 LE, count u16 LE, data; header 63 bytes |
+| 17, ContentMetadata | `LCM`, version 1, generation 16, full manifest 63; 83 bytes | `LCN`, version 1, result, generation 16, full manifest 63, UTF-8 basename length u8, basename; header 85 bytes |
+| 18, PrepareContentHandoff | `LCW`, version 1, transaction 16, generation 16, full manifest 63, durable offset u64 LE; 107 bytes | `LCT`, version 1, result, transaction 16, generation 16, SHA-256 32, accepted offset u64 LE; 77 bytes |
+
+Results are Ok=0, Invalid=1, Unauthorized=2, WrongStorage=3, Busy=4, NotFound=5,
+Corrupt=6, and IoError=7. Malformed requests receive the normal control Error
+response. Read success carries exactly the requested/end-of-file count, up to
+961 bytes; failures carry no content bytes. Metadata success carries a nonempty
+UTF-8 basename of at most 255 bytes, with no path separators, NUL, ASCII controls,
+or DEL. Its extension must match the content kind; bitmap fonts require `.cpfont`,
+while vector fonts accept `.ttf`, `.otf`, and `.ttc`. Metadata errors carry no name.
+Every decoder verifies exact lengths and request bindings before accepting data.
+Export manifests exclude firmware and require the supported format/logical-ID
+contract for EPUBs, courses, fonts, or retained dictionary ZIP archives.
+
+Shared request/reply JSON fixtures for ReaderContentRead, ReaderContentMetadata,
+and ReaderContentHandoff verify Swift/C++ wire agreement.
+
+### Source and lease lifetime
+
+The reader validates the inventory/index pair and resolves the exact manifest's
+path. Source attachment verifies SHA-256 and length; bounded reads check source
+metadata before and after I/O. Same-size/same-timestamp rewrites are not excluded
+by metadata checks, so final companion SHA verification remains mandatory.
+
+Export admission requires more than 1 MiB remaining. A verified one-byte source
+read precedes retaining the transaction, installation, manifest, resume offset,
+and inventory revision. `WifiHandoffLease.prepareExport` requires that binding
+and reuses authenticated preparation, activation, expiry, and consume checks.
+Activation closes the source handle while preserving the export binding; the
+first Wi-Fi read reopens and verifies the source. Its 109-byte body prepends the
+lease transaction to the 93-byte read request. The encrypted dispatcher checks
+transaction, installation, card, full manifest, revision, and the lower offset
+bound. Responses retain the content-read format.
+
+Mutation cleanup, normal session reset, stop, disconnect, and exit clear export
+bindings and close readers. Close failures block subsequent mutations. The owner
+retains its terminated path and checked reusable HAL handle outside the task
+stack. Binding state is included in that checked allocation; all variable-size
+source I/O borrows the existing 8 KiB activity workspace. No additional transfer
+buffer is allocated.
+
+### Durable companion import
+
+Schema 40 stores reader/card/installation/manifest-bound jobs, durable offsets,
+and immutable reader-provided filenames. Enqueue requires complete exact
+inventory evidence and deduplicates active intent. Existing removal or deletion
+state blocks import; pending imports block reader removal. First filename binding
+may recover a migrated schema-39 queued, downloading, paused, or verifying job
+without changing its offset. Subsequent differing names are rejected; aborted
+jobs cannot bind, and completed jobs cannot create a new binding.
+
+ReaderImportStorage uses a separate durable staging root with exact immutable
+ownership records, serialized file operations, and file synchronization before
+SQLite checkpoints. Recovery trims an unacknowledged tail and refuses a missing
+or short acknowledged prefix. ReaderImportRunner checks fresh job state after
+every read, pauses interrupted work, and does not write an in-flight chunk after
+deletion. Handoff preparation checks staging and requires unchanged job state
+across admission, including after reopening a retained downloading job.
+
+ContentImporter verifies expected bytes and content kind before SQLite atomically
+publishes metadata, reader selection, course identity where applicable, and job
+completion. Publication checks the accepted filename again. Completed retries
+verify the retained vault object and do not reselect content. Cancellation commits
+aborted state before discarding owned staging; completed imports cannot be
+cancelled. Terminal cleanup scans bounded pages, reports per-job failures, and
+preserves pending staging, foreign bindings, and immutable vault objects.
+
+The native Installed content section offers Import/Resume and Pause for reader-only
+content and shows pending import progress and Cancel. Globally removed content is
+excluded from automatic re-import. With Wi-Fi assistance enabled, more than 1 MiB
+remaining and advertised support trigger admission and saved-network/hotspot
+negotiation. Refused negotiation can fall back while BLE is still ready. After
+radio switching, failure closes the encrypted transport and requires a fresh
+connection and inventory refresh before resume. Hotspot credentials and leases
+remain ephemeral. Library refresh and import completion run terminal staging
+maintenance when reader operations are idle.
+
+### Verification limits
+
+All 502 portable Swift tests and 1,703 host CTest entries pass. Tests cover wire
+fixtures, durable migration/restart, in-flight deletion, checksum rejection,
+retained-owner closure/reopening, encrypted import, lost Wi-Fi reply followed by
+fresh-session BLE resume, immutable filename publication, cancellation, and
+bounded terminal cleanup, deselection during import, and font removal
+format/path agreement. All five firmware profiles build with the corrected
+font-removal codecs. Their saved images pass board/chip, checksum/SHA trailer,
+and OTA-size validation. See
+hardware-verification.md for image identities and compiler frame evidence.
+
+Native source syntax and localization catalog checks pass on Linux. Native
+Apple SDK compilation, UI/accessibility interaction, post-switch
+reconnection on physical devices, physical BLE/Wi-Fi recovery, power-cut behavior, and measured
+runtime heap/stack acceptance remain unverified or incomplete. These checks do
+not establish completion of COMPANION_PLAN.md.

@@ -38,7 +38,8 @@ class HalEpubRemovalBackend final : public ContentRemovalBackend {
   }
   ContentRemovalResult remove(const ContentRemovalRequest& request) override {
     if (!allowed()) return ContentRemovalResult::Busy;
-    if (request.manifest.kind != ContentKind::Epub) return ContentRemovalResult::Unsupported;
+    if (request.manifest.kind != ContentKind::Epub && request.manifest.kind != ContentKind::Font)
+      return ContentRemovalResult::Unsupported;
     const auto prepared = transactions.prepare(request);
     if (prepared != ContentRemovalJournalResult::Ok) {
       if (prepared == ContentRemovalJournalResult::Conflict) return ContentRemovalResult::Busy;

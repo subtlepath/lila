@@ -31,4 +31,8 @@ enum class IdentityResult : uint8_t { Ok, IoError, Corrupt, WrongHardware, Exhau
 // Call once per reading/sync lifecycle, before generating events. Each successful
 // call durably reserves a fresh epoch; sequence numbers may start at one in it.
 IdentityResult provisionIdentity(IdentityStorage& storage, IdentityState& output);
+enum class IdentityInspectionResult : uint8_t { Ok, Unavailable, IoError, Corrupt, WrongHardware, WrongStorage };
+// Read-only context proof. Never reserves an epoch or creates/rotates identities.
+// Output remains unchanged on failure; Ok does not authorize new event sequences.
+IdentityInspectionResult inspectIdentity(IdentityStorage& storage, IdentityState& output);
 }  // namespace companion

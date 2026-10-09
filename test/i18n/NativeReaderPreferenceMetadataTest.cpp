@@ -4,9 +4,13 @@
 #include <fstream>
 #include <iterator>
 
+#include "CompanionBookmarkChoicePage.h"
+#include "CompanionBookmarkEditSession.h"
 #include "CompanionBookmarkEditionStage.h"
 #include "CompanionBookmarkIdentityEnumeration.h"
 #include "CompanionBookmarkJsonPreparation.h"
+#include "CompanionBookmarkLegacyImport.h"
+#include "CompanionBookmarkPublicationSession.h"
 #include "CompanionBookmarkReplay.h"
 #include "CompanionBookmarkSaveSession.h"
 #include "CompanionReaderPreferenceMetadata.h"
@@ -293,6 +297,250 @@ TEST(NativeReaderPreferenceMetadataTest, InvalidOrUnchangedSaveDoesNotReserveIde
   EXPECT_EQ(save->persist(baseline, baseline, identities), TintaJournalResult::Ok);
   EXPECT_EQ(identities.calls, 0U);
   EXPECT_EQ(state.files, before);
+  save.reset();
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  EXPECT_EQ(save->persist(baseline, baseline, identities, 2), TintaJournalResult::Invalid);
+  EXPECT_EQ(identities.calls, 0U);
+  EXPECT_EQ(state.files, before);
+  save.reset();
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  EXPECT_EQ(save->persist(candidate, candidate, identities, 1), TintaJournalResult::Invalid);
+  EXPECT_EQ(identities.calls, 0U);
+  EXPECT_EQ(state.files, before);
+}
+
+TEST(NativeReaderPreferenceMetadataTest, ExplicitContentRefreshJournalsNewHashForUnchangedFontSelection) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  state.directories["/"] = {{".fonts", true}, {".crosspoint", true}};
+  state.directories["/.fonts"] = {{"Test", true}};
+  state.directories["/.fonts/Test"] = {{"Test_14.cpfont", false}};
+  std::ifstream input(std::string(COMPANION_FIXTURE_DIR) + "/BitmapFont-v4.fixture", std::ios::binary);
+  auto& font = state.files["/.fonts/Test/Test_14.cpfont"];
+  font = {std::istreambuf_iterator<char>(input), {}};
+  ASSERT_FALSE(font.empty());
+  SdCardFontRegistry registry;
+  ASSERT_TRUE(registry.discover());
+  std::array<uint8_t, 1024> scratch{};
+  ReaderPreferenceValues selected;
+  selected.fontPointSize = 14;
+  std::copy_n("Test", 5, selected.sdFontFamilyName.begin());
+  SaveIdentities identities;
+  auto save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(selected, selected, identities, 1), TintaJournalResult::Ok);
+  save.reset();
+  const auto originalJournal = state.files.at(TINTA_JOURNAL_EVENTS);
+  font.back() ^= 1;
+  Digest expected{};
+  ASSERT_EQ(EVP_Digest(font.data(), font.size(), expected.data(), nullptr, EVP_sha256(), nullptr), 1);
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  const auto calls = identities.calls;
+  ASSERT_EQ(save->persist(selected, selected, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, calls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), originalJournal);
+  save.reset();
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(selected, selected, identities, 1), TintaJournalResult::Ok);
+  EXPECT_FALSE(save->requiresRecovery());
+  save.reset();
+  HalTintaJournalStorage storage;
+  TintaJournal journal(storage, scratch);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  ASSERT_GT(journal.count(), 1U);
+  ASSERT_EQ(journal.read(journal.count() - 1), TintaJournalResult::Ok);
+  ASSERT_GE(journal.body().size(), 38U);
+  EXPECT_EQ(journal.body()[2], 1);
+  EXPECT_TRUE(std::equal(expected.begin(), expected.end(), journal.body().begin() + 5));
+  ASSERT_TRUE(storage.close());
+  const auto refreshedJournal = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto refreshedCalls = identities.calls;
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(selected, selected, identities, 1), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, refreshedCalls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), refreshedJournal);
+  save.reset();
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  SyncEvent concurrent;
+  concurrent.identity.epoch = concurrent.identity.sequence = 1;
+  concurrent.storageGeneration.fill(2);
+  concurrent.kind = EventKind::Preference;
+  concurrent.resource = PREFERENCE_SCOPE;
+  std::array<uint8_t, 8> margin{1, static_cast<uint8_t>(EventKind::Preference), 8, 1, 20, 0, 0, 0};
+  for (uint8_t origin = 70; origin <= 71; ++origin) {
+    concurrent.identity.origin.fill(origin);
+    margin[4] = origin == 70 ? 20 : 30;
+    ASSERT_TRUE(storage.digest(margin, concurrent.bodyHash));
+    ASSERT_EQ(journal.append(concurrent, margin), TintaJournalResult::Ok);
+  }
+  ASSERT_TRUE(storage.close());
+  const auto conflictingJournal = state.files.at(TINTA_JOURNAL_EVENTS);
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(selected, selected, identities, 1), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, refreshedCalls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), conflictingJournal);
+  save.reset();
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  ASSERT_EQ(journal.read(1), TintaJournalResult::Ok);
+  std::vector<uint8_t> conflictingFont(journal.body().begin(), journal.body().end());
+  ASSERT_EQ(conflictingFont[2], 1);
+  conflictingFont[5] ^= 1;
+  concurrent.identity.origin.fill(72);
+  ASSERT_TRUE(storage.digest(conflictingFont, concurrent.bodyHash));
+  ASSERT_EQ(journal.append(concurrent, conflictingFont), TintaJournalResult::Ok);
+  ASSERT_TRUE(storage.close());
+  auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+  auto resolution = makeUniqueNoThrow<PortablePreferenceResolution>();
+  ASSERT_TRUE(audit);
+  ASSERT_TRUE(resolution);
+  ASSERT_TRUE(audit->run());
+  ASSERT_EQ(audit->resolvePortablePreferences(*resolution), TintaJournalResult::Conflict);
+  EXPECT_TRUE(resolution->readerBody(1).empty());
+  EXPECT_EQ(resolution->conflictMask(), 0x81U);
+  audit.reset();
+  save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(selected, selected, identities, 1), TintaJournalResult::Ok);
+  EXPECT_GT(identities.calls, refreshedCalls);
+  save.reset();
+  audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+  ASSERT_TRUE(audit);
+  ASSERT_TRUE(audit->run());
+  ASSERT_EQ(audit->resolvePortablePreferences(*resolution), TintaJournalResult::Conflict);
+  EXPECT_EQ(resolution->conflictMask(), 0x80U);
+  const auto resolvedFont = resolution->readerBody(1);
+  ASSERT_GE(resolvedFont.size(), 38U);
+  EXPECT_TRUE(std::equal(expected.begin(), expected.end(), resolvedFont.begin() + 5));
+}
+
+TEST(NativeReaderPreferenceMetadataTest, DictionaryRefreshRequiresCompleteBundleAndDeduplicatesVerifiedBytes) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  state.directories["/"] = {{"dictionaries", true}, {".crosspoint", true}};
+  state.directories["/.crosspoint"] = {{"companion", true}};
+  state.directories["/.crosspoint/companion"] = {};
+  state.directories["/dictionaries"] = {{"es", true}};
+  state.directories["/dictionaries/es"] = {
+      {"stem.idx", false}, {"stem.ifo", false}, {"stem.dict", false}, {"stem.syn", false}};
+  const auto fixture = [](const char* name) {
+    std::ifstream input(std::string(COMPANION_FIXTURE_DIR) + "/" + name, std::ios::binary);
+    return std::vector<uint8_t>{std::istreambuf_iterator<char>(input), {}};
+  };
+  state.files["/dictionaries/es/stem.idx"] = fixture("DictionaryIndex-definitions.fixture");
+  state.files["/dictionaries/es/stem.syn"] = fixture("DictionaryIndex-synonyms.fixture");
+  auto& definitions = state.files["/dictionaries/es/stem.dict"];
+  definitions = {'o', 'n', 'e', 't', 'w', 'o'};
+  const std::string info =
+      "StarDict's dict ifo file\nversion=3.0.0\nbookname=Canonical "
+      "dictionary\nwordcount=2\nidxfilesize=24\nsynwordcount=1\n";
+  state.files["/dictionaries/es/stem.ifo"] = {info.begin(), info.end()};
+  SdCardFontRegistry registry;
+  std::array<uint8_t, 1024> scratch{};
+  ReaderPreferenceValues selected;
+  std::copy_n("es", 3, selected.dictionaryName.begin());
+  SaveIdentities identities;
+  const auto refresh = [&] {
+    auto save = makeUniqueNoThrow<NativeReaderPreferenceSaveSession>(registry, scratch);
+    EXPECT_TRUE(save);
+    return save ? save->persist(selected, selected, identities, 0x400) : TintaJournalResult::IoError;
+  };
+  ASSERT_EQ(refresh(), TintaJournalResult::Ok);
+  const auto originalJournal = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto originalCalls = identities.calls;
+  definitions.resize(2);
+  EXPECT_EQ(refresh(), TintaJournalResult::Invalid);
+  EXPECT_EQ(identities.calls, originalCalls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), originalJournal);
+  definitions = {'u', 'n', 'o', 't', 'w', 'o'};
+  auto canonical = fixture("DictionaryBundle-plain.fixture");
+  const std::array<uint8_t, 6> originalDefinitions{'o', 'n', 'e', 't', 'w', 'o'};
+  const auto at =
+      std::search(canonical.begin(), canonical.end(), originalDefinitions.begin(), originalDefinitions.end());
+  ASSERT_NE(at, canonical.end());
+  std::copy(definitions.begin(), definitions.end(), at);
+  // Independent ZIP fixture: update data-descriptor and central-directory CRCs.
+  const std::array<uint8_t, 4> originalCrc{0x45, 0x81, 0x11, 0x8c};
+  const std::array<uint8_t, 4> changedCrc{0xdc, 0x40, 0xe1, 0x41};
+  unsigned replaced = 0;
+  auto cursor = canonical.begin();
+  while ((cursor = std::search(cursor, canonical.end(), originalCrc.begin(), originalCrc.end())) != canonical.end()) {
+    std::copy(changedCrc.begin(), changedCrc.end(), cursor);
+    cursor += changedCrc.size();
+    ++replaced;
+  }
+  ASSERT_EQ(replaced, 2U);
+  Digest expected{};
+  ASSERT_EQ(EVP_Digest(canonical.data(), canonical.size(), expected.data(), nullptr, EVP_sha256(), nullptr), 1);
+  ASSERT_EQ(refresh(), TintaJournalResult::Ok);
+  EXPECT_GT(identities.calls, originalCalls);
+  HalTintaJournalStorage storage;
+  TintaJournal journal(storage, scratch);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  ASSERT_EQ(journal.read(journal.count() - 1), TintaJournalResult::Ok);
+  PreferenceBodyView body;
+  ASSERT_TRUE(decodePreferenceBody(journal.body(), body));
+  EXPECT_EQ(body.key, 11);
+  ASSERT_EQ(body.contentHash.size(), expected.size());
+  EXPECT_TRUE(std::equal(expected.begin(), expected.end(), body.contentHash.begin()));
+  ASSERT_TRUE(storage.close());
+  const auto refreshedJournal = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto refreshedCalls = identities.calls;
+  EXPECT_EQ(refresh(), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, refreshedCalls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), refreshedJournal);
+  HalDictionaryCacheStorage cache;
+  DictionaryCachePublication publication(cache, scratch);
+  DictionaryArchiveBinding binding;
+  binding.members.kind = binding.original.kind = ContentKind::Dictionary;
+  binding.members.formatVersion = binding.original.formatVersion = 1;
+  binding.members.length = canonical.size();
+  binding.members.contentHash = expected;
+  state.files[DICTIONARY_CACHE_CANDIDATE] = canonical;
+  ASSERT_EQ(publication.publish(binding.members), DictionaryCacheResult::Ok);
+  auto originalArchive = canonical;
+  originalArchive[originalArchive.size() - 2] = 3;
+  originalArchive.insert(originalArchive.end(), {'z', 'i', 'p'});
+  binding.original.length = originalArchive.size();
+  ASSERT_EQ(EVP_Digest(originalArchive.data(), originalArchive.size(), binding.original.contentHash.data(), nullptr,
+                       EVP_sha256(), nullptr),
+            1);
+  state.files[DICTIONARY_CACHE_CANDIDATE] = originalArchive;
+  ASSERT_EQ(publication.publish(binding.original), DictionaryCacheResult::Ok);
+  HalDictionaryBindings bindings(cache, scratch);
+  ASSERT_TRUE(bindings.install("/dictionaries/es/stem", binding));
+  ASSERT_TRUE(bindings.finalizeInstallation("/dictionaries/es/stem", binding));
+  ASSERT_EQ(refresh(), TintaJournalResult::Ok);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  ASSERT_EQ(journal.read(journal.count() - 1), TintaJournalResult::Ok);
+  ASSERT_TRUE(decodePreferenceBody(journal.body(), body));
+  ASSERT_EQ(body.contentHash.size(), binding.original.contentHash.size());
+  EXPECT_TRUE(
+      std::equal(binding.original.contentHash.begin(), binding.original.contentHash.end(), body.contentHash.begin()));
+  ASSERT_TRUE(storage.close());
+  const auto boundFiles = state.files;
+  const auto boundCalls = identities.calls;
+  definitions[0] = 'd';
+  const auto editedFiles = state.files;
+  EXPECT_EQ(refresh(), TintaJournalResult::Invalid);
+  EXPECT_EQ(identities.calls, boundCalls);
+  EXPECT_EQ(state.files, editedFiles);
+  definitions[0] = 'u';
+  EXPECT_EQ(refresh(), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, boundCalls);
+  // Authority, bindings, retained archives and members remain unchanged; audit marks are disposable.
+  for (const auto& [path, bytes] : boundFiles) {
+    if (path.starts_with("/dictionaries/") || path.starts_with("/.crosspoint/companion/dictionary-") ||
+        path.starts_with("/.crosspoint/companion/tinta-events/"))
+      EXPECT_EQ(state.files.at(path), bytes) << path;
+  }
 }
 
 TEST(NativeReaderPreferenceMetadataTest, InitialImportPreservesExistingKeysAndIsIdempotent) {
@@ -764,6 +1012,8 @@ TEST(NativeReaderPreferenceMetadataTest, BookmarkSaveRefusesConcurrentEditsUntil
   std::array<uint8_t, MAX_BOOKMARK_BODY_SIZE> body{};
   for (uint8_t origin = 1; origin <= 6; ++origin) {
     event.identity.origin.fill(origin);
+    bookmark.deleted = origin == 6;
+    event.kind = bookmark.deleted ? EventKind::BookmarkDelete : EventKind::BookmarkPut;
     bookmark.anchor.visibleTextOffset = origin * 5;
     const auto size = encodeBookmarkBody(bookmark, body);
     ASSERT_TRUE(storage.digest(std::span(body).first(size), event.bodyHash));
@@ -787,9 +1037,28 @@ TEST(NativeReaderPreferenceMetadataTest, BookmarkSaveRefusesConcurrentEditsUntil
   EXPECT_FALSE(save->requiresRecovery());
   EXPECT_EQ(identities.calls, 0u);
   EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
-  save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
-  ASSERT_TRUE(save);
-  ASSERT_EQ(save->persist(bookmark, edition, identities, true), TintaJournalResult::Ok);
+  auto choices = makeUniqueNoThrow<NativeBookmarkChoicePage>();
+  ASSERT_TRUE(choices);
+  ASSERT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::Ok);
+  ASSERT_EQ(choices->count(), 4u);
+  EXPECT_EQ(choices->totalCount(), 6u);
+  EXPECT_TRUE(choices->hasNext());
+  BookmarkBodyView selected;
+  ASSERT_TRUE(choices->choice(0, selected));
+  EXPECT_TRUE(selected.deleted);
+  EXPECT_EQ(choices->source(0)->origin[0], 6u);
+  EXPECT_EQ(identities.calls, 0u);
+  auto next = makeUniqueNoThrow<NativeBookmarkChoicePage>();
+  ASSERT_TRUE(next);
+  ASSERT_EQ(next->load(edition, bookmark.identity, 4, 4), TintaJournalResult::Ok);
+  EXPECT_EQ(next->count(), 2u);
+  EXPECT_EQ(next->totalCount(), 6u);
+  EXPECT_FALSE(next->hasNext());
+  ASSERT_TRUE(next->choice(0, selected));
+  EXPECT_EQ(selected.anchor.visibleTextOffset, 10u);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+  ASSERT_EQ(choices->resolve(0, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(choices->count(), 0u);
   ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
   EXPECT_EQ(journal.count(), 8u);
   ASSERT_TRUE(storage.close());
@@ -803,6 +1072,103 @@ TEST(NativeReaderPreferenceMetadataTest, BookmarkSaveRefusesConcurrentEditsUntil
   EXPECT_EQ(decoded.identity, bookmark.identity);
   EXPECT_EQ(replay->run(edition, bookmark.identity, 4, publisher, &publications), TintaJournalResult::Ok);
   EXPECT_EQ(publications, 1u);
+}
+
+TEST(NativeReaderPreferenceMetadataTest, BookmarkChoiceRejectsAnUnseenConcurrentEditBeforeReservingIdentity) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  SaveIdentities identities;
+  Digest edition{};
+  edition.fill(7);
+  HalTintaJournalStorage storage;
+  std::array<uint8_t, 1024> scratch{};
+  TintaJournal journal(storage, scratch);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  SyncEvent event;
+  event.identity.epoch = event.identity.sequence = 1;
+  event.storageGeneration.fill(2);
+  event.resource = edition;
+  BookmarkBodyView bookmark;
+  bookmark.identity[0] = 3;
+  std::array<uint8_t, MAX_BOOKMARK_BODY_SIZE> body{};
+  const auto append = [&](uint8_t origin, bool deleted) {
+    event.identity.origin.fill(origin);
+    bookmark.deleted = deleted;
+    event.kind = deleted ? EventKind::BookmarkDelete : EventKind::BookmarkPut;
+    bookmark.anchor = {2, static_cast<uint32_t>(origin * 5)};
+    const auto size = encodeBookmarkBody(bookmark, body);
+    EXPECT_TRUE(storage.digest(std::span(body).first(size), event.bodyHash));
+    EXPECT_EQ(journal.append(event, std::span(body).first(size)), TintaJournalResult::Ok);
+  };
+  append(1, false);
+  append(2, true);
+  ASSERT_TRUE(storage.close());
+  auto choices = makeUniqueNoThrow<NativeBookmarkChoicePage>();
+  ASSERT_TRUE(choices);
+  ASSERT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::Ok);
+  ASSERT_EQ(choices->count(), 2u);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  append(3, false);
+  ASSERT_TRUE(storage.close());
+  const auto before = state.files.at(TINTA_JOURNAL_EVENTS);
+  EXPECT_EQ(choices->resolve(0, identities), TintaJournalResult::Conflict);
+  EXPECT_EQ(identities.calls, 0u);
+  EXPECT_FALSE(choices->requiresRecovery());
+  EXPECT_EQ(choices->count(), 0u);
+  EXPECT_EQ(choices->resolve(0, identities), TintaJournalResult::Invalid);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+  ASSERT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::Ok);
+  ASSERT_EQ(choices->count(), 3u);
+  BookmarkBodyView selected;
+  ASSERT_TRUE(choices->choice(1, selected));
+  ASSERT_TRUE(selected.deleted);
+  ASSERT_EQ(choices->resolve(1, identities), TintaJournalResult::Ok);
+  HalJournalCausalAuditSession audit;
+  ASSERT_TRUE(audit.run());
+  size_t length = 0;
+  ASSERT_EQ(audit.resolveBookmark(edition, bookmark.identity, body, length), TintaJournalResult::Ok);
+  ASSERT_TRUE(decodeBookmarkBody(std::span(body).first(length), selected));
+  EXPECT_TRUE(selected.deleted);
+  const auto resolved = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto calls = identities.calls;
+  ASSERT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::Ok);
+  EXPECT_EQ(choices->count(), 1u);
+  ASSERT_EQ(choices->resolve(0, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, calls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), resolved);
+}
+
+TEST(NativeReaderPreferenceMetadataTest, BookmarkChoiceClearsReadinessOnFailedReloadAndRejectsBadSelections) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  SaveIdentities identities;
+  Digest edition{};
+  edition.fill(7);
+  BookmarkBodyView bookmark;
+  bookmark.identity[0] = 3;
+  bookmark.anchor = {3, 42};
+  auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+  ASSERT_TRUE(save);
+  ASSERT_EQ(save->persist(bookmark, edition, identities), TintaJournalResult::Ok);
+  auto choices = makeUniqueNoThrow<NativeBookmarkChoicePage>();
+  ASSERT_TRUE(choices);
+  ASSERT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::Ok);
+  EXPECT_EQ(choices->resolve(4, identities), TintaJournalResult::Invalid);
+  EXPECT_EQ(choices->count(), 1u);
+  EXPECT_EQ(choices->load(edition, bookmark.identity, 4, 1), TintaJournalResult::Unavailable);
+  EXPECT_EQ(choices->count(), 0u);
+  EXPECT_EQ(choices->resolve(0, identities), TintaJournalResult::Invalid);
+  const auto before = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto calls = identities.calls;
+  state.failClose = true;
+  EXPECT_EQ(choices->load(edition, bookmark.identity, 4), TintaJournalResult::IoError);
+  EXPECT_EQ(choices->count(), 0u);
+  EXPECT_EQ(choices->resolve(0, identities), TintaJournalResult::Invalid);
+  EXPECT_EQ(identities.calls, calls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+  state.failClose = false;
 }
 
 TEST(NativeReaderPreferenceMetadataTest, BookmarkSaveStopsOnAuditCloseFailureBeforeIdentityReservation) {
@@ -994,6 +1360,7 @@ TEST(NativeReaderPreferenceMetadataTest, EditionStageResolvesAllBookmarkBodiesBe
                           : mode == 1 ? TintaJournalResult::Conflict
                                       : TintaJournalResult::Invalid;
     ASSERT_EQ(stage->prepare(event.resource, 4), expected);
+    EXPECT_EQ(stage->conflictIdentity()[0], mode == 1 ? 7 : 0);
     std::span<const uint8_t> output;
     if (mode == 0) {
       EXPECT_EQ(stage->size(), 2u);
@@ -1124,4 +1491,528 @@ TEST(NativeReaderPreferenceMetadataTest, CompleteJsonPreparationChecksEveryStage
     state.corruptWritePath.clear();
     EXPECT_TRUE(prepared->cleanup());
   }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, EmptyEditionPreparationRequiresOptInAndCreatesNoJournalEvents) {
+  for (const bool allowEmpty : {false, true}) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    state.enumerateFileMap = true;
+    Digest edition{};
+    edition.fill(7);
+    std::array<uint8_t, 128> scratch{};
+    auto prepared = makeUniqueNoThrow<NativeBookmarkJsonPreparation>(scratch);
+    ASSERT_TRUE(prepared);
+    EXPECT_EQ(prepared->prepare(edition, 4, allowEmpty),
+              allowEmpty ? TintaJournalResult::Ok : TintaJournalResult::Unavailable);
+    EXPECT_EQ(prepared->isPrepared(), allowEmpty);
+    EXPECT_EQ(prepared->recordCount(), 0u);
+    EXPECT_FALSE(state.files.count(HalBookmarkIdentityStage::PATH));
+    EXPECT_FALSE(state.files.count(HalBookmarkBodyStage::PATH));
+    if (allowEmpty) {
+      const auto& bytes = state.files.at(HalBookmarkJsonStage::PATH);
+      EXPECT_EQ(std::string(bytes.begin(), bytes.end()), R"({"bookmarks":[]})");
+      HalJournalCausalAuditSession audit;
+      Digest frontier{};
+      ASSERT_TRUE(audit.run(&frontier));
+      EXPECT_EQ(prepared->authorityFrontier(), frontier);
+      EXPECT_EQ(audit.recordCount(), 0u);
+    }
+    EXPECT_TRUE(prepared->cleanup());
+    EXPECT_FALSE(state.files.count(HalBookmarkJsonStage::PATH));
+  }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, EmptyJournalPublicationRecoversAndRepeatedPublicationChangesNoFiles) {
+  for (const bool editionPath : {false, true}) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    state.enumerateFileMap = true;
+    ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+    ASSERT_TRUE(Storage.ensureDirectoryExists(HalBookmarkPublicationPaths::ACTIVE_PARENT));
+    Digest edition{};
+    edition.fill(7);
+    constexpr const char* canonical =
+        "/.crosspoint/bookmarks/editions/0707070707070707070707070707070707070707070707070707070707070707.json";
+    const char* active = editionPath ? canonical : "/.crosspoint/bookmarks/book.json";
+    if (editionPath) ASSERT_TRUE(Storage.ensureDirectoryExists(BOOKMARK_EDITION_CACHE_PARENT));
+    state.files[active] = {'o', 'l', 'd'};
+    Identity transaction{}, generation{};
+    transaction.fill(1);
+    generation.fill(2);
+    std::array<uint8_t, 128> scratch{};
+    const auto validator = +[](void*, const BookmarkPublicationClaim&) { return true; };
+    const auto preparationValidator = +[](void*, const BookmarkPreparationClaim&) { return true; };
+    state.failRenameAfterSource = HalBookmarkPublicationPaths::INTENT_NEXT;
+    auto session =
+        makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+    ASSERT_TRUE(session);
+    EXPECT_EQ(session->publish(active, edition, 4, transaction, generation, true), TintaJournalResult::IoError);
+    EXPECT_TRUE(session->requiresRecovery());
+    const auto pendingClaim = session->publicationClaim();
+    session.reset();
+    EXPECT_EQ(state.files.at(active), (std::vector<uint8_t>{'o', 'l', 'd'}));
+    ASSERT_TRUE(state.files.contains(HalBookmarkPublicationPaths::INTENT));
+    ASSERT_TRUE(state.files.contains(HalBookmarkJsonStage::PATH));
+    state.failRenameAfterSource.clear();
+    constexpr const char* wrong = "/.crosspoint/bookmarks/other.json";
+    state.files[wrong] = {'o', 'l', 'd'};
+    const auto beforeWrongRecovery = state.files;
+    session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+    ASSERT_TRUE(session);
+    EXPECT_EQ(session->recoverPending(wrong), TintaJournalResult::Invalid);
+    session.reset();
+    EXPECT_EQ(state.files, beforeWrongRecovery);
+    session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+    ASSERT_TRUE(session);
+    EXPECT_EQ(session->recover(wrong, pendingClaim), TintaJournalResult::Invalid);
+    session.reset();
+    EXPECT_EQ(state.files, beforeWrongRecovery);
+    const auto preparationBytes = state.files.at(HalBookmarkPreparationStorage::PATH);
+    for (unsigned mode = 0; mode < 3; ++mode) {
+      if (mode == 0) state.files[HalBookmarkPreparationStorage::PATH][0] ^= 1;
+      if (mode == 1) state.files.erase(HalBookmarkPreparationStorage::PATH);
+      if (mode == 2) state.failClosePath = HalBookmarkPreparationStorage::PATH;
+      const auto protectedFiles = state.files;
+      session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+      ASSERT_TRUE(session);
+      EXPECT_EQ(session->recoverPending(active), mode == 2 ? TintaJournalResult::IoError : TintaJournalResult::Corrupt);
+      session.reset();
+      EXPECT_EQ(state.files, protectedFiles);
+      state.failClosePath.clear();
+      state.files[HalBookmarkPreparationStorage::PATH] = preparationBytes;
+    }
+    session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+    ASSERT_TRUE(session);
+    ASSERT_EQ(session->recoverPending(active), TintaJournalResult::Ok);
+    session.reset();
+    const auto& bytes = state.files.at(active);
+    EXPECT_EQ(std::string(bytes.begin(), bytes.end()), R"({"bookmarks":[]})");
+    const auto files = state.files;
+    transaction.fill(9);
+    session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(scratch, validator, nullptr, preparationValidator);
+    ASSERT_TRUE(session);
+    EXPECT_EQ(session->publish(active, edition, 4, transaction, generation, true), TintaJournalResult::Ok);
+    session.reset();
+    EXPECT_EQ(state.files, files);
+    HalJournalCausalAuditSession audit;
+    ASSERT_TRUE(audit.run());
+    EXPECT_EQ(audit.recordCount(), 0u);
+  }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, CompleteBookmarkPublicationPreservesCandidateOnUncertainIntentAndRecovers) {
+  for (unsigned mode = 0; mode < 9; ++mode) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    state.enumerateFileMap = true;
+    ASSERT_TRUE(Storage.ensureDirectoryExists(HalBookmarkPublicationPaths::ACTIVE_PARENT));
+    constexpr const char* active = "/.crosspoint/bookmarks/book.json";
+    state.files[active] = {'o', 'l', 'd'};
+    Digest edition{};
+    edition.fill(7);
+    BookmarkBodyView bookmark;
+    bookmark.identity[0] = 3;
+    bookmark.anchor = {2, 42};
+    SaveIdentities identities;
+    auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+    ASSERT_TRUE(save);
+    ASSERT_EQ(save->persist(bookmark, edition, identities), TintaJournalResult::Ok);
+    save.reset();
+    std::array<uint8_t, 128> scratch{};
+    Identity transaction{}, generation{};
+    transaction.fill(1);
+    generation.fill(2);
+    bool validContext = mode != 3;
+    const auto validator = +[](void* opaque, const BookmarkPublicationClaim&) { return *static_cast<bool*>(opaque); };
+    auto session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(
+        scratch, validator, &validContext,
+        +[](void* ctx, const BookmarkPreparationClaim&) { return *static_cast<bool*>(ctx); });
+    ASSERT_TRUE(session);
+    if (mode == 1) state.failRenameAfterSource = HalBookmarkPublicationPaths::INTENT_NEXT;
+    if (mode == 8) state.failRenameAfterSource = HalBookmarkPublicationPaths::INTENT_NEXT;
+    if (mode == 2) state.failSyncPath = HalBookmarkPublicationPaths::INTENT_NEXT;
+    if (mode == 4) state.files[HalBookmarkPublicationPaths::INTENT] = {9};
+    if (mode == 5) state.failSyncPath = HalBookmarkPreparationStorage::NEXT;
+    if (mode == 6) state.failRenameAfterSource = HalBookmarkPreparationStorage::NEXT;
+    if (mode == 7) {
+      state.failWritePath = HalBookmarkIdentityStage::PATH;
+      state.failMatchingWrite = 1;
+      state.failRemove = true;
+    }
+    const auto expected = mode == 0   ? TintaJournalResult::Ok
+                          : mode == 3 ? TintaJournalResult::Invalid
+                          : mode == 4 ? TintaJournalResult::Conflict
+                                      : TintaJournalResult::IoError;
+    EXPECT_EQ(session->publish(active, edition, 4, transaction, generation), expected);
+    EXPECT_FALSE(tinta_body_detail::nonzero(session->conflictIdentity()));
+    EXPECT_EQ(session->requiresRecovery(), mode == 1 || mode == 2 || mode >= 5);
+    session.reset();
+    if (mode >= 3 && mode != 8) {
+      EXPECT_EQ(state.files.at(active), (std::vector<uint8_t>{'o', 'l', 'd'}));
+      EXPECT_FALSE(state.files.contains(HalBookmarkJsonStage::PATH));
+      if (mode == 4) EXPECT_EQ(state.files.at(HalBookmarkPublicationPaths::INTENT), (std::vector<uint8_t>{9}));
+      if (mode >= 5) {
+        if (mode < 7) EXPECT_FALSE(state.files.contains(HalBookmarkIdentityStage::PATH));
+        state.failSyncPath.clear();
+        state.failRenameAfterSource.clear();
+        state.failWritePath.clear();
+        state.failRemove = false;
+        auto orphan = makeUniqueNoThrow<NativeBookmarkPreparationSession>(
+            +[](void*, const BookmarkPreparationClaim&) { return true; }, nullptr);
+        ASSERT_EQ(orphan->recover(active, edition, generation), TintaJournalResult::Ok);
+        EXPECT_FALSE(state.files.contains(HalBookmarkPreparationStorage::PATH));
+        EXPECT_FALSE(state.files.contains(HalBookmarkIdentityStage::PATH));
+      }
+      continue;
+    }
+    if (mode) {
+      EXPECT_TRUE(state.files.contains(HalBookmarkJsonStage::PATH));
+      EXPECT_TRUE(state.files.contains(HalBookmarkPreparationStorage::PATH));
+      if (mode == 8) state.files.erase(HalBookmarkPreparationStorage::PATH);
+      EXPECT_EQ(state.files.at(active), (std::vector<uint8_t>{'o', 'l', 'd'}));
+      state.failRenameAfterSource.clear();
+      state.failSyncPath.clear();
+      session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(
+          scratch, validator, &validContext,
+          +[](void* ctx, const BookmarkPreparationClaim&) { return *static_cast<bool*>(ctx); });
+      ASSERT_EQ(session->recoverPending(active), TintaJournalResult::Ok);
+      EXPECT_FALSE(session->requiresRecovery());
+    }
+    const auto& bytes = state.files.at(active);
+    EXPECT_EQ(std::string(bytes.begin(), bytes.end()),
+              R"({"bookmarks":[{"id":"03000000000000000000000000000000","si":2,"vo":42,"name":"","summary":""}]})");
+    EXPECT_FALSE(state.files.contains(HalBookmarkJsonStage::PATH));
+    EXPECT_FALSE(state.files.contains(HalBookmarkPreparationStorage::PATH));
+  }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, BookmarkRecoveryDoesNotPromoteWrongContextOrCorruptOwnership) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+  std::array<uint8_t, 128> scratch{};
+  const auto validator = +[](void*, const BookmarkPublicationClaim&) { return false; };
+  constexpr const char* active = "/.crosspoint/bookmarks/book.json";
+  auto session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(
+      scratch, validator, nullptr, +[](void*, const BookmarkPreparationClaim&) { return false; });
+  EXPECT_EQ(session->recoverPending(active), TintaJournalResult::Unavailable);
+  session.reset();
+  state.files[HalBookmarkPublicationPaths::INTENT] = {9};
+  const auto corrupt = state.files;
+  session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(
+      scratch, validator, nullptr, +[](void*, const BookmarkPreparationClaim&) { return false; });
+  EXPECT_EQ(session->recoverPending(active), TintaJournalResult::Corrupt);
+  session.reset();
+  EXPECT_EQ(state.files, corrupt);
+  state.files.erase(HalBookmarkPublicationPaths::INTENT);
+  BookmarkPublicationClaim claim;
+  claim.transaction.fill(1);
+  claim.storageGeneration.fill(2);
+  claim.edition.fill(3);
+  claim.frontier.fill(4);
+  claim.candidateHash.fill(5);
+  claim.candidateLength = 50;
+  claim.recordCount = 1;
+  claim.recordSize = 512;
+  std::array<uint8_t, BOOKMARK_PUBLICATION_RECORD_SIZE> bytes{};
+  ASSERT_TRUE(encodeBookmarkPublicationRecord(claim, bytes));
+  state.files[HalBookmarkPublicationPaths::INTENT_NEXT] = std::vector<uint8_t>(bytes.begin(), bytes.end());
+  const auto before = state.files;
+  session = makeUniqueNoThrow<NativeBookmarkPublicationSession>(
+      scratch, validator, nullptr, +[](void*, const BookmarkPreparationClaim&) { return false; });
+  EXPECT_EQ(session->recoverPending(active), TintaJournalResult::Invalid);
+  EXPECT_TRUE(session->requiresRecovery());
+  EXPECT_EQ(state.files, before);
+}
+
+TEST(NativeReaderPreferenceMetadataTest, LegacyBookmarkImportIsRepeatableAndDoesNotResurrectJournalDeletion) {
+  inventory_hal_test::state = {};
+  inventory_hal_test::state.enumerateFileMap = true;
+  Digest edition{}, originalHash{};
+  edition.fill(7);
+  originalHash.fill(8);
+  std::array<BookmarkEntry, 2> entries{};
+  for (auto& entry : entries) {
+    entry.hasVisibleTextOffset = true;
+    entry.computedSpineIndex = 2;
+    entry.visibleTextOffset = 42;
+  }
+  entries[0].name = "First";
+  entries[1].name = "Second";
+  auto importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_TRUE(importer);
+  Identity first{}, second{}, repeat{};
+  ASSERT_TRUE(importer->identityFor(entries[0], 0, edition, originalHash, first));
+  ASSERT_TRUE(importer->identityFor(entries[1], 1, edition, originalHash, second));
+  EXPECT_NE(first, second);
+  ASSERT_TRUE(importer->identityFor(entries[0], 0, edition, originalHash, repeat));
+  EXPECT_EQ(first, repeat);
+  Identity pinned{};
+  ASSERT_TRUE(BookmarkIdentity::decode("3fd9a454c9e4eb76c4195eee2e102908", pinned));
+  EXPECT_EQ(first, pinned);
+  SaveIdentities identities;
+  ASSERT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  EXPECT_FALSE(importer->requiresRecovery());
+  importer.reset();
+  const auto before = inventory_hal_test::state.files.at(TINTA_JOURNAL_EVENTS);
+  importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(inventory_hal_test::state.files.at(TINTA_JOURNAL_EVENTS), before);
+  importer.reset();
+  BookmarkBodyView deletion;
+  deletion.identity = first;
+  deletion.deleted = true;
+  auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+  ASSERT_EQ(save->persist(deletion, edition, identities), TintaJournalResult::Ok);
+  save.reset();
+  const auto deleted = inventory_hal_test::state.files.at(TINTA_JOURNAL_EVENTS);
+  importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(inventory_hal_test::state.files.at(TINTA_JOURNAL_EVENTS), deleted);
+}
+TEST(NativeReaderPreferenceMetadataTest, LegacyBookmarkImportRejectsForeignEditionPutsAndDeletionsBeforeAnyAppend) {
+  for (const bool deleted : {false, true}) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    state.enumerateFileMap = true;
+    Digest edition{}, foreign{}, originalHash{};
+    edition.fill(7);
+    foreign.fill(9);
+    originalHash.fill(8);
+    SaveIdentities identities;
+    BookmarkBodyView bookmark;
+    bookmark.identity[0] = 3;
+    bookmark.deleted = deleted;
+    auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+    ASSERT_TRUE(save);
+    ASSERT_EQ(save->persist(bookmark, foreign, identities), TintaJournalResult::Ok);
+    save.reset();
+    const auto before = state.files.at(TINTA_JOURNAL_EVENTS);
+    const auto calls = identities.calls;
+    std::array<BookmarkEntry, 2> entries{};
+    for (auto& entry : entries) {
+      entry.hasVisibleTextOffset = true;
+      entry.computedSpineIndex = 2;
+      entry.visibleTextOffset = 42;
+    }
+    entries[0].name = "Missing current-edition bookmark";
+    entries[1].identity = bookmark.identity;
+    entries[1].name = "Foreign bookmark";
+    auto importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+    ASSERT_TRUE(importer);
+    EXPECT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Conflict);
+    EXPECT_FALSE(tinta_body_detail::nonzero(importer->conflictIdentity()));
+    EXPECT_FALSE(importer->requiresRecovery());
+    EXPECT_EQ(identities.calls, calls);
+    EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+    EXPECT_EQ(entries[1].identity, bookmark.identity);
+  }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, LegacyBookmarkImportPreservesExistingCurrentEditionAuthorityWithSharedId) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  Digest edition{}, foreign{}, originalHash{};
+  edition.fill(7);
+  foreign.fill(9);
+  originalHash.fill(8);
+  SaveIdentities identities;
+  BookmarkBodyView bookmark;
+  bookmark.identity[0] = 3;
+  for (const auto& resource : {foreign, edition}) {
+    auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+    ASSERT_TRUE(save);
+    ASSERT_EQ(save->persist(bookmark, resource, identities), TintaJournalResult::Ok);
+  }
+  const auto before = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto calls = identities.calls;
+  BookmarkEntry entry;
+  entry.identity = bookmark.identity;
+  entry.hasVisibleTextOffset = true;
+  entry.name = "Stale legacy copy";
+  entry.visibleTextOffset = 99;
+  auto importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_TRUE(importer);
+  EXPECT_EQ(importer->import(std::span(&entry, 1), edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, calls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+  EXPECT_FALSE(tinta_body_detail::nonzero(importer->conflictIdentity()));
+}
+
+TEST(NativeReaderPreferenceMetadataTest, LegacyBookmarkImportPreflightsLateInvalidEntriesWithoutJournalMutation) {
+  for (unsigned mode = 0; mode < 6; ++mode) {
+    inventory_hal_test::state = {};
+    Digest edition{}, originalHash{};
+    edition.fill(7);
+    originalHash.fill(8);
+    std::array<BookmarkEntry, 2> entries{};
+    for (auto& entry : entries) {
+      entry.hasVisibleTextOffset = true;
+      entry.computedSpineIndex = 2;
+    }
+    if (mode == 0) entries[1].hasVisibleTextOffset = false;
+    if (mode == 1) entries[1].computedSpineIndex = 99;
+    if (mode == 2) {
+      entries[0].identity.fill(3);
+      entries[1].identity = entries[0].identity;
+    }
+    if (mode == 3) entries[1].name.assign(129, 'x');
+    if (mode == 4) entries[1].summary.assign(513, 'x');
+    if (mode == 5) entries[1].name = std::string("\xc0\x80", 2);
+    auto importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+    SaveIdentities identities;
+    const auto before = inventory_hal_test::state.files;
+    EXPECT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Invalid);
+    EXPECT_EQ(inventory_hal_test::state.files, before);
+  }
+}
+
+TEST(NativeReaderPreferenceMetadataTest, LegacyBookmarkPartialImportRetriesOnlyMissingAuthority) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  Digest edition{}, originalHash{};
+  edition.fill(7);
+  originalHash.fill(8);
+  std::array<BookmarkEntry, 2> entries{};
+  for (auto& entry : entries) {
+    entry.hasVisibleTextOffset = true;
+    entry.computedSpineIndex = 2;
+  }
+  entries[0].name = "First";
+  entries[1].name = "Second";
+  SaveIdentities identities;
+  auto importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_EQ(importer->import(std::span(entries).first(1), edition, originalHash, 4, identities),
+            TintaJournalResult::Ok);
+  importer.reset();
+  const auto prefix = state.files.at(TINTA_JOURNAL_EVENTS);
+  state.failWritePath = TINTA_JOURNAL_EVENTS;
+  state.failMatchingWrite = 1;
+  importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  EXPECT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::IoError);
+  EXPECT_TRUE(importer->requiresRecovery());
+  importer.reset();
+  state.failWritePath.clear();
+  state.failMatchingWrite = 0;
+  importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  const auto& events = state.files.at(TINTA_JOURNAL_EVENTS);
+  EXPECT_GT(events.size(), prefix.size());
+  EXPECT_TRUE(std::equal(prefix.begin(), prefix.end(), events.begin()));
+  const auto complete = events;
+  importer.reset();
+  importer = makeUniqueNoThrow<NativeBookmarkLegacyImport>();
+  ASSERT_EQ(importer->import(entries, edition, originalHash, 4, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), complete);
+}
+
+TEST(NativeReaderPreferenceMetadataTest, BookmarkEditPreflightsWithoutEntropyOrJournalMutation) {
+  inventory_hal_test::state = {};
+  inventory_hal_test::state.enumerateFileMap = true;
+  SaveIdentities identities;
+  Digest edition{};
+  edition.fill(7);
+  BookmarkEntry entry{};
+  entry.name = "Name";
+  entry.summary = "Summary";
+  for (unsigned invalid = 0; invalid < 4; ++invalid) {
+    entry.hasVisibleTextOffset = invalid != 0;
+    entry.computedSpineIndex = invalid == 1 ? 9 : 0;
+    entry.name = invalid == 2 ? std::string(129, 'a') : "Name";
+    entry.summary = invalid == 3 ? std::string("bad\0text", 8) : "Summary";
+    auto edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+    ASSERT_TRUE(edit);
+    EXPECT_EQ(edit->create(entry, edition, 4, identities), TintaJournalResult::Invalid);
+    EXPECT_FALSE(BookmarkIdentity::valid(entry.identity));
+    EXPECT_EQ(identities.calls, 0u);
+    EXPECT_TRUE(inventory_hal_test::state.files.empty());
+  }
+}
+TEST(NativeReaderPreferenceMetadataTest, BookmarkEditCreatesRenamesAndDeletesStableIdentityBeforeUiMutation) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  SaveIdentities identities;
+  Digest edition{};
+  edition.fill(7);
+  BookmarkEntry entry{};
+  entry.name = "Original";
+  entry.summary = "Summary";
+  entry.hasVisibleTextOffset = true;
+  entry.computedSpineIndex = 2;
+  entry.visibleTextOffset = 42;
+  auto edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+  ASSERT_EQ(edit->create(entry, edition, 4, identities), TintaJournalResult::Ok);
+  ASSERT_TRUE(BookmarkIdentity::valid(entry.identity));
+  const auto identity = entry.identity;
+  edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+  ASSERT_EQ(edit->rename(entry, "Renamed", edition, 4, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(entry.name, "Original");
+  EXPECT_EQ(entry.identity, identity);
+  auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+  ASSERT_TRUE(audit->run());
+  std::array<uint8_t, MAX_BOOKMARK_BODY_SIZE> bytes{};
+  size_t length = 0;
+  ASSERT_EQ(audit->resolveBookmark(edition, identity, bytes, length), TintaJournalResult::Ok);
+  BookmarkBodyView body;
+  ASSERT_TRUE(decodeBookmarkBody(std::span(bytes).first(length), body));
+  EXPECT_EQ(std::string(reinterpret_cast<const char*>(body.name.data()), body.name.size()), "Renamed");
+  EXPECT_EQ(body.anchor, (ReadingAnchor{2, 42}));
+  audit.reset();
+  edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+  ASSERT_EQ(edit->erase(entry, edition, identities), TintaJournalResult::Ok);
+  const auto events = state.files.at(TINTA_JOURNAL_EVENTS);
+  const auto calls = identities.calls;
+  edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+  EXPECT_EQ(edit->erase(entry, edition, identities), TintaJournalResult::Ok);
+  EXPECT_EQ(identities.calls, calls);
+  EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), events);
+  audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+  ASSERT_TRUE(audit->run());
+  ASSERT_EQ(audit->resolveBookmark(edition, identity, bytes, length), TintaJournalResult::Ok);
+  ASSERT_TRUE(decodeBookmarkBody(std::span(bytes).first(length), body));
+  EXPECT_TRUE(body.deleted);
+}
+TEST(NativeReaderPreferenceMetadataTest, BookmarkCreationCollisionCannotReuseOrResurrectExistingIdentity) {
+  for (const bool deleted : {false, true}) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    state.enumerateFileMap = true;
+    SaveIdentities identities;
+    Digest edition{};
+    edition.fill(7);
+    BookmarkBodyView prior;
+    prior.identity.fill(8);
+    prior.deleted = deleted;
+    auto save = makeUniqueNoThrow<NativeBookmarkSaveSession>();
+    ASSERT_EQ(save->persist(prior, edition, identities), TintaJournalResult::Ok);
+    save.reset();
+    const auto before = state.files.at(TINTA_JOURNAL_EVENTS);
+    identities.random = 8;
+    BookmarkEntry entry{};
+    entry.hasVisibleTextOffset = true;
+    auto edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+    EXPECT_EQ(edit->create(entry, edition, 1, identities), TintaJournalResult::Conflict);
+    EXPECT_FALSE(BookmarkIdentity::valid(entry.identity));
+    EXPECT_EQ(state.files.at(TINTA_JOURNAL_EVENTS), before);
+  }
+}
+TEST(NativeReaderPreferenceMetadataTest, BookmarkCreationLeavesUiIdentityUnsetOnUncertainJournalFailure) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  state.failWrite = true;
+  SaveIdentities identities;
+  Digest edition{};
+  edition.fill(7);
+  BookmarkEntry entry{};
+  entry.hasVisibleTextOffset = true;
+  auto edit = makeUniqueNoThrow<NativeBookmarkEditSession>();
+  EXPECT_EQ(edit->create(entry, edition, 1, identities), TintaJournalResult::IoError);
+  EXPECT_TRUE(edit->requiresRecovery());
+  EXPECT_FALSE(BookmarkIdentity::valid(entry.identity));
 }

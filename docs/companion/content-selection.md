@@ -2,9 +2,117 @@
 
 `LibraryStore.setReaderSelection` persists a desired choice by hardware reader identity and SHA-256 content ID. SQLite schema 8 keeps these rows separate from shared library metadata and requires the content to exist. EPUBs, courses, fonts, and dictionaries use this path; firmware installation requires its separate explicit update flow.
 
+The current source advertises EPUB and font removal through authenticated BLE
+and encrypted Wi-Fi commands. A retained owner prepares complete-path plans and publishes
+metadata before retiring quarantined bytes. Resource admission covers its owner,
+JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
+retry pass the native SdFat checker. Native Apple and physical acceptance remain
+unverified. Course and dictionary removal still need their own participants.
+Font cohort routing and recovery pass the native host checker and all five
+firmware builds/image checks; physical acceptance remains pending.
+
+Reader-only inventory content can be imported through the native Installed content
+section using authenticated metadata and bounded BLE or encrypted Wi-Fi reads.
+The exact reader/card/manifest binds a durable import job and immutable filename.
+Downloads synchronize before SQLite checkpoints, recover saved offsets, verify
+SHA-256 and kind, and atomically publish library metadata and reader selection.
+Courses retain their inventory logical identity and inspected pack metadata.
+Firmware is excluded from this flow.
+
+Import/Resume, Pause, saved-progress, and Cancel controls are wired. Cancellation
+persists aborted intent before deleting owned staging and leaves reader content
+and completed library objects intact. Globally removed content is excluded from
+automatic re-import; deletion during a download or admission aborts that job.
+Deselection atomically aborts active imports for that reader and content,
+including imports retained across card generations. Publication cannot override
+the newer choice; library metadata and other readers’ selections remain intact.
+
+Wi-Fi import closes the handoff on validation and download failures, including
+missing jobs, without advancing the durable offset.
+
+Terminal staging cleanup scans bounded pages and refuses foreign bindings. It
+keeps the binding until payload deletion is synchronized, then removes the
+binding and empty directory. Restarted cleanup accepts an empty directory but
+refuses a nonempty directory without its ownership proof.
+
+The native action offers Wi-Fi for more than 1 MiB remaining when assistance is
+enabled and the reader advertises export support. It shares transaction IDs and
+durable offsets across transports. Lost-reply tests reopen storage and resume
+through a fresh authenticated BLE session. The native import action now reuses
+the upload reconnect helper after success or a non-cancelled Wi-Fi failure,
+requiring the same reader, card generation, and installation before refreshing
+inventory. A failed reconnect preserves completed imports and asks the user to
+reconnect. This native flow still needs Apple build and physical verification. Manual and foreground Resume retain the existing import job ID. Manual Resume
+uses the bound filename even after a reader-side rename, and can bind a missing
+filename to an older interrupted job without enqueuing a replacement. Cancelled
+jobs refuse metadata resume. An authenticated transport test cancels the stored
+job while metadata is in flight and proves no filename binding, content read,
+or replacement job occurs. Resume also checks job ownership before metadata
+exchange, and tests refuse foreign reader/card/installation jobs with zero
+metadata requests; library metadata arriving from another app no
+longer hides Resume for a matching active job. A full authenticated restart test reopens SQLite and staging, binds metadata
+to the same paused job with 961 bytes acknowledged, starts the first content
+read at offset 961, and verifies the final vault object matches every source
+byte. Schema-39 interrupted imports can acquire their first authenticated
+filename without losing phase or offset. See protocol.md for wire formats,
+resource ownership, binding checks, and recovery details.
+
+All 504 Swift tests and 1,703 host entries pass. All five firmware profiles build
+with the corrected font-removal codecs, and their saved images pass validation.
+Native source syntax/localization checks pass, but native
+Apple compilation, physical reader operation, power-cut recovery, accessibility,
+and measured runtime heap/stack acceptance remain unverified.
+
+Local family deletion now checks settings persistence before removing files.
+Deleting the selected family first publishes the built-in fallback through the
+existing preference journal/settings path. Every retry checks persistence again,
+including after a failed save left the in-memory selection cleared. No new
+workspace is allocated; this is one checked save per explicit deletion request.
+Run `python3 test/companion/font_installer_fault_check.py` to compile the actual
+installer with deterministic fake storage/settings failures. It verifies save
+refusal before any removal, retries after an in-memory fallback, partial deletion
+across both roots, invalid-name/oversized-path refusal, and an argument aliased
+to the active settings buffer. It also checks a deletion that takes effect but
+reports failure, preserving the surviving root until a checked retry, and
+retaining another selected family. The exact path-capacity check accepts a
+151-byte family name, preserves an unrelated directory, and refuses 152 bytes
+before saving or removing anything. Deletion retains one checked 160-byte path and
+reuses it for both roots; it adds no allocation or second path buffer. The check is registered as `FontInstallerFaultCheck` in CTest and passes; the
+C3 build and saved-image validation pass for the installer guard. A later UI
+change retains a failed deletion’s family index, routes both Confirm and touch
+Retry back to deletion, uses translated deletion errors, and refreshes registry
+state after every attempt. It adds one integer member; the web error reuses its
+JSON document and existing string-serialization pattern for translated text.
+All five profiles pass the final UI build and saved-image validation. Physical
+failure-injection verification remains pending.
+Companion-driven font removal still needs settings/reference recovery and native
+activity/startup routing. The reusable byte participant now accepts validated
+single-file EPUB and font plans (`HalSingleFileRemovalParticipant`); EPUB callers
+retain their existing aliases. The real-SdFat host checker covers EPUB, TTF, OTF,
+TTC and bitmap CPFONT files across nine success/fault cases each: rename failure
+before/after effect, uncertain deletion, corrupt source/backup, publication failure,
+foreign journal ownership, restart and repeated completion. It preserves an
+unrelated sibling file. The references in this matrix are fakes, so it does not
+prove font preference persistence or physical SD recovery. Run
+`python3 test/companion/sdfat_path_lookup_check.py .pio/libdeps/default/SdFat/src`.
+This shared worker adds no allocation or extra buffers; it retains the existing
+fixed off-stack owner and borrowed hash scratch. A final firmware build batch for
+this extraction is running; the saved images in the hardware table predate it.
+Font removal remains unadvertised until reference recovery and routing are complete.
+
+Font removal codecs and single-file plans use vector format 1 and bitmap format
+4, matching inventory and transfer manifests. Formats 0, 2, 3, and 5 are rejected;
+TTF/OTF/TTC and bitmap extensions must agree with the manifest. This validates
+the shared contract; dependency-aware native font removal remains incomplete.
+
+## Selection and removal implementation notes
+
+The following incremental notes retain earlier validation details; current export
+status and verification limits are stated above.
+
 Selections survive app restart and SD replacement because they describe the desired content for the physical reader. Actual installed state must come from the authenticated inventory for the current SD generation. A false selection is retained as a removal request. It does not delete library metadata, content objects, or another reader's selection. Global deletion uses the separate explicit library action described below.
 
-Identical choices return false without updating SQLite. Changed or newly recorded choices return true. `readerSelections` returns both selected and deselected rows in content-hash order. The future reconciliation runner must combine them with current inventory and durable transfer jobs; these APIs do not claim a reader operation has completed.
+Identical choices return false without updating SQLite. Changed or newly recorded choices return true. `readerSelections` returns both selected and deselected rows in content-hash order. The reconciliation runner combines them with current inventory and durable jobs; completion still requires acknowledged reader operations.
 
 Run `swift test --package-path apple/CompanionKit`. `ReaderSelectionTests` verifies independent reader choices, retained library copies, restart recovery, repeated-choice suppression, and firmware/invalid-reader rejection. Reader reconciliation, install/removal commands, and native UI remain pending.
 
@@ -112,7 +220,7 @@ Both installed-library suites pass with fresh-card absence, directory enumeratio
 
 Final native builds after the startup changes pass for `default` (C3) and `sticky` (S3). The release image validator accepts both board/chip tags and image checksums/hashes: C3 is 6,276,016 bytes with 277,584 bytes of OTA headroom; S3 is 5,634,288 bytes with 919,312 bytes of headroom. C3 SHA-256 is `9a924d5f7207831d57f4bf816509a9fc64ebb49dd5bf397b174a4c9b49dbf1cd`; S3 is `201c2eec7b054df5429178cd85ba0dffca9c52fa4565c51443c536b0e34499d9`. These images include the native startup recovery caller; they do not establish hardware resource/power-cut acceptance. The physical checklist now includes fresh-card boot, early failure before mutable store loads, every removal checkpoint, completion publication, journal-slot cleanup, foreign cards/plans, and later reading-state preservation.
 
-Command 15 and its portable authorization/completion-first handler now define the removal endpoint contract; the shared reply codec/fixture and explicit EPUB removal capability bit 8 are available on Apple. No reader advertises the bit or invokes the handler yet. Native backend admission must resolve the complete installed path set: `InventoryPaths::find` returns the first matching path, while inventory deduplicates content hashes and can retain multiple identical copies in its path map. A backend must not acknowledge deselection as complete after silently removing only that first copy. Persist a recoverable plan for the full content path set, clear matching live references for that set, retain progress/bookmark history, and refresh/invalidate session inventory and in-memory reader stores before resumption. Existing single-file participants remain useful for the one-path case and need composition for multiple paths. Other content kinds retain their dependency-aware removal requirements.
+Command 15 and its portable authorization/completion-first handler now define the removal endpoint contract; the shared reply codec/fixture and explicit EPUB removal capability bit 8 are available on Apple. No reader advertises the bit. Authenticated BLE and encrypted Wi-Fi dispatch now invoke the native handler; the complete-path owner, startup recovery, and app jobs/UI are described below. Native backend admission must resolve the complete installed path set: `InventoryPaths::find` returns the first matching path, while inventory deduplicates content hashes and can retain multiple identical copies in its path map. A backend must not acknowledge deselection as complete after silently removing only that first copy. Persist a recoverable plan for the full content path set, clear matching live references for that set, retain progress/bookmark history, and refresh/invalidate session inventory and in-memory reader stores before resumption. Existing single-file participants remain useful for the one-path case and need composition for multiple paths. Other content kinds retain their dependency-aware removal requirements.
 
 `InventoryPaths::nextPath` now copies a terminated path alongside its manifest instead of exposing borrowed decode bytes. Insufficient output capacity, overlapping output/scratch, and read failures invalidate enumeration without publishing new outputs. Both manifest-only and path-copying enumeration verify the complete record CRC, reported snapshot length, header identity/revision/count/CRC, and an in-memory payload-only CRC at End. The payload guard is computed while opening and while enumerating, excluding each record's CRC footer: a record plus its own valid CRC has a fixed residue, so the existing wire aggregate alone cannot detect same-length content rewritten with a new per-record CRC. This adds twelve bytes of iterator state and preserves the existing file format. CRC guards detect corruption/change; they do not authenticate SD data or replace exclusion of concurrent writers.
 
@@ -166,7 +274,7 @@ The native activity now has a refresh operation that invalidates/closes its inve
 
 Admission accepts an optional fallible inventory-preparation callback only in the checked journal-absent branch. It can validate/open or rebuild the native index/path pair and return the actual revision used for collection. Retry, Busy and Retired branches skip this callback. Tests require no file mutation on callback failure, fresh admission with a returned revision replacing an initial zero, and no extra callback calls during durable retry/competition/retirement. The session passes this callback through to admission; activity owner/dispatch wiring remains pending.
 
-`HalEpubRemovalNativeOwner` retains the inventory validator, one path-storage handle, a record bank plus 128-byte coverage bank, and the removal session outside the task stack. Its lazy inventory open validates the published index/path pair at the requested revision, then bounds plan bytes by the verified path-map file length plus the LRMP header. LRMP records omit each inventory record's manifest, so this is a conservative finite bound. It closes both plan and path readers before refresh. Quota changes are allowed only when no writer stage is owned; an attempted change during an active stage fails that operation. Native owner allocation and command dispatch are still pending; the owner does not allocate itself or enable removal capabilities.
+`HalEpubRemovalNativeOwner` retains the inventory validator, one path-storage handle, a record bank plus 128-byte coverage bank, and the removal session outside the task stack. Its lazy inventory open validates the published index/path pair at the requested revision, then bounds plan bytes by the verified path-map file length plus the LRMP header. LRMP records omit each inventory record's manifest, so this is a conservative finite bound. It closes both plan and path readers before refresh. Quota changes are allowed only when no writer stage is owned; an attempted change during an active stage fails that operation. The activity now allocates this owner lazily with a checked allocation and dispatches authenticated requests through it. The owner does not allocate itself or enable removal capabilities.
 
 BLE `RemoveContent` now routes through authenticated native activity admission. It checks full request owner/card/kind, excludes unfinished transfers and journal sessions, checks firmware installation intents with checked storage lookup, and retains a checked off-stack native owner for the connection. Fresh collection lazily validates/opens the inventory pair; completion closes removal readers and reloads state/recent books before verified inventory rebuild. IO/corrupt results block ordinary activity storage work pending recovery. Owner cleanup occurs with journal-session teardown. The EPUB removal capability remains unadvertised; physical heap/stack/SD-failure acceptance remains pending. Wi-Fi request admission does not yet permit removal.
 
@@ -174,7 +282,7 @@ Wi-Fi admission now permits a removal request only when its complete transaction
 
 Companion library schema 33 adds durable EPUB removal jobs in a separate table, retaining reader identity, the immutable full request and queued/removing/paused/completed phase. Queue admission requires a complete inventory containing the exact manifest and deduplicates pending requests by reader/card/owner/manifest while retaining their transaction IDs. Jobs do not depend on library-content foreign keys. Queueing changes only that reader's selection when a library copy exists; the copy and global library visibility remain intact. A restart test checks retained request/phase, pause/resume, completed terminal state and pending-job filtering. Transport runner and UI integration remain unfinished.
 
-`TransferRunner.removeContent` now shares the existing runner's concurrency guard with transfer/firmware work. It validates saved reader, installation owner and card identity, checks protocol/removal capability before sending, persists Removing before exchange and pauses failed exchanges while retaining the exact request. Success requires matching command/response flag/request ID and a transaction-bound Ok reply before completing the job. Locally completed jobs return without another command after identity checks. Tests simulate a lost reply, retry the identical request, reject wrong-card admission without transmission and reject mismatched response IDs. The Swift runner requires advertised EPUB removal support; native advertisement is still pending physical acceptance. Removal UI integration remains unfinished.
+`TransferRunner.removeContent` now shares the existing runner's concurrency guard with transfer/firmware work. It validates saved reader, installation owner and card identity, checks protocol/removal capability before sending, persists Removing before exchange and pauses failed exchanges while retaining the exact request. Success requires matching command/response flag/request ID and a transaction-bound Ok reply before completing the job. Locally completed jobs return without another command after identity checks. Tests simulate a lost reply, retry the identical request, reject wrong-card admission without transmission and reject mismatched response IDs. The Swift runner requires advertised EPUB removal support; native advertisement is still pending physical acceptance. Confirmed installed-content controls and pending-job presentation are now wired in the app, as described below; native Apple execution remains unverified.
 
 The app's selected-content synchronization now executes EPUB removal actions when the reader advertises removal support. Before computing new work, it resumes durable removals belonging to the authenticated reader, installation and card, then collects a fresh inventory. A persisted removal is an accepted intent: reselecting the book does not cancel an uncertain reader transaction. After that transaction completes, reconciliation against the refreshed inventory queues reinstallation when selected. A store test checks that reselecting preserves the pending request and that the completed removal produces an install action against an empty inventory. Unsupported readers retain selection intent without sending removal commands. Device-only content removal controls, pending-removal presentation and Apple runtime acceptance remain unfinished.
 
@@ -185,3 +293,152 @@ Transfer enqueue now rejects transaction IDs already owned by removal jobs, matc
 New transfer jobs cannot be inserted for the same reader/card/content while a removal remains queued, removing or paused, including through direct enqueue. Reselection remains permitted; the durable removal request remains unchanged. Once removal reaches Completed, ordinary selected-content enqueue succeeds. Existing transfer jobs remain available for recovery/abort. The store test covers rejected direct and selected enqueue before completion, then successful reinstallation enqueue afterward.
 
 Removal queueing also rejects an unfinished transfer of that content on the same reader/card before changing selection. The installed-content action tells users to finish or cancel the pending transfer first. The regression test checks rejection with a fresh removal transaction, unchanged selection and no additional removal job. This prevents sync from sending a removal ahead of recovery/abort for the same bytes.
+
+### Foreground removal recovery
+
+An active scene now considers retained EPUB removal jobs alongside upload jobs,
+scoped to the authenticated reader, card generation and Apple installation and
+requiring advertised EPUB removal support. The existing selected-content executor
+recovers those requests before collecting a new inventory and reconciling work.
+The lost-reply regression reopens SQLite and constructs a fresh runner, verifies
+that the paused job appears in pending work, rejects a mismatched reply ID, and
+completes with the same serialized request; completed jobs leave the pending list.
+Native source parsing passes. Apple UI/physical acceptance must still verify that
+reactivating after a lost removal reply resumes the same transaction, and that a
+changed card, foreign installation or unsupported reader sends no removal.
+
+### Font reference recovery participant
+
+`HalFontRemovalReferences` now supplies the settings side of the shared single-file
+worker. It derives grouped families from the directory name and loose vector
+families from the filename stem, matching names through the HAL's real SdFat
+Unicode comparison. Publication requires the exact current quarantined journal
+record and checks settings persistence. A retry saves again even if the first
+failed save cleared the in-memory selection. Other selected families remain
+selected. Retirement verifies the removed family is no longer selected.
+
+The real-SdFat checker compiles this unchanged participant against fake settings
+persistence and exercises failed saves/retries, hidden/visible roots, grouped and
+loose fonts, Unicode/case matching, foreign ownership, invalid/nested paths,
+unterminated settings, and preserving another selected family. It passes. The
+participant adds no heap allocation or path buffer; family names borrow the
+worker's retained original path, and its checkpoint belongs in the off-stack
+session owner. Actual `CrossPointSettings` serialization, startup recovery,
+registry refresh and command routing remain required. This new participant is
+not referenced by firmware yet, so the active five-profile build batch verifies
+the shared byte worker, not native settings integration. Companion font removal
+remains unadvertised until those paths are connected and verified.
+
+### Font startup recovery
+
+Startup recovery now accepts persisted single-file font plans. It checks heap
+admission, loads saved settings before creating the font worker, and refuses
+recovery if settings cannot be loaded. This avoids publishing boot defaults over
+unrelated preferences, because companion recovery precedes normal settings load.
+The worker is allocated once with `makeUniqueNoThrow` only for a pending font
+journal, borrows the existing plan/hash buffers, and is released before completion
+receipt publication and before normal reading starts. Settings serialization uses
+the existing checked store path; no new JSON persistence format is introduced.
+
+The real-SdFat checker passes for TTF/OTF/TTC/CPFONT: quarantine followed by failed
+settings publication, failed boot settings load, failed retry save, a reconstructed
+successful recovery, journal release, unrelated file preservation and repeated
+recovery. Settings persistence is a fault-injectable fake in this check. The native
+firmware build batch is running. Command admission, registry refresh, capability
+advertisement, Apple removal routing and physical power-loss acceptance still
+remain required before companion font removal is usable.
+
+### Font removal jobs and settings boundary
+
+The Apple store can now retain font-removal jobs without changing the library
+copy. The runner requires the separate font-removal capability, bit 13; EPUB-only
+capabilities cannot authorize these commands. The new regression covers vector
+format 1 and bitmap format 4, duplicate-job reuse, SQLite reopen, no wire request
+to an EPUB-only reader, lost-reply recovery with the identical request and
+retained library metadata. All 504 Swift tests pass. Native controls and firmware
+advertisement remain disabled until font command routing is complete.
+
+The first native startup build found that HAL cannot include the application's
+settings header. The recovery path now borrows a `FontRemovalSettings` interface;
+`CompanionFontRemovalSettings` supplies the checked native settings operations
+from the application. The small adapter lives on the boot stack and outlives the
+synchronous recovery call. HAL no longer depends on `CrossPointSettings` or the
+`SETTINGS` singleton. The real-SdFat settings/startup checker passes after this
+change, and the corrected native build batch is running. The failed build log is
+preserved at `/tmp/lila-font-startup-default-header-failure.log`.
+
+### Capability-gated Apple font removal controls
+
+Installed-content controls, confirmation, foreground recovery, pending-removal
+execution and new reconciliation actions now share the runner's kind/capability
+check. EPUB capability bit 8 authorizes EPUB removal; font capability bit 13
+authorizes font removal. Unsupported kinds remain queued for inspection. Removal
+availability shares the content-transfer guard, including library/preference
+activity exclusion. The confirmation retains the library copy and explains the
+built-in fallback for an in-use font. Localized catalog JSON and SwiftUI syntax
+checks pass, and all 504 CompanionKit tests pass after shared capability routing.
+Native SDK compilation and UI execution remain unverified. Current firmware does
+not advertise bit 13; native multi-path font admission/routing still needs work.
+
+The corrected C3 startup-recovery build and image validation pass, with evidence
+under `/tmp/lila-font-startup-images/default.json`. The remaining profiles are
+still in the active batch. This check proves compilation/image validity rather
+than physical settings or learner-state acceptance.
+
+### Native font cohort command routing
+
+Font capability bit 13 (`0x00002000`) is now advertised in source. Command 15 uses
+the existing authenticated owner/card checks, complete inventory path collection,
+SHA-bound LRMP plan, shared removal journal and completed-request receipts for
+both supported font formats. A retained router allocates the checked font worker
+once, only for font work. Its fixed path/lookup/hash state exceeds the stack
+budget; it borrows the existing session scratch and uses pre/post internal-heap
+admission rather than adding another transfer workspace. Every reference path and
+selected-family field is checked before quarantine. One successful settings save
+is reused within the same journal checkpoint; failed saves always retry. Removing
+an in-use family selects the built-in fallback. The activity marks the font
+registry dirty before publishing its refreshed inventory.
+
+Boot recovery accepts both single-file and cohort font plans, loads saved settings
+through the borrowed application adapter and completes the same journal phases.
+The real-SdFat checker passes a complete command/session matrix for vector and
+bitmap formats, duplicated hidden/visible-root files, partial rename after effect,
+failed settings save, boot reconstruction, immutable completion replay, sibling
+preservation and one successful settings save per phase. Corrupt second-copy bytes
+and invalid selected-family settings cause no quarantine or removal journal. All
+1,703 configured CTest entries also pass after the routing change. Native radio,
+settings serialization, heap/stack and physical power-loss behavior remain
+unverified. The earlier startup build batch was intentionally stopped after its
+passing C3 checkpoint so final checks can cover the routed implementation. The
+current batch uses `/tmp/lila-font-cohort-<profile>-build.log` and saves validated
+images under `/tmp/lila-font-cohort-images`.
+
+### Dictionary removal plan foundation
+
+Dictionary inventory exposes an original/canonical ZIP cache object, while the
+live lookup uses extracted dictionary members. Removal therefore needs an owned
+member plan rather than deleting the inventory ZIP. `DictionaryRemovalPlanCodec`
+now binds the exact removal request to the installed base path, original and
+canonical archive manifests, and each sealed member's length/hash proof. It reuses
+the installation/member proof codecs and requires their complete committed shape,
+the removal transaction/card generation and the original manifest to match.
+Definitions, index, info and optional synonyms paths are derived with the existing
+bounded member-path helper; compressed definitions retain `.dict.dz`.
+
+The codec retains its validation copies outside the task stack and performs no
+heap allocation. The eventual native owner must allocate its large fixed state
+with `makeUniqueNoThrow`, once per session, with internal-heap admission. It is not
+referenced by current firmware yet. Three host tests cover roundtrip/unaligned
+wire input, all compressed/synonym combinations, every truncated length and
+corrupted byte, valid-checksum ownership mismatch, incomplete proofs, private
+paths, hidden roots, and exact member-path output bounds. All 1,706 configured
+CTest entries pass. Native plan collection/persistence, member quarantine,
+reference/binding publication, completed receipts/startup routing, Apple controls
+and physical acceptance still need implementation. No reader advertises dictionary
+removal capability yet.
+
+The final routed-font batch passes all five targets. Saved-image identities,
+checksums/SHA trailers and OTA-size validation pass for each profile; see the
+current table in `hardware-verification.md`. Native Apple execution, actual
+settings serialization/power-loss behavior, radio transitions and measured
+runtime memory acceptance remain unverified.

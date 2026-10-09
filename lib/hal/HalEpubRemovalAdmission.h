@@ -33,7 +33,8 @@ class HalEpubRemovalAdmission final {
         context(context) {}
   EpubRemovalAdmissionResult admit(const ContentRemovalRequest& request, uint64_t inventoryRevision,
                                    ContentRemovalRecord& output) {
-    if (!validContentRemovalRequest(request) || request.manifest.kind != ContentKind::Epub)
+    if (!validContentRemovalRequest(request) ||
+        (request.manifest.kind != ContentKind::Epub && request.manifest.kind != ContentKind::Font))
       return EpubRemovalAdmissionResult::Invalid;
     expected = request;
     if (expected.generation != generation) return EpubRemovalAdmissionResult::WrongStorage;

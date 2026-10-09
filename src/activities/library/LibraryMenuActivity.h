@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <cstdint>
 
 #include "activities/UiListActivity.h"
@@ -12,6 +13,7 @@ class LibraryMenuActivity final : public UiListActivity {
   LibraryMenuActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
 
   void onEnter() override;
+  void onBackgroundSaveFailed() override;
 
   enum class Entry : uint8_t { Folders, AddBooks, Catalogs, Games, Tinta, Companion, Settings };
   static constexpr int MAX_ROWS = 5
@@ -34,6 +36,7 @@ class LibraryMenuActivity final : public UiListActivity {
   Entry entries[MAX_ROWS]{};
   freeink::ui::ListItem rowItems[MAX_ROWS]{};
   int rowCount = 0;
+  std::atomic<bool> syncStartFailed{false};
   // Entered from a held Confirm or Back: their releases belong to the shelf.
   bool lockNextConfirmRelease = false;
   bool lockNextBackRelease = false;

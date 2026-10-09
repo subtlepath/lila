@@ -27,7 +27,7 @@ inline bool validContentRemovalRequest(const ContentRemovalRequest& request) {
     case ContentKind::Course:
       return manifest.formatVersion == 1 && family;
     case ContentKind::Font:
-      return (manifest.formatVersion == 1 || manifest.formatVersion == 2) && !family;
+      return (manifest.formatVersion == 1 || manifest.formatVersion == 4) && !family;
     case ContentKind::Dictionary:
       return manifest.formatVersion == 1 && !family;
     default:

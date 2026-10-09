@@ -29,7 +29,7 @@ public actor TransferRunner {
         guard job.request.generation == device.storageGeneration else { throw TransferRunnerError.wrongStorage }
         if job.phase == .completed { return job }
         guard device.minimumProtocol <= 1, device.maximumProtocol >= 1 else { throw TransferRunnerError.unsupportedProtocol }
-        guard device.readerCapabilities.supportsEpubRemoval, job.request.manifest.kind == .epub else {
+        guard device.readerCapabilities.supportsRemoval(of: job.request.manifest.kind) else {
             throw TransferRunnerError.unsupportedContent
         }
         try Task.checkCancellation()
@@ -208,6 +208,18 @@ public actor TransferRunner {
     public func prepareDeclaration(_ id: UUID, session: AuthenticatedReaderSession) async throws -> TransferDeclaration {
         try await prepareDeclaration(id, device: session.device, installation: session.installation)
     }
+    private func validateCourse(_ content: LibraryContent, job: UUID, url: URL, device: DeviceDescriptor) async throws {
+        let metadata = try CoursePackInspector.inspect(url)
+        let details = try CoursePackDetails(metadata)
+        guard let stored = try await library.coursePackDetails(content.id), stored == details,
+              content.languages == [details.locale] else { throw StoreError.invalidValue }
+        guard device.readerCapabilities.contains(details.requiredReaderCapabilities) else {
+            throw TransferRunnerError.unsupportedContent
+        }
+        if try await library.courseSwitchConfirmation(job) != nil && !device.readerCapabilities.supportsCourseSwitch {
+            throw TransferRunnerError.unsupportedContent
+        }
+    }
     func prepareDeclaration(_ id: UUID, device: DeviceDescriptor, installation: Data) async throws -> TransferDeclaration {
         guard !running else { throw TransferRunnerError.busy }
         running = true
@@ -224,6 +236,7 @@ public actor TransferRunner {
             throw TransferRunnerError.unsupportedContent
         }
         let object = try await vault.verifiedObject(job.content)
+        if content.kind == .course { try await validateCourse(content, job: job.id, url: object.url, device: device) }
         if content.kind == .font {
             let plan = try FontTransferPlan(content: content)
             try plan.admit(device)
@@ -301,6 +314,7 @@ public actor TransferRunner {
         let checkSelection = requireSelection && job.phase != .committing
         if checkSelection { try await ensureSelected(job) }
         let object = try await vault.verifiedObject(job.content)
+        if content.kind == .course { try await validateCourse(content, job: job.id, url: object.url, device: device) }
         if content.kind == .font {
             let plan = try FontTransferPlan(content: content)
             try plan.admit(device)
@@ -331,7 +345,7 @@ public actor TransferRunner {
             begin = try TransferCommands.begin(expected, requestID: nextRequestID())
         }
         let switchConsent = try await library.courseSwitchConfirmation(id)
-        if switchConsent != nil && !device.readerCapabilities.contains(.courseSwitches) {
+        if switchConsent != nil && !device.readerCapabilities.supportsCourseSwitch {
             throw TransferRunnerError.unsupportedContent
         }
         var state = try await send(begin, expected: expected, transport: transport)

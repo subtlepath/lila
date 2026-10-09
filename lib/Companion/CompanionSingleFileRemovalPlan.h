@@ -41,7 +41,7 @@ inline bool validSingleFileRemovalPlan(const SingleFileRemovalPlan& plan) {
   if (plan.request.manifest.kind != ContentKind::Font) return false;
   const bool fontRoot = (plan.path.size() > 7 && removalPathEqualAscii(plan.path.substr(0, 7), "/fonts/")) ||
                         (plan.path.size() > 8 && removalPathEqualAscii(plan.path.substr(0, 8), "/.fonts/"));
-  return fontRoot && (plan.request.manifest.formatVersion == 1 ? suffix(".cpfont")
+  return fontRoot && (plan.request.manifest.formatVersion == 4 ? suffix(".cpfont")
                                                                : suffix(".ttf") || suffix(".otf") || suffix(".ttc"));
 }
 inline size_t encodeSingleFileRemovalPlan(const SingleFileRemovalPlan& plan, std::span<uint8_t> output) {

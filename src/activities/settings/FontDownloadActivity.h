@@ -106,6 +106,7 @@ class FontDownloadActivity final : public UiListActivity {
   size_t fileProgress_ = 0;
   size_t fileTotal_ = 0;
   int downloadingFamilyIndex_ = 0;
+  int deletingFamilyIndex_ = -1;
   std::string errorMessage_;
   bool cancelRequested_ = false;
   // Set when the cancel came from the home gesture (consumed by the download
@@ -151,6 +152,7 @@ class FontDownloadActivity final : public UiListActivity {
   bool isSelectedFamilyDeletable() const;
   void promptDeleteSelectedFamily();
   void onDeleteConfirmationResult(const ActivityResult& result);
+  void deleteFamily(int familyIndex);
   int familyIndexFromList(int listIndex) const;
   int listItemCount() const;
   bool hasGroupScreen() const { return !scriptGroupLabels_.empty(); }

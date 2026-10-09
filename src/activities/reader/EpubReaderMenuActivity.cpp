@@ -61,7 +61,8 @@ void EpubReaderMenuActivity::buildMenuItems(std::vector<MenuItem>& items, const 
       if (Frontlight.present()) items.push_back({MenuAction::FRONTLIGHT, StrId::STR_LIGHT});
       // Marking it.
       items.push_back({MenuAction::TOGGLE_BOOKMARK, StrId::STR_BOOKMARK_THIS_PAGE, true});
-      if (context.bookmarkCount > 0) items.push_back({MenuAction::BOOKMARKS, StrId::STR_BOOKMARKS});
+      if (context.bookmarkCount > 0 || context.bookmarksNeedAttention)
+        items.push_back({MenuAction::BOOKMARKS, StrId::STR_BOOKMARKS});
       items.push_back({MenuAction::MORE_OPTIONS, StrId::STR_MORE_OPTIONS, true});
       break;
     case MenuPage::More:
@@ -200,7 +201,10 @@ void EpubReaderMenuActivity::refreshRowValue(const size_t row) {
       }
       break;
     case MenuAction::BOOKMARKS:
-      snprintf(value, VALUE_LEN, "%d", context.bookmarkCount);
+      if (context.bookmarksNeedAttention)
+        snprintf(value, VALUE_LEN, "%s", tr(STR_SELECT));
+      else
+        snprintf(value, VALUE_LEN, "%d", context.bookmarkCount);
       break;
     case MenuAction::ROTATE_SCREEN:
       snprintf(value, VALUE_LEN, "%s",

@@ -2,7 +2,16 @@
 
 Open `apple/LilaCompanion.xcodeproj` in Xcode. Shared schemes are `LilaCompanion-iOS` (iOS/iPadOS 18+) and `LilaCompanion-macOS` (macOS 15+). Both link the local CompanionKit package and compile the same SwiftUI source and English string catalog. Set your signing team and bundle identifier in Xcode before running on a device.
 
-The initial app provides Devices, Library, Updates and Settings navigation. Library reads persistent CompanionKit metadata and imports EPUBs, existing Tinta `.pack` files, `.cpfont` bitmap fonts, vector fonts and StarDict ZIP bundles through the shared `ContentImporter.importFile` validators. Mac has an Import Files command with Command-O and the Library accepts file URL drops. A synchronous request gate rejects overlapping imports before spawning work, and security-scoped access stays active until the batch finishes. Import controls are disabled if library initialization failed. Devices and Updates are placeholders, not connected services. Bluetooth pairing, device detail, transfers, course confirmation, CloudKit, sharing, background resume and native/UI tests remain to be implemented.
+The app provides Devices, Library, Updates and Settings navigation with Bluetooth
+pairing, installed-content inventories, resumable transfers and reader imports,
+course-switch confirmation, synchronization, CloudKit controls, and firmware
+staging/install actions. Library imports EPUBs, Tinta packs, supported fonts, and
+StarDict bundles through CompanionKit validators. Mac supports Command-O and file
+URL drops; security-scoped access remains active through each import batch.
+These services are wired in source. Linux checks do not establish native Apple
+compilation, UI behavior, OS permissions, or physical reader acceptance. The
+implementation notes below include earlier checkpoints and their limitations.
+
 
 On a Mac with Xcode, verify both targets:
 
@@ -77,7 +86,7 @@ Six host tests validate callback ownership, cleanup, cancellation, expiry, inval
 
 The Devices transfer section now has an opt-in **Use reader hotspot for large transfers** toggle. Eligible EPUB/Tinta jobs above 1 MiB are staged over authenticated BLE, negotiated with a fresh hotspot offer, joined through the temporary iOS configuration, and continued through the encrypted HTTP transport and the existing runner. Fully staged/committing jobs finish over BLE. A reader that reports unsupported/unavailable preparation continues over BLE. BLE disconnection during the intentional handoff preserves the task and connection-operation identity instead of cancelling it; explicit disconnect/pause still cancels the operation.
 
-The first runner Begin reply over Wi-Fi is authenticated and bound before any chunk advances. Failure closes the cipher/HTTP transport and temporary hotspot lease, retaining durable work. Successful commit closes both and clears the cached BLE authentication. This initial UI flow processes one Wi-Fi job per action and asks for reconnection for remaining work; it does not automatically reconnect or claim all queued work is complete. The reader may remain in Wi-Fi mode until its idle deadline before advertising BLE again. Mac and saved-network joining remain to be wired.
+The first runner Begin reply over Wi-Fi is authenticated and bound before any chunk advances. Failure closes the cipher/HTTP transport and temporary hotspot lease, retaining durable work. After a Wi-Fi job, the current source reconnects Bluetooth, authenticates a fresh session, verifies the same physical reader/card generation/app installation, and collects complete inventory before continuing the remaining queue. Failed reconnect or binding verification stops continuation and retains pending work. Mac and saved-network joining use the manual guidance described below. This is source behavior; physical radio/reconnect/multi-job acceptance remains unverified.
 
 Swift syntax parsing and the three new English catalog entries pass validation. CompanionKit's last full host run passed 266 tests, but those tests do not exercise this SwiftUI model or NetworkExtension. Native Xcode builds and physical acceptance remain required: intentional BLE loss must preserve the running Wi-Fi task; genuine BLE loss on ordinary transfers must cancel; explicit disconnect/pause must release the lease; rejected prepare must fall back safely; old-reader jobs must remain usable; and a failed/lost HTTP reply must resume with a newly negotiated key and the durable reader offset after reconnect. Test course association/compatibility, deselection, permissions, background/sleep and queued work on a physical iPhone and C3/S3 readers before enabling automatic assistance.
 
@@ -85,6 +94,131 @@ Swift syntax parsing and the three new English catalog entries pass validation. 
 
 The assistance controls are now shared by iOS and Mac, with **Reader hotspot** and **Saved reader network** choices. iOS hotspots use NetworkExtension; Mac hotspots and saved networks use a transient **Join Wi-Fi** section with the exact network name, an ephemeral hotspot password when applicable, Continue and Cancel. Saved-network passwords remain on the reader and are not displayed or transmitted. Use system Wi-Fi controls to join, then confirm; the app still requires discovery and an authenticated encrypted Begin response before transmitting chunks.
 
-`WifiManualJoinRequest` retains only UI strings and the original offer deadline, not the AES key. Unrenderable saved SSIDs, backward clocks, expiry, overlapping waits and cancellation are rejected. A pending prompt expires without user interaction. Repeated confirmation cannot resume twice, and cancellation immediately after confirmation still prevents continuation. Prompt fields disappear on completion/cancellation/disconnect and are not persisted or cloud-synced. Each Wi-Fi job still requires reconnection before remaining jobs proceed; automatic reconnect/multi-job assistance is unfinished.
+`WifiManualJoinRequest` retains only UI strings and the original offer deadline, not the AES key. Unrenderable saved SSIDs, backward clocks, expiry, overlapping waits and cancellation are rejected. A pending prompt expires without user interaction. Repeated confirmation cannot resume twice, and cancellation immediately after confirmation still prevents continuation. Prompt fields disappear on completion/cancellation/disconnect and are not persisted or cloud-synced. Each completed Wi-Fi content job reconnects and refreshes authenticated inventory before remaining jobs proceed. Explicit cancellation or failed identity/generation checks prevent continuation; physical multi-job acceptance remains unverified.
 
 The manual prompt has five host lifecycle tests. Swift source parsing and the new English catalog entries pass validation; native SwiftUI/NetworkExtension/CoreBluetooth builds and physical Mac/iPhone testing remain unverified. Test system-network selection, wrong-network confirmation, deadline expiry while in system controls, user cancellation, rejected permission, delayed BLE acknowledgement, encrypted-message failure and recovery through a new authenticated connection. Confirm saved passwords never enter UI/library/cloud records, temporary hotspot text disappears after exit, and remaining jobs retain their reader/card bindings.
+
+### Native navigation UI tests
+
+Both shared app schemes include a platform-specific UI-test target, compiling
+`apple/UITests/CompanionNavigationUITests.swift`. The test launches the actual
+app, visits Devices, Library, Updates and Settings, checks that library import
+is enabled after persistent-store initialization, and repeats the library check
+after termination/relaunch. Additional cases open and cancel the content and
+release-manifest pickers, require no error alert and keep the import controls
+enabled; Mac also checks that Command-O opens import from Devices. Tests use
+normal startup and stable accessibility identifiers. They do not select a file
+or invoke pairing, installation or CloudKit controls. Native launch uses Apple's
+[XCUIAutomation application proxy](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication).
+
+On a Mac with Xcode and an available iOS 18+ simulator, run:
+
+```sh
+xcrun simctl list devices available
+# Set this to the UUID of an available iOS 18+ simulator from the output above.
+export LILA_IOS_SIMULATOR_ID='<simulator UUID>'
+xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-iOS -destination "platform=iOS Simulator,id=$LILA_IOS_SIMULATOR_ID" CODE_SIGNING_ALLOWED=NO test
+xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-macOS -destination 'platform=macOS' test
+swift test --package-path apple/CompanionKit
+```
+
+Set the development team for the Mac app and its UI-test runner as needed.
+Use a development library/account: normal app startup can resume previously
+enabled cloud synchronization. The test does not reset saved library data or
+credentials. Simulator runs use their own application container.
+
+Linux verification parses the Swift sources and OpenStep project, checks every
+object reference, both UI-test dependencies/configurations/source phases and
+scheme Test Actions, and parses the string catalogs. These checks pass, but do
+not typecheck Apple SDK APIs or execute UI automation. Neither native test
+command has run here. Navigation selectors, native launch/signing, Mac/iPad
+sidebar behavior and persistent-store initialization still require execution on
+Apple platforms. Import/share/drop, accessibility audits, Dynamic Type,
+keyboard/menu behavior, pairing, CloudKit and reader transfer UI tests remain
+required beyond this smoke test.
+
+The picker cases verify actual system UI rather than synthesizing callback
+results. SwiftUI documents that user cancellation dismisses the importer without
+calling its completion handler; see [fileImporter cancellation](https://developer.apple.com/documentation/swiftui/view/fileimporter%28ispresented%3Aallowedcontenttypes%3Aallowsmultipleselection%3Aoncompletion%3Aoncancellation%3A%29).
+Source syntax and project checks pass on Linux; system-picker hierarchy,
+Command-O routing and cancellation execution remain unverified until the native
+schemes run. No cancellation error workaround was added without runtime evidence.
+
+Course-transfer rejection now distinguishes reader capability. A switch-capable
+reader directs the user to refresh installed content, open the pack in Library,
+and confirm a course switch; refreshing is required because the failed transfer
+clears cached inventory. A reader without the complete switch capability set
+instead explains that compatible firmware is required. Both retain the current
+course and pending work. Native Swift syntax and English string-catalog checks
+pass; these error paths remain unverified in native UI/hardware execution.
+
+Bluetooth-only course jobs now also collect fresh authenticated inventory after
+successful transfer, before admitting the next queued job. Wi-Fi jobs already
+refresh during Bluetooth restoration. This makes subsequent compatibility checks
+use the newly installed course's item history. Collection or cancellation errors
+stop the queue while keeping durable completed/pending job state.
+
+The portable history regression demonstrates why this is required: the original
+pack is compatible with stale inventory naming itself, but is rejected as removing
+history when inventory names an installed extension. All 104 related portable
+Swift course/transfer/inventory/handoff/import tests pass; native app syntax and
+scoped diff checks pass. Native app typechecking and a physical queue with two
+successive course versions remain unverified. On hardware, install an extended
+course over Bluetooth, then try an earlier version in the same queue; verify the
+second job is rejected before transmission and the extended course/history remain
+installed. Repeat with compatible extensions and with interrupted inventory refresh.
+
+Commit-boundary cancellation has an additional portable regression: the reader
+applies commit, then cancellation prevents delivery of its acknowledgement.
+SQLite restart must retain the same job as committing at full durable length;
+retry recovers completed status without sending content bytes or commit again.
+All 105 selected portable transfer/handoff/inventory/course tests pass. This
+covers the runner's durable recovery boundary, not native scene scheduling or
+physical OS suspension. Explicit Pause still cancels the current task; it is not
+silently turned into permission to start fresh transfers or flash firmware.
+
+## Opportunistic foreground content resume
+
+When the scene becomes active, the app starts enabled CloudKit work and reader
+resume checks independently, so local work does not wait for a cloud connection. With an authenticated Bluetooth connection
+and a complete matching inventory, it resumes selected non-firmware content
+work for the same reader, SD generation, and Apple installation. Failed jobs are
+left for inspection. Retained EPUB removal jobs also resume when the connected
+reader advertises removal support and reader/card/installation match. Recovery
+uses the saved request and transaction ID before refreshing inventory; it does
+not create a new removal intent merely because the app entered the foreground.
+It rechecks connection ownership, busy states and the exact
+inventory snapshot after asynchronous store reads. The content-transfer button
+and action share an availability guard, including pending selection/library
+writes and a complete matching reader/card inventory. Firmware staging/installation
+still uses its explicit actions. If no upload work is eligible, the app resumes a retained reader import whose
+reader/card/installation and manifest match the current inventory. Missing
+filename metadata is fetched through the authenticated reader metadata command
+before downloading. It resumes the saved job ID after
+checking the full immutable job again; cancellation/deselection cannot implicitly
+create a replacement job. An import can resume even if another app has already
+provided its library metadata. Disconnected readers retain their existing
+reconnect/resume controls. A cancelled metadata task sends no request, leaves the
+saved job and filename binding unchanged, and permits a later retry.
+
+All 504 CompanionKit tests pass, including cancellation before metadata exchange; native
+source syntax also passes. Native foreground execution still needs Xcode/UI and
+physical verification: background/reactivate a paused content job; change cards
+or disconnect while store reads run; keep failed and firmware jobs from automatic
+execution; verify no overlapping transfer starts during library changes; and
+cancel/deselect an import during foreground checks to confirm no replacement
+job or new selection is created; and keep CloudKit offline while confirming
+local retained jobs can resume.
+
+## Font removal compatibility
+
+The installed-content removal action supports fonts only when the reader explicitly
+advertises font-removal capability bit 13. EPUB-only readers keep their existing
+EPUB controls and receive no font-removal command. The action, reconciliation and
+foreground recovery use the same capability check as the runner, retain saved
+request identities, and preserve the library copy. Font confirmation explains
+that removing an in-use font selects the built-in fallback. Current firmware
+source advertises this capability and routes multi-path removal and startup
+recovery; all five target builds/image checks pass, with physical acceptance
+still pending. Syntax/catalog checks and all 504 Kit tests pass, but Apple native
+build/UI and physical confirmation/recovery checks remain required.

@@ -8,8 +8,24 @@ namespace companion {
 // Output is a canonical body, including explicit deletion, and changes only on Ok.
 class BookmarkResolution final {
  public:
+  using Visitor = bool (*)(void*, const EventIdentity&, std::span<const uint8_t>);
   TintaJournalResult run(TintaJournal& journal, JournalIdentityIndex& index, JournalReplayVisits& marks,
                          const Digest& edition, const Identity& bookmark, std::span<uint8_t> output, size_t& length) {
+    return scan(journal, index, marks, edition, bookmark, output, length, nullptr, nullptr);
+  }
+  // Each body is borrowed only during the callback. Consumers discard partial
+  // results unless Ok and recheck authority before showing or applying choices.
+  TintaJournalResult visitHeads(TintaJournal& journal, JournalIdentityIndex& index, JournalReplayVisits& marks,
+                                const Digest& edition, const Identity& bookmark, Visitor visitor, void* context) {
+    if (!visitor) return TintaJournalResult::Invalid;
+    size_t ignored = 0;
+    return scan(journal, index, marks, edition, bookmark, selected, ignored, visitor, context);
+  }
+
+ private:
+  TintaJournalResult scan(TintaJournal& journal, JournalIdentityIndex& index, JournalReplayVisits& marks,
+                          const Digest& edition, const Identity& bookmark, std::span<uint8_t> output, size_t& length,
+                          Visitor visitor, void* context) {
     if (!journal.available()) return TintaJournalResult::Unavailable;
     if (!tinta_body_detail::nonzero(edition) || !tinta_body_detail::nonzero(bookmark) ||
         output.size() < MAX_BOOKMARK_BODY_SIZE)
@@ -36,6 +52,7 @@ class BookmarkResolution final {
       }
       if (matching && !marked) {
         const auto body = journal.body();
+        if (visitor && !visitor(context, event.identity, body)) return TintaJournalResult::IoError;
         if (!selectedLength) {
           selectedLength = body.size();
           std::copy(body.begin(), body.end(), selected.begin());
@@ -57,14 +74,15 @@ class BookmarkResolution final {
       }
       if (journal.count() != count) return TintaJournalResult::Conflict;
     }
-    if (conflict) return TintaJournalResult::Conflict;
+    if (conflict && !visitor) return TintaJournalResult::Conflict;
     if (!selectedLength) return TintaJournalResult::Unavailable;
-    std::copy_n(selected.begin(), selectedLength, output.begin());
-    length = selectedLength;
+    if (!visitor) {
+      std::copy_n(selected.begin(), selectedLength, output.begin());
+      length = selectedLength;
+    }
     return TintaJournalResult::Ok;
   }
 
- private:
   static TintaJournalResult markParent(JournalIdentityIndex& index, JournalReplayVisits& marks,
                                        const EventIdentity& identity, uint32_t child) {
     uint32_t record = 0;

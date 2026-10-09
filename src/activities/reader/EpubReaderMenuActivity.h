@@ -56,6 +56,7 @@ class EpubReaderMenuActivity final : public UiListActivity {
     bool hasFootnotes = false;
     int footnoteCount = 0;
     int bookmarkCount = 0;
+    bool bookmarksNeedAttention = false;
     bool pageBookmarked = false;
     bool canSync = false;
   };

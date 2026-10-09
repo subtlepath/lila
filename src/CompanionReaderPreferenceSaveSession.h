@@ -12,12 +12,18 @@ class NativeReaderPreferenceSaveSession final {
   NativeReaderPreferenceSaveSession(const SdCardFontRegistry& registry, std::span<uint8_t> scratch)
       : content(registry, scratch), capture(writer.mutations()) {}
   TintaJournalResult persist(const ReaderPreferenceValues& baseline, const ReaderPreferenceValues& candidate,
-                             IdentityStorage& identities) {
+                             IdentityStorage& identities, uint16_t contentChanges = 0) {
     if (!capture.initialize(baseline)) return failure("capture initialization");
-    const auto prepared = capture.prepare(candidate, &encode, &content.contentMetadata());
+    const auto prepared = capture.prepare(candidate, &encode, &content.contentMetadata(), contentChanges);
     if (prepared != TintaJournalResult::Ok || !capture.preparedChanges()) return prepared;
+    const auto refreshKeys =
+        static_cast<uint16_t>(contentChanges & ~ReaderPreferenceChangeCapture::changedKeys(baseline, candidate));
     auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
-    if (!audit || !audit->run()) return failure("authority audit");
+    if (!audit || !audit->run(refreshKeys ? &contentFrontier : nullptr)) return failure("authority audit");
+    if (refreshKeys) {
+      const auto filtered = deduplicateContent(*audit, refreshKeys);
+      if (filtered != TintaJournalResult::Ok || !capture.preparedChanges()) return filtered;
+    }
     return commitPrepared(*audit, identities);
   }
   TintaJournalResult importMissing(const ReaderPreferenceValues& values, IdentityStorage& identities) {
@@ -47,6 +53,29 @@ class NativeReaderPreferenceSaveSession final {
   bool requiresRecovery() const { return recovery; }
 
  private:
+  TintaJournalResult deduplicateContent(HalJournalCausalAuditSession& audit, uint16_t mask) {
+    const auto count = audit.recordCount();
+    const auto recordSize = audit.recordSize();
+    {
+      auto resolution = makeUniqueNoThrow<PortablePreferenceResolution>();
+      if (!resolution) return failure("OOM: content refresh resolution");
+      const auto resolved = audit.resolvePortablePreferences(*resolution);
+      if (resolved != TintaJournalResult::Ok && resolved != TintaJournalResult::Conflict)
+        return failure("content refresh authority resolution");
+      for (uint8_t key = 1; key <= 14; ++key) {
+        if (!(mask & (uint16_t{1} << (key - 1)))) continue;
+        const auto proposed = capture.preparedBody(key);
+        const auto current = resolution->readerBody(key);
+        if (!current.empty() && current.size() == proposed.size() &&
+            std::equal(current.begin(), current.end(), proposed.begin()) && !capture.omitPreparedKey(key))
+          return failure("content refresh prepared key");
+      }
+    }
+    if (!audit.run(&contentRechecked)) return failure("content refresh authority recheck");
+    if (contentFrontier != contentRechecked || audit.recordCount() != count || audit.recordSize() != recordSize)
+      return TintaJournalResult::Conflict;
+    return TintaJournalResult::Ok;
+  }
   TintaJournalResult commitPrepared(HalJournalCausalAuditSession& audit, IdentityStorage& identities) {
     const auto started = writer.start(identities);
     if (started != TintaJournalResult::Ok) return failure("identity/writer start");
@@ -71,6 +100,7 @@ class NativeReaderPreferenceSaveSession final {
   NativeReaderPreferenceContentPhase content;
   HalTintaWriterSession writer;
   ReaderPreferenceChangeCapture capture;
+  Digest contentFrontier{}, contentRechecked{};
   bool recovery = false;
 };
 }  // namespace companion

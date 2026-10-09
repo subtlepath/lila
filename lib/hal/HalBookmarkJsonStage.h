@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompanionBookmarkJsonWriter.h"
+#include "HalBookmarkPublicationRecord.h"
 #include "HalVerifiedFileStage.h"
 
 namespace companion {
@@ -10,7 +11,12 @@ class HalBookmarkJsonStage final : private BookmarkJsonSink {
  public:
   static constexpr char PATH[] = "/.crosspoint/companion/bookmark-json-next";
   static constexpr uint64_t MAX_BYTES_PER_BOOKMARK = 4096;
-  explicit HalBookmarkJsonStage(std::span<uint8_t> scratch) : stage(scratch), writer(*this) {}
+  explicit HalBookmarkJsonStage(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                void* context = nullptr)
+      : stage(scratch, guard, context, TRANSFER_DIRECTORY, guard, context),
+        writer(*this),
+        guard(guard),
+        context(context) {}
   ~HalBookmarkJsonStage() override { cleanup(); }
   HalBookmarkJsonStage(const HalBookmarkJsonStage&) = delete;
   HalBookmarkJsonStage& operator=(const HalBookmarkJsonStage&) = delete;
@@ -39,11 +45,32 @@ class HalBookmarkJsonStage final : private BookmarkJsonSink {
   bool isSealed() const { return !failed && sealedOwned && stage.isSealed(); }
   uint64_t bytesWritten() const { return offset; }
   const Digest& contentHash() const { return stage.contentHash(); }
+  // The verified durable intent takes responsibility for this exact candidate.
+  bool retainForPublication(HalBookmarkPublicationRecord& records, const char* intentPath,
+                            const BookmarkPublicationClaim& claim) {
+    if (!isSealed() || claim.candidateLength != offset || claim.candidateHash != stage.contentHash() ||
+        records.inspect(intentPath, claim) != BookmarkPublicationRecord::Matches)
+      return failure("JSON publication ownership");
+    sealedOwned = false;
+    failed = true;
+    return true;
+  }
+  // Starting a durable intent write makes ownership uncertain on any I/O error.
+  // Recovery retains the candidate even when persistence acknowledgement is lost.
+  bool persistPublicationIntent(BookmarkPublicationStorage& storage, const BookmarkPublicationClaim& claim) {
+    if (!isSealed() || !validBookmarkPublicationClaim(claim) || claim.candidateLength != offset ||
+        claim.candidateHash != stage.contentHash())
+      return failure("JSON intent descriptor");
+    sealedOwned = false;
+    failed = true;
+    return storage.persistIntent(claim);
+  }
   bool cleanup() {
     failed = true;
     writing = false;
     if (!stage.cleanup()) return failure("JSON writer cleanup");
     if (sealedOwned) {
+      if (guard && !guard(context)) return failure("cleanup authority");
       if (!Storage.ready() || !Storage.remove(PATH)) return failure("JSON candidate cleanup");
       sealedOwned = false;
     }
@@ -63,6 +90,8 @@ class HalBookmarkJsonStage final : private BookmarkJsonSink {
   }
   HalVerifiedFileStage stage;
   BookmarkJsonWriter writer;
+  InventoryHashProgress guard;
+  void* context;
   uint64_t offset = 0;
   uint32_t expected = 0, records = 0;
   bool used = false, failed = true, writing = false, sealedOwned = false;

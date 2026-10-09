@@ -7,7 +7,7 @@ public enum ProtocolError: Error, Equatable, Sendable {
 public enum Command: UInt8, CaseIterable, Sendable {
     case discover = 1, inventory, exchangeChanges, beginTransfer, transferChunk
     case transferStatus, commit, abort, wifiHandoff, installFirmware, error
-    case registerInstallation, authenticateInstallation, journalFormats, removeContent
+    case registerInstallation, authenticateInstallation, journalFormats, removeContent, readContent, contentMetadata, prepareContentHandoff
 }
 
 public struct ControlFrame: Equatable, Sendable {

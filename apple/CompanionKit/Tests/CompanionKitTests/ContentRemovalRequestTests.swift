@@ -117,4 +117,20 @@ final class ContentRemovalRequestTests: XCTestCase {
         XCTAssertEqual(ReaderCapabilities.epubRemovals.rawValue, 256)
     }
 
+    func testFontFormatsMatchInstalledVectorAndBitmapManifests() throws {
+        let source = try ContentRemovalRequest(decoding: fixture())
+        for format: UInt32 in 0...5 {
+            let manifest = try ContentManifest(content: source.manifest.content, kind: .font,
+                length: source.manifest.length, formatVersion: format, logicalIdentity: Data(count: 16))
+            if format == 1 || format == 4 {
+                let request = try ContentRemovalRequest(transaction: source.transaction, owner: source.owner,
+                    generation: source.generation, manifest: manifest)
+                XCTAssertEqual(try ContentRemovalRequest(decoding: request.encoded), request)
+            } else {
+                XCTAssertThrowsError(try ContentRemovalRequest(transaction: source.transaction, owner: source.owner,
+                    generation: source.generation, manifest: manifest))
+            }
+        }
+    }
+
 }

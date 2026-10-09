@@ -2,6 +2,7 @@
 
 #include "HalEpubRemovalBackend.h"
 #include "HalEpubRemovalCohortParticipant.h"
+#include "HalRemovalParticipantRouter.h"
 
 namespace companion {
 // Allocate this retained session with makeUniqueNoThrow: its fixed buffers and
@@ -11,7 +12,8 @@ class HalEpubRemovalSession final {
   HalEpubRemovalSession(const Identity& generation, InventoryPaths& paths, const uint64_t& revision,
                         uint64_t maximumPlanBytes, HalEpubRemovalBackend::Callback permitted,
                         HalEpubRemovalBackend::Callback refresh, void* context,
-                        HalEpubRemovalAdmission::InventoryReady inventoryReady = nullptr)
+                        HalEpubRemovalAdmission::InventoryReady inventoryReady = nullptr,
+                        FontRemovalSettings* fontSettings = nullptr)
       : generation(generation),
         journal(storage, journalBytes),
         completions(completionBytes),
@@ -19,7 +21,8 @@ class HalEpubRemovalSession final {
         collection(paths, writer),
         references(journal, declarationBytes, io),
         cohort(journal, plans, references, io),
-        transactions(generation, journal, storage, completions, cohort, releaseBytes),
+        participants(cohort, journal, plans, io, fontSettings),
+        transactions(generation, journal, storage, completions, participants, releaseBytes),
         admission(generation, journal, collection, writer, plans, inventoryReady, context),
         backend(admission, transactions, revision, permitted, refresh, context),
         handler(backend) {}
@@ -44,6 +47,7 @@ class HalEpubRemovalSession final {
   HalMultiPathRemovalPlanStorage plans;
   HalEpubRemovalReferences references;
   HalEpubRemovalCohortParticipant cohort;
+  HalRemovalParticipantRouter participants;
   HalContentRemovalTransactions transactions;
   HalEpubRemovalAdmission admission;
   HalEpubRemovalBackend backend;

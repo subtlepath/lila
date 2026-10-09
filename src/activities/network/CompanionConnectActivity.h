@@ -9,6 +9,7 @@
 #include <HalCompanionBluetooth.h>
 #include <HalCompanionWifiRadio.h>
 #include <HalCompanionWifiSession.h>
+#include <HalContentReadNativeOwner.h>
 #include <HalEpubRemovalNativeOwner.h>
 #include <HalIdentityStorage.h>
 #include <HalInventoryIndexStorage.h>
@@ -21,6 +22,7 @@
 #include <memory>
 #include <optional>
 
+#include "CompanionFontRemovalSettings.h"
 #include "activities/Activity.h"
 
 namespace companion {
@@ -65,21 +67,28 @@ class CompanionConnectActivity final : public Activity {
   bool prepareInventory();
   bool refreshAfterRemoval();
   bool removalPermitted() const;
+  bool contentReadPermitted() const;
   size_t removalReply(bool authorized, const companion::Identity& owner, std::span<const uint8_t> request,
                       std::span<uint8_t> reply);
+  size_t contentMetadataReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+  size_t contentReadReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+  size_t contentHandoffReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+  bool closeContentReaders();
   bool freshFirmwareInfo(companion::FirmwareReaderInfo& output);
   size_t firmwareInstallReply(std::span<const uint8_t> request, std::span<uint8_t> reply);
   void performFirmwareInstallation();
   size_t firmwareInfoReply(std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t journalExportReply(std::span<const uint8_t> request, std::span<uint8_t> reply);
   void resetJournalExport();
-  void resetJournalSessions();
+  void resetJournalSessions(bool preserveExport = false);
   size_t journalExchangeReply(std::span<const uint8_t> request, const companion::Identity& owner,
                               std::span<uint8_t> reply);
   size_t legacyBackupReply(std::span<const uint8_t> request, std::span<uint8_t> reply);
 
   std::unique_ptr<uint8_t[]> workspace;
+  CompanionFontRemovalSettings fontRemovalSettings;
   std::unique_ptr<companion::HalEpubRemovalNativeOwner> removalOwner;
+  std::unique_ptr<companion::HalContentReadNativeOwner> contentReader;
   bool removalActive = false;
   companion::HalIdentityStorage identityStorage;
   companion::IdentityState identity;
@@ -96,6 +105,7 @@ class CompanionConnectActivity final : public Activity {
   companion::HalPairingsStorage pairingsStorage;
   companion::Pairings pairings{pairingsStorage};
   companion::Identity installation{};
+  companion::Identity exportTransaction{};
   uint64_t installationSession = 0;
   bool pairingsAvailable = false;
   HalCompanionBluetooth bluetooth;

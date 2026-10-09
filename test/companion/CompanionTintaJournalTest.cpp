@@ -3701,6 +3701,9 @@ TEST(CompanionTintaJournalTest, PortableMarginResolutionRetainsConcurrencyUntilC
   EXPECT_EQ(missing, 0x1234);
   EXPECT_EQ(resolution.conflictMask(), 1U << 7);
   EXPECT_TRUE(resolution.bodies().empty());
+  EXPECT_TRUE(resolution.readerBody(8).empty());
+  EXPECT_TRUE(resolution.readerBody(0).empty());
+  EXPECT_TRUE(resolution.readerBody(15).empty());
   event.identity.origin.fill(8);
   event.ancestorCount = 2;
   event.ancestors[0] = index.ids[0];
@@ -4808,6 +4811,31 @@ TEST(CompanionBookmarkResolution, ConcurrentPutAndDeleteRequireChoiceAndJoinedDe
             TintaJournalResult::Conflict);
   EXPECT_EQ(output, untouched);
   EXPECT_EQ(length, 99u);
+  struct Choices {
+    std::vector<EventIdentity> sources;
+    std::vector<bool> deleted;
+  } choices;
+  choices.sources.reserve(4);
+  choices.deleted.reserve(4);
+  const auto visit = +[](void* raw, const EventIdentity& source, std::span<const uint8_t> body) {
+    auto& choices = *static_cast<Choices*>(raw);
+    BookmarkBodyView decoded;
+    if (!decodeBookmarkBody(body, decoded)) return false;
+    choices.sources.push_back(source);
+    choices.deleted.push_back(decoded.deleted);
+    return true;
+  };
+  ASSERT_EQ(resolution.visitHeads(f.journal, index, visits, f.event.resource, bookmark.identity, visit, &choices),
+            TintaJournalResult::Ok);
+  ASSERT_EQ(choices.sources.size(), 2u);
+  EXPECT_EQ(choices.sources[0].origin[0], 2u);
+  EXPECT_EQ(choices.sources[1].origin[0], 1u);
+  EXPECT_TRUE(choices.deleted[0]);
+  EXPECT_FALSE(choices.deleted[1]);
+  EXPECT_EQ(resolution.visitHeads(
+                f.journal, index, visits, f.event.resource, bookmark.identity,
+                +[](void*, const EventIdentity&, std::span<const uint8_t>) { return false; }, nullptr),
+            TintaJournalResult::IoError);
   Identity other{};
   other[0] = 9;
   EXPECT_EQ(resolution.run(f.journal, index, visits, f.event.resource, other, output, length),
@@ -4829,4 +4857,11 @@ TEST(CompanionBookmarkResolution, ConcurrentPutAndDeleteRequireChoiceAndJoinedDe
   ASSERT_TRUE(decodeBookmarkBody(std::span(output).first(length), decoded));
   EXPECT_TRUE(decoded.deleted);
   EXPECT_EQ(decoded.identity, bookmark.identity);
+  choices.sources.clear();
+  choices.deleted.clear();
+  ASSERT_EQ(resolution.visitHeads(f.journal, index, visits, f.event.resource, bookmark.identity, visit, &choices),
+            TintaJournalResult::Ok);
+  ASSERT_EQ(choices.sources.size(), 1u);
+  EXPECT_EQ(choices.sources[0], index.ids.back());
+  EXPECT_TRUE(choices.deleted[0]);
 }

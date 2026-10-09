@@ -4,6 +4,7 @@
 #include <Logging.h>
 #include <Memory.h>
 #include <SDCardManager.h>
+#include <common/upcase.h>
 #ifndef LILA_SDFAT_DIRECTORY_ERRORS
 #error "SdFat directory-error patch must run before compiling HalStorage"
 #endif
@@ -32,6 +33,11 @@ HalStorage::HalStorage() {
   // recursive mutexes.
   storageMutex = xSemaphoreCreateRecursiveMutex();
   assert(storageMutex != nullptr);
+}
+
+uint32_t HalStorage::foldFilenameCodepoint(uint32_t codepoint) {
+  // SdFat compares supplementary scalars as unchanged UTF-16 surrogate pairs.
+  return codepoint <= 0xffff ? toUpcase(static_cast<uint16_t>(codepoint)) : codepoint;
 }
 
 // begin() and ready() are only called from setup, no need to acquire mutex for them

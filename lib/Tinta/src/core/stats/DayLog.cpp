@@ -107,6 +107,15 @@ bool DayLog::add(DayNumber day, const DayTotals& delta) {
   return true;
 }
 
+bool DayLog::addChecked(DayNumber day, const DayTotals& delta) {
+  if (uncertainWrite_) return false;
+  if (add(day, delta)) return true;
+  uncertainDelta_ = delta;
+  uncertainDay_ = day;
+  uncertainWrite_ = true;
+  return false;
+}
+
 bool DayLog::totals(DayNumber day, DayTotals& out) {
   out = DayTotals();
   return forEach([&](DayNumber d, const DayTotals& t) {

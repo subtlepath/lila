@@ -120,6 +120,55 @@ void testTornAndForeign() {
   CHECK(!log.add(13, session(1, 1, 0, 1)));
 }
 
+void testCheckedUncertainTotals() {
+  class LostAckStore : public MemStore {
+   public:
+    bool loseAck = false;
+    bool write(const char* path, uint32_t at, const void* data, uint32_t len) override {
+      const bool saved = MemStore::write(path, at, data, len);
+      return saved && !loseAck;
+    }
+  } store;
+  DayLog log(store);
+  CHECK(log.addChecked(100, session(2, 1, 1, 10)));
+  store.loseAck = true;
+  const DayTotals delta = session(3, 2, 0, 20);
+  CHECK(!log.addChecked(100, delta));
+  CHECK(log.hasUncertainWrite());
+  CHECK_EQ(log.uncertainDay(), 100);
+  CHECK_EQ(log.uncertainDelta().reviews, 3);
+  CHECK_EQ(log.uncertainDelta().seconds, 20);
+  DayTotals total;
+  CHECK(log.totals(100, total));
+  CHECK_EQ(total.reviews, 5);
+  const auto committed = store.files;
+  const int calls = store.calls;
+  store.loseAck = false;
+  CHECK(!log.addChecked(100, delta));
+  CHECK(!log.addChecked(101, session(7, 6, 0, 30)));
+  CHECK(store.files == committed);
+  CHECK_EQ(store.calls, calls);
+  CHECK_EQ(log.uncertainDay(), 100);
+
+  MemStore cut;
+  DayLog split(cut);
+  CHECK(split.addChecked(1, session(1, 1, 0, 1)));
+  cut.cutAt(cut.calls + 1, MemStore::Tear::Prefix);
+  const DayTotals large = session(70000, 65000, 2, 100000);
+  CHECK(!split.addChecked(2, large));
+  CHECK(split.hasUncertainWrite());
+  CHECK_EQ(split.uncertainDelta().reviews, 70000);
+  CHECK_EQ(split.uncertainDelta().seconds, 100000);
+  cut.powerOn();
+  const auto partial = cut.files;
+  const int partialCalls = cut.calls;
+  CHECK(!split.addChecked(2, large));
+  CHECK(cut.files == partial);
+  CHECK_EQ(cut.calls, partialCalls);
+  CHECK(split.totals(2, total));
+  CHECK_EQ(total.reviews, 65535);
+}
+
 void testGuest() {
   MemStore store;
   store.present = false;
@@ -233,6 +282,7 @@ void testCardDropsOut() {
 }  // namespace
 
 int main() {
+  testCheckedUncertainTotals();
   testTotals();
   testTornAndForeign();
   testGuest();

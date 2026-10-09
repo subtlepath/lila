@@ -34,10 +34,14 @@ class HalTintaIncrementalRecovery final {
     auto retention = makeUniqueNoThrow<HalTintaAuthorityRetention>();
     if (!retention) return failure("OOM: authority retention workspace");
     if (frontier == previousFrontier) {
+      const auto verified = reader.verifyGeneration(previous);
+      if (verified == TintaDerivedVerification::IoError) return failure("baseline file verification");
       if (!retention->establish(previousBytes, course, generation, pack, catalog))
         return failure("baseline checkpoint");
-      ready = true;
-      return TintaIncrementalRecoveryResult::Unchanged;
+      if (verified == TintaDerivedVerification::Verified) {
+        ready = true;
+        return TintaIncrementalRecoveryResult::Unchanged;
+      }
     }
     if (!retention->prove(previousBytes, course, generation, pack, catalog, frontier) ||
         (proveRetention && !proveRetention(retentionContext, previous, frontier)))

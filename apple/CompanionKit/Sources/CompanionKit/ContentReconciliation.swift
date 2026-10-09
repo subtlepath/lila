@@ -28,7 +28,7 @@ public struct ContentManifest: Equatable, Sendable {
         logicalIdentity = try reader.take(16)
     }
 }
-public struct ReaderInventory: Sendable {
+public struct ReaderInventory: Equatable, Sendable {
     public let reader: Data
     public let generation: Data
     public let contents: [ContentManifest]

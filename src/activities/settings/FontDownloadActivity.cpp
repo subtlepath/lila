@@ -693,22 +693,29 @@ void FontDownloadActivity::onDeleteConfirmationResult(const ActivityResult& resu
     requestUpdate();
     return;
   }
+  deleteFamily(familyIndex);
+}
+
+void FontDownloadActivity::deleteFamily(const int familyIndex) {
+  if (familyIndex < 0 || familyIndex >= static_cast<int>(families_.size())) return;
   auto& family = families_[familyIndex];
-
-  if (fontInstaller_.deleteFamily(str(family.name)) != FontInstaller::Error::OK) {
+  const auto result = fontInstaller_.deleteFamily(str(family.name));
+  sdFontSystem.markRegistryDirty();
+  fontInstaller_.refreshRegistry();
+  {
     RenderLock lock(*this);
-    state_ = ERROR;
-    errorMessage_ = "Failed to delete font";
-  } else {
-    fontInstaller_.refreshRegistry();
-    family.installed = false;
-    family.hasUpdate = false;
-    // Unlike the other family_ mutations, this one stays in FAMILY_LIST (no
-    // state_ transition to hang the rebuild off), so it must set the flag
-    // directly.
+    family.installed = fontInstaller_.isFamilyInstalled(str(family.name));
     rowsDirty_ = true;
+    if (result != FontInstaller::Error::OK) {
+      deletingFamilyIndex_ = familyIndex;
+      state_ = ERROR;
+      errorMessage_.clear();
+    } else {
+      deletingFamilyIndex_ = -1;
+      state_ = FAMILY_LIST;
+      family.hasUpdate = false;
+    }
   }
-
   requestUpdate();
 }
 
@@ -872,10 +879,15 @@ bool FontDownloadActivity::handleCustomInput() {
       {
         RenderLock lock(*this);
         state_ = FAMILY_LIST;
+        deletingFamilyIndex_ = -1;
         rowsDirty_ = true;  // the failed download reset installed/hasUpdate
       }
       requestUpdate();
     } else if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+      if (deletingFamilyIndex_ >= 0) {
+        deleteFamily(deletingFamilyIndex_);
+        return true;
+      }
       if (downloadingFamilyIndex_ >= 0 && downloadingFamilyIndex_ < static_cast<int>(families_.size())) {
         downloadFamily(families_[downloadingFamilyIndex_]);
         requestUpdateAndWait();
@@ -892,6 +904,10 @@ bool FontDownloadActivity::handleCustomInput() {
       int x = 0;
       int y = 0;
       if (mappedInput.wasScreenTapped(x, y)) {
+        if (deletingFamilyIndex_ >= 0) {
+          deleteFamily(deletingFamilyIndex_);
+          return true;
+        }
         if (downloadingFamilyIndex_ >= 0 && downloadingFamilyIndex_ < static_cast<int>(families_.size())) {
           downloadFamily(families_[downloadingFamilyIndex_]);
           requestUpdateAndWait();
@@ -987,8 +1003,9 @@ void FontDownloadActivity::render(RenderLock&&) {
     const auto labels = mappedInput.mapLabels(tr(STR_BACK), "", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
   } else if (state_ == ERROR) {
-    renderer.drawCenteredText(UI_10_FONT_ID, centerY - lineHeight, tr(STR_FONT_INSTALL_FAILED), true,
-                              EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_10_FONT_ID, centerY - lineHeight,
+                              deletingFamilyIndex_ >= 0 ? tr(STR_FONT_DELETE_FAILED) : tr(STR_FONT_INSTALL_FAILED),
+                              true, EpdFontFamily::BOLD);
     if (!errorMessage_.empty()) {
       renderer.drawCenteredText(UI_10_FONT_ID, centerY + metrics.verticalSpacing, errorMessage_.c_str());
     }

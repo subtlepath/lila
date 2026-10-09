@@ -8,7 +8,9 @@ namespace companion {
 // Consumers stage results only until next() returns End, then recheck authority.
 class NativeBookmarkIdentityEnumeration final {
  public:
-  explicit NativeBookmarkIdentityEnumeration(std::span<uint8_t> scratch) : stage(scratch) {}
+  explicit NativeBookmarkIdentityEnumeration(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                             void* context = nullptr)
+      : stage(scratch, guard, context) {}
   TintaJournalResult prepare(const Digest& edition) {
     if (used) return TintaJournalResult::Unavailable;
     used = true;

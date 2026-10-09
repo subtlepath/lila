@@ -139,7 +139,7 @@ bool App::open(const uint8_t* courseIdentity) {
   log("profile %s", kLoadNames[static_cast<uint8_t>(loaded)]);
   firstRun_ = loaded == core::Profile::LoadResult::Defaults;
   // A corrupt file is left alone until the learner changes a setting.
-  profileDirty_ = loaded == core::Profile::LoadResult::Upgraded;
+  profileSave_ = core::PendingSave(loaded == core::Profile::LoadResult::Upgraded);
   // Settings > Study > Record usage arrives with its profile field; on until then.
   usage_.open(true);
 
@@ -255,7 +255,7 @@ bool App::drawSleepCard() {
   log("sleep word %s%s", pack_.str(lemma.es), word.learnt ? "" : " (new)");
   // Saved by close().
   ++profile_.sleepCount;
-  profileDirty_ = true;
+  profileSave_.mark();
   return true;
 }
 
@@ -276,7 +276,7 @@ void App::beginTimeStep(const ScreenId* then, const uint8_t count) {
 void App::finishTimeStep() {
   if (clock_.hasTimeOfDay() && clock_.today() != profile_.lastConfirmedDay) {
     profile_.lastConfirmedDay = clock_.today();
-    profileDirty_ = true;
+    profileSave_.mark();
   }
   clock_.pollDayChange();
   // The review session can only come back once the day is known.
@@ -570,7 +570,7 @@ void App::profileChanged() {
   session_.countsChanged();
   ui_->setTransitionFullEvery(profile_.fullRefreshEvery);
   clock_.setRolloverHour(profile_.rolloverHour);
-  profileDirty_ = true;
+  profileSave_.mark();
   invalidate();
 }
 
@@ -851,7 +851,7 @@ void App::pollPeriodic() {
     session_.countsChanged();
     if (clock_.hasTimeOfDay()) {
       profile_.lastConfirmedDay = clock_.today();
-      profileDirty_ = true;
+      profileSave_.mark();
     }
     invalidate();
   }
@@ -865,30 +865,31 @@ void App::pollPeriodic() {
   }
 }
 
-void App::saveIfDirty() {
-  if (!profileDirty_) return;
-  profileDirty_ = false;
-  if (!storage_.available()) return;
-  if (profileAuthorityFailed_) {
-    log("profile save blocked: authority recovery required");
-    return;
-  }
-  if (profileJournal_.persist && !profileJournal_.persist(profileJournal_.context, profile_)) {
+bool App::saveIfDirty(bool force) {
+  if (profileAuthorityFailed_) return false;
+  if (!profileSave_.pending()) return true;
+  if (!force && !profileSave_.due(millis())) return false;
+  bool saved = false;
+  if (!storage_.available()) {
+    log("profile save blocked: storage unavailable");
+  } else if (profileJournal_.persist && !profileJournal_.persist(profileJournal_.context, profile_)) {
     profileAuthorityFailed_ = true;
     log("profile save blocked: authoritative journal failed");
-    return;
-  }
-  if (profile_.save(storage_)) {
-    log("profile saved");
   } else {
-    log("profile save failed");
+    saved = profile_.save(storage_);
+    log(saved ? "profile saved" : "profile save failed");
   }
+  profileSave_.complete(millis(), saved);
+  return saved;
 }
 
 // ── Sleep ────────────────────────────────────────────────────────────────────
 
-void App::saveSession() {
-  if (!storage_.available()) return;
+bool App::saveSession() {
+  if (!storage_.available()) {
+    log("session save blocked: storage unavailable");
+    return false;
+  }
   uint8_t* b = sessionFile_;
   uint8_t depth = 0;
   uint32_t sessionLength = 0;
@@ -923,7 +924,11 @@ void App::saveSession() {
   // In place, not through a temporary file: this runs after every grade, and
   // a torn write only fails the CRC, which loses no more than the session's
   // place (the grades are in the journal).
-  if (!storage_.write(kSessionFile, 0, b, covered + 4)) log("session.bin not written");
+  if (!storage_.write(kSessionFile, 0, b, covered + 4)) {
+    log("session.bin not written");
+    return false;
+  }
+  return true;
 }
 
 uint8_t App::loadResumeStack(ScreenId* out, const uint8_t cap) {
@@ -948,12 +953,14 @@ uint8_t App::loadResumeStack(ScreenId* out, const uint8_t cap) {
   return depth;
 }
 
-void App::flush() {
-  session_.setAside();
-  saveSession();
-  saveIfDirty();
+bool App::flush() {
+  const bool totalsSaved = session_.setAside();
+  const bool sessionSaved = saveSession();
+  const bool profileSaved = saveIfDirty(true);
   usage_.flush();
-  log("flushed");
+  const bool saved = totalsSaved && sessionSaved && profileSaved;
+  log(saved ? "flushed" : "flush failed");
+  return saved;
 }
 
 void App::invalidateWindow(const freeink::ui::Rect rect) {

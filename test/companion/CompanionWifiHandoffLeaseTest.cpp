@@ -216,3 +216,35 @@ TEST(CompanionWifiHandoffLeaseTest, JournalLeaseRequiresBoundDeclarationAndIncom
   EXPECT_EQ(fixture.lease.consume(1000, {&sink, Sink::accept}), WifiHandoffLeaseResult::Ok);
   EXPECT_EQ(sink.calls, 1u);
 }
+
+TEST(CompanionWifiHandoffLeaseTest, ExportRequiresVerifiedBindingAndUsesAuthenticatedActivation) {
+  Fixture fixture;
+  ContentExportBinding binding;
+  ContentHandoffRequest admission;
+  admission.transaction = fixture.source.offer.transaction;
+  admission.read.generation = fixture.source.offer.storageGeneration;
+  admission.read.manifest.contentHash.fill(7);
+  admission.read.manifest.length = 2 * 1024 * 1024;
+  admission.read.manifest.formatVersion = 1;
+  admission.read.maximumBytes = 1;
+  const auto prepare = [&](uint64_t revision = 9, uint64_t token = 7) {
+    return fixture.lease.prepareExport(fixture.source, fixture.request, binding, revision, fixture.source.offer.reader,
+                                       fixture.source.offer.storageGeneration, fixture.source.offer.installation, token,
+                                       1000);
+  };
+  EXPECT_EQ(prepare(), WifiHandoffLeaseResult::Invalid);
+  ASSERT_EQ(binding.admit(admission, true, fixture.source.offer.installation, fixture.source.offer.storageGeneration, 9,
+                          ContentReadResult::Ok),
+            ContentReadResult::Ok);
+  EXPECT_EQ(prepare(9, 0), WifiHandoffLeaseResult::Unauthorized);
+  EXPECT_EQ(prepare(8), WifiHandoffLeaseResult::Invalid);
+  ASSERT_EQ(prepare(), WifiHandoffLeaseResult::Ok);
+  EXPECT_EQ(fixture.apply(fixture.command(), 8), WifiHandoffLeaseResult::Unauthorized);
+  ASSERT_EQ(fixture.apply(fixture.command()), WifiHandoffLeaseResult::Ok);
+  Sink sink{&fixture.lease};
+  EXPECT_EQ(fixture.lease.consume(1000, {&sink, Sink::accept}), WifiHandoffLeaseResult::Ok);
+  EXPECT_EQ(sink.calls, 1U);
+  EXPECT_EQ(fixture.lease.phase(), WifiHandoffLeasePhase::Empty);
+  ASSERT_EQ(prepare(), WifiHandoffLeaseResult::Ok);
+  EXPECT_EQ(fixture.apply(fixture.command(), 7, 31000), WifiHandoffLeaseResult::Expired);
+}

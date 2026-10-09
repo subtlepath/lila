@@ -22,6 +22,7 @@
 #include <limits>
 
 #include "../../util/BookmarkFile.h"
+#include "../../util/BookmarkPageMatch.h"
 #include "BookmarkEntry.h"
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
@@ -100,7 +101,8 @@ ProgressRange getPageProgressRange(const std::shared_ptr<Epub>& epub, const int 
 }
 
 bool bookmarkMatchesProgress(const BookmarkEntry& bookmark, const int spineIndex, const int page, const int pageCount,
-                             const ProgressRange& pageRange) {
+                             const ProgressRange& pageRange, const BookmarkTextPageRange& textRange) {
+  if (bookmark.hasVisibleTextOffset) return bookmarkMatchesTextPage(bookmark, spineIndex, textRange);
   if (bookmark.computedSpineIndex == spineIndex && bookmark.computedChapterPageCount == pageCount &&
       bookmark.computedChapterProgress == page) {
     return true;
@@ -165,9 +167,8 @@ EpubReaderActivity::~EpubReaderActivity() {
 
   // Leaving from inside a note (Home, sleep, another book) saves the passage
   // the first note was followed from, not the note.
-  if (footnoteDepth > 0 && epub) {
-    const SavedPosition& origin = savedPositions[0];
-    EpubReaderUtils::saveProgress(*epub, origin.spineIndex, origin.pageNumber, origin.pageCount, origin.textOffset);
+  if (epub && !flushProgressBeforeLeaving()) {
+    LOG_ERR("ERS", "Failed to flush final reading progress");
   }
 
   section.reset();
@@ -388,6 +389,13 @@ void EpubReaderActivity::loop() {
     return;
   }
 
+  if (progressSavePending.load(std::memory_order_acquire) &&
+      static_cast<uint32_t>(millis()) - progressAttemptMs.load(std::memory_order_relaxed) >=
+          ProgressSaveDebounce::INTERVAL_MS) {
+    RenderLock lock;
+    if (!flushPendingProgress(false)) requestUpdate();
+  }
+
   // Someone else turned the screen while this reader was stacked (the control
   // center's orientation tile). Reflow before the next render, or the page
   // would be drawn with a layout built for the previous frame size.
@@ -575,8 +583,7 @@ void EpubReaderActivity::loop() {
   if (confirmLongPressed) {
     switch (SETTINGS.longPressMenuFunction) {
       case CrossPointSettings::LP_MENU_BOOKMARK:
-        addBookmark();
-        showBookmarkMessage = true;
+        showBookmarkMessage = addBookmark();
         bookmarkMessageTime = millis();
         requestUpdate();
         break;
@@ -599,8 +606,7 @@ void EpubReaderActivity::loop() {
     switch (mappedInput.homeButtonAction()) {
       case HomeButtonAction::Bookmark:
         if (!showBookmarkMessage) {
-          addBookmark();
-          showBookmarkMessage = true;
+          showBookmarkMessage = addBookmark();
           bookmarkMessageTime = millis();
           requestUpdate();
         }
@@ -974,15 +980,17 @@ void EpubReaderActivity::onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction 
       break;
     }
     case EpubReaderMenuActivity::MenuAction::BOOKMARKS: {
-      startActivityForResult(
-          std::make_unique<EpubReaderBookmarksActivity>(renderer, mappedInput, epub, epub->getPath()),
-          progressChangeResultHandler);
+      auto activity = makeUniqueNoThrow<EpubReaderBookmarksActivity>(renderer, mappedInput, epub, epub->getPath());
+      if (!activity) {
+        LOG_ERR("ERS", "OOM: bookmarks activity");
+        break;
+      }
+      startActivityForResult(std::move(activity), progressChangeResultHandler);
       break;
     }
     case EpubReaderMenuActivity::MenuAction::TOGGLE_BOOKMARK: {
-      addBookmark();
       // The page comes back with the same confirmation the long-press path shows.
-      showBookmarkMessage = true;
+      showBookmarkMessage = addBookmark();
       bookmarkMessageTime = millis();
       requestUpdate();
       break;
@@ -995,6 +1003,10 @@ EpubReaderMenuActivity::MenuContext EpubReaderActivity::menuContext() const {
   context.hasFootnotes = !currentPageFootnotes.empty();
   context.footnoteCount = static_cast<int>(currentPageFootnotes.size());
   context.bookmarkCount = static_cast<int>(cachedBookmarks.size());
+#if LILA_COMPANION
+  context.bookmarksNeedAttention = !bookmarkBinding.ready || bookmarkBinding.legacyAssociationRequired ||
+                                   companion::tinta_body_detail::nonzero(bookmarkBinding.conflict);
+#endif
   context.pageBookmarked = currentPageBookmarked;
   context.canSync = KOREADER_STORE.hasCredentials();
   return context;
@@ -1032,6 +1044,9 @@ void EpubReaderActivity::rebuildBook() {
     epub->setupCacheDir();
     if (!EpubReaderUtils::saveProgress(*epub, spineIndex, position.pageIndex, position.totalPages, offset)) {
       LOG_ERR("ERS", "Failed to save progress before rebuilding the book");
+    } else {
+      progressSave.clearPending();
+      progressSavePending.store(false, std::memory_order_release);
     }
   }
   activityManager.goToReader(path);
@@ -1251,6 +1266,14 @@ void EpubReaderActivity::renderBook() {
   settleOverlayRefresh();
 
   const auto showPendingSyncSaveError = [this]() {
+    if (pendingBookmarkError != StrId::_COUNT) {
+      GUI.drawPopup(renderer, (pendingBookmarkError == StrId::STR_LEGACY_BOOKMARK_DECISION_REQUIRED
+                                   ? tr(STR_LEGACY_BOOKMARK_DECISION_REQUIRED)
+                               : pendingBookmarkError == StrId::STR_BOOKMARK_CONFLICT ? tr(STR_BOOKMARK_CONFLICT)
+                                                                                      : tr(STR_SAVE_BOOKMARK_FAILED)));
+      pendingBookmarkError = StrId::_COUNT;
+      return;
+    }
     if (!pendingSyncSaveError) return;
     pendingSyncSaveError = false;
     GUI.drawPopup(renderer, tr(STR_SAVE_PROGRESS_FAILED));
@@ -1537,14 +1560,7 @@ void EpubReaderActivity::renderBook() {
     if (lightPanelRequested) lightPanelReady.store(true, std::memory_order_release);
   }
 
-  if (currentSpineIndex != lastSavedSpineIndex || section->currentPage != lastSavedPage ||
-      section->pageCount != lastSavedPageCount) {
-    if (saveProgress(currentSpineIndex, section->currentPage, section->estimatedTotalPages())) {
-      lastSavedSpineIndex = currentSpineIndex;
-      lastSavedPage = section->currentPage;
-      lastSavedPageCount = section->estimatedTotalPages();
-    }
-  }
+  if (footnoteDepth == 0) saveProgress(currentSpineIndex, section->currentPage, section->estimatedTotalPages(), false);
 
   showPendingSyncSaveError();
 
@@ -1581,7 +1597,13 @@ void EpubReaderActivity::renderBook() {
 void EpubReaderActivity::onEndOfBookRendered() {
   automaticPageTurnActive = false;
   if (lightPanelRequested) lightPanelReady.store(true, std::memory_order_release);
-  if (pendingSyncSaveError) {
+  if (pendingBookmarkError != StrId::_COUNT) {
+    GUI.drawPopup(renderer, (pendingBookmarkError == StrId::STR_LEGACY_BOOKMARK_DECISION_REQUIRED
+                                 ? tr(STR_LEGACY_BOOKMARK_DECISION_REQUIRED)
+                             : pendingBookmarkError == StrId::STR_BOOKMARK_CONFLICT ? tr(STR_BOOKMARK_CONFLICT)
+                                                                                    : tr(STR_SAVE_BOOKMARK_FAILED)));
+    pendingBookmarkError = StrId::_COUNT;
+  } else if (pendingSyncSaveError) {
     pendingSyncSaveError = false;
     GUI.drawPopup(renderer, tr(STR_SAVE_PROGRESS_FAILED));
   }
@@ -1640,10 +1662,35 @@ std::optional<uint32_t> EpubReaderActivity::readingOffsetForPage(const int page)
   return section->getVisibleTextOffsetForPage(static_cast<uint16_t>(page));
 }
 
-bool EpubReaderActivity::saveProgress(int spineIndex, int currentPage, int pageCount) {
+bool EpubReaderActivity::saveProgress(int spineIndex, int currentPage, int pageCount, bool force) {
   const std::optional<uint32_t> offset =
       spineIndex == currentSpineIndex ? readingOffsetForPage(currentPage) : std::nullopt;
-  const bool saved = EpubReaderUtils::saveProgress(*epub, spineIndex, currentPage, pageCount, offset);
+  progressSave.stage({spineIndex, currentPage, pageCount, offset}, force);
+  progressSavePending.store(progressSave.hasPending(), std::memory_order_release);
+  return flushPendingProgress(force);
+}
+
+bool EpubReaderActivity::prepareForBackground(const RenderLock&) { return flushProgressBeforeLeaving(); }
+
+bool EpubReaderActivity::flushProgressBeforeLeaving() {
+  if (footnoteDepth > 0 && epub) {
+    const SavedPosition& origin = savedPositions[0];
+    progressSave.stage({origin.spineIndex, origin.pageNumber, origin.pageCount, origin.textOffset});
+    progressSavePending.store(progressSave.hasPending(), std::memory_order_release);
+  }
+  return flushPendingProgress(true);
+}
+
+bool EpubReaderActivity::flushPendingProgress(bool force) {
+  if (!progressSave.hasPending()) return true;
+  if (!force && !progressSave.due(static_cast<uint32_t>(millis()))) return true;
+  if (!epub) return false;
+  const auto& position = progressSave.position();
+  const bool saved =
+      EpubReaderUtils::saveProgress(*epub, position.spine, position.page, position.count, position.offset);
+  progressSave.complete(static_cast<uint32_t>(millis()), saved);
+  progressAttemptMs.store(progressSave.lastAttemptMs(), std::memory_order_relaxed);
+  progressSavePending.store(progressSave.hasPending(), std::memory_order_release);
   if (!saved) pendingSyncSaveError = true;
   return saved;
 }
@@ -2693,8 +2740,7 @@ void EpubReaderActivity::activateMoreRow(int row) {
   if (action == MA::TOGGLE_BOOKMARK) {
     // No child activity here to trigger the re-render the list menu relies on:
     // show the same confirmation popup the long-press path does.
-    addBookmark();
-    showBookmarkMessage = true;
+    showBookmarkMessage = addBookmark();
     bookmarkMessageTime = millis();
     requestUpdate();
     return;
@@ -2954,6 +3000,7 @@ void EpubReaderActivity::drawSearchMark(const Page& page, const int marginLeft, 
 }
 
 void EpubReaderActivity::loadCachedBookmarks() {
+  RenderLock lock;
   cachedBookmarks.clear();
   if (cachedBookmarks.capacity() < initialBookmarkCacheCapacity) {
     cachedBookmarks.reserve(initialBookmarkCacheCapacity);
@@ -2963,64 +3010,140 @@ void EpubReaderActivity::loadCachedBookmarks() {
     return;
   }
 
+#if LILA_COMPANION
+  const auto result = companion::restoreReaderBookmarks(*epub, cachedBookmarks, bookmarkBinding);
+  if (bookmarkBinding.legacyAssociationRequired)
+    pendingBookmarkError = StrId::STR_LEGACY_BOOKMARK_DECISION_REQUIRED;
+  else if (result != companion::TintaJournalResult::Ok)
+    pendingBookmarkError = result == companion::TintaJournalResult::Conflict ? StrId::STR_BOOKMARK_CONFLICT
+                                                                             : StrId::STR_SAVE_BOOKMARK_FAILED;
+#else
   BookmarkFile::load(epub->getPath(), cachedBookmarks);
+#endif
   updateBookmarkFlag();
 }
 
-void EpubReaderActivity::addBookmark() {
-  if (!section || !epub) return;
+bool EpubReaderActivity::addBookmark() {
+  RenderLock lock;
+  if (!section || !epub) return false;
   LOG_DBG("ERS", "Toggle bookmark at spine %d, page %d", currentSpineIndex, section ? section->currentPage : -1);
   int currentPage;
   int pageCount;
-  {
-    RenderLock lock;
-    pageCount = section->estimatedTotalPages();
-    currentPage = section->currentPage;
-  }
+  BookmarkTextPageRange textRange;
+  pageCount = section->estimatedTotalPages();
+  currentPage = section->currentPage;
+  textRange = getBookmarkTextPageRange(currentPage);
 
-  SavedProgressPosition progress = ProgressMapper::toSavedProgress(epub, getCurrentPosition());
   const ProgressRange pageRange = getPageProgressRange(epub, currentSpineIndex, currentPage, pageCount);
+
+#if LILA_COMPANION
+  if (!bookmarkBinding.ready) {
+    pendingBookmarkError = bookmarkBinding.legacyAssociationRequired ? StrId::STR_LEGACY_BOOKMARK_DECISION_REQUIRED
+                                                                     : StrId::STR_SAVE_BOOKMARK_FAILED;
+    requestUpdate();
+    return false;
+  }
+  struct MatchContext {
+    int spine, page, count;
+    ProgressRange progress;
+    BookmarkTextPageRange text;
+  } match{currentSpineIndex, currentPage, pageCount, pageRange, textRange};
+  const auto matches = +[](void* context, const BookmarkEntry& entry) {
+    const auto& match = *static_cast<MatchContext*>(context);
+    return bookmarkMatchesProgress(entry, match.spine, match.page, match.count, match.progress, match.text);
+  };
+  bookmarkRemoved = std::any_of(cachedBookmarks.begin(), cachedBookmarks.end(),
+                                [&](const BookmarkEntry& entry) { return matches(&match, entry); });
+  companion::TintaJournalResult result;
+  if (bookmarkRemoved) {
+    result = companion::deleteMatchingReaderBookmarks(*epub, cachedBookmarks, bookmarkBinding, matches, &match);
+  } else if (appendBookmarkAtPage(currentPage, pageCount)) {
+    result = companion::createReaderBookmark(*epub, *bookmarkDraft, cachedBookmarks, bookmarkBinding);
+  } else {
+    result = companion::TintaJournalResult::IoError;
+  }
+  updateBookmarkFlag();
+  if (bookmarkBinding.legacyAssociationRequired)
+    pendingBookmarkError = StrId::STR_LEGACY_BOOKMARK_DECISION_REQUIRED;
+  else if (result != companion::TintaJournalResult::Ok)
+    pendingBookmarkError = result == companion::TintaJournalResult::Conflict ? StrId::STR_BOOKMARK_CONFLICT
+                                                                             : StrId::STR_SAVE_BOOKMARK_FAILED;
+  requestUpdate();
+  return result == companion::TintaJournalResult::Ok;
+#else
 
   const size_t bookmarkCountBeforeToggle = cachedBookmarks.size();
   cachedBookmarks.erase(std::remove_if(cachedBookmarks.begin(), cachedBookmarks.end(),
                                        [&](const BookmarkEntry& b) {
                                          return bookmarkMatchesProgress(b, currentSpineIndex, currentPage, pageCount,
-                                                                        pageRange);
+                                                                        pageRange, textRange);
                                        }),
                         cachedBookmarks.end());
   if (cachedBookmarks.size() != bookmarkCountBeforeToggle) {
     bookmarkRemoved = true;
     currentPageBookmarked = false;
   } else {
-    std::string pageText;
-    if (currentPage >= 0 && currentPage < pageCount) {
-      pageText = section->getTextFromSectionFile();
+    if (!appendBookmarkAtPage(currentPage, pageCount)) {
+      pendingSyncSaveError = true;
+      requestUpdate();
+      return false;
     }
-    BookmarkEntry entry;
-    entry.percentage = progress.percentage;
-    entry.xpath = progress.xpath;
-    entry.summary = BookmarkUtil::sanitizeBookmarkSummary(pageText);
-    entry.computedSpineIndex = currentSpineIndex;
-    entry.computedChapterPageCount = pageCount;
-    entry.computedChapterProgress = currentPage;
-    const std::optional<uint32_t> offset =
-        currentPageVisibleOffset.has_value() ? currentPageVisibleOffset
-        : (currentPage >= 0 && currentPage < section->pageCount)
-            ? section->getVisibleTextOffsetForPage(static_cast<uint16_t>(currentPage))
-            : std::nullopt;
-    if (offset.has_value()) {
-      entry.visibleTextOffset = *offset;
-      entry.hasVisibleTextOffset = true;
-    }
-    cachedBookmarks.insert(cachedBookmarks.begin(), entry);
     bookmarkRemoved = false;
     currentPageBookmarked = true;
   }
 
-  if (!BookmarkFile::save(epub->getPath(), cachedBookmarks)) {
+  const bool saved = BookmarkFile::save(epub->getPath(), cachedBookmarks);
+  if (!saved) {
     LOG_ERR("ERS", "Failed to save bookmarks");
+    pendingSyncSaveError = true;
   }
   requestUpdate();
+  return saved;
+#endif
+}
+
+SavedProgressPosition EpubReaderActivity::getBookmarkSavedProgress() const {
+  const auto position = getCurrentPosition();
+  return ProgressMapper::toSavedProgress(epub, position);
+}
+
+bool EpubReaderActivity::appendBookmarkAtPage(int page, int pageCount) {
+  // Reuse one off-stack draft rather than combining it with progress temporaries.
+  if (!bookmarkDraft) {
+    bookmarkDraft = makeUniqueNoThrow<BookmarkEntry>();
+    if (!bookmarkDraft) {
+      LOG_ERR("ERS", "OOM: bookmark draft");
+      return false;
+    }
+  }
+  auto& entry = *bookmarkDraft;
+  entry.identity = {};
+  entry.name.clear();
+#if LILA_COMPANION
+  entry.xpath.clear();
+  entry.percentage = 0;
+#else
+  {
+    auto progress = getBookmarkSavedProgress();
+    entry.percentage = progress.percentage;
+    entry.xpath = std::move(progress.xpath);
+  }
+#endif
+  entry.summary.clear();
+  if (page >= 0 && page < pageCount) entry.summary = section->getTextFromSectionFile();
+  entry.summary = BookmarkUtil::sanitizeBookmarkSummary(std::move(entry.summary));
+  entry.computedSpineIndex = currentSpineIndex;
+  entry.computedChapterPageCount = pageCount;
+  entry.computedChapterProgress = page;
+  const auto offset = (page >= 0 && page < section->pageCount)
+                          ? section->getVisibleTextOffsetForPage(static_cast<uint16_t>(page))
+                          : std::nullopt;
+  entry.hasVisibleTextOffset = offset.has_value();
+  entry.visibleTextOffset = offset.value_or(0);
+#if !LILA_COMPANION
+  cachedBookmarks.insert(cachedBookmarks.begin(), entry);
+#endif
+  return true;
 }
 
 void EpubReaderActivity::updateBookmarkFlag() {
@@ -3030,9 +3153,22 @@ void EpubReaderActivity::updateBookmarkFlag() {
   }
   const int pageCount = section->estimatedTotalPages();
   const ProgressRange pageRange = getPageProgressRange(epub, currentSpineIndex, section->currentPage, pageCount);
+  const auto textRange = getBookmarkTextPageRange(section->currentPage);
   currentPageBookmarked = std::any_of(cachedBookmarks.begin(), cachedBookmarks.end(), [&](const BookmarkEntry& b) {
-    return bookmarkMatchesProgress(b, currentSpineIndex, section->currentPage, pageCount, pageRange);
+    return bookmarkMatchesProgress(b, currentSpineIndex, section->currentPage, pageCount, pageRange, textRange);
   });
+}
+
+BookmarkTextPageRange EpubReaderActivity::getBookmarkTextPageRange(int page) const {
+  BookmarkTextPageRange range;
+  if (!section || page < 0 || page >= section->pageCount) return range;
+  range.start = section->getVisibleTextOffsetForPage(static_cast<uint16_t>(page));
+  if (page + 1 < section->pageCount) {
+    range.end = section->getVisibleTextOffsetForPage(static_cast<uint16_t>(page + 1));
+  } else {
+    range.finalPage = !section->isPartial() && !section->isBuilding();
+  }
+  return range;
 }
 
 ScreenshotInfo EpubReaderActivity::getScreenshotInfo() const {

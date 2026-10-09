@@ -633,7 +633,7 @@ public actor LibraryStore {
     }
     public func queueRemoval(manifest: ContentManifest, inventory: ReaderInventory, installation: Data,
                              transaction: UUID = UUID()) throws -> ContentRemovalJob {
-        guard inventory.complete, manifest.kind == .epub, inventory.contents.contains(manifest) else {
+        guard inventory.complete, (manifest.kind == .epub || manifest.kind == .font), inventory.contents.contains(manifest) else {
             throw StoreError.invalidValue
         }
         let request = try ContentRemovalRequest(transaction: withUnsafeBytes(of: transaction.uuid) { Data($0) },
@@ -646,11 +646,14 @@ public actor LibraryStore {
             try database.execute("COMMIT"); committed = true; return saved
         }
         if try job(transaction) != nil { throw StoreError.conflictingJob }
+        if try readerImportJob(transaction) != nil { throw StoreError.conflictingJob }
         let transfers = try database.query("""
             SELECT 1 FROM jobs WHERE reader=? AND generation=? AND content=?
             AND phase NOT IN ('completed','aborted') LIMIT 1
             """, [.blob(inventory.reader), .blob(inventory.generation), .text(manifest.content.hex)])
         guard try !transfers.next() else { throw StoreError.conflictingJob }
+        guard try !hasPendingReaderImport(reader: inventory.reader, generation: inventory.generation,
+                                         content: manifest.content) else { throw StoreError.conflictingJob }
         try database.execute("""
             INSERT INTO reader_selections(reader,content,selected)
             SELECT ?,hash,0 FROM content WHERE hash=?
@@ -670,6 +673,200 @@ public actor LibraryStore {
         guard let created = try removalJob(transaction) else { throw StoreError.missingJob }
         try database.execute("COMMIT"); committed = true
         return created
+    }
+    public func enqueueReaderImport(manifest: ContentManifest, inventory: ReaderInventory, installation: Data,
+                                    id: UUID = UUID()) throws -> ReaderImportJob {
+        guard inventory.complete, inventory.contents.contains(manifest), manifest.length <= UInt64(Int64.max),
+              installation.count == 16, installation.contains(where: { $0 != 0 }),
+              withUnsafeBytes(of: id.uuid, { $0.contains(where: { $0 != 0 }) }) else { throw StoreError.invalidValue }
+        _ = try ReaderContentReadRequest(generation: inventory.generation, manifest: manifest, offset: 0,
+                                        maximumBytes: UInt16(ReaderContentReadRequest.maximumChunkBytes))
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        if let saved = try readerImportJob(id) {
+            guard saved.reader == inventory.reader, saved.generation == inventory.generation,
+                  saved.installation == installation, saved.manifest == manifest else { throw StoreError.conflictingJob }
+            try database.execute("COMMIT"); committed = true; return saved
+        }
+        guard try job(id) == nil, try removalJob(id) == nil else { throw StoreError.conflictingJob }
+        guard try !isReaderImportContentDeleted(manifest.content) else { throw StoreError.invalidTransition }
+        let active = try database.query("""
+            SELECT id,reader,generation,installation,manifest,acknowledged,phase,content FROM reader_import_jobs
+            WHERE reader=? AND generation=? AND content=? AND phase NOT IN ('completed','aborted')
+            """, [.blob(inventory.reader), .blob(inventory.generation), .text(manifest.content.hex)])
+        if try active.next() {
+            let saved = try decodeReaderImportJob(active)
+            guard saved.installation == installation, saved.manifest == manifest else { throw StoreError.conflictingJob }
+            try database.execute("COMMIT"); committed = true; return saved
+        }
+        guard try !hasPendingRemoval(reader: inventory.reader, generation: inventory.generation,
+                                     content: manifest.content) else { throw StoreError.conflictingJob }
+        try database.execute("""
+            INSERT INTO reader_import_jobs(id,reader,generation,installation,manifest,content,acknowledged,phase)
+            VALUES(?,?,?,?,?,?,0,'queued')
+            """, [.text(id.uuidString), .blob(inventory.reader), .blob(inventory.generation), .blob(installation),
+                  .blob(manifest.encoded), .text(manifest.content.hex)])
+        guard let created = try readerImportJob(id) else { throw StoreError.missingJob }
+        try database.execute("COMMIT"); committed = true; return created
+    }
+    public func readerImportJob(_ id: UUID) throws -> ReaderImportJob? {
+        let query = try database.query("""
+            SELECT id,reader,generation,installation,manifest,acknowledged,phase,content FROM reader_import_jobs WHERE id=?
+            """, [.text(id.uuidString)])
+        return try query.next() ? decodeReaderImportJob(query) : nil
+    }
+    public func bindReaderImportFilename(_ id: UUID, request: ReaderContentMetadataRequest,
+                                         reply: ReaderContentMetadataReply) throws -> String {
+        guard reply.result == .ok, reply.generation == request.generation, reply.manifest == request.manifest,
+              let name = reply.originalFilename else { throw StoreError.invalidValue }
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        guard let job = try readerImportJob(id) else { throw StoreError.missingJob }
+        guard job.generation == request.generation, job.manifest == request.manifest else { throw StoreError.conflictingJob }
+        guard job.phase != .aborted else { throw StoreError.invalidTransition }
+        let saved = try database.query("SELECT original_filename FROM reader_import_filenames WHERE id=?", [.text(id.uuidString)])
+        if try saved.next() {
+            guard saved.text(0) == name else { throw StoreError.conflictingJob }
+        } else {
+            guard job.phase != .completed else { throw StoreError.invalidTransition }
+            try database.execute("INSERT INTO reader_import_filenames(id,original_filename) VALUES(?,?)",
+                                 [.text(id.uuidString), .text(name)])
+        }
+        try database.execute("COMMIT"); committed = true
+        return name
+    }
+    public func readerImportFilename(_ id: UUID) throws -> String? {
+        guard try readerImportJob(id) != nil else { throw StoreError.missingJob }
+        let query = try database.query("SELECT original_filename FROM reader_import_filenames WHERE id=?", [.text(id.uuidString)])
+        return try query.next() ? query.text(0) : nil
+    }
+    public func pendingReaderImports() throws -> [ReaderImportJob] {
+        let query = try database.query("""
+            SELECT id,reader,generation,installation,manifest,acknowledged,phase,content FROM reader_import_jobs
+            WHERE phase NOT IN ('completed','aborted') ORDER BY id
+            """)
+        var jobs: [ReaderImportJob] = []; jobs.reserveCapacity(32)
+        while try query.next() { jobs.append(try decodeReaderImportJob(query)) }
+        return jobs
+    }
+    public func finishedReaderImports(after: UUID? = nil, limit: Int = 32) throws -> [ReaderImportJob] {
+        guard (1...128).contains(limit) else { throw StoreError.invalidValue }
+        let query = try database.query("""
+            SELECT id,reader,generation,installation,manifest,acknowledged,phase,content FROM reader_import_jobs
+            WHERE phase IN ('completed','aborted') AND id>? ORDER BY id LIMIT ?
+            """, [.text(after?.uuidString ?? ""), .integer(Int64(limit))])
+        var jobs: [ReaderImportJob] = []; jobs.reserveCapacity(limit)
+        while try query.next() { jobs.append(try decodeReaderImportJob(query)) }
+        return jobs
+    }
+    private func isReaderImportContentDeleted(_ id: ContentID) throws -> Bool {
+        let query = try database.query("SELECT identity,content,payload FROM library_visibility_events WHERE content=?", [.text(id.hex)])
+        var changes: [LibraryVisibilityChange] = []; changes.reserveCapacity(16)
+        while try query.next() { changes.append(try decodeVisibility(query)) }
+        return try LibraryVisibilityHistory.merge(changes, content: id,
+            initiallyRemoved: isLibraryContentDeleted(id)).removed
+    }
+    private func abortReaderImportsInTransaction(content: ContentID) throws {
+        try database.execute("""
+            UPDATE reader_import_jobs SET phase='aborted' WHERE content=? AND phase NOT IN ('completed','aborted')
+            """, [.text(content.hex)])
+    }
+    private func hasPendingReaderImport(reader: Data, generation: Data, content: ContentID) throws -> Bool {
+        let query = try database.query("""
+            SELECT 1 FROM reader_import_jobs WHERE reader=? AND generation=? AND content=?
+            AND phase NOT IN ('completed','aborted') LIMIT 1
+            """, [.blob(reader), .blob(generation), .text(content.hex)])
+        return try query.next()
+    }
+    public func checkpointReaderImport(_ id: UUID, offset: UInt64, phase: ReaderImportJobPhase) throws {
+        guard let saved = try readerImportJob(id) else { throw StoreError.missingJob }
+        guard offset >= saved.acknowledgedOffset, offset <= saved.manifest.length,
+              saved.phase != .completed, saved.phase != .aborted,
+              phase != .completed, phase != .aborted else { throw StoreError.invalidTransition }
+        if saved.phase == phase, saved.acknowledgedOffset == offset { return }
+        let unchanged = offset == saved.acknowledgedOffset
+        let permitted = (saved.phase == .queued && unchanged && (phase == .downloading || phase == .paused)) ||
+            (saved.phase == .paused && unchanged && phase == .downloading) ||
+            (saved.phase == .downloading && phase == .downloading) ||
+            (unchanged && phase == .paused && (saved.phase == .downloading || saved.phase == .verifying)) ||
+            (unchanged && offset == saved.manifest.length && phase == .verifying &&
+             (saved.phase == .downloading || saved.phase == .paused))
+        guard permitted else { throw StoreError.invalidTransition }
+        try database.execute("UPDATE reader_import_jobs SET acknowledged=?,phase=? WHERE id=? AND phase=? AND acknowledged=?",
+            [.integer(Int64(offset)), .text(phase.rawValue), .text(id.uuidString), .text(saved.phase.rawValue),
+             .integer(Int64(saved.acknowledgedOffset))])
+        guard database.changedRows == 1 else { throw StoreError.invalidTransition }
+    }
+    public func restartReaderImport(_ id: UUID) throws {
+        guard let saved = try readerImportJob(id) else { throw StoreError.missingJob }
+        guard saved.phase == .queued || saved.phase == .paused else { throw StoreError.invalidTransition }
+        if saved.phase == .queued, saved.acknowledgedOffset == 0 { return }
+        try database.execute("UPDATE reader_import_jobs SET acknowledged=0,phase='queued' WHERE id=? AND phase=? AND acknowledged=?",
+            [.text(id.uuidString), .text(saved.phase.rawValue), .integer(Int64(saved.acknowledgedOffset))])
+        guard database.changedRows == 1 else { throw StoreError.invalidTransition }
+    }
+    public func abortReaderImport(_ id: UUID) throws {
+        guard let saved = try readerImportJob(id) else { throw StoreError.missingJob }
+        guard saved.phase != .completed else { throw StoreError.invalidTransition }
+        if saved.phase == .aborted { return }
+        try database.execute("UPDATE reader_import_jobs SET phase='aborted' WHERE id=? AND phase=? AND acknowledged=?",
+            [.text(id.uuidString), .text(saved.phase.rawValue), .integer(Int64(saved.acknowledgedOffset))])
+        guard database.changedRows == 1 else { throw StoreError.invalidTransition }
+    }
+    // Called only after ContentImporter verifies and publishes the immutable object.
+    func publishReaderImport(_ job: ReaderImportJob, content: LibraryContent,
+                             courseMetadata: CoursePackMetadata? = nil) throws {
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        if let bound = try readerImportFilename(job.id), bound != content.originalFilename {
+            throw StoreError.conflictingJob
+        }
+        guard let saved = try readerImportJob(job.id) else { throw StoreError.missingJob }
+        guard saved == job, saved.phase == .verifying, saved.acknowledgedOffset == saved.manifest.length,
+              content.id == saved.manifest.content, content.kind == saved.manifest.kind,
+              content.length == saved.manifest.length, try !isReaderImportContentDeleted(content.id),
+              try !hasPendingRemoval(reader: saved.reader, generation: saved.generation, content: content.id) else {
+            throw StoreError.invalidTransition
+        }
+        if let courseMetadata {
+            guard content.kind == .course else { throw StoreError.invalidValue }
+            try putCoursePackInTransaction(content, metadata: courseMetadata)
+            try requireCourseAssociation(resource: content.id.digest, course: saved.manifest.logicalIdentity)
+            try database.execute("INSERT INTO course_associations(content,identity) VALUES(?,?) ON CONFLICT(content) DO NOTHING",
+                                 [.text(content.id.hex), .blob(saved.manifest.logicalIdentity)])
+        } else {
+            guard content.kind != .course, content.kind != .firmware else { throw StoreError.invalidValue }
+            try putInTransaction(content)
+        }
+        try database.execute("""
+            INSERT INTO reader_selections(reader,content,selected) VALUES(?,?,1)
+            ON CONFLICT(reader,content) DO UPDATE SET selected=1 WHERE selected!=1
+            """, [.blob(saved.reader), .text(content.id.hex)])
+        try database.execute("UPDATE reader_import_jobs SET phase='completed' WHERE id=? AND phase='verifying' AND acknowledged=?",
+                             [.text(saved.id.uuidString), .integer(Int64(saved.manifest.length))])
+        guard database.changedRows == 1 else { throw StoreError.invalidTransition }
+        try database.execute("COMMIT"); committed = true
+    }
+    private func decodeReaderImportJob(_ query: Statement) throws -> ReaderImportJob {
+        guard let id = UUID(uuidString: query.text(0)), let phase = ReaderImportJobPhase(rawValue: query.text(6)),
+              query.integer(5) >= 0 else { throw StoreError.invalidValue }
+        let reader = query.blob(1), generation = query.blob(2), installation = query.blob(3)
+        let manifest = try ContentManifest(decoding: query.blob(4)), offset = UInt64(query.integer(5))
+        guard reader.count == 16, reader.contains(where: { $0 != 0 }),
+              installation.count == 16, installation.contains(where: { $0 != 0 }),
+              manifest.content.hex == query.text(7), manifest.length <= UInt64(Int64.max),
+              offset <= manifest.length, (phase != .queued || offset == 0),
+              (phase != .verifying && phase != .completed || offset == manifest.length),
+              withUnsafeBytes(of: id.uuid, { $0.contains(where: { $0 != 0 }) }) else {
+            throw StoreError.invalidValue
+        }
+        _ = try ReaderContentReadRequest(generation: generation, manifest: manifest, offset: 0,
+                                        maximumBytes: UInt16(ReaderContentReadRequest.maximumChunkBytes))
+        return ReaderImportJob(id: id, reader: reader, generation: generation, installation: installation,
+                               manifest: manifest, acknowledgedOffset: offset, phase: phase)
     }
     public func removalJob(_ id: UUID) throws -> ContentRemovalJob? {
         let query = try database.query("SELECT id,reader,request,phase FROM removal_jobs WHERE id=?", [.text(id.uuidString)])
@@ -1340,6 +1537,7 @@ public actor LibraryStore {
         return inserted
     }
     private func applyVisibilityState(_ state: LibraryVisibilitySnapshot, content id: ContentID) throws {
+        if state.removed { try abortReaderImportsInTransaction(content: id) }
         guard try content(id) != nil else { return }
             if state.removed {
                 try database.execute("INSERT INTO library_deletions(content) VALUES(?) ON CONFLICT(content) DO NOTHING", [.text(id.hex)])
@@ -1420,6 +1618,7 @@ public actor LibraryStore {
             return false
         }
         try database.execute("INSERT INTO library_deletions(content) VALUES(?)", [.text(id.hex)])
+        try abortReaderImportsInTransaction(content: id)
         try database.execute("UPDATE reader_selections SET selected=0 WHERE content=? AND selected=1", [.text(id.hex)])
         try database.execute("""
             INSERT INTO transfer_aborts(job) SELECT id FROM jobs WHERE content=?
@@ -1447,6 +1646,12 @@ public actor LibraryStore {
             WHERE reader_selections.selected!=excluded.selected
             """, [.blob(reader), .text(content.hex), .integer(selected ? 1 : 0)])
         let changed = database.changedRows != 0
+        if !selected {
+            try database.execute("""
+                UPDATE reader_import_jobs SET phase='aborted'
+                WHERE reader=? AND content=? AND phase NOT IN ('completed','aborted')
+                """, [.blob(reader), .text(content.hex)])
+        }
         try database.execute("COMMIT"); committed = true
         return changed
     }
@@ -1610,11 +1815,15 @@ public actor LibraryStore {
     }
 
     public func putCoursePack(_ content: LibraryContent, metadata: CoursePackMetadata) throws {
-        let details = try CoursePackDetails(metadata)
-        guard content.kind == .course, content.languages == [details.locale] else { throw StoreError.invalidValue }
         try database.execute("BEGIN IMMEDIATE")
         var committed = false
         defer { if !committed { try? database.execute("ROLLBACK") } }
+        try putCoursePackInTransaction(content, metadata: metadata)
+        try database.execute("COMMIT"); committed = true
+    }
+    private func putCoursePackInTransaction(_ content: LibraryContent, metadata: CoursePackMetadata) throws {
+        let details = try CoursePackDetails(metadata)
+        guard content.kind == .course, content.languages == [details.locale] else { throw StoreError.invalidValue }
         if let existing = try coursePackDetails(content.id), existing != details { throw StoreError.invalidValue }
         try putInTransaction(content)
         try database.execute("""
@@ -1628,8 +1837,6 @@ public actor LibraryStore {
             try database.execute("INSERT INTO course_associations(content,identity) VALUES(?,?) ON CONFLICT(content) DO NOTHING",
                                  [.text(content.id.hex), .blob(identity)])
         }
-        try database.execute("COMMIT")
-        committed = true
     }
     public func coursePackDetails(_ id: ContentID) throws -> CoursePackDetails? {
         let query = try database.query("SELECT major,minor,edition,locale FROM course_packs WHERE content=?", [.text(id.hex)])
@@ -2435,6 +2642,7 @@ public actor LibraryStore {
         guard try self.content(content) != nil else { throw StoreError.missingContent }
         guard try !isLibraryContentDeleted(content) else { throw StoreError.invalidTransition }
         guard try removalJob(transaction) == nil else { throw StoreError.conflictingJob }
+        guard try readerImportJob(transaction) == nil else { throw StoreError.conflictingJob }
         if let existing = try job(transaction) {
             guard existing.reader == reader, existing.storageGeneration == storageGeneration,
                   existing.installation == installation, existing.content == content else { throw StoreError.conflictingJob }
@@ -2495,6 +2703,7 @@ public actor LibraryStore {
         }
         let transaction = UUID()
         guard try removalJob(transaction) == nil else { throw StoreError.conflictingJob }
+        guard try readerImportJob(transaction) == nil else { throw StoreError.conflictingJob }
         guard try !hasPendingRemoval(reader: reader, generation: storageGeneration, content: content) else {
             throw StoreError.conflictingJob
         }
@@ -2769,7 +2978,7 @@ private final class Database {
             let schema: Int64
             do {
                 let version = try query("PRAGMA user_version")
-                guard try version.next(), (0 ... 38).contains(version.integer(0)) else { throw StoreError.unsupportedSchema }
+                guard try version.next(), (0 ... 40).contains(version.integer(0)) else { throw StoreError.unsupportedSchema }
                 schema = version.integer(0)
             }
             if schema == 0 {
@@ -3096,6 +3305,26 @@ private final class Database {
                 CREATE UNIQUE INDEX journal_merge_active_reader ON journal_merge_jobs(reader,generation)
                     WHERE phase!='completed' AND abort_state!=2;
                 PRAGMA user_version=38;
+                """)
+            }
+            if schema < 39 {
+                try execute("""
+                CREATE TABLE reader_import_jobs(id TEXT PRIMARY KEY NOT NULL,
+                    reader BLOB NOT NULL CHECK(length(reader)=16),generation BLOB NOT NULL CHECK(length(generation)=16),
+                    installation BLOB NOT NULL CHECK(length(installation)=16),manifest BLOB NOT NULL CHECK(length(manifest)=63),
+                    content TEXT NOT NULL CHECK(length(content)=64),acknowledged INTEGER NOT NULL CHECK(acknowledged>=0),
+                    phase TEXT NOT NULL CHECK(phase IN ('queued','downloading','paused','verifying','completed','aborted')));
+                CREATE UNIQUE INDEX reader_import_active_content ON reader_import_jobs(reader,generation,content)
+                    WHERE phase NOT IN ('completed','aborted');
+                PRAGMA user_version=39;
+                """)
+            }
+            if schema < 40 {
+                try execute("""
+                CREATE TABLE reader_import_filenames(id TEXT PRIMARY KEY NOT NULL
+                    REFERENCES reader_import_jobs(id),original_filename TEXT NOT NULL
+                    CHECK(length(CAST(original_filename AS BLOB)) BETWEEN 1 AND 255));
+                PRAGMA user_version=40;
                 """)
             }
             try execute("COMMIT")

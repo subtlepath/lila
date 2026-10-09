@@ -86,6 +86,50 @@ class HalJournalCausalAuditSession {
   using ReplayVisitor = bool (*)(void*, uint32_t, const SyncEvent&, std::span<const uint8_t>, bool);
   using KnowledgeHeadVisitor = bool (*)(void*, const EventIdentity&);
   using BookmarkIdentityVisitor = bool (*)(void*, const Identity&);
+  // Explicit IDs in legacy caches must not be borrowed from another edition.
+  // Caller excludes all journal writers through import/publication.
+  TintaJournalResult checkBookmarkEdition(const Digest& edition, const Identity& bookmark) {
+    if (!audited) {
+      failure("bookmark edition proof before audit");
+      return TintaJournalResult::Unavailable;
+    }
+    audited = false;
+    if (!tinta_body_detail::nonzero(edition) || !tinta_body_detail::nonzero(bookmark)) {
+      failure("bookmark edition proof arguments");
+      return TintaJournalResult::Invalid;
+    }
+    const auto count = journal.count();
+    auto result = TintaJournalResult::Ok;
+    for (uint32_t record = 0; record < count; ++record) {
+      result = journal.read(record);
+      if (result != TintaJournalResult::Ok) break;
+      const auto& event = journal.event();
+      if (event.kind == EventKind::BookmarkPut || event.kind == EventKind::BookmarkDelete) {
+        BookmarkBodyView value;
+        if (!decodeBookmarkBody(journal.body(), value)) {
+          failure("bookmark edition proof body");
+          result = TintaJournalResult::Corrupt;
+          break;
+        }
+        if (value.identity == bookmark && event.resource != edition) {
+          result = TintaJournalResult::Conflict;
+          break;
+        }
+      }
+      if (journal.count() != count) {
+        result = TintaJournalResult::Conflict;
+        break;
+      }
+      vTaskDelay(1);
+    }
+    const bool indexClosed = reader.close();
+    const bool journalClosed = storage.close();
+    if (!indexClosed || !journalClosed) {
+      failure("bookmark edition proof close");
+      return TintaJournalResult::IoError;
+    }
+    return result;
+  }
   // Visitor stages borrowed IDs only; discard staged data unless the call is Ok.
   // Caller excludes journal writers and must not re-enter this audit session.
   TintaJournalResult bookmarkIdentities(const Digest& edition, void* context, BookmarkIdentityVisitor visitor) {
@@ -370,6 +414,36 @@ class HalJournalCausalAuditSession {
     } else if (result != TintaJournalResult::Conflict && result != TintaJournalResult::Unavailable) {
       failure("bookmark resolution");
     }
+    return result;
+  }
+  TintaJournalResult visitBookmarkHeads(const Digest& edition, const Identity& bookmark,
+                                        BookmarkResolution::Visitor visitor, void* context) {
+    if (!audited) {
+      failure("bookmark choices before audit");
+      return TintaJournalResult::Unavailable;
+    }
+    audited = false;
+    if (!visitor) return TintaJournalResult::Invalid;
+    // Visit marks and canonical-body storage exceed the local stack budget.
+    auto workspace = makeUniqueNoThrow<BookmarkResolutionWorkspace>();
+    if (!workspace) {
+      failure("OOM: bookmark choices workspace");
+      return TintaJournalResult::IoError;
+    }
+    const auto result =
+        reader.open() && index.open(journal.count())
+            ? workspace->resolution.visitHeads(journal, index, workspace->visits, edition, bookmark, visitor, context)
+            : TintaJournalResult::IoError;
+    const bool visitsClosed = workspace->visits.close();
+    const bool indexClosed = reader.close();
+    const bool journalClosed = storage.close();
+    if (!visitsClosed || !indexClosed || !journalClosed) {
+      failure("bookmark choices close");
+      return TintaJournalResult::IoError;
+    }
+    if (result != TintaJournalResult::Ok && result != TintaJournalResult::Conflict &&
+        result != TintaJournalResult::Unavailable)
+      failure("bookmark choices enumeration");
     return result;
   }
   // Caller freezes the audited journal/index and supplies a durable baseline count.

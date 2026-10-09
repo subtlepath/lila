@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #include "CompanionReaderPreferenceApplication.h"
 #include "CompanionReadingBody.h"
 #include "CompanionTintaJournal.h"
@@ -20,6 +22,9 @@ using ReaderBookmarkPublisher = bool (*)(void*, std::span<const uint8_t>);
 // Publisher must complete checked storage and must not re-enter this runtime.
 TintaJournalResult restoreReaderBookmark(const Epub& epub, const Identity& bookmark, ReaderBookmarkPublisher publish,
                                          void* context);
+// Successful local upload only, after closing the file and releasing storage locks.
+// Acquires the render lock; must not be called while holding it.
+bool captureLocalFontReplacement(std::string_view family, std::string_view path);
 void suspendReaderPreferenceCapture();
 void resumeReaderPreferenceCapture();
 void notifyReaderPreferenceSaveError();

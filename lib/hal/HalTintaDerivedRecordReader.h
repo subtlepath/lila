@@ -2,6 +2,7 @@
 
 #include "CompanionTintaDerivedPaths.h"
 #include "HalCompanionFileLookup.h"
+#include "HalTintaDerivedFileVerification.h"
 
 namespace companion {
 enum class TintaDerivedRecordLoad { Loaded, Missing, Invalid, IoError };
@@ -44,7 +45,29 @@ class HalTintaDerivedRecordReader {
     return result;
   }
 
+  // Caller validates manifest binding; reuse this reader's handle and scratch.
+  TintaDerivedVerification verifyGeneration(const TintaDerivedManifestView& manifest) {
+    if (!validRoot || scratch.empty()) return verificationError("generation arguments");
+    for (unsigned at = 0; at < 5; ++at) {
+      const auto kind = static_cast<TintaDerivedFile>(at);
+      if ((file.isOpen() && !file.close()) || !tintaDerivedFilePath(course, kind, TintaDerivedRole::Active, path))
+        return verificationError("generation path or close");
+      const auto presence = lookup.inspect(path.data());
+      if (presence == CompanionFilePresence::Missing) return TintaDerivedVerification::Conflict;
+      if (presence == CompanionFilePresence::Error || !Storage.openFileForReadReusing("COMPANION", path.data(), file))
+        return verificationError("generation lookup or open");
+      const auto result = verifyTintaDerivedFileReceipt(file, manifest, kind, scratch);
+      if (!file.close()) return verificationError("generation close");
+      if (result != TintaDerivedVerification::Verified) return result;
+    }
+    return TintaDerivedVerification::Verified;
+  }
+
  private:
+  static TintaDerivedVerification verificationError(const char* reason) {
+    error(reason);
+    return TintaDerivedVerification::IoError;
+  }
   TintaDerivedRecordLoad readRecord(TintaDerivedRecord record) {
     if (!validRoot || scratch.size() < TINTA_DERIVED_MANIFEST_SIZE || !tintaDerivedRecordPath(course, record, path) ||
         (file.isOpen() && !file.close()))

@@ -77,6 +77,13 @@ class PortablePreferenceResolution final {
     output = missing;
     return true;
   }
+  std::span<const uint8_t> readerBody(uint8_t key) const {
+    if (!ready || key < 1 || key > 14 || (conflicts & (uint32_t{1} << (key - 1)))) return {};
+    for (const auto body : std::span(views).first(size)) {
+      if (body[2] == key) return body;
+    }
+    return {};
+  }
 
  private:
   static TintaJournalResult markParent(JournalIdentityIndex& index, JournalReplayVisits& marks,

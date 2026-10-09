@@ -5,18 +5,29 @@
 #include <Logging.h>
 #include <PersistableStore.h>
 
+#include <cmath>
+#include <cstring>
+
 #include "BookmarkUtil.h"
 
 bool BookmarkFile::load(const std::string& bookPath, std::vector<BookmarkEntry>& bookmarks) {
-  bookmarks.clear();
-
-  // Read/write go through PersistableStoreBase so the JSON parser and
-  // serializer stay instantiated once, in PersistableStore.cpp.
   const std::string path = BookmarkUtil::getBookmarkPath(bookPath);
-  JsonDocument doc;
-  if (!PersistableStoreBase::readDocFromFile(path.c_str(), doc)) {
+  if (!loadFromPath(path.c_str(), bookmarks, false)) return false;
+  for (auto& bookmark : bookmarks) {
+    if (bookmark.name.size() > BookmarkEntry::MAX_NAME_LENGTH) bookmark.name.resize(BookmarkEntry::MAX_NAME_LENGTH);
+  }
+  return true;
+}
+
+bool BookmarkFile::loadFromPath(const char* path, std::vector<BookmarkEntry>& bookmarks, bool strict) {
+  bookmarks.clear();
+  if (!path || !*path) {
+    LOG_ERR("BKM", "Missing bookmark file path");
     return false;
   }
+  // Keep the JSON parser instantiated in PersistableStore.cpp.
+  JsonDocument doc;
+  if (!PersistableStoreBase::readDocFromFile(path, doc)) return false;
 
   if (!doc["bookmarks"].is<JsonArray>()) {
     LOG_ERR("BKM", "Invalid bookmark array");
@@ -31,6 +42,37 @@ bool BookmarkFile::load(const std::string& bookPath, std::vector<BookmarkEntry>&
       return false;
     }
     JsonObject obj = value.as<JsonObject>();
+    if (strict) {
+      static constexpr const char* TEXT_FIELDS[] = {"xpath", "name", "summary"};
+      static constexpr const char* SHORT_FIELDS[] = {"si", "pc", "pp"};
+      bool valid = true;
+      for (const char* key : TEXT_FIELDS) {
+        const JsonVariantConst field = obj[key];
+        if (field.isUnbound()) continue;
+        if (!field.is<const char*>()) {
+          valid = false;
+          break;
+        }
+        const JsonString text = field.as<JsonString>();
+        if (memchr(text.c_str(), 0, text.size())) {
+          valid = false;
+          break;
+        }
+      }
+      for (const char* key : SHORT_FIELDS) {
+        const JsonVariantConst field = obj[key];
+        if (!field.isUnbound() && !field.is<uint16_t>()) valid = false;
+      }
+      const JsonVariantConst offset = obj["vo"];
+      if (!offset.isUnbound() && (!offset.is<uint32_t>() || !obj["si"].is<uint16_t>())) valid = false;
+      const JsonVariantConst percentage = obj["percentage"];
+      if (!percentage.isUnbound() && (!percentage.is<float>() || !std::isfinite(percentage.as<float>()))) valid = false;
+      if (!valid) {
+        LOG_ERR("BKM", "Invalid legacy bookmark fields");
+        bookmarks.clear();
+        return false;
+      }
+    }
     bookmarks.emplace_back();
     auto& bookmark = bookmarks.back();
     if (obj["id"].is<const char*>()) {
@@ -58,9 +100,6 @@ bool BookmarkFile::load(const std::string& bookPath, std::vector<BookmarkEntry>&
     bookmark.percentage = obj["percentage"] | static_cast<float>(0);
     bookmark.summary = obj["summary"] | "";
     bookmark.name = obj["name"] | "";
-    if (bookmark.name.size() > BookmarkEntry::MAX_NAME_LENGTH) {
-      bookmark.name.resize(BookmarkEntry::MAX_NAME_LENGTH);
-    }
     bookmark.computedSpineIndex = obj["si"] | static_cast<uint16_t>(0);
     bookmark.computedChapterPageCount = obj["pc"] | static_cast<uint16_t>(0);
     bookmark.computedChapterProgress = obj["pp"] | static_cast<uint16_t>(0);

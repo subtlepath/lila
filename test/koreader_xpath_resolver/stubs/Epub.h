@@ -3,7 +3,9 @@
 #include <Print.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -14,7 +16,19 @@ class Epub {
     std::string href;
   };
 
-  explicit Epub(std::vector<std::string> spineContents) : spineContents(std::move(spineContents)) {}
+  explicit Epub(std::vector<std::string> spineContents) : spineContents(std::move(spineContents)) {
+    companionIdentity.fill(7);
+  }
+  bool hasCompanionContentIdentity() const { return companionIdentityReady; }
+  bool getCompanionContentIdentity(std::span<uint8_t>, std::array<uint8_t, 32>& output) const {
+    if (!companionIdentityReady) return false;
+    output = companionIdentity;
+    return true;
+  }
+  std::array<uint8_t, 32> companionIdentity{};
+  bool companionIdentityReady = true;
+  void (*afterStream)(void*) = nullptr;
+  void* streamContext = nullptr;
 
   int getSpineItemsCount() const { return static_cast<int>(spineContents.size()); }
 
@@ -38,6 +52,7 @@ class Epub {
         out.write(reinterpret_cast<const uint8_t*>(contents.data() + offset), size);
         offset += size;
       }
+      if (afterStream) afterStream(streamContext);
       return true;
     }
     return false;

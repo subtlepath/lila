@@ -423,7 +423,7 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // point size comes back into BUILTIN_READER_POINT_SIZES with it, since that is
   // the only set a built-in family ships — otherwise the settings UI would keep
   // offering a size nothing renders at. Both fields are persisted in one write.
-  void clearSdFontFamily();
+  bool clearSdFontFamily();
 
   // Resolved status-bar composition. Consumers read the spec; only settings
   // editors read the raw fields.

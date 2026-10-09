@@ -15,7 +15,7 @@ struct BookmarkPublicationClaim {
 inline bool validBookmarkPublicationClaim(const BookmarkPublicationClaim& claim) {
   return tinta_body_detail::nonzero(claim.transaction) && tinta_body_detail::nonzero(claim.storageGeneration) &&
          tinta_body_detail::nonzero(claim.edition) && tinta_body_detail::nonzero(claim.frontier) &&
-         tinta_body_detail::nonzero(claim.candidateHash) && claim.candidateLength && claim.recordCount &&
+         tinta_body_detail::nonzero(claim.candidateHash) && claim.candidateLength &&
          (claim.recordSize == 512 || claim.recordSize == 1024) && claim.recordCount <= UINT32_MAX / claim.recordSize &&
          (claim.hadOriginal ? tinta_body_detail::nonzero(claim.originalHash)
                             : !claim.originalLength && !tinta_body_detail::nonzero(claim.originalHash));

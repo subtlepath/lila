@@ -425,16 +425,21 @@ void SessionController::addTotals(const core::StudyTotals& t) {
   flushed_.milliseconds += t.milliseconds;
 }
 
-void SessionController::flushToLog() {
+bool SessionController::flushToLog() {
+  if (app_.dayLog().hasUncertainWrite()) return false;
   const core::StudyTotals t = queue_.takeTotals();
   addTotals(t);
-  if (t.reviews == 0) return;
+  if (t.reviews == 0) return true;
   core::DayTotals day;
   day.reviews = t.reviews;
   day.correct = t.correct;
   day.newItems = t.newItems;
   day.seconds = (t.milliseconds + 500) / 1000;
-  if (!app_.dayLog().add(queue_.day(), day)) log("days.bin not written");
+  if (!app_.dayLog().addChecked(queue_.day(), day)) {
+    log("days.bin not written: authoritative recovery required");
+    return false;
+  }
+  return true;
 }
 
 void SessionController::end(const usage::SessionEndHow how) {
@@ -461,12 +466,14 @@ void SessionController::end(const usage::SessionEndHow how) {
   }
 }
 
-void SessionController::setAside() {
-  if (!active_) return;
-  flushToLog();
+bool SessionController::setAside() {
+  if (app_.dayLog().hasUncertainWrite()) return false;
+  if (!active_) return true;
+  if (!flushToLog()) return false;
   // It may resume after the wake; the usage log sees a new start then.
   app_.usage().sessionEnd(usage::SessionEndHow::Slept, flushed_.reviews, flushed_.correct,
                           (flushed_.milliseconds + 500) / 1000);
+  return true;
 }
 
 uint32_t SessionController::serialize(uint8_t* out, const uint32_t cap) const {

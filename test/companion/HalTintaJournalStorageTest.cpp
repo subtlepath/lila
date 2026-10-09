@@ -2710,6 +2710,10 @@ TEST(HalTintaJournalStorageTest, IncrementalRecoveryReplaysAuthorityAndPublishes
   EXPECT_EQ(state.files[activePath.data()], originalItems);
   EXPECT_EQ(recovery.journalFrontier(), nullptr);
   state.failSyncPath.clear();
+  std::array<char, COURSE_STATE_PATH_SIZE> dayPath{};
+  ASSERT_TRUE(tintaDerivedFilePath(course, TintaDerivedFile::Days, TintaDerivedRole::Active, dayPath));
+  // A live total append may tear after the authoritative review is durable.
+  state.files[dayPath.data()].insert(state.files[dayPath.data()].end(), {5, 0, 3, 0, 2});
   ASSERT_EQ(recovery.run(generation, pack, catalog, 5, snapshot), TintaIncrementalRecoveryResult::Rebuilt);
   ASSERT_NE(recovery.journalFrontier(), nullptr);
   std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
@@ -2720,6 +2724,12 @@ TEST(HalTintaJournalStorageTest, IncrementalRecoveryReplaysAuthorityAndPublishes
   EXPECT_EQ(manifest.revision(), 2U);
   EXPECT_EQ(manifest.studyDay(), 6U);
   EXPECT_TRUE(manifest.matches(course, generation, pack, *recovery.journalFrontier()));
+  HalFile recoveredDays;
+  ASSERT_TRUE(Storage.openFileForRead("TEST", dayPath.data(), recoveredDays));
+  EXPECT_TRUE(validateTintaDayLogFile(recoveredDays, scratch));
+  ASSERT_EQ(state.files[dayPath.data()].size(), 16U);
+  EXPECT_EQ(tinta::core::getU16(state.files[dayPath.data()].data() + 6), 1U);
+  const auto checkedDays = state.files[dayPath.data()];
   std::array<char, COURSE_STATE_PATH_SIZE> path{};
   ASSERT_TRUE(tintaDerivedFilePath(course, TintaDerivedFile::Items, TintaDerivedRole::Active, path));
   tinta::core::ItemState item;
@@ -2728,6 +2738,27 @@ TEST(HalTintaJournalStorageTest, IncrementalRecoveryReplaysAuthorityAndPublishes
   const auto active = state.files[path.data()];
   ASSERT_EQ(recovery.run(generation, pack, catalog, 5, snapshot), TintaIncrementalRecoveryResult::Unchanged);
   EXPECT_EQ(state.files[path.data()], active);
+  EXPECT_EQ(state.files[dayPath.data()], checkedDays);
+  const auto verifiedGeneration = state.files;
+  state.readErrorPath = dayPath.data();
+  EXPECT_EQ(recovery.run(generation, pack, catalog, 5, snapshot), TintaIncrementalRecoveryResult::Failed);
+  EXPECT_EQ(state.files, verifiedGeneration);
+  state.readErrorPath.clear();
+  for (unsigned mode = 0; mode < 3; ++mode) {
+    if (mode == 0) state.files[dayPath.data()].push_back(1);
+    if (mode == 1) state.files.erase(dayPath.data());
+    if (mode == 2) state.files[dayPath.data()][6] ^= 1;
+    Identity repairedSnapshot{};
+    repairedSnapshot.fill(static_cast<uint8_t>(9 + mode));
+    ASSERT_EQ(recovery.run(generation, pack, catalog, 5, repairedSnapshot), TintaIncrementalRecoveryResult::Rebuilt);
+    EXPECT_EQ(state.files[dayPath.data()], checkedDays);
+    ASSERT_EQ(reader.load(TintaDerivedRecord::Receipt, receipt), TintaDerivedRecordLoad::Loaded);
+    ASSERT_TRUE(manifest.decode(receipt));
+    EXPECT_EQ(manifest.revision(), 3U + mode);
+    const auto repairedGeneration = state.files;
+    ASSERT_EQ(recovery.run(generation, pack, catalog, 5, repairedSnapshot), TintaIncrementalRecoveryResult::Unchanged);
+    EXPECT_EQ(state.files, repairedGeneration);
+  }
 }
 
 TEST(HalTintaJournalStorageTest, PrefixFrontierRetainsOldEventsWhenNewOriginsSortBeforeThem) {
@@ -3649,6 +3680,66 @@ TEST(HalTintaJournalStorageTest, BookmarkResolutionRequiresAuditAndCheckedCloses
   ASSERT_EQ(audit.resolveBookmark(event.resource, bookmark.identity, output, length), TintaJournalResult::Ok);
   EXPECT_EQ(length, size);
   EXPECT_TRUE(std::equal(output.begin(), output.begin() + length, body.begin()));
+  unsigned heads = 0;
+  const auto visitor = +[](void* raw, const EventIdentity&, std::span<const uint8_t>) {
+    ++*static_cast<unsigned*>(raw);
+    return true;
+  };
+  EXPECT_EQ(audit.visitBookmarkHeads(event.resource, bookmark.identity, visitor, &heads),
+            TintaJournalResult::Unavailable);
+  EXPECT_EQ(heads, 0u);
+  ASSERT_TRUE(audit.run());
+  state.failClosePath = HalJournalReplayVisits::PATH;
+  EXPECT_EQ(audit.visitBookmarkHeads(event.resource, bookmark.identity, visitor, &heads), TintaJournalResult::IoError);
+  EXPECT_EQ(heads, 1u);
+  state.failClosePath.clear();
+  ASSERT_TRUE(audit.run());
+  EXPECT_EQ(audit.visitBookmarkHeads(event.resource, bookmark.identity, visitor, &heads), TintaJournalResult::Ok);
+  EXPECT_EQ(heads, 2u);
+  ASSERT_TRUE(audit.run());
+  EXPECT_EQ(audit.visitBookmarkHeads(
+                event.resource, bookmark.identity,
+                +[](void*, const EventIdentity&, std::span<const uint8_t>) { return false; }, nullptr),
+            TintaJournalResult::IoError);
+}
+
+TEST(HalTintaJournalStorageTest, BookmarkEditionProofRequiresAuditAndPropagatesCloseFailure) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  HalTintaJournalStorage storage;
+  std::array<uint8_t, 1024> scratch{};
+  TintaJournal journal(storage, scratch);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  BookmarkBodyView bookmark;
+  bookmark.identity[0] = 7;
+  std::array<uint8_t, MAX_BOOKMARK_BODY_SIZE> body{};
+  const auto size = encodeBookmarkBody(bookmark, body);
+  SyncEvent event;
+  event.identity.origin.fill(1);
+  event.identity.epoch = event.identity.sequence = 1;
+  event.storageGeneration.fill(2);
+  event.kind = EventKind::BookmarkPut;
+  event.resource.fill(8);
+  ASSERT_TRUE(storage.digest(std::span(body).first(size), event.bodyHash));
+  ASSERT_EQ(journal.append(event, std::span(body).first(size)), TintaJournalResult::Ok);
+  ASSERT_TRUE(storage.close());
+  HalJournalCausalAuditSession audit;
+  EXPECT_EQ(audit.checkBookmarkEdition(event.resource, bookmark.identity), TintaJournalResult::Unavailable);
+  ASSERT_TRUE(audit.run());
+  EXPECT_EQ(audit.checkBookmarkEdition(event.resource, bookmark.identity), TintaJournalResult::Ok);
+  Digest other{};
+  other.fill(9);
+  ASSERT_TRUE(audit.run());
+  EXPECT_EQ(audit.checkBookmarkEdition(other, bookmark.identity), TintaJournalResult::Conflict);
+  ASSERT_TRUE(audit.run());
+  state.failClosePath = TINTA_JOURNAL_EVENTS;
+  EXPECT_EQ(audit.checkBookmarkEdition(other, bookmark.identity), TintaJournalResult::IoError);
+  state.failClosePath.clear();
+  ASSERT_TRUE(audit.run());
+  Identity absent{};
+  absent[0] = 3;
+  EXPECT_EQ(audit.checkBookmarkEdition(other, absent), TintaJournalResult::Ok);
 }
 
 TEST(HalTintaJournalStorageTest, BookmarkEnumerationRequiresAuditYieldsAndIncludesDeletionIds) {

@@ -8,11 +8,13 @@ namespace companion {
 // excludes all writers through publication. Scratch outlives this owner.
 class NativeBookmarkJsonPreparation final {
  public:
-  explicit NativeBookmarkJsonPreparation(std::span<uint8_t> scratch) : edition(scratch), json(scratch) {}
-  TintaJournalResult prepare(const Digest& verifiedEdition, uint32_t spineCount) {
+  explicit NativeBookmarkJsonPreparation(std::span<uint8_t> scratch, InventoryHashProgress guard = nullptr,
+                                         void* context = nullptr)
+      : edition(scratch, guard, context), json(scratch, guard, context) {}
+  TintaJournalResult prepare(const Digest& verifiedEdition, uint32_t spineCount, bool allowEmpty = false) {
     if (used) return TintaJournalResult::Unavailable;
     used = true;
-    const auto prepared = edition.prepare(verifiedEdition, spineCount);
+    const auto prepared = edition.prepare(verifiedEdition, spineCount, allowEmpty);
     if (prepared != TintaJournalResult::Ok) return discard(prepared);
     editionHash = verifiedEdition;
     frontier = edition.authorityFrontier();
@@ -43,6 +45,22 @@ class NativeBookmarkJsonPreparation final {
   const Digest& authorityFrontier() const { return frontier; }
   uint32_t recordCount() const { return count; }
   uint16_t recordSize() const { return stride; }
+  const Identity& conflictIdentity() const { return edition.conflictIdentity(); }
+  bool retainForPublication(HalBookmarkPublicationRecord& records, const char* intentPath,
+                            const BookmarkPublicationClaim& claim) {
+    if (!isPrepared() || claim.edition != editionHash || claim.frontier != frontier || claim.recordCount != count ||
+        claim.recordSize != stride || !json.retainForPublication(records, intentPath, claim))
+      return false;
+    ready = false;
+    return true;
+  }
+  bool persistPublicationIntent(BookmarkPublicationStorage& storage, const BookmarkPublicationClaim& claim) {
+    if (!isPrepared() || claim.edition != editionHash || claim.frontier != frontier || claim.recordCount != count ||
+        claim.recordSize != stride)
+      return false;
+    ready = false;
+    return json.persistPublicationIntent(storage, claim);
+  }
   bool cleanup() {
     ready = false;
     const bool editionClean = edition.cleanup();

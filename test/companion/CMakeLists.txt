@@ -23,6 +23,8 @@ target_compile_definitions(CompanionTransferTest PRIVATE LILA_TINTA=1)
 gtest_discover_tests(CompanionTransferTest)
 
 add_executable(CompanionIdentityTest CompanionIdentityTest.cpp ../../lib/Companion/CompanionIdentity.cpp)
+target_include_directories(CompanionIdentityTest PRIVATE ${REPO_ROOT}/test/koreader_xpath_resolver/stubs
+  ${REPO_ROOT}/lib/Companion)
 target_link_libraries(CompanionIdentityTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionIdentityTest)
 
@@ -185,6 +187,14 @@ add_executable(CompanionTransferDisabledTest CompanionTransferDisabledTest.cpp
 target_link_libraries(CompanionTransferDisabledTest PRIVATE crosspoint_test_common GTest::gtest_main)
 target_compile_definitions(CompanionTransferDisabledTest PRIVATE LILA_TINTA=0)
 gtest_discover_tests(CompanionTransferDisabledTest)
+
+add_executable(CompanionTransferPsramTest CompanionTransferDisabledTest.cpp
+  ../../lib/Companion/CompanionTransfer.cpp ../../lib/Companion/CompanionRecords.cpp
+  ../../lib/Companion/CompanionTransferHandler.cpp)
+target_link_libraries(CompanionTransferPsramTest PRIVATE crosspoint_test_common GTest::gtest_main)
+target_compile_definitions(CompanionTransferPsramTest PRIVATE LILA_TINTA=0 BOARD_HAS_PSRAM=1)
+gtest_discover_tests(CompanionTransferPsramTest)
+
 
 add_executable(CompanionInventorySorterTest CompanionInventorySorterTest.cpp ../../lib/Companion/CompanionRecords.cpp)
 target_link_libraries(CompanionInventorySorterTest PRIVATE crosspoint_test_common GTest::gtest_main)
@@ -693,3 +703,31 @@ target_compile_definitions(TintaNativeProfileMutationTest PRIVATE LILA_TINTA=1)
 target_include_directories(TintaNativeProfileMutationTest BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tinta_clock_stubs ${REPO_ROOT}/lib/Tinta/src ${REPO_ROOT}/lib/Companion)
 target_link_libraries(TintaNativeProfileMutationTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
 gtest_discover_tests(TintaNativeProfileMutationTest)
+
+add_executable(CompanionContentReadTest CompanionContentReadTest.cpp ../../lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionContentReadTest PRIVATE crosspoint_test_common GTest::gtest_main)
+target_compile_definitions(CompanionContentReadTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures")
+gtest_discover_tests(CompanionContentReadTest)
+
+add_executable(HalContentReadSourceTest HalContentReadSourceTest.cpp ../../lib/hal/HalInventoryFileHash.cpp)
+target_include_directories(HalContentReadSourceTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${CMAKE_CURRENT_SOURCE_DIR}/hal_inventory_stubs ${REPO_ROOT}/lib/Companion)
+target_link_libraries(HalContentReadSourceTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(HalContentReadSourceTest)
+
+add_executable(HalContentReadSessionTest HalContentReadSessionTest.cpp ../../lib/hal/HalInventoryFileHash.cpp ../../lib/Companion/CompanionRecords.cpp
+  ../../lib/hal/HalInventoryIndexStorage.cpp ../../lib/hal/HalInventoryPublicationValidator.cpp)
+target_include_directories(HalContentReadSessionTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${CMAKE_CURRENT_SOURCE_DIR}/hal_inventory_stubs ${REPO_ROOT}/lib/Companion ${REPO_ROOT}/lib/hal)
+target_link_libraries(HalContentReadSessionTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(HalContentReadSessionTest)
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME FontInstallerFaultCheck
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/font_installer_fault_check.py
+          --compiler ${CMAKE_CXX_COMPILER})
+
+add_executable(CompanionDictionaryRemovalPlanTest CompanionDictionaryRemovalPlanTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionDictionaryRemovalPlanTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionDictionaryRemovalPlanTest)

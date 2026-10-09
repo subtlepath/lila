@@ -15,7 +15,7 @@ public struct ContentRemovalRequest: Equatable, Sendable {
         switch manifest.kind {
         case .epub: valid = manifest.formatVersion <= 1 && !family
         case .course: valid = manifest.formatVersion == 1 && family
-        case .font: valid = (1...2).contains(manifest.formatVersion) && !family
+        case .font: valid = (manifest.formatVersion == 1 || manifest.formatVersion == 4) && !family
         case .dictionary: valid = manifest.formatVersion == 1 && !family
         case .firmware: valid = false
         }

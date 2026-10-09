@@ -1,11 +1,22 @@
 # Companion hardware acceptance
 
 No hardware results have been recorded. Passing host tests or linking firmware
-is not evidence of passing this checklist. The current implementation provides
-BLE installation binding and EPUB transfers; inventory, Wi-Fi assistance,
-synchronization, other content installs, firmware installation, and Apple apps
-remain pending. Run their sections when the corresponding implementation exists.
-Do not mark unsupported flows passed.
+is not evidence of passing this checklist. Source exists for reader inventory,
+BLE/Wi-Fi transfer, synchronization, content/update services and native Apple app
+targets, but native Apple execution and physical acceptance remain unverified.
+Run only capabilities advertised by the tested firmware; source presence does
+not establish availability on every board. Do not mark unsupported flows passed.
+
+The descriptor in src/activities/network/CompanionConnectActivity.cpp advertises
+dictionary transfers when its concrete installer is attached and EPUB removal.
+Native Apple and physical acceptance remain part of full-plan completion. Declared Begin dispatch now admits bitmap fonts through
+the same destination validator used during installation, restricts vector fonts to
+PSRAM boards, and admits format-1 dictionaries only at their hash-scoped destination.
+Command-handler regressions cover valid requests and invalid paths without mutation;
+these host checks do not establish physical transfer acceptance.
+The Sticky profile excludes Tinta because it lacks layouts (platformio.ini:291), so its successful build does not validate course
+installation/switching or learner-state integration. These gaps must be resolved
+and verified, rather than treated as hardware passes or waived requirements.
 
 ## Equipment and evidence
 
@@ -35,9 +46,9 @@ startup gate of 128 KiB is a conservative guard, not measured BLE consumption.
 | Pairing and independent installations | pending | pending |
 | Repeated sessions and memory | pending | pending |
 | BLE transfer and power-loss recovery | pending | pending |
-| Wi-Fi handoff and fallback | pending implementation | pending implementation |
-| Offline/CloudKit reconciliation | pending implementation | pending implementation |
-| Content and firmware installation | pending implementation | pending implementation |
+| Wi-Fi handoff and fallback | acceptance pending; check capabilities | acceptance pending; check capabilities |
+| Offline/CloudKit reconciliation | acceptance pending; check capabilities | acceptance pending; check capabilities |
+| Content and firmware installation | acceptance pending; check capabilities | acceptance pending; check capabilities |
 
 ## Pairing and resource lifecycle
 
@@ -128,7 +139,7 @@ and retained history before and after each attempt.
       serial measurements. Firmware size and host allocation tests do not prove
       these physical limits.
 
-## Wi-Fi assistance (implementation pending)
+## Wi-Fi assistance (native/physical acceptance pending)
 
 - [ ] Queue more than 1 MiB, exercise both saved-network and password-protected
       hotspot assistance, including iOS joining and Mac system Wi-Fi guidance.
@@ -141,7 +152,7 @@ and retained history before and after each attempt.
       BLE and continue from the durable offset without duplicate installation.
 - [ ] Repeat handoffs in the memory-cycle test and verify the heap threshold.
 
-## Distributed state and CloudKit (implementation pending)
+## Distributed state and CloudKit (native/physical acceptance pending)
 
 - [ ] Change the same book position on both readers offline. One-sided changes
       propagate; concurrent positions retain both anchors until user resolution.
@@ -192,7 +203,7 @@ and retained history before and after each attempt.
 - [ ] Remove a reader without deleting library content. Verify a global library
       deletion requires its separate explicit action.
 
-## Other content and firmware (implementation pending)
+## Other content and firmware (native/physical acceptance pending)
 
 - [ ] Import the Spanish course pack, supported fonts, and StarDict bundles.
       Reject incompatible/corrupt packs and invalid archives. Preserve stable
@@ -209,7 +220,7 @@ and retained history before and after each attempt.
       must preserve an available recovery/previous boot path.
 - [ ] Connect older firmware: show existing OTA/SD initial-upgrade instructions.
 
-## Apple interaction (implementation pending)
+## Apple interaction (native/physical acceptance pending)
 
 - [ ] Open Settings → Portable preferences with concurrent reader changes.
       Verify both values are shown, cancel preserves both, and confirming a
@@ -227,3 +238,162 @@ and retained history before and after each attempt.
 Acceptance requires completed evidence for every relevant row and checkbox.
 Signing, CloudKit provisioning, distribution, and remote Git operations are
 separate from recording physical test results.
+
+## Existing reader content import
+
+Native reader-only controls, authenticated filename metadata, BLE reads, and
+reverse Wi-Fi admission/dispatch are wired. Record the complete user flow on C3
+and S3; command tests and source parsing do not satisfy this acceptance section.
+
+- [ ] Select an EPUB already on a reader but absent from the companion library;
+  verify parsed metadata, exact SHA/length, source-reader selection and retained
+  per-book reading history. Other readers must remain unselected.
+- [ ] Import an existing Tinta pack and verify its stable logical identity,
+  locale/edition and existing learner history remain intact.
+- [ ] Import bitmap/vector/collection fonts on supported boards and verify their
+  authenticated original names/families survive library/cloud/transfer use.
+- [ ] Import both plain and dictzip dictionaries; compare the retained original
+  ZIP bytes and validate members, index/synonyms and compressed definitions.
+- [ ] Interrupt a middle chunk, lose a reply, terminate/relaunch the Apple app,
+  reconnect and verify the acknowledged offset resumes without duplicate bytes.
+- [ ] Lose the last reply and interrupt verification/publication; retry must
+  preserve one immutable object and one completed job without reselecting an
+  item that was subsequently deselected.
+- [ ] Delete library content locally or through cloud visibility while a read or
+  verification is in flight; it must not publish/reselect after cancellation.
+- [ ] Change/remove the card, alter source bytes, disconnect/unpair, force low or
+  fragmented heap, and attempt concurrent transfer/removal/journal mutations.
+  Record explicit refusal, safe handle cleanup, retry and unchanged learner data.
+- [ ] Verify large-file Wi-Fi assistance, lease expiry, cancellation, reconnect, and
+  BLE fallback. Host encrypted transport tests do not prove physical handoff.
+- [ ] Monitor existing serial heap logs before/after radio start, every failure
+  and repeated sessions; record free/largest blocks and stack watermarks. Static
+  link RAM and compiler frames are not substitutes for the >50 KiB heap gate.
+
+- [ ] Complete a Wi-Fi reader import and verify automatic Bluetooth reconnect,
+  installation authentication, and refreshed inventory for the same reader and
+  card generation. The imported object and reader selection must remain present.
+- [ ] Lose the Wi-Fi finish response after library publication. Verify the job
+  remains Completed and the object is retained; a failed reconnect must report
+  successful import with a reconnect instruction rather than a paused download.
+- [ ] Replace the SD card or reader before post-handoff authentication. Reject
+  the changed identity/generation and do not publish its inventory as the old
+  reader's state. The completed companion object must remain usable.
+- [ ] Disconnect explicitly while post-handoff reconnect is running. Verify the
+  cancelled connection operation cannot later replace the current device state.
+
+- [ ] Delete the selected local font with settings-save failure injected. Verify
+  neither font root is removed until fallback persistence succeeds, including a
+  retry after the in-memory selection was cleared.
+- [ ] Fail deletion before and after effect in each root. Verify remaining files
+  are retained on a failed save and caches/registry reflect any partial deletion.
+  Check that a different selected family and unrelated directories survive.
+
+- [ ] Fail local font deletion, then retry with Confirm and touch separately.
+  Both must repeat deletion of the same family, with no download request. Back
+  must clear the deletion retry target. Check translated deletion errors and
+  registry refresh after partial failure in both local and web interfaces.
+
+- [ ] With CloudKit offline or stalled, reactivate a connected app with retained
+  local transfer/import jobs and a complete matching inventory. Local work must
+  resume independently of cloud completion. Deliver a global deletion while an
+  import is active and verify it cannot publish or reselect the deleted content.
+
+## Current portable software evidence
+
+The full CompanionKit Linux suite passes 504 tests. The complete configured CTest
+suite passes 1,706 entries. These cover the selected portable implementations,
+including inventory, persistence, migration, synchronization, transfers, removal,
+export codecs and shared fixtures, source verification, encrypted imports,
+restart/fallback, in-flight deletion, immutable filenames, cancellation, and
+bounded terminal staging cleanup. Native-only Apple SDK branches, SwiftUI
+interaction, CloudKit execution, and physical devices are outside these checks.
+
+Reproduce the Swift checks with `swift test --package-path apple/CompanionKit`.
+Configure/build `test/companion` with CMake and run its CTest suite; the verification
+run uses `/tmp/lila-companion-tests`. Native UI targets and Xcode commands are
+listed in `apple/App/README.md`. Swift source syntax parsing and the localization
+catalog check pass on Linux, but native compilation and UI execution remain
+unverified.
+
+`FontInstallerFaultCheck` is included in the passing CTest suite. It can also be
+run directly with `python3 test/companion/font_installer_fault_check.py`.
+It compiles the native installer against fake settings/storage to exercise failed
+saves and partial two-root deletion. It does not execute native settings
+serialization or physical SD failure behavior.
+
+### Current firmware images
+
+The routed font cohort implementation passes all five firmware builds and image
+validation. These images include capability bit 13, complete-path admission,
+checked settings publication, single-file/cohort startup recovery and registry
+refresh, alongside the earlier reader export and font-deletion UI changes.
+Board/chip identity, segment bounds, checksum, SHA trailer and OTA-size validation
+pass through `scripts/build_companion_release_manifest.py`. Saved proof records
+and images are under `/tmp/lila-font-cohort-images`.
+
+The dictionary-removal plan codec is host-tested but is not referenced by firmware
+yet; these images do not enable dictionary removal. Earlier stopped build batches
+are checkpoints only; this table contains the final routed-font results.
+
+| Profile | Static link RAM (bytes) | Image (bytes) | OTA headroom (bytes) | SHA-256 |
+| --- | ---: | ---: | ---: | --- |
+| default | 64984 | 6439040 | 114560 | `8485f123ae87bbb9e838dde7ad9bbc14bbc98d453382b04d1b9c512d662ad7d6` |
+| sticky | 75220 | 5749296 | 804304 | `27720bf7a082cad83699180ca48312d4ba2d6553053e33881e28251dc36dc793` |
+| x4pro | 108900 | 6478672 | 74928 | `6a48e20086082fa6638d6d9cde98b64b56f61a5afdd3e70b3f9c067955402889` |
+| x4c | 108732 | 6449712 | 103888 | `d9bd4eb270377aabc4064c366daeadbe82e5ac23d18ac7675e51364ef5d6bc77` |
+| papermono | 125076 | 5863696 | 689904 | `f42903c5fbdb3167e6e3c84a2a891a767ef8686410d43fbb0ba704e4460fa8d1` |
+
+Static link RAM is not runtime free heap. Firmware-image acceptance does not prove
+radio operation, learner-history preservation, SD power-loss recovery, or the
+required repeated-session memory acceptance. Sticky excludes Tinta, so its build
+is not evidence of course installation or learner-state behavior.
+
+### Compiler frame checks
+
+The font cohort/reference probe passes with C3 project flags, LTO disabled and
+frames above 256 bytes promoted to errors. It reports 192 bytes for font reference
+path selection, 64 bytes for selected-family comparison and cohort walking,
+32 bytes for publication, and 32/16 bytes for the plan/cohort probe entry points.
+The probe uses the matching cached 5.5.5 SDK headers because PlatformIO temporarily
+replaces the shared package while switching profiles; Arduino headers are 3.3.11.
+Evidence is `/tmp/lila-font-cohort-frame-probe.log` and
+`/tmp/lila-font-cohort-frame-probe.su`. These are individual compiler frames,
+not whole-call stack usage or physical task watermarks.
+
+The updated native `FontInstaller.cpp` passes an ESP32-C3 compile using actual
+project flags with LTO disabled and frames above 256 bytes promoted to errors.
+`deleteFamily` has a 224-byte static frame. The probe log and stack report are
+`/tmp/lila-font-delete-frame.log` and `/tmp/lila-font-delete-frame.su`. This is an
+individual compiler frame, not a task watermark or whole-call-chain bound.
+
+A focused ESP32-C3 probe uses actual project flags, disables LTO for reporting,
+and promotes frames larger than 256 bytes to errors. It passes with 256 bytes for
+source admission, 240 bytes for the Wi-Fi read wrapper, and 80 bytes for the shared
+session reply. Earlier codec/source probes report a largest codec frame of 160
+bytes and source attach/read frames of 96/32 bytes. These are individual generated
+frames, not whole-call stack usage or task high-water marks.
+
+The retained-owner test closes a source handle while preserving the admitted
+binding, reopens and hashes it for Wi-Fi, rejects changed bytes, and refuses reads
+after normal cleanup clears the binding. Other host fault tests cover low or
+fragmented heap refusal before source/mutation admission, failed close propagation,
+malformed wire bindings, and retry. Measure free/largest heap, task watermarks,
+and repeated radio transitions on actual C3/S3 hardware; no physical results have
+been recorded.
+
+### Font removal acceptance
+
+- [ ] On C3 and S3, remove an in-use bitmap font using the Apple confirmation;
+      verify built-in fallback persists across reboot and the library copy remains.
+- [ ] On a vector-capable S3, repeat for vector fonts and loose-root font files.
+- [ ] Install identical font bytes in both font roots, remove their content ID,
+      and verify both copies leave inventory while unrelated styles remain.
+- [ ] Interrupt quarantine, settings save, completion publication and reply;
+      verify boot recovery/retry retains the same transaction and preserves other
+      preferences. A failed settings load must block recovery without overwriting
+      the saved settings file.
+- [ ] Check native VoiceOver/keyboard/touch confirmation and ensure EPUB-only
+      firmware receives no font-removal request.
+- [ ] Record free/largest internal heap, stack watermarks and repeated-session
+      memory during font removal, including refused low/fragmented-heap admission.

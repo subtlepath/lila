@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import CSQLite
 #if canImport(CryptoKit)
 import CryptoKit
 #else
@@ -33,6 +34,7 @@ private actor ReaderTransferFixture: CompanionTransport {
     private var lostStatus: Bool
     private let rejectionStatus: TransferPhase?
     private let foreignStatus: Bool
+    private var cancelCommit: Bool
     private var cancelChunk: Bool
     private var cancelInstallingBegin: Bool
     private var received = Data()
@@ -50,9 +52,10 @@ private actor ReaderTransferFixture: CompanionTransport {
     init(beginPhase: TransferPhase? = nil, lostChunk: Bool = false, lostCommit: Bool = false, lostAbort: Bool = false, badOffset: Bool = false,
          installingCommit: Bool = false, rejectCommit: Bool = false, lostStatus: Bool = false,
          rejectionStatus: TransferPhase? = nil, foreignStatus: Bool = false,
-         cancelInstallingBegin: Bool = false, cancelChunk: Bool = false,
+         cancelInstallingBegin: Bool = false, cancelChunk: Bool = false, cancelCommit: Bool = false,
          deselectAtOffset: (LibraryStore, Data, ContentID, UInt64)? = nil) {
         self.beginPhase = beginPhase
+        self.cancelCommit = cancelCommit
         self.cancelChunk = cancelChunk
         self.deselectAtOffset = deselectAtOffset
         self.lostAbort = lostAbort
@@ -148,6 +151,11 @@ private actor ReaderTransferFixture: CompanionTransport {
                                       contentHash: current.contentHash, length: current.length, durableOffset: current.length,
                                       phase: installingCommit ? .installing : .committed)
             installingCommit = false
+            if cancelCommit {
+                cancelCommit = false
+                withUnsafeCurrentTask { $0?.cancel() }
+                throw CancellationError()
+            }
             if lostCommit { lostCommit = false; throw RunnerFixtureError.disconnected }
         case .transferStatus:
             if lostStatus { throw RunnerFixtureError.disconnected }
@@ -413,6 +421,37 @@ final class TransferRunnerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(result.phase, .completed)
         let paths = await reader.declaredDestinations()
         XCTAssertEqual(paths, ["/fonts/Fixture.ttf"])
+    }
+    func testCourseMetadataMustMatchVerifiedPackBeforeDeclarationOrTransmission() async throws {
+        for assignment in ["edition=edition+1", "minor=minor+1", "locale='fr'"] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let (library, vault, job, _) = try await setupCourse(root)
+            var database: OpaquePointer?
+            XCTAssertEqual(sqlite3_open(root.appendingPathComponent("library.sqlite").path, &database), SQLITE_OK)
+            XCTAssertEqual(sqlite3_exec(database, "UPDATE course_packs SET \(assignment)", nil, nil, nil), SQLITE_OK)
+            XCTAssertEqual(sqlite3_close(database), SQLITE_OK)
+            let reader = ReaderTransferFixture()
+            let runner = TransferRunner(library: library, vault: vault)
+            do {
+                _ = try await runner.prepareDeclaration(job.id, device: device(capabilities: 3), installation: job.installation)
+                XCTFail("Mismatched course metadata must not produce a declaration")
+            } catch { XCTAssertEqual(error as? StoreError, .invalidValue) }
+            let undeclared = try await library.job(job.id)
+            XCTAssertEqual(undeclared, job)
+            do {
+                _ = try await runner.run(job.id, device: device(capabilities: 3), transport: reader)
+                XCTFail("Mismatched course metadata must not reach the reader")
+            } catch { XCTAssertEqual(error as? StoreError, .invalidValue) }
+            let count = await reader.count()
+            XCTAssertEqual(count, 0)
+            let unchanged = try await library.job(job.id)
+            XCTAssertEqual(unchanged?.id, job.id)
+            XCTAssertEqual(unchanged?.content, job.content)
+            XCTAssertEqual(unchanged?.storageGeneration, job.storageGeneration)
+            XCTAssertEqual(unchanged?.durableOffset, 0)
+            XCTAssertEqual(unchanged?.phase, .paused)
+        }
     }
     func testRejectedCourseCommitCanBeAbortedAfterReaderConfirmsReceiving() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -744,6 +783,37 @@ final class TransferRunnerTests: XCTestCase, @unchecked Sendable {
         let uncertain = try await library.job(job.id)
         XCTAssertEqual(uncertain?.phase, .committing)
     }
+    func testCancellationAfterCommitEffectsRetainsRecoveryAcrossRestart() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (library, vault, job, _) = try await setup(root)
+        let reader = ReaderTransferFixture(cancelCommit: true)
+        let runner = TransferRunner(library: library, vault: vault)
+        let task = Task { try await runner.run(job.id, device: device(), transport: reader) }
+        do { _ = try await task.value; XCTFail("Commit acknowledgement cancellation ignored") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        let restarted = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
+        let pendingValue = try await restarted.job(job.id)
+        let pending = try XCTUnwrap(pendingValue)
+        XCTAssertEqual(pending.phase, .committing)
+        let contentValue = try await restarted.content(job.content)
+        let content = try XCTUnwrap(contentValue)
+        XCTAssertEqual(pending.durableOffset, content.length)
+        let received = await reader.bytes()
+        let commitCount = await reader.commits()
+        XCTAssertEqual(commitCount, 1)
+        let resumed = try await TransferRunner(library: restarted, vault: vault)
+            .run(job.id, device: device(), transport: reader)
+        XCTAssertEqual(resumed.id, job.id)
+        XCTAssertEqual(resumed.phase, .completed)
+        let finalBytes = await reader.bytes()
+        let finalCommits = await reader.commits()
+        XCTAssertEqual(finalBytes, received)
+        XCTAssertEqual(finalCommits, commitCount)
+        let jobs = try await restarted.pendingJobs()
+        XCTAssertTrue(jobs.isEmpty)
+    }
+
     func testPauseAfterDurableChunkResumesSameJobAfterRestart() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -885,6 +955,12 @@ final class TransferRunnerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(preservedConsent, consent)
         let reader = ReaderTransferFixture(lostChunk: true)
         let runner = TransferRunner(library: reopened, vault: vault)
+        do {
+            _ = try await runner.prepareDeclaration(job.id, device: device(capabilities: 3), installation: job.installation)
+            XCTFail("switch capability required before handoff declaration")
+        } catch TransferRunnerError.unsupportedContent {}
+        let rejectedDeclaration = try await reopened.retainedTransferDeclaration(job.id)
+        XCTAssertNil(rejectedDeclaration)
         do {
             _ = try await runner.run(job.id, device: device(capabilities: 3), transport: reader)
             XCTFail("switch capability required")

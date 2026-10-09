@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CompanionContentRead.h"
 #include "CompanionContentRemovalRequest.h"
 #include "CompanionCourseSwitchRequest.h"
 #include "CompanionDeclaredTransferCommand.h"
@@ -58,10 +59,19 @@ inline bool wifiTransferStateMatches(const TransferState& state, const Identity&
   return decodeWifiRemoval(body, request) && request.transaction == transaction && request.owner == owner &&
          request.generation == generation;
 }
+[[gnu::noinline]] inline bool validWifiContentReadEnvelope(std::span<const uint8_t> body, const Identity& transaction,
+                                                           const Identity& generation) {
+  if (body.size() != 16 + CONTENT_READ_REQUEST_SIZE ||
+      !std::equal(transaction.begin(), transaction.end(), body.begin()))
+    return false;
+  ContentReadRequest read;
+  return decodeContentReadRequest(body.subspan(16), read) && read.generation == generation;
+}
 inline bool validWifiTransferRequest(const FrameView& request, const Identity& transaction, const Identity& owner,
                                      const Identity& generation) {
   if (request.response || request.payload.size() > MAX_CONTROL_PAYLOAD) return false;
   const auto& body = request.payload;
+  if (request.command == Command::ReadContent) return validWifiContentReadEnvelope(body, transaction, generation);
   if (request.command == Command::RemoveContent) return validWifiRemoval(body, transaction, owner, generation);
   if (request.command == Command::BeginTransfer) {
     if (body.size() >= 2 && body[0] == 1 && body[1] == static_cast<uint8_t>(RecordKind::ContentManifest))

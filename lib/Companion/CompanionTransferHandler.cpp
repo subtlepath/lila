@@ -1,13 +1,15 @@
 #include "CompanionTransferHandler.h"
 
+#include "../EpdFont/VectorFontSupport.h"
 #include "CompanionCourseBinding.h"
 #include "CompanionDeclaredTransferCommand.h"
+#include "CompanionDictionaryArchiveBinding.h"
 #include "CompanionFirmwareTransfer.h"
+#include "CompanionFontDestination.h"
 namespace companion {
 namespace {
-bool validEpubTarget(std::string_view destination, const Digest& hash) {
-  constexpr std::string_view prefix = "/Books/Companion/";
-  constexpr std::string_view suffix = ".epub";
+bool validHashedTarget(std::string_view destination, const Digest& hash, std::string_view prefix,
+                       std::string_view suffix) {
   if (!destination.starts_with(prefix) || !destination.ends_with(suffix) ||
       destination.size() != prefix.size() + 64 + suffix.size())
     return false;
@@ -23,7 +25,17 @@ bool validEpubTarget(std::string_view destination, const Digest& hash) {
                                                      const Identity& owner) {
   const auto& manifest = begin.declaration.manifest;
   if (manifest.kind == ContentKind::Epub) {
-    if (!validEpubTarget(begin.destination, manifest.contentHash)) return TransferResult::Invalid;
+    if (!validHashedTarget(begin.destination, manifest.contentHash, "/Books/Companion/", ".epub"))
+      return TransferResult::Invalid;
+  } else if (manifest.kind == ContentKind::Font) {
+    if (!validFontDestination(begin.destination, manifest.formatVersion)) return TransferResult::Invalid;
+#if !CROSSPOINT_VECTOR_FONTS
+    if (manifest.formatVersion == 1) return TransferResult::Invalid;
+#endif
+  } else if (manifest.kind == ContentKind::Dictionary) {
+    if (!validDictionaryBindingManifest(manifest) ||
+        !validHashedTarget(begin.destination, manifest.contentHash, "/dictionaries/", "/dictionary"))
+      return TransferResult::Invalid;
   } else if (manifest.kind == ContentKind::Firmware) {
     if (!validFirmwareStageManifest(manifest) || begin.destination != FIRMWARE_STAGE_DESTINATION)
       return TransferResult::Invalid;
@@ -52,7 +64,8 @@ TransferResult execute(Transfer& transfer, Command command, std::span<const uint
     if (body.size() >= 2 && body[1] == static_cast<uint8_t>(RecordKind::ContentManifest))
       return declaredBegin(transfer, body, owner);
     BeginTransferCommand begin;
-    if (!decodeBeginTransfer(body, begin) || !validEpubTarget(begin.destination, begin.state.contentHash))
+    if (!decodeBeginTransfer(body, begin) ||
+        !validHashedTarget(begin.destination, begin.state.contentHash, "/Books/Companion/", ".epub"))
       return TransferResult::Invalid;
     if (begin.state.owner != owner) return TransferResult::Unauthorized;
     return transfer.begin(begin.state, begin.destination);

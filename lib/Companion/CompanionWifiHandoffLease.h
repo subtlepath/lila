@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CompanionContentExportBinding.h"
 #include "CompanionJournalMergeIntent.h"
 #include "CompanionWifiHandoffCommands.h"
 
@@ -57,6 +58,14 @@ class WifiHandoffLease final {
                        durableCount >= merge.previous.count && durableCount < merge.merged.count;
     return prepareBound(source, request, merge.transaction, reader, generation, installation, authenticatedToken, now,
                         valid);
+  }
+
+  WifiHandoffLeaseResult prepareExport(const WifiNetworkOffer& source, const WifiHandoffPrepare& request,
+                                       const ContentExportBinding& binding, uint64_t inventoryRevision,
+                                       const Identity& reader, const Identity& generation, const Identity& installation,
+                                       uint64_t authenticatedToken, uint64_t now) {
+    return prepareBound(source, request, request.transaction, reader, generation, installation, authenticatedToken, now,
+                        binding.boundTo(request.transaction, installation, generation, inventoryRevision));
   }
 
  private:

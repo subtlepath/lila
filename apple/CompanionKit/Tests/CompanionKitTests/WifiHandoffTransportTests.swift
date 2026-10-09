@@ -57,12 +57,23 @@ private actor HandoffWireFixture: WifiMessageTransport {
             journalReply = Data([1, 0, 0, 0]) + transaction
             journalReply.appendLittleEndian(0, count: 4)
         }
+        if request.command == .readContent {
+            guard request.payload.prefix(16) == transaction else { throw HandoffFixtureError.disconnected }
+            let read = try ReaderContentReadRequest(decoding: Data(request.payload.dropFirst(16)))
+            let count = Int(min(UInt64(read.maximumBytes), read.manifest.length - read.offset))
+            journalReply = Data([0x4c, 0x43, 0x53, 1, 0])
+            journalReply.append(read.generation); journalReply.append(read.manifest.content.digest)
+            journalReply.appendLittleEndian(read.offset, count: 8)
+            journalReply.appendLittleEndian(UInt64(count), count: 2)
+            journalReply.append(Data(repeating: 7, count: count))
+            if mode == 6 { journalReply[5] ^= 1 }
+        }
         afterRequest()
         if mode == 3 { throw HandoffFixtureError.disconnected }
         let reply = try ControlFrame(command: mode == 2 ? .commit : request.command,
             response: true, requestID: mode == 1 ? request.requestID + 1 : request.requestID,
             payload: request.command == .journalFormats ? Data([0, 6]) :
-                     request.command == .exchangeChanges ? journalReply :
+                     request.command == .exchangeChanges || request.command == .readContent ? journalReply :
                      request.command == .wifiHandoff && mode != 5 ? Data([0]) : Data())
         var encrypted = try await cipher.seal(reply.encoded())
         if mode == 4 { encrypted[31] ^= 1 }
@@ -73,6 +84,46 @@ private actor HandoffWireFixture: WifiMessageTransport {
 }
 
 final class WifiHandoffTransportTests: XCTestCase {
+    func testContentReadsUseEncryptedTransactionAndGenerationBindings() async throws {
+        let offer = try offer(), clock = HandoffTestClock()
+        let wire = try HandoffWireFixture(offer: offer)
+        let transport = try transport(offer, wire, clock)
+        let manifest = try ContentManifest(content: ContentID(String(repeating: "12", count: 32)), kind: .epub,
+            length: 1000, formatVersion: 1, logicalIdentity: Data(count: 16))
+        let request = try ReaderContentReadRequest(generation: offer.storageGeneration, manifest: manifest,
+            offset: 961, maximumBytes: 961)
+        let reply = try await transport.readContent(request, requestID: 19)
+        XCTAssertEqual(reply.result, .ok); XCTAssertEqual(reply.bytes, Data(repeating: 7, count: 39))
+        let foreign = try ControlFrame(command: .readContent, requestID: 20,
+            payload: Data(repeating: 9, count: 16) + request.encoded)
+        do { _ = try await transport.exchange(foreign); XCTFail("Foreign transaction accepted") }
+        catch { XCTAssertEqual(error as? WifiHandoffTransportError, .binding) }
+        let stats = await wire.statistics(); XCTAssertEqual(stats.0, 1); XCTAssertTrue(stats.1)
+    }
+    func testForeignCardContentReadFailsBeforeEncryptedHTTP() async throws {
+        let offer = try offer(), clock = HandoffTestClock()
+        let wire = try HandoffWireFixture(offer: offer)
+        let transport = try transport(offer, wire, clock)
+        let manifest = try ContentManifest(content: ContentID(String(repeating: "12", count: 32)), kind: .epub,
+            length: 5, formatVersion: 1, logicalIdentity: Data(count: 16))
+        let request = try ReaderContentReadRequest(generation: Data(repeating: 9, count: 16), manifest: manifest,
+            offset: 0, maximumBytes: 3)
+        do { _ = try await transport.readContent(request, requestID: 20); XCTFail("Foreign card accepted") }
+        catch { XCTAssertEqual(error as? WifiHandoffTransportError, .binding) }
+        let stats = await wire.statistics(); XCTAssertEqual(stats.0, 0); XCTAssertTrue(stats.1)
+    }
+    func testWrongContentReplyBindingClosesEncryptedTransport() async throws {
+        let offer = try offer(), clock = HandoffTestClock()
+        let wire = try HandoffWireFixture(offer: offer, mode: 6)
+        let transport = try transport(offer, wire, clock)
+        let manifest = try ContentManifest(content: ContentID(String(repeating: "12", count: 32)), kind: .epub,
+            length: 5, formatVersion: 1, logicalIdentity: Data(count: 16))
+        let request = try ReaderContentReadRequest(generation: offer.storageGeneration, manifest: manifest,
+            offset: 0, maximumBytes: 3)
+        do { _ = try await transport.readContent(request, requestID: 21); XCTFail("Foreign reply accepted") }
+        catch { XCTAssertEqual(error as? ProtocolError, .value) }
+        let stats = await wire.statistics(); XCTAssertEqual(stats.0, 1); XCTAssertTrue(stats.1)
+    }
     func testCollectorImportsEmptyJournalOverEncryptedHandoff() async throws {
         let offer = try offer(), clock = HandoffTestClock()
         var page = Data([1, 1, 0, 0])

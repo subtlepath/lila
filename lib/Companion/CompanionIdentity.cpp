@@ -31,6 +31,35 @@ bool equal(const Identity& value, std::span<const uint8_t> bytes) {
 void copy(const Identity& value, std::span<uint8_t> bytes) { std::copy(value.begin(), value.end(), bytes.begin()); }
 }  // namespace
 
+IdentityInspectionResult inspectIdentity(IdentityStorage& storage, IdentityState& output) {
+  std::array<uint8_t, IDENTITY_RECORD_SIZE> record{};
+  Identity device{}, card{}, marker{};
+  if (!storage.hardwareIdentity(device) || !storage.cardIdentity(card)) return IdentityInspectionResult::IoError;
+  if (!nonzero(device) || !nonzero(card)) return IdentityInspectionResult::Corrupt;
+  const auto binding = storage.readBinding(record);
+  if (binding == IdentityRead::Missing) return IdentityInspectionResult::Unavailable;
+  if (binding == IdentityRead::Error) return IdentityInspectionResult::IoError;
+  if (binding != IdentityRead::Present) return IdentityInspectionResult::Corrupt;
+  const auto bytes = std::span<const uint8_t>(record);
+  if (bytes[0] != 'L' || bytes[1] != 'C' || bytes[2] != 'I' || bytes[3] != 1 ||
+      number(bytes.subspan(76, 4)) != crc(bytes.first(76)) ||
+      !std::any_of(bytes.begin() + 52, bytes.begin() + 68, [](uint8_t byte) { return byte != 0; }))
+    return IdentityInspectionResult::Corrupt;
+  const auto epoch = number(bytes.subspan(68, 8));
+  if (!epoch) return IdentityInspectionResult::Corrupt;
+  if (!equal(device, bytes.subspan(4, 16))) return IdentityInspectionResult::WrongHardware;
+  const auto markerStatus = storage.readMarker(marker);
+  if (markerStatus == IdentityRead::Missing) return IdentityInspectionResult::Unavailable;
+  if (markerStatus == IdentityRead::Error) return IdentityInspectionResult::IoError;
+  if (markerStatus != IdentityRead::Present || !nonzero(marker)) return IdentityInspectionResult::Corrupt;
+  if (!equal(card, bytes.subspan(20, 16)) || !equal(marker, bytes.subspan(36, 16)))
+    return IdentityInspectionResult::WrongStorage;
+  output.device = device;
+  std::copy_n(bytes.begin() + 52, 16, output.storageGeneration.begin());
+  output.eventEpoch = epoch;
+  return IdentityInspectionResult::Ok;
+}
+
 IdentityResult provisionIdentity(IdentityStorage& storage, IdentityState& output) {
   std::array<uint8_t, IDENTITY_RECORD_SIZE> record{};
   IdentityState next;

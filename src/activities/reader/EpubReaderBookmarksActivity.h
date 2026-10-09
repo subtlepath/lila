@@ -1,6 +1,12 @@
 #pragma once
 #include <Epub.h>
+#include <I18n.h>
+#if LILA_COMPANION
+#include "CompanionBookmarkChoicePage.h"
+#include "CompanionReaderBookmarks.h"
+#endif
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -16,6 +22,30 @@ class EpubReaderBookmarksActivity final : public UiListActivity {
   std::shared_ptr<Epub> epub;
   std::string epubPath;
   std::vector<BookmarkEntry> bookmarks;
+  StrId pendingBookmarkError = StrId::_COUNT;
+#if LILA_COMPANION
+  companion::ReaderBookmarkBinding bookmarkBinding;
+  bool associationUi = false;
+  void restoreBookmarkList(const RenderLock& lock);
+  void rebuildAssociationRows();
+  void selectAssociation(int index);
+  struct ConflictUi {
+    static constexpr size_t SUBTITLE_BYTES = 640;
+    companion::NativeBookmarkChoicePage page;
+    std::array<std::array<char, BookmarkEntry::MAX_NAME_LENGTH + 1>, companion::NativeBookmarkChoicePage::CAPACITY>
+        labels{};
+    std::array<std::array<char, SUBTITLE_BYTES>, companion::NativeBookmarkChoicePage::CAPACITY> subtitles{};
+    uint32_t offset = 0;
+  };
+  static_assert(sizeof(ConflictUi) <= 6400);
+  std::unique_ptr<ConflictUi> conflictUi;
+  bool loadConflictChoices(uint32_t offset);
+  void rebuildConflictRows();
+  void appendConflictRow(uint32_t index);
+  void formatConflictSubtitle(uint32_t index, const companion::BookmarkBodyView& body);
+  void selectConflictChoice(int index);
+  void closeConflictChoices();
+#endif
   // Row buffers derived from `bookmarks`, rebuilt only when it changes
   // (onEnter() load, post-delete) instead of on every repaint — buildScreen()
   // used to re-compose a percentage/chapter/TOC-title subtitle string per
@@ -23,6 +53,7 @@ class EpubReaderBookmarksActivity final : public UiListActivity {
   std::vector<std::string> bookmarkSubtitles;
   std::vector<freeink::ui::ListItem> bookmarkRowItems;
   void rebuildBookmarkRowItems();
+  std::string bookmarkSubtitle(const BookmarkEntry& bookmark) const;
   bool confirmingDelete = false;
   OptionPopup confirmPopup;
 
@@ -33,7 +64,12 @@ class EpubReaderBookmarksActivity final : public UiListActivity {
   void render(RenderLock&&) override;
 
  private:
-  int listCount() const override { return static_cast<int>(bookmarks.size()); }
+  int listCount() const override {
+#if LILA_COMPANION
+    if (!bookmarkBinding.ready || conflictUi || associationUi) return static_cast<int>(bookmarkRowItems.size());
+#endif
+    return static_cast<int>(bookmarks.size());
+  }
   void buildScreen(UiScreen& screen) override;
   void activateIndex(int index) override;
   void onRowLongPress(int index) override;

@@ -396,7 +396,7 @@ final class TintaMigrationRunnerTests: XCTestCase, @unchecked Sendable {
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let queued = try await fixture.library.queueJournalMerge(reader: fixture.inventory.reader,
             declaration: fixture.admission.merge, previous: [], incoming: fixture.incoming, inventory: fixture.inventory)
-        try sql("DROP INDEX journal_merge_active_reader; ALTER TABLE journal_merge_jobs DROP COLUMN abort_state; CREATE UNIQUE INDEX journal_merge_active_reader ON journal_merge_jobs(reader,generation) WHERE phase!='completed'; PRAGMA user_version=37", database: fixture.database)
+        try sql("DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP INDEX journal_merge_active_reader; ALTER TABLE journal_merge_jobs DROP COLUMN abort_state; CREATE UNIQUE INDEX journal_merge_active_reader ON journal_merge_jobs(reader,generation) WHERE phase!='completed'; PRAGMA user_version=37", database: fixture.database)
         let reopened = try LibraryStore(url: fixture.database)
         let restored = try await reopened.journalMergeJob(queued.id)
         XCTAssertEqual(restored, queued)
@@ -457,7 +457,7 @@ final class TintaMigrationRunnerTests: XCTestCase, @unchecked Sendable {
     func testOrdinaryMergeUpgradesSchema36() async throws {
         let fixture = try await fixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
-        try sql("DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; PRAGMA user_version=36", database: fixture.database)
+        try sql("DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; PRAGMA user_version=36", database: fixture.database)
         let reopened = try LibraryStore(url: fixture.database)
         let queued = try await reopened.queueJournalMerge(reader: fixture.inventory.reader,
             declaration: fixture.admission.merge, previous: [], incoming: fixture.incoming, inventory: fixture.inventory)
@@ -554,7 +554,7 @@ final class TintaMigrationRunnerTests: XCTestCase, @unchecked Sendable {
         let fixture = try await fixture(learning: false)
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let before = try await fixture.library.syncEvents()
-        try sql("DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; PRAGMA user_version=35", database: fixture.database)
+        try sql("DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; PRAGMA user_version=35", database: fixture.database)
         let upgraded = try LibraryStore(url: fixture.database)
         let after = try await upgraded.syncEvents()
         XCTAssertEqual(after, before)
@@ -746,7 +746,7 @@ final class TintaMigrationRunnerTests: XCTestCase, @unchecked Sendable {
         defer { try? FileManager.default.removeItem(at: fixture.root) }
         let job = try await fixture.library.queueTintaMigration(backup: fixture.backup, admission: fixture.admission,
             previous: [], incoming: fixture.incoming, inventory: fixture.inventory, vault: fixture.vault)
-        try sql("DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP INDEX tinta_migration_active_reader; ALTER TABLE tinta_migration_jobs DROP COLUMN abort_state; CREATE UNIQUE INDEX tinta_migration_active_reader ON tinta_migration_jobs(reader,generation) WHERE phase!='completed'; PRAGMA user_version=34", database: fixture.database)
+        try sql("DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP INDEX tinta_migration_active_reader; ALTER TABLE tinta_migration_jobs DROP COLUMN abort_state; CREATE UNIQUE INDEX tinta_migration_active_reader ON tinta_migration_jobs(reader,generation) WHERE phase!='completed'; PRAGMA user_version=34", database: fixture.database)
         let upgraded = try LibraryStore(url: fixture.database)
         let restored = try await upgraded.tintaMigrationJob(job.id)
         XCTAssertEqual(restored, job)
@@ -1068,7 +1068,7 @@ final class TintaMigrationRunnerTests: XCTestCase, @unchecked Sendable {
     func testSchema33UpgradePreservesReviewedBackupAndImportedHistory() async throws {
         let fixture = try await fixture()
         defer { try? FileManager.default.removeItem(at: fixture.root) }
-        try sql("DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP TABLE tinta_migration_events; DROP TABLE tinta_migration_jobs; PRAGMA user_version=33", database: fixture.database)
+        try sql("DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP TABLE tinta_migration_events; DROP TABLE tinta_migration_jobs; PRAGMA user_version=33", database: fixture.database)
         let reopened = try LibraryStore(url: fixture.database)
         let events = try await reopened.syncEvents(); XCTAssertEqual(events.count, fixture.incoming.count)
         let backups = try await reopened.legacyBackupIDs(reader: fixture.admission.reader,

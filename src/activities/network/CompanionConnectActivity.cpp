@@ -245,6 +245,99 @@ bool CompanionConnectActivity::removalPermitted() const {
   return !current || current->phase == companion::TransferPhase::Committed ||
          current->phase == companion::TransferPhase::Aborted;
 }
+bool CompanionConnectActivity::contentReadPermitted() const {
+  if ((!ready && wifiPhase != WifiPhase::Serving) || !workspace || recoveryBlocked || firmwareInstallPending ||
+      inventoryPending || journalReceive || legacyBackup || journalExportReady || !transfer)
+    return false;
+  const auto* current = transfer->current();
+  return !current || current->phase == companion::TransferPhase::Committed ||
+         current->phase == companion::TransferPhase::Aborted;
+}
+bool CompanionConnectActivity::closeContentReaders() {
+  exportTransaction = {};
+  if (!contentReader || contentReader->closeReaders()) return true;
+  recoveryBlocked = true;
+  LOG_ERR("COMPANION", "Content export readers could not close");
+  return false;
+}
+size_t CompanionConnectActivity::contentReadReply(bool authorized, std::span<const uint8_t> input,
+                                                  std::span<uint8_t> output) {
+  companion::ContentReadRequest request;
+  if (!companion::decodeContentReadRequest(input, request)) return 0;
+  auto result = companion::ContentReadResult::Unauthorized;
+  if (!authorized) return companion::encodeContentReadReply(request, result, {}, output);
+  result = companion::ContentReadResult::WrongStorage;
+  if (request.generation != identity.storageGeneration)
+    return companion::encodeContentReadReply(request, result, {}, output);
+  result = companion::ContentReadResult::Busy;
+  if (!contentReader || !contentReadPermitted() || !inventory || !inventory->revision())
+    return companion::encodeContentReadReply(request, result, {}, output);
+  uint64_t bytes = 0;
+  for (const char* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, bytes);
+    if (status == companion::FileStatus::Present) return companion::encodeContentReadReply(request, result, {}, output);
+    if (status == companion::FileStatus::Error)
+      return companion::encodeContentReadReply(request, companion::ContentReadResult::IoError, {}, output);
+  }
+  if (!contentReader->open(identity.storageGeneration, inventory->revision()))
+    return companion::encodeContentReadReply(request, companion::ContentReadResult::IoError, {}, output);
+  return contentReader->reply(installation, identity.storageGeneration, inventory->revision(), input, output);
+}
+
+size_t CompanionConnectActivity::contentMetadataReply(bool authorized, std::span<const uint8_t> input,
+                                                      std::span<uint8_t> output) {
+  companion::ContentMetadataRequest request;
+  if (!companion::decodeContentMetadataRequest(input, request)) return 0;
+  auto result = companion::ContentReadResult::Unauthorized;
+  if (!authorized) return companion::encodeContentMetadataReply(request, result, {}, output);
+  result = companion::ContentReadResult::WrongStorage;
+  if (request.generation != identity.storageGeneration)
+    return companion::encodeContentMetadataReply(request, result, {}, output);
+  result = companion::ContentReadResult::Busy;
+  if (!contentReader || !contentReadPermitted() || !inventory || !inventory->revision())
+    return companion::encodeContentMetadataReply(request, result, {}, output);
+  uint64_t bytes = 0;
+  for (const char* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, bytes);
+    if (status == companion::FileStatus::Present)
+      return companion::encodeContentMetadataReply(request, result, {}, output);
+    if (status == companion::FileStatus::Error)
+      return companion::encodeContentMetadataReply(request, companion::ContentReadResult::IoError, {}, output);
+  }
+  if (!contentReader->open(identity.storageGeneration, inventory->revision()))
+    return companion::encodeContentMetadataReply(request, companion::ContentReadResult::IoError, {}, output);
+  return contentReader->metadataReply(request, identity.storageGeneration, inventory->revision(), output);
+}
+
+size_t CompanionConnectActivity::contentHandoffReply(bool authorized, std::span<const uint8_t> input,
+                                                     std::span<uint8_t> output) {
+  companion::ContentHandoffRequest request;
+  if (!companion::decodeContentHandoffRequest(input, request)) return 0;
+  if (!authorized)
+    return companion::encodeContentHandoffReply(request, companion::ContentReadResult::Unauthorized, output);
+  if (request.read.generation != identity.storageGeneration)
+    return companion::encodeContentHandoffReply(request, companion::ContentReadResult::WrongStorage, output);
+  if (!contentReader || !contentReadPermitted() || !inventory || !inventory->revision() ||
+      wifiPhase != WifiPhase::None || wifiLease.phase() != companion::WifiHandoffLeasePhase::Empty)
+    return companion::encodeContentHandoffReply(request, companion::ContentReadResult::Busy, output);
+  uint64_t bytes = 0;
+  for (const char* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, bytes);
+    if (status == companion::FileStatus::Present)
+      return companion::encodeContentHandoffReply(request, companion::ContentReadResult::Busy, output);
+    if (status == companion::FileStatus::Error)
+      return companion::encodeContentHandoffReply(request, companion::ContentReadResult::IoError, output);
+  }
+  if (!contentReader->open(identity.storageGeneration, inventory->revision()))
+    return companion::encodeContentHandoffReply(request, companion::ContentReadResult::IoError, output);
+  const auto length =
+      contentReader->admitExport(request, installation, identity.storageGeneration, inventory->revision(), output);
+  if (length == companion::CONTENT_HANDOFF_REPLY_SIZE &&
+      output[4] == static_cast<uint8_t>(companion::ContentReadResult::Ok))
+    exportTransaction = request.transaction;
+  return length;
+}
+
 size_t CompanionConnectActivity::removalReply(bool authorized, const companion::Identity& owner,
                                               std::span<const uint8_t> body, std::span<uint8_t> reply) {
   if (reply.size() < companion::CONTENT_REMOVAL_REPLY_SIZE) return 0;
@@ -261,9 +354,11 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::WrongStorage);
   if (request.generation != identity.storageGeneration) return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Unsupported);
-  if (request.manifest.kind != companion::ContentKind::Epub) return companion::CONTENT_REMOVAL_REPLY_SIZE;
+  if (request.manifest.kind != companion::ContentKind::Epub && request.manifest.kind != companion::ContentKind::Font)
+    return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Busy);
   if (!removalPermitted()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
+  if (!closeContentReaders()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
   uint64_t bytes = 0;
   for (const char* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
     const auto status = transferStorage.stat(path, bytes);
@@ -275,6 +370,9 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
   }
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::IoError);
   if (!removalOwner) {
+    if (!companion::admitCompanionHeap(sizeof(companion::HalEpubRemovalNativeOwner),
+                                       sizeof(companion::HalEpubRemovalNativeOwner)))
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
     // Retain fixed buffers/handles off stack and reuse for this connection.
     removalOwner = makeUniqueNoThrow<companion::HalEpubRemovalNativeOwner>(
         identity.storageGeneration,
@@ -296,8 +394,9 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
           }
           revision = activity.inventory->revision();
           return activity.removalOwner->openInventory(revision);
-        });
-    if (!removalOwner || HalMemory::getInternalHeap().freeBytes <= 50 * 1024 || !removalOwner->prepare()) {
+        },
+        &fontRemovalSettings);
+    if (!removalOwner || !companion::admitCompanionHeap() || !removalOwner->prepare()) {
       LOG_ERR("COMPANION", "Removal owner allocation/heap admission failed");
       removalOwner.reset();
       return companion::CONTENT_REMOVAL_REPLY_SIZE;
@@ -313,6 +412,7 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
 }
 
 bool CompanionConnectActivity::refreshAfterRemoval() {
+  sdFontSystem.markRegistryDirty();
   inventory.reset();
   inventoryPending = true;
   if (!workspace || !inventoryStorage.close() || !APP_STATE.loadFromFile() || !RECENT_BOOKS.loadFromFile() ||
@@ -349,7 +449,10 @@ size_t CompanionConnectActivity::prepareWifi(const companion::WifiHandoffPrepare
                                              std::span<uint8_t> reply) {
   const auto* current = transfer ? transfer->current() : nullptr;
   const bool journal = journalHandoffMatches(request.transaction);
-  if (recoveryBlocked || (!journal && (!current || current->length <= 1024 * 1024)) ||
+  const bool exporting = contentReader && inventory &&
+                         contentReader->exportBinding().boundTo(request.transaction, installation,
+                                                                identity.storageGeneration, inventory->revision());
+  if (recoveryBlocked || (!journal && !exporting && (!current || current->length <= 1024 * 1024)) ||
       wifiLease.phase() != companion::WifiHandoffLeasePhase::Empty || wifiPhase != WifiPhase::None) {
     LOG_ERR("COMPANION", "Wi-Fi preparation unavailable");
     return 0;
@@ -386,11 +489,14 @@ size_t CompanionConnectActivity::prepareWifi(const companion::WifiHandoffPrepare
   wifiMaterial.network.password =
       request.mode == companion::WifiNetworkMode::Hotspot ? std::string_view(wifiPassword.data()) : std::string_view{};
   const auto now = static_cast<uint64_t>(esp_timer_get_time()) / 1000;
-  const auto result = journal ? wifiLease.prepareJournal(wifiMaterial, request, *journalReceive->receivingDeclaration(),
-                                                         journalReceive->count(), identity.device,
-                                                         identity.storageGeneration, installation, session, now)
-                              : wifiLease.prepare(wifiMaterial, request, *current, identity.device,
-                                                  identity.storageGeneration, installation, session, now);
+  const auto result =
+      exporting ? wifiLease.prepareExport(wifiMaterial, request, contentReader->exportBinding(), inventory->revision(),
+                                          identity.device, identity.storageGeneration, installation, session, now)
+      : journal ? wifiLease.prepareJournal(wifiMaterial, request, *journalReceive->receivingDeclaration(),
+                                           journalReceive->count(), identity.device, identity.storageGeneration,
+                                           installation, session, now)
+                : wifiLease.prepare(wifiMaterial, request, *current, identity.device, identity.storageGeneration,
+                                    installation, session, now);
   companion::clearWifiHandoffSecrets(wifiMaterial.offer.session, wifiMaterial.offer.key);
   if (result != companion::WifiHandoffLeaseResult::Ok) {
     LOG_ERR("COMPANION", "Wi-Fi lease preparation failed: %u", static_cast<unsigned>(result));
@@ -440,7 +546,11 @@ bool CompanionConnectActivity::activateWifi(void* context, const companion::Wifi
       current && current->transaction == view.offer.transaction && current->owner == activity.installation &&
       current->storageGeneration == activity.identity.storageGeneration &&
       (current->phase == companion::TransferPhase::Receiving || current->phase == companion::TransferPhase::Verified);
-  if (activity.recoveryBlocked || (!content && !activity.journalHandoffMatches(view.offer.transaction)) ||
+  const bool exporting = activity.contentReader && activity.inventory &&
+                         activity.contentReader->exportBinding().boundTo(view.offer.transaction, activity.installation,
+                                                                         activity.identity.storageGeneration,
+                                                                         activity.inventory->revision());
+  if (activity.recoveryBlocked || (!content && !exporting && !activity.journalHandoffMatches(view.offer.transaction)) ||
       !companion::wifiHandoffMatches(view.offer, activity.identity.device, activity.identity.storageGeneration,
                                      activity.installation, view.offer.transaction) ||
       std::string_view(view.ssid) != std::string_view(activity.wifiSsid.data())) {
@@ -450,7 +560,7 @@ bool CompanionConnectActivity::activateWifi(void* context, const companion::Wifi
   activity.wifiMaterial.offer = view.offer;
   activity.wifiReceivedAt = view.receivedAtMilliseconds;
   activity.bluetooth.stop();
-  activity.resetJournalSessions();
+  activity.resetJournalSessions(exporting);
   if (activity.recoveryBlocked) return false;
   activity.ready = false;
   activity.installationSession = 0;
@@ -540,6 +650,7 @@ void CompanionConnectActivity::onExit() {
   bluetooth.stop();
   resetJournalSessions();
   journalExport.reset();
+  contentReader.reset();
   inventoryPending = false;
   inventory.reset();
   if (!inventoryStorage.close()) LOG_ERR("COMPANION", "Inventory close failed");
@@ -570,6 +681,31 @@ void CompanionConnectActivity::loop() {
     const bool prepared = prepareInventory();
     inventoryPending = false;
     if (prepared) {
+      const auto readScratch =
+          std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE).subspan(companion::TRANSFER_OFFSET);
+      if (companion::admitCompanionHeap(sizeof(companion::HalContentReadNativeOwner),
+                                        sizeof(companion::HalContentReadNativeOwner))) {
+        contentReader = makeUniqueNoThrow<companion::HalContentReadNativeOwner>(
+            readScratch,
+            [](void* context) {
+              auto& activity = *static_cast<CompanionConnectActivity*>(context);
+              const bool bluetoothSession = activity.installationSession &&
+                                            activity.installationSession == activity.bluetooth.authenticatedSession();
+              const bool exportSession =
+                  activity.wifiPhase == WifiPhase::Serving && activity.contentReader && activity.inventory &&
+                  activity.contentReader->exportBinding().boundTo(activity.exportTransaction, activity.installation,
+                                                                  activity.identity.storageGeneration,
+                                                                  activity.inventory->revision());
+              return activity.contentReadPermitted() && companion::admitCompanionHeap() &&
+                     (bluetoothSession || exportSession);
+            },
+            this);
+        if (!contentReader || !companion::admitCompanionHeap() || !contentReader->prepare() ||
+            !contentReader->open(identity.storageGeneration, inventory->revision())) {
+          LOG_ERR("COMPANION", "Content export owner unavailable");
+          contentReader.reset();
+        }
+      }
       // Reuse audit/export buffers across pages; they exceed the small task stack.
       journalExport = makeUniqueNoThrow<companion::HalJournalCausalAuditSession>();
       if (!journalExport) LOG_ERR("COMPANION", "OOM: journal export workspace");
@@ -647,7 +783,12 @@ void CompanionConnectActivity::resetJournalExport() {
   if (journalExport && !journalExport->endExport()) LOG_ERR("COMPANION", "Journal export close failed");
 }
 
-void CompanionConnectActivity::resetJournalSessions() {
+void CompanionConnectActivity::resetJournalSessions(bool preserveExport) {
+  if (!preserveExport) exportTransaction = {};
+  if (contentReader && !contentReader->resetSource(preserveExport)) {
+    LOG_ERR("COMPANION", "Content export session close failed");
+    recoveryBlocked = true;
+  }
   removalOwner.reset();
   removalActive = false;
   resetJournalExport();
@@ -755,6 +896,7 @@ size_t CompanionConnectActivity::firmwareInstallReply(std::span<const uint8_t> r
       journalReceive || legacyBackup || !transfer || !workspace ||
       !companion::decodeFirmwareInstallRequest(request, firmwareAuthorization.request))
     return 0;
+  if (!closeContentReaders()) return 0;
   firmwareAuthorization.owner = installation;
   const auto* current = transfer->current();
   const auto* manifest = transfer->contentManifest();
@@ -821,6 +963,7 @@ void CompanionConnectActivity::performFirmwareInstallation() {
 
 size_t CompanionConnectActivity::journalExchangeReply(std::span<const uint8_t> request,
                                                       const companion::Identity& owner, std::span<uint8_t> reply) {
+  if (!closeContentReaders()) return 0;
   if (request.size() == companion::COURSE_SWITCH_REQUEST_SIZE) {
 #if LILA_TINTA
     if (recoveryBlocked || journalReceive || legacyBackup || !transfer || !workspace) return 0;
@@ -987,6 +1130,10 @@ size_t CompanionConnectActivity::dispatchTransfer(const companion::FrameView& re
     response[0] = static_cast<uint8_t>(companion::TransferResult::Busy);
     return 1;
   }
+  if (!closeContentReaders()) {
+    response[0] = static_cast<uint8_t>(companion::TransferResult::IoError);
+    return 1;
+  }
   const auto outcome = companion::dispatchTransfer(*transfer, identity.storageGeneration, request.command,
                                                    request.payload, owner, response);
   if (outcome.inventoryChanged) sdFontSystem.markRegistryDirty();
@@ -1003,6 +1150,18 @@ companion::WifiDispatchReply CompanionConnectActivity::wifiTransferDispatch(void
     LOG_ERR("COMPANION", "Wi-Fi installation mismatch");
     if (response.empty()) return {companion::Command::Error, 0};
     response[0] = 2;
+    return {companion::Command::Error, 1};
+  }
+  if (request.command == companion::Command::ReadContent) {
+    const auto length =
+        activity.contentReader && activity.inventory && activity.contentReadPermitted() &&
+                activity.contentReader->open(activity.identity.storageGeneration, activity.inventory->revision())
+            ? activity.contentReader->wifiReply(activity.exportTransaction, owner, activity.identity.storageGeneration,
+                                                activity.inventory->revision(), request.payload, response)
+            : 0;
+    if (length) return {request.command, length};
+    if (response.empty()) return {companion::Command::Error, 0};
+    response[0] = 1;
     return {companion::Command::Error, 1};
   }
   if (request.command == companion::Command::RemoveContent)
@@ -1047,6 +1206,12 @@ void CompanionConnectActivity::processFrame() {
     descriptor.batteryPercent = static_cast<uint8_t>(std::min<uint16_t>(powerManager.getBatteryPercentage(), 100));
     descriptor.capabilities = companion::CAPABILITY_DECLARED_TRANSFERS | companion::CAPABILITY_JOURNAL_FORMATS;
     descriptor.capabilities |= companion::CAPABILITY_FONT_TRANSFERS;
+    descriptor.capabilities |= companion::CAPABILITY_EPUB_REMOVALS;
+    descriptor.capabilities |= companion::CAPABILITY_FONT_REMOVALS;
+    if (contentReader)
+      descriptor.capabilities |= companion::CAPABILITY_CONTENT_READS | companion::CAPABILITY_CONTENT_METADATA |
+                                 companion::CAPABILITY_WIFI_CONTENT_READS;
+    if (dictionaryInstaller) descriptor.capabilities |= companion::CAPABILITY_DICTIONARY_TRANSFERS;
 #if CROSSPOINT_VECTOR_FONTS
     descriptor.capabilities |= companion::CAPABILITY_VECTOR_FONT_TRANSFERS;
 #endif
@@ -1095,6 +1260,21 @@ void CompanionConnectActivity::processFrame() {
     } else {
       payload[0] = static_cast<uint8_t>(authorized ? companion::InventoryResult::IoError
                                                    : companion::InventoryResult::Unauthorized);
+      length = 1;
+    }
+  } else if ((request.command == companion::Command::ReadContent ||
+              request.command == companion::Command::ContentMetadata ||
+              request.command == companion::Command::PrepareContentHandoff)) {
+    companion::PairingPeer peer;
+    const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&
+                            pairings.boundTo(installation, peer);
+    length = request.command == companion::Command::ReadContent ? contentReadReply(authorized, request.payload, payload)
+             : request.command == companion::Command::ContentMetadata
+                 ? contentMetadataReply(authorized, request.payload, payload)
+                 : contentHandoffReply(authorized, request.payload, payload);
+    if (!length) {
+      command = companion::Command::Error;
+      payload[0] = 1;
       length = 1;
     }
   } else if (request.command == companion::Command::RemoveContent) {

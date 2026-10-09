@@ -45,6 +45,10 @@ final class CompanionModel {
     private let wifiNegotiator = WifiHandoffNegotiator()
     var pendingTransfers: [TransferJob] = []
     var pendingRemovals: [ContentRemovalJob] = []
+    var pendingReaderImports: [ReaderImportJob] = []
+    var readerImportActive = false
+    private var readerImports: ReaderImportRunner?
+    private var importCleanupTask: Task<Void, Never>?
     private var transferTask: Task<Void, Never>?
     private var transfers: TransferRunner?
     var inventoryError: String?
@@ -93,7 +97,10 @@ final class CompanionModel {
             let vault = try ContentVault(root: root.appendingPathComponent("content"))
             contentVault = vault
             backupStaging = root.appendingPathComponent("learning-backup-staging", isDirectory: true)
-            importer = ContentImporter(vault: vault, library: store)
+            let contentImporter = ContentImporter(vault: vault, library: store)
+            importer = contentImporter
+            let importStorage = try ReaderImportStorage(root: root.appendingPathComponent("reader-imports", isDirectory: true))
+            readerImports = ReaderImportRunner(library: store, storage: importStorage, importer: contentImporter)
             transfers = TransferRunner(library: store, vault: vault)
             if let identifier = Bundle.main.object(forInfoDictionaryKey: "LilaCloudKitContainer") as? String,
                identifier.hasPrefix("iCloud."), !identifier.contains("$(") {
@@ -178,6 +185,56 @@ final class CompanionModel {
             cloudStatus = await cloud.currentStatus()
         } catch { await cloud.reportFailure(error); cloudFailed = true; cloudStatus = await cloud.currentStatus() }
     }
+    func resumeReaderWorkIfAvailable() async {
+        guard !transferBusy, !inventoryBusy, !connectionBusy, !savingSelection, !changingLibrary,
+              !historySyncActive, let library, let session = authenticated, let inventory,
+              inventory.complete, inventory.reader == session.device.identity,
+              inventory.generation == session.device.storageGeneration,
+              let bluetooth, case .ready = bluetooth.state else { return }
+        let operation = connectionOperation
+        do {
+            let jobs = try await library.pendingJobs()
+            var resumable = false
+            for job in jobs where job.reader == session.device.identity &&
+                job.storageGeneration == session.device.storageGeneration && job.installation == session.installation &&
+                job.phase != .failed {
+                if let content = try await library.content(job.content), content.kind != .firmware {
+                    resumable = true
+                    break
+                }
+            }
+            if !resumable {
+                resumable = try await library.pendingRemovalJobs().contains {
+                    $0.reader == session.device.identity && $0.request.owner == session.installation &&
+                        $0.request.generation == session.device.storageGeneration &&
+                        session.device.readerCapabilities.supportsRemoval(of: $0.request.manifest.kind)
+                }
+            }
+            guard connectionOperation == operation, !transferBusy, !inventoryBusy, !connectionBusy,
+                  !savingSelection, !changingLibrary, !historySyncActive,
+                  self.inventory == inventory, case .ready = bluetooth.state else { return }
+            if resumable {
+                transferSelectedContent()
+                return
+            }
+            let imports = try await library.pendingReaderImports()
+            for job in imports where job.reader == session.device.identity &&
+                job.generation == session.device.storageGeneration && job.installation == session.installation &&
+                inventory.contents.contains(job.manifest) {
+                await reloadPendingTransfers(operation: operation)
+                guard connectionOperation == operation, self.inventory == inventory else { return }
+                if canImportInstalledContent(job.manifest) {
+                    importInstalledContent(job.manifest, resuming: job)
+                    return
+                }
+            }
+        } catch {
+            if connectionOperation == operation {
+                self.error = String(localized: "Pending transfers could not be loaded.")
+            }
+        }
+    }
+
     func stopCloud() async {
         guard !cloudBusy, let cloud else { return }
         cloudBusy = true; cloudFailed = false
@@ -270,7 +327,7 @@ final class CompanionModel {
         migrationTask?.cancel(); migrationTask = nil
         historyAbortTask?.cancel(); historyAbortTask = nil
         historySyncJob = nil
-        transferBusy = false; pendingTransfers = []; pendingRemovals = []
+        transferBusy = false; pendingTransfers = []; pendingRemovals = []; pendingReaderImports = []; readerImportActive = false
         inventoryTask?.cancel(); inventoryTask = nil
         inventory = nil; inventoryBusy = false; inventoryError = nil; historySyncError = nil
         historySyncNotice = nil; historySyncActive = false; historySyncNeedsPreferences = false
@@ -362,12 +419,188 @@ final class CompanionModel {
         }
     }
 
+    func pendingReaderImport(for manifest: ContentManifest) -> ReaderImportJob? {
+        guard let session = authenticated, let inventory else { return nil }
+        return pendingReaderImports.first {
+            $0.reader == session.device.identity && $0.generation == inventory.generation &&
+                $0.installation == session.installation && $0.manifest == manifest &&
+                $0.phase != .completed && $0.phase != .aborted
+        }
+    }
+
+    func canImportInstalledContent(_ manifest: ContentManifest) -> Bool {
+        guard !transferBusy, !inventoryBusy, !connectionBusy, !savingSelection, !changingLibrary,
+              !historySyncActive, readerImports != nil, importCleanupTask == nil, let session = authenticated, let inventory,
+              inventory.complete, inventory.reader == session.device.identity,
+              inventory.generation == session.device.storageGeneration, inventory.contents.contains(manifest),
+              session.device.readerCapabilities.supportsContentMetadata,
+              manifest.kind != .firmware,
+              !contents.contains(where: { $0.id == manifest.content }) || pendingReaderImport(for: manifest) != nil,
+              !removedContents.contains(where: { $0.id == manifest.content }),
+              let bluetooth, case .ready = bluetooth.state else { return false }
+        return true
+    }
+
+    func importInstalledContent(_ manifest: ContentManifest, resuming expectedJob: ReaderImportJob? = nil) {
+        guard canImportInstalledContent(manifest), let readerImports, let session = authenticated,
+              let inventory else { return }
+        let operation = connectionOperation
+        transferBusy = true; readerImportActive = true; transferNotice = nil
+        transferTask = Task {
+            defer {
+                if connectionOperation == operation {
+                    transferBusy = false; readerImportActive = false; transferTask = nil
+                    if wifiHandoffInProgress {
+                        wifiHandoffInProgress = false
+                        authenticated = nil; connected = nil; inventory = nil
+                        bluetooth?.disconnect()
+                    }
+                    startReaderImportCleanup()
+                }
+            }
+            var importJob: ReaderImportJob?
+            do {
+                let job: ReaderImportJob
+                if let expectedJob {
+                    guard let library, expectedJob.manifest == manifest,
+                          try await library.readerImportJob(expectedJob.id) == expectedJob else {
+                        throw StoreError.invalidTransition
+                    }
+                    if try await library.readerImportFilename(expectedJob.id) != nil {
+                        job = expectedJob
+                    } else {
+                        job = try await readerImports.prepareImport(manifest: manifest, session: session,
+                            inventory: inventory, resuming: expectedJob.id)
+                    }
+                } else {
+                    job = try await readerImports.prepareImport(manifest: manifest, session: session, inventory: inventory)
+                }
+                importJob = job
+                if wifiAssistance, session.device.readerCapabilities.supportsWifiContentRead,
+                   job.manifest.length - job.acknowledgedOffset > ReaderContentHandoffRequest.wifiThreshold {
+                    try await importThroughWifi(job, session: session, inventory: inventory, runner: readerImports)
+                } else {
+                    _ = try await readerImports.download(job.id, session: session, inventory: inventory)
+                }
+                guard connectionOperation == operation else { return }
+                transferNotice = String(localized: "Reader content was added to your library.")
+                await reload()
+                if wifiHandoffInProgress {
+                    do { _ = try await restoreBluetoothAfterWifi(session, operation: operation) }
+                    catch {
+                        guard connectionOperation == operation else { return }
+                        transferNotice = String(localized: "Reader content was added to your library. Reconnect to continue.")
+                    }
+                }
+            } catch {
+                guard connectionOperation == operation else { return }
+                let completed: Bool
+                if let importJob, let library {
+                    completed = (try? await library.readerImportJob(importJob.id))?.phase == .completed
+                } else { completed = false }
+                if wifiHandoffInProgress, !Task.isCancelled {
+                    _ = try? await restoreBluetoothAfterWifi(session, operation: operation)
+                    guard connectionOperation == operation else { return }
+                }
+                if completed {
+                    await reload()
+                    guard connectionOperation == operation else { return }
+                    transferNotice = wifiHandoffInProgress
+                        ? String(localized: "Reader content was added to your library. Reconnect to continue.")
+                        : String(localized: "Reader content was added to your library.")
+                } else if wifiHandoffInProgress {
+                    transferNotice = String(localized: "Reader import paused. Reconnect and refresh installed content to resume.")
+                } else if Task.isCancelled || error is CancellationError {
+                    transferNotice = String(localized: "Reader import paused. Resume it from installed content.")
+                } else {
+                    self.error = String(localized: "Reader content could not be imported. Refresh installed content and try again.")
+                }
+            }
+            await reloadPendingTransfers(operation: operation)
+        }
+    }
+
+    private func importThroughWifi(_ job: ReaderImportJob, session: AuthenticatedReaderSession,
+                                   inventory: ReaderInventory, runner: ReaderImportRunner) async throws {
+        do {
+            _ = try await runner.prepareForHandoff(job.id, session: session, inventory: inventory)
+        } catch {
+            if !Task.isCancelled, let bluetooth, case .ready = bluetooth.state,
+               error as? ReaderImportRunnerError == .unsupportedContent {
+                _ = try await runner.download(job.id, session: session, inventory: inventory)
+                return
+            }
+            throw error
+        }
+        let mode = wifiNetworkMode
+        let transaction = withUnsafeBytes(of: job.id.uuid) { Data($0) }
+        wifiHandoffInProgress = true
+        let negotiation: WifiHandoffNegotiation
+        do {
+            negotiation = try await wifiNegotiator.negotiate(session: session, transaction: transaction, mode: mode)
+        } catch WifiHandoffCommandError.control(let code) {
+            if (code == 1 || code == 5), let bluetooth, case .ready = bluetooth.state {
+                wifiHandoffInProgress = false
+                _ = try await runner.download(job.id, session: session, inventory: inventory)
+                return
+            }
+            throw WifiHandoffCommandError.control(code)
+        }
+        var lease: WifiHotspotLease?
+        #if os(iOS)
+        if mode == .hotspot { lease = try await WifiHotspotJoiner.apply(negotiation) }
+        else { try await requestManualWifiJoin(negotiation) }
+        #else
+        try await requestManualWifiJoin(negotiation)
+        #endif
+        defer { lease?.close() }
+        let handoff = try await WifiHandoffConnector.prepare(offer: negotiation.network.offer,
+            reader: job.reader, storageGeneration: job.generation, installation: job.installation,
+            transaction: transaction, receivedAtNanoseconds: negotiation.receivedAtNanoseconds)
+        do {
+            _ = try await runner.download(job.id, session: session, inventory: inventory, handoff: handoff)
+            try await handoff.finish(requestID: UInt32.random(in: 1...UInt32.max))
+        } catch {
+            await handoff.close()
+            throw error
+        }
+    }
+
+    var canCancelReaderImport: Bool {
+        !transferBusy && !inventoryBusy && !connectionBusy && !savingSelection &&
+            !changingLibrary && !historySyncActive && importCleanupTask == nil &&
+            readerImports != nil && library != nil
+    }
+
+    func cancelReaderImport(_ job: ReaderImportJob) async {
+        guard canCancelReaderImport, let readerImports, let library else { return }
+        let operation = connectionOperation
+        savingSelection = true
+        defer { savingSelection = false }
+        do {
+            _ = try await readerImports.cancel(job.id)
+            if connectionOperation == operation { transferNotice = String(localized: "Reader import cancelled.") }
+        } catch {
+            if connectionOperation == operation {
+                let saved = try? await library.readerImportJob(job.id)
+                self.error = saved?.phase == .aborted
+                    ? String(localized: "Reader import cancelled. Temporary files could not be cleared.")
+                    : String(localized: "Reader import could not be cancelled. Try again.")
+            }
+        }
+        await reloadPendingTransfers(operation: operation)
+    }
+
+    func pauseReaderImport() {
+        guard readerImportActive else { return }
+        transferTask?.cancel()
+    }
+
     func canRemoveInstalledContent(_ manifest: ContentManifest) -> Bool {
-        guard !transferBusy, !inventoryBusy, !connectionBusy, !savingSelection,
-              manifest.kind == .epub, let session = authenticated, let inventory,
+        guard canTransferSelectedContent, let session = authenticated, let inventory,
               inventory.complete, inventory.reader == session.device.identity,
               inventory.generation == session.device.storageGeneration,
-              inventory.contents.contains(manifest), session.device.readerCapabilities.supportsEpubRemoval,
+              inventory.contents.contains(manifest), session.device.readerCapabilities.supportsRemoval(of: manifest.kind),
               let bluetooth, case .ready = bluetooth.state else { return false }
         return true
     }
@@ -388,7 +621,7 @@ final class CompanionModel {
             savingSelection = false
             if connectionOperation == operation {
                 if error as? StoreError == .conflictingJob {
-                    self.error = String(localized: "Finish or cancel this book’s pending transfer before removing it from the reader.")
+                    self.error = String(localized: "Finish or cancel this content’s pending transfer before removing it from the reader.")
                 } else {
                     self.error = String(localized: "Reader removal could not be queued. Refresh installed content and try again.")
                 }
@@ -396,8 +629,18 @@ final class CompanionModel {
         }
     }
 
+    var canTransferSelectedContent: Bool {
+        guard !transferBusy, !inventoryBusy, !connectionBusy, !savingSelection, !changingLibrary,
+              !historySyncActive, library != nil, transfers != nil,
+              let session = authenticated, let inventory, inventory.complete,
+              inventory.reader == session.device.identity,
+              inventory.generation == session.device.storageGeneration,
+              let bluetooth, case .ready = bluetooth.state else { return false }
+        return true
+    }
+
     func transferSelectedContent() {
-        guard !transferBusy, !inventoryBusy, !connectionBusy, let library, let transfers,
+        guard canTransferSelectedContent, let library, let transfers,
               let session = authenticated, let inventory, let transport = bluetooth,
               case .ready = transport.state else { return }
         transferBusy = true
@@ -416,10 +659,11 @@ final class CompanionModel {
             }
             do {
                 var currentInventory = inventory
-                if session.device.readerCapabilities.supportsEpubRemoval {
+                if session.device.readerCapabilities.supportsEpubRemoval || session.device.readerCapabilities.supportsFontRemoval {
                     let removals = try await library.pendingRemovalJobs().filter {
                         $0.reader == session.device.identity && $0.request.owner == session.installation &&
-                            $0.request.generation == session.device.storageGeneration
+                            $0.request.generation == session.device.storageGeneration &&
+                            session.device.readerCapabilities.supportsRemoval(of: $0.request.manifest.kind)
                     }
                     for job in removals {
                         try Task.checkCancellation()
@@ -452,10 +696,14 @@ final class CompanionModel {
                                let content = try await library.content(job.content), content.length > 1024 * 1024 {
                                 usedWifi = try await transferThroughWifi(job, session: currentSession, runner: transfers)
                             } else { _ = try await transfers.run(job.id, session: currentSession) }
+                            if kind == .course && !usedWifi {
+                                currentInventory = try await inventories.collect(session: currentSession, maximumEntries: 100_000)
+                                guard connectionOperation == operation else { throw CancellationError() }
+                            }
                         } else { unsupported = true }
                     case .abort(let job): _ = try await transfers.abort(job.id, session: currentSession)
                     case .remove(let manifest):
-                        if manifest.kind == .epub && currentSession.device.readerCapabilities.supportsEpubRemoval {
+                        if currentSession.device.readerCapabilities.supportsRemoval(of: manifest.kind) {
                             let job = try await library.queueRemoval(manifest: manifest, inventory: currentInventory,
                                 installation: currentSession.installation)
                             _ = try await transfers.removeContent(job.id, session: currentSession)
@@ -489,7 +737,11 @@ final class CompanionModel {
                     if let admission = error as? CourseTransferAdmissionError {
                         switch admission {
                         case .differentCourse:
-                            self.error = String(localized: "This pack belongs to a different course. Switching the reader’s active course is not available yet. The current course and pending work have been retained.")
+                            if (authenticated?.device.readerCapabilities ?? session.device.readerCapabilities).supportsCourseSwitch {
+                                self.error = String(localized: "This pack belongs to a different course. Refresh installed content, then open this pack in Library to confirm a course switch. The current course and pending work have been retained.")
+                            } else {
+                                self.error = String(localized: "This reader does not support switching courses through the companion. Keep the current course or install compatible firmware before trying again. Pending work has been retained.")
+                            }
                         case .multipleActiveCourses:
                             self.error = String(localized: "The reader reported more than one active course. Reconnect and refresh installed content before retrying. Pending work has been retained.")
                         case .incompatibleHistory:
@@ -900,9 +1152,11 @@ final class CompanionModel {
         do {
             let jobs = try await library.pendingJobs().filter { $0.reader == device.identity }
             let removals = try await library.pendingRemovalJobs().filter { $0.reader == device.identity }
+            let imports = try await library.pendingReaderImports().filter { $0.reader == device.identity }
             guard connectionOperation == operation else { return }
             pendingTransfers = jobs
             pendingRemovals = removals
+            pendingReaderImports = imports
         } catch {
             if connectionOperation == operation { error = String(localized: "Pending transfers could not be loaded.") }
         }
@@ -929,6 +1183,30 @@ final class CompanionModel {
         case .scanning: return String(localized: "Finding readers")
         case .connecting: return String(localized: "Connecting")
         case .ready: return connected == nil ? String(localized: "Authenticating") : String(localized: "Connected")
+        }
+    }
+
+    private func startReaderImportCleanup() {
+        guard importCleanupTask == nil, !transferBusy, !inventoryBusy, !connectionBusy,
+              !readerImportActive, let readerImports else { return }
+        importCleanupTask = Task {
+            defer { importCleanupTask = nil }
+            var cursor: UUID?
+            do {
+                repeat {
+                    try Task.checkCancellation()
+                    guard !transferBusy, !inventoryBusy, !connectionBusy, !readerImportActive else { return }
+                    let report = try await readerImports.cleanupFinishedImports(after: cursor)
+                    if !report.failedJobs.isEmpty {
+                        self.error = String(localized: "Temporary reader import files could not be cleared.")
+                    }
+                    cursor = report.nextCursor
+                } while cursor != nil
+            } catch {
+                if !Task.isCancelled, error as? ReaderImportRunnerError != .busy {
+                    self.error = String(localized: "Temporary reader import files could not be cleared.")
+                }
+            }
         }
     }
 
@@ -967,6 +1245,7 @@ final class CompanionModel {
                     .filter(\.selected).map(\.content))
             }
             readerSelections = selections
+            startReaderImportCleanup()
         } catch {
             self.error = String(localized: "Your library could not be loaded.")
         }
@@ -980,7 +1259,7 @@ final class CompanionModel {
 
     func switchInventory(_ content: ContentID) -> ReaderInventory? {
         guard !transferBusy, !inventoryBusy, !connectionBusy, let session = authenticated,
-              session.device.readerCapabilities.contains(.courseSwitches), let inventory, inventory.complete,
+              session.device.readerCapabilities.supportsCourseSwitch, let inventory, inventory.complete,
               inventory.reader == session.device.identity, inventory.generation == session.device.storageGeneration,
               let course = courseIdentities[content], verifiedCourses.contains(content) else { return nil }
         let active = inventory.contents.filter { $0.kind == .course }
@@ -1430,6 +1709,7 @@ struct LilaCompanionApp: App {
                         .navigationTitle("Library")
                         .toolbar {
                             Button("Import files", systemImage: "plus") { showImporter = true }
+                                .accessibilityIdentifier("library.import")
                                 .disabled(!model.canImport)
                         }
                     }
@@ -1448,6 +1728,7 @@ struct LilaCompanionApp: App {
                             }
                             Section("Preferences") {
                                 NavigationLink("Portable preferences") { PortablePreferencesView(model: model) }
+                                    .accessibilityIdentifier("settings.preferences")
                             }
                             CloudSettingsSection(model: model)
                         }.navigationTitle("Settings")
@@ -1456,7 +1737,10 @@ struct LilaCompanionApp: App {
             }
             .tabViewStyle(.sidebarAdaptable)
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { Task { await model.resumeCloudIfEnabled() } }
+                if phase == .active {
+                    Task { await model.resumeCloudIfEnabled() }
+                    Task { await model.resumeReaderWorkIfAvailable() }
+                }
             }
             .task { await model.reload(); await model.resumeCloudIfEnabled() }
             .confirmationDialog("Remove this content from your library?", isPresented: Binding(
@@ -1468,7 +1752,7 @@ struct LilaCompanionApp: App {
                     }
                     Button("Cancel", role: .cancel) { removalCandidate = nil }
                 } message: {
-                    Text("This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Reader-side removal is not available yet. Restoring does not select the content again.")
+                    Text("This removes the selection from all readers and retains files needed for recovery. The library decision is shared with your other apps when iCloud sync is enabled. Supported content is removed from compatible readers during synchronization. Restoring does not select the content again.")
                 }
             .onOpenURL { url in
                 guard url.isFileURL else {
@@ -1523,7 +1807,9 @@ private struct DevicesView: View {
                         Button("Pair reader") { model.pairReader() }.disabled(model.connectionBusy)
                         Button("Cancel", role: .cancel) { model.disconnectReader() }
                     } else {
-                        Button("Find readers") { model.findReaders() }.disabled(model.connectionBusy)
+                        Button("Find readers") { model.findReaders() }
+                            .accessibilityIdentifier("devices.find")
+                            .disabled(model.connectionBusy)
                         if model.connectionBusy {
                             ProgressView()
                             Button("Cancel", role: .cancel) { model.disconnectReader() }
@@ -1565,7 +1851,7 @@ private struct DevicesView: View {
                             }.disabled(model.transferBusy)
                         }
                         Button("Transfer selected content") { model.transferSelectedContent() }
-                            .disabled(model.transferBusy || model.inventoryBusy || model.inventory == nil)
+                            .disabled(!model.canTransferSelectedContent)
                         if model.transferBusy {
                             ProgressView("Transferring content…")
                             Button("Pause transfer") { model.pauseContentTransfer() }
@@ -1584,6 +1870,20 @@ private struct DevicesView: View {
                                         .disabled(model.transferBusy || model.inventoryBusy || model.connectionBusy ||
                                             job.storageGeneration != model.connected?.storageGeneration)
                                 }
+                            }.accessibilityElement(children: .combine)
+                        }
+                        ForEach(model.pendingReaderImports, id: \.id) { job in
+                            VStack(alignment: .leading) {
+                                Text("Reader import pending")
+                                Text(job.manifest.content.hex).font(.caption).foregroundStyle(.secondary)
+                                Text(job.acknowledgedOffset, format: .number).font(.caption)
+                                Text("Bytes saved in companion").font(.caption)
+                                if job.generation != model.connected?.storageGeneration {
+                                    Text("This import belongs to a different SD card.").font(.caption)
+                                }
+                                Button("Cancel reader import", role: .destructive) {
+                                    Task { await model.cancelReaderImport(job) }
+                                }.disabled(!model.canCancelReaderImport)
                             }.accessibilityElement(children: .combine)
                         }
                         ForEach(model.pendingRemovals, id: \.id) { job in
@@ -1607,7 +1907,15 @@ private struct DevicesView: View {
                                 VStack(alignment: .leading) {
                                     Text(model.title(for: entry.content) ?? String(localized: "Content"))
                                     Text(entry.content.hex).font(.caption).foregroundStyle(.secondary)
-                                    if model.connected?.readerCapabilities.supportsEpubRemoval == true, entry.kind == .epub {
+                                    let pending = model.pendingReaderImport(for: entry)
+                                    if model.connected?.readerCapabilities.supportsContentMetadata == true,
+                                       pending != nil || !model.contents.contains(where: { $0.id == entry.content }),
+                                       !model.removedContents.contains(where: { $0.id == entry.content }) {
+                                        Button(pending != nil ? String(localized: "Resume reader import") : String(localized: "Import into library")) {
+                                            model.importInstalledContent(entry, resuming: pending)
+                                        }.disabled(!model.canImportInstalledContent(entry))
+                                    }
+                                    if model.connected?.readerCapabilities.supportsRemoval(of: entry.kind) == true {
                                         Button("Remove from this reader", role: .destructive) { removalChoice = entry }
                                             .disabled(!model.canRemoveInstalledContent(entry))
                                     }
@@ -1618,6 +1926,9 @@ private struct DevicesView: View {
                             Text(error)
                         } else {
                             Text("Refresh to see this reader’s installed content.")
+                        }
+                        if model.readerImportActive {
+                            Button("Pause reader import") { model.pauseReaderImport() }
                         }
                         if model.historySyncActive {
                             Button("Pause history sync") { model.pauseHistorySync() }
@@ -1672,7 +1983,7 @@ private struct DevicesView: View {
                 } message: {
                     Text("Uncommitted uploads will be cancelled. Already committed history is retained, and the library history remains available.")
                 }
-                .confirmationDialog("Remove this book from the reader?", isPresented: Binding(
+                .confirmationDialog("Remove this content from the reader?", isPresented: Binding(
                     get: { removalChoice != nil }, set: { if !$0 { removalChoice = nil } })) {
                     if let manifest = removalChoice {
                         Button("Remove from this reader", role: .destructive) {
@@ -1682,7 +1993,11 @@ private struct DevicesView: View {
                     }
                     Button("Cancel", role: .cancel) { removalChoice = nil }
                 } message: {
-                    Text("The companion library copy is retained. An interrupted removal will resume when you synchronize this reader.")
+                    if removalChoice?.kind == .font {
+                        Text("The companion library copy is retained. If this font is in use, the reader switches to a built-in font. An interrupted removal will resume when you synchronize this reader.")
+                    } else {
+                        Text("The companion library copy is retained. An interrupted removal will resume when you synchronize this reader.")
+                    }
                 }
         }
     }
@@ -2676,6 +2991,7 @@ private struct FirmwareUpdatesView: View {
                     Button("Cancel release check") { model.cancelReleaseCheck() }
                 } else {
                     Button("Check stable releases", systemImage: "arrow.clockwise") { model.checkStableRelease() }
+                        .accessibilityIdentifier("updates.check")
                         .disabled(model.firmwareDownloadBusy)
                 }
 
@@ -2683,6 +2999,7 @@ private struct FirmwareUpdatesView: View {
                     .disabled(model.firmwareDownloadBusy || model.releaseCheckBusy)
                     .onChange(of: model.allowReleaseCandidates) { model.releaseManifest = nil }
                 Button("Import release manifest", systemImage: "doc.badge.plus") { showManifestImporter = true }
+                    .accessibilityIdentifier("updates.importManifest")
                     .disabled(model.firmwareDownloadBusy || model.releaseCheckBusy)
                 if let release = model.releaseManifest { LabeledContent("Version", value: release.version) }
             }

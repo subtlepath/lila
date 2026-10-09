@@ -4,6 +4,10 @@
 #include <Epub/FootnoteEntry.h>
 #include <Epub/PageLink.h>
 #include <Epub/Section.h>
+#include <I18n.h>
+#if LILA_COMPANION
+#include "CompanionReaderBookmarks.h"
+#endif
 
 #include <atomic>
 #include <memory>
@@ -17,6 +21,9 @@
 #include "ReaderActivity.h"
 #include "ReaderToolbarUi.h"
 #include "components/OptionPopup.h"
+#include "util/ProgressSaveDebounce.h"
+
+struct BookmarkTextPageRange;
 
 class EpubReaderActivity final : public ReaderActivity {
   std::shared_ptr<Epub> epub;
@@ -43,6 +50,10 @@ class EpubReaderActivity final : public ReaderActivity {
   float pendingSpineProgress = 0.0f;
   bool pendingScreenshot = false;
   bool pendingSyncSaveError = false;
+  StrId pendingBookmarkError = StrId::_COUNT;
+#if LILA_COMPANION
+  companion::ReaderBookmarkBinding bookmarkBinding;
+#endif
   uint8_t pageLoadRetryCount = 0;
   static constexpr uint8_t MAX_PAGE_LOAD_RETRIES = 3;
   bool skipNextButtonCheck = false;
@@ -56,6 +67,7 @@ class EpubReaderActivity final : public ReaderActivity {
   unsigned long lastRenderCompleteMs = 0;
   bool bookmarkRemoved = false;
   std::vector<BookmarkEntry> cachedBookmarks;
+  std::unique_ptr<BookmarkEntry> bookmarkDraft;
   bool recentsEntryRemoved = false;
   unsigned long bookmarkMessageTime = 0UL;
   bool pendingReadFolderMove = false;
@@ -153,9 +165,9 @@ class EpubReaderActivity final : public ReaderActivity {
   uint16_t buildViewportHeight = 0;
   bool partialRebuildStartFailed = false;
 
-  int lastSavedSpineIndex = -1;
-  int lastSavedPage = -1;
-  int lastSavedPageCount = -1;
+  ProgressSaveDebounce progressSave;
+  std::atomic<bool> progressSavePending{false};
+  std::atomic<uint32_t> progressAttemptMs{0};
 
   static constexpr int BUILD_PAGES_PER_CHUNK = 8;
   static constexpr int BACKGROUND_BUILD_PAGES_PER_TICK = 2;
@@ -180,7 +192,9 @@ class EpubReaderActivity final : public ReaderActivity {
   std::optional<uint32_t> anchorOnPage(int page);
   // The offset that names `page` of the current section: the anchor, else the page start.
   std::optional<uint32_t> readingOffsetForPage(int page);
-  bool saveProgress(int spineIndex, int currentPage, int pageCount);
+  bool saveProgress(int spineIndex, int currentPage, int pageCount, bool force = true);
+  bool flushPendingProgress(bool force);
+  bool flushProgressBeforeLeaving();
   void jumpToPercent(int percent);
   void onReaderMenuConfirm(EpubReaderMenuActivity::MenuAction action);
   EpubReaderMenuActivity::MenuContext menuContext() const;
@@ -223,8 +237,11 @@ class EpubReaderActivity final : public ReaderActivity {
   unsigned long confirmLongPressThreshold() const;
   void toggleAutoPageTurn(uint8_t selectedPageTurnOption);
   void loadCachedBookmarks();
-  void addBookmark();
+  bool addBookmark();
+  bool appendBookmarkAtPage(int page, int pageCount);
+  SavedProgressPosition getBookmarkSavedProgress() const;
   void updateBookmarkFlag();
+  BookmarkTextPageRange getBookmarkTextPageRange(int page) const;
 
   void navigateToHref(const std::string& href, bool savePosition = false);
   void restoreSavedPosition();
@@ -256,6 +273,7 @@ class EpubReaderActivity final : public ReaderActivity {
   ~EpubReaderActivity() override;
 
   void loop() override;
+  bool prepareForBackground(const RenderLock&) override;
 
   bool pageTurn(bool isForward) override;
   bool skipPages(int amount) override;

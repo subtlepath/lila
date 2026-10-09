@@ -23,6 +23,7 @@ class TintaActivity final : public Activity {
 
   void onEnter() override;
   void onExit() override;
+  bool prepareForBackground(const RenderLock&) override;
   void loop() override;
   void render(RenderLock&&) override;
   // The X4 Pro's Home pad: Tinta's pause sheet, as on its own firmware.
@@ -36,6 +37,7 @@ class TintaActivity final : public Activity {
   std::unique_ptr<tinta::app::App> app;
   std::unique_ptr<TintaCompanionSession> companionSession;
   bool failed = false;
+  bool saveError = false;
   // Set when this activity asked for the frame; a render nobody here asked for
   // follows an activity drawn on top (lila's light panel), so Tinta repaints.
   std::atomic<bool> frameRequested{false};

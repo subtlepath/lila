@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include "lib/Companion/CompanionBookmarkPreparation.h"
+#include "lib/Companion/CompanionBookmarkPreparationClaim.h"
 #include "lib/Companion/CompanionBookmarkPublicationRecord.h"
 
 using namespace companion;
@@ -209,6 +211,53 @@ TEST(BookmarkPublication, RecordRoundtripAndCorruptionPreserveOutput) {
     EXPECT_FALSE(decodeBookmarkPublicationRecord(std::span(bytes).first(bytes.size() - 1), decoded));
   }
 }
+TEST(BookmarkPublication, EmptyJournalUsesDistinctVersionAndPreservesLegacyValidation) {
+  std::array<uint8_t, BOOKMARK_PUBLICATION_RECORD_SIZE> bytes{};
+  auto expected = claim(false);
+  expected.recordCount = 0;
+  for (const uint16_t stride : {512, 1024}) {
+    expected.recordSize = stride;
+    ASSERT_TRUE(encodeBookmarkPublicationRecord(expected, bytes));
+    EXPECT_EQ(bytes[4], 2);
+    BookmarkPublicationClaim output;
+    ASSERT_TRUE(decodeBookmarkPublicationRecord(bytes, output));
+    EXPECT_EQ(output, expected);
+    for (const uint8_t version : {0, 1, 3}) {
+      bytes[4] = version;
+      bookmark_record_detail::put(std::span(bytes).last(4),
+                                  bookmark_record_detail::checksum(std::span(bytes).first(192)));
+      EXPECT_FALSE(decodeBookmarkPublicationRecord(bytes, output));
+      EXPECT_EQ(output, expected);
+    }
+  }
+}
+TEST(BookmarkPublication, EmptyJournalRecoversEveryMutationCutWithoutInventingEvents) {
+  auto record = claim();
+  record.recordCount = 0;
+  for (const bool after : {false, true}) {
+    for (unsigned cut = 1; cut <= 8; ++cut) {
+      Store store;
+      store.failAt = cut;
+      store.after = after;
+      BookmarkPublication publication(store);
+      const auto result = publication.publish(record);
+      EXPECT_TRUE(result == TintaJournalResult::Ok || result == TintaJournalResult::IoError);
+      EXPECT_FALSE(store.removedBackupBeforeCommit);
+      store.failAt = 0;
+      if (store.pending == BookmarkPublicationRecord::Missing &&
+          store.committed == BookmarkPublicationRecord::Missing) {
+        EXPECT_EQ(publication.publish(record), TintaJournalResult::Ok);
+      } else {
+        EXPECT_EQ(publication.recover(record), TintaJournalResult::Ok);
+      }
+      EXPECT_EQ(store.files[0], BookmarkPublicationFile::Candidate);
+      EXPECT_EQ(store.files[2], BookmarkPublicationFile::Missing);
+      const auto operations = store.operations;
+      EXPECT_EQ(publication.recover(record), TintaJournalResult::Ok);
+      EXPECT_EQ(store.operations, operations);
+    }
+  }
+}
 TEST(BookmarkPublication, RecordRejectsInvalidFieldsWithValidChecksum) {
   std::array<uint8_t, BOOKMARK_PUBLICATION_RECORD_SIZE> bytes{};
   const auto expected = claim();
@@ -227,4 +276,183 @@ TEST(BookmarkPublication, RecordRejectsInvalidFieldsWithValidChecksum) {
   const auto untouched = bytes;
   EXPECT_FALSE(encodeBookmarkPublicationRecord(invalid, bytes));
   EXPECT_EQ(bytes, untouched);
+}
+
+TEST(BookmarkPreparationClaim, ValidatesEntireRecordBeforeChangingOutput) {
+  BookmarkPreparationClaim expected;
+  expected.transaction.fill(1);
+  expected.storageGeneration.fill(2);
+  expected.edition.fill(3);
+  expected.destinationPathHash.fill(4);
+  std::array<uint8_t, BOOKMARK_PREPARATION_CLAIM_SIZE> bytes{};
+  ASSERT_TRUE(encodeBookmarkPreparationClaim(expected, bytes));
+  BookmarkPreparationClaim output;
+  ASSERT_TRUE(decodeBookmarkPreparationClaim(bytes, output));
+  EXPECT_EQ(output, expected);
+  for (size_t i = 0; i < bytes.size(); ++i) {
+    auto damaged = bytes;
+    damaged[i] ^= 1;
+    output = expected;
+    EXPECT_FALSE(decodeBookmarkPreparationClaim(damaged, output)) << i;
+    EXPECT_EQ(output, expected);
+  }
+  for (const size_t length : {size_t{0}, size_t{8}, bytes.size() - 1}) {
+    output = expected;
+    EXPECT_FALSE(decodeBookmarkPreparationClaim(std::span(bytes).first(length), output));
+    EXPECT_EQ(output, expected);
+  }
+  for (const size_t offset : {size_t{8}, size_t{24}, size_t{40}, size_t{72}}) {
+    auto damaged = bytes;
+    std::fill_n(damaged.begin() + offset, offset < 40 ? 16 : 32, 0);
+    bookmark_record_detail::put(std::span(damaged).last(4),
+                                bookmark_record_detail::checksum(std::span(damaged).first(104)));
+    output = expected;
+    EXPECT_FALSE(decodeBookmarkPreparationClaim(damaged, output));
+    EXPECT_EQ(output, expected);
+  }
+  for (const size_t offset : {size_t{4}, size_t{5}, size_t{6}, size_t{7}}) {
+    auto damaged = bytes;
+    damaged[offset] = 2;
+    bookmark_record_detail::put(std::span(damaged).last(4),
+                                bookmark_record_detail::checksum(std::span(damaged).first(104)));
+    output = expected;
+    EXPECT_FALSE(decodeBookmarkPreparationClaim(damaged, output));
+    EXPECT_EQ(output, expected);
+  }
+  auto invalid = expected;
+  invalid.destinationPathHash.fill(0);
+  bytes.fill(0xaa);
+  const auto untouched = bytes;
+  EXPECT_FALSE(encodeBookmarkPreparationClaim(invalid, bytes));
+  EXPECT_EQ(bytes, untouched);
+}
+
+namespace {
+BookmarkPreparationClaim preparationClaim() {
+  BookmarkPreparationClaim result;
+  result.transaction.fill(1);
+  result.storageGeneration.fill(2);
+  result.edition.fill(3);
+  result.destinationPathHash.fill(4);
+  return result;
+}
+class PreparationStorage final : public BookmarkPreparationStorage {
+ public:
+  bool validateContext(const BookmarkPreparationClaim&) override { return context; }
+  BookmarkPublicationRecord ownership(const BookmarkPreparationClaim&) override { return owned; }
+  BookmarkPublicationRecord publication() override { return publishing; }
+  BookmarkPreparationFile file(BookmarkPreparationRole role) override { return files[static_cast<size_t>(role)]; }
+  bool persist(const BookmarkPreparationClaim&) override {
+    ++mutations;
+    if (mutations == failAt && !after) return false;
+    owned = BookmarkPublicationRecord::Matches;
+    return mutations != failAt;
+  }
+  bool remove(BookmarkPreparationRole role) override {
+    ++mutations;
+    if (mutations == failAt && !after) return false;
+    files[static_cast<size_t>(role)] = BookmarkPreparationFile::Missing;
+    if (changeContext) context = false;
+    if (startPublication) publishing = BookmarkPublicationRecord::Matches;
+    return mutations != failAt;
+  }
+  bool clear(const BookmarkPreparationClaim&) override {
+    ++mutations;
+    if (mutations == failAt && !after) return false;
+    owned = BookmarkPublicationRecord::Missing;
+    return mutations != failAt;
+  }
+  std::array<BookmarkPreparationFile, 3> files{BookmarkPreparationFile::Missing, BookmarkPreparationFile::Missing,
+                                               BookmarkPreparationFile::Missing};
+  BookmarkPublicationRecord owned = BookmarkPublicationRecord::Missing;
+  BookmarkPublicationRecord publishing = BookmarkPublicationRecord::Missing;
+  bool context = true, after = false, changeContext = false, startPublication = false;
+  unsigned mutations = 0, failAt = 0;
+};
+}  // namespace
+TEST(BookmarkPreparation, ClaimIsRequiredBeforeWritesAndForeignSpoolsCannotBeClaimed) {
+  const auto claim = preparationClaim();
+  for (size_t role = 0; role < 3; ++role) {
+    PreparationStorage storage;
+    storage.files[role] = BookmarkPreparationFile::Regular;
+    BookmarkPreparation owner(storage);
+    EXPECT_EQ(owner.begin(claim), TintaJournalResult::Corrupt);
+    EXPECT_EQ(storage.mutations, 0u);
+  }
+  PreparationStorage storage;
+  BookmarkPreparation owner(storage);
+  EXPECT_EQ(owner.guard(claim), TintaJournalResult::Corrupt);
+  storage.failAt = 1;
+  EXPECT_EQ(owner.begin(claim), TintaJournalResult::IoError);
+  EXPECT_EQ(owner.guard(claim), TintaJournalResult::Corrupt);
+  storage.failAt = 2;
+  storage.after = true;
+  EXPECT_EQ(owner.begin(claim), TintaJournalResult::IoError);
+  EXPECT_EQ(owner.guard(claim), TintaJournalResult::Ok);
+  EXPECT_EQ(owner.begin(claim), TintaJournalResult::Corrupt);
+}
+TEST(BookmarkPreparation, RecoveryCutsAndLostAcknowledgementsKeepOwnershipUntilCleanup) {
+  const auto claim = preparationClaim();
+  for (unsigned cut = 1; cut <= 4; ++cut) {
+    for (const bool after : {false, true}) {
+      PreparationStorage storage;
+      storage.owned = BookmarkPublicationRecord::Matches;
+      storage.files.fill(BookmarkPreparationFile::Regular);
+      storage.failAt = cut;
+      storage.after = after;
+      BookmarkPreparation owner(storage);
+      EXPECT_EQ(owner.recover(claim), TintaJournalResult::IoError);
+      if (storage.owned == BookmarkPublicationRecord::Matches) {
+        storage.failAt = 0;
+        EXPECT_EQ(owner.recover(claim), TintaJournalResult::Ok);
+      }
+      EXPECT_EQ(storage.owned, BookmarkPublicationRecord::Missing);
+      for (const auto file : storage.files) EXPECT_EQ(file, BookmarkPreparationFile::Missing);
+    }
+  }
+}
+TEST(BookmarkPreparation, RecoveryProtectsForeignAuthorityDirectoriesAndPublicationIntents) {
+  const auto claim = preparationClaim();
+  for (const auto state :
+       {BookmarkPublicationRecord::Missing, BookmarkPublicationRecord::Other, BookmarkPublicationRecord::Error}) {
+    PreparationStorage storage;
+    storage.owned = state;
+    storage.files.fill(BookmarkPreparationFile::Regular);
+    BookmarkPreparation owner(storage);
+    EXPECT_NE(owner.recover(claim), TintaJournalResult::Ok);
+    EXPECT_EQ(storage.mutations, 0u);
+  }
+  for (size_t role = 0; role < 3; ++role) {
+    PreparationStorage storage;
+    storage.owned = BookmarkPublicationRecord::Matches;
+    storage.files.fill(BookmarkPreparationFile::Regular);
+    storage.files[role] = BookmarkPreparationFile::Other;
+    BookmarkPreparation owner(storage);
+    EXPECT_EQ(owner.recover(claim), TintaJournalResult::Corrupt);
+    EXPECT_EQ(storage.mutations, 0u);
+  }
+  for (const auto state :
+       {BookmarkPublicationRecord::Matches, BookmarkPublicationRecord::Other, BookmarkPublicationRecord::Error}) {
+    PreparationStorage storage;
+    storage.owned = BookmarkPublicationRecord::Matches;
+    storage.publishing = state;
+    BookmarkPreparation owner(storage);
+    EXPECT_NE(owner.recover(claim), TintaJournalResult::Ok);
+    EXPECT_EQ(storage.mutations, 0u);
+  }
+}
+TEST(BookmarkPreparation, ContextAndPublicationAreRecheckedBetweenRemovals) {
+  for (const bool context : {false, true}) {
+    PreparationStorage storage;
+    storage.owned = BookmarkPublicationRecord::Matches;
+    storage.files.fill(BookmarkPreparationFile::Regular);
+    storage.changeContext = context;
+    storage.startPublication = !context;
+    BookmarkPreparation owner(storage);
+    EXPECT_EQ(owner.recover(preparationClaim()), context ? TintaJournalResult::Invalid : TintaJournalResult::Conflict);
+    EXPECT_EQ(storage.mutations, 1u);
+    EXPECT_EQ(storage.owned, BookmarkPublicationRecord::Matches);
+    EXPECT_EQ(storage.files[1], BookmarkPreparationFile::Regular);
+    EXPECT_EQ(storage.files[2], BookmarkPreparationFile::Regular);
+  }
 }

@@ -22,7 +22,7 @@ public struct CloudContentDescriptor: Codable, Equatable, Sendable {
         switch kind {
         case .epub: supported = suffix == "epub"
         case .course: supported = suffix == "pack"
-        case .font: supported = ["cpfont", "ttf", "otf"].contains(suffix)
+        case .font: supported = ["cpfont", "ttf", "otf", "ttc"].contains(suffix)
         case .dictionary: supported = suffix == "zip"
         case .firmware: supported = false
         }
