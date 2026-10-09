@@ -2,6 +2,7 @@
 
 #include "CompanionContentRead.h"
 #include "CompanionContentRemovalRequest.h"
+#include "CompanionCourseContext.h"
 #include "CompanionCourseSwitchRequest.h"
 #include "CompanionDeclaredTransferCommand.h"
 #include "CompanionJournalMergeReadiness.h"
@@ -72,6 +73,12 @@ inline bool validWifiTransferRequest(const FrameView& request, const Identity& t
   if (request.response || request.payload.size() > MAX_CONTROL_PAYLOAD) return false;
   const auto& body = request.payload;
   if (request.command == Command::ReadContent) return validWifiContentReadEnvelope(body, transaction, generation);
+  if (request.command == Command::CourseContext) {
+    Identity requested{};
+    return body.size() == transaction.size() + COURSE_CONTEXT_REQUEST_SIZE &&
+           std::equal(transaction.begin(), transaction.end(), body.begin()) &&
+           decodeCourseContextRequest(body.subspan(transaction.size()), requested) && requested == generation;
+  }
   if (request.command == Command::RemoveContent) return validWifiRemoval(body, transaction, owner, generation);
   if (request.command == Command::BeginTransfer) {
     if (body.size() >= 2 && body[0] == 1 && body[1] == static_cast<uint8_t>(RecordKind::ContentManifest))

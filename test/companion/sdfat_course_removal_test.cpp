@@ -416,6 +416,12 @@ int main() {
     HalRemovedCourseBaseline removedSource(request.generation, metadataScratch, permitted, &allowed);
     assert(!removedSource.open(request.manifest));
     assert(!removedSource.path() && !removedSource.manifest());
+    ContentManifest queried = request.manifest;
+    auto queriedSource = CourseContextSource::None;
+    const auto beforeQuery = state.files;
+    assert(removedSource.inspectCurrentCourse(queried, queriedSource) == CourseContextResult::Busy);
+    assert(queried == request.manifest && queriedSource == CourseContextSource::None);
+    assert(state.files == beforeQuery);
     HalCompletedContentRemovals completions(receiptScratch);
     assert(completions.persist(completed, recovered) == CompletedRemovalResult::Ok);
     HalCompletedRemovalJournalRelease release(recovered, journalStorage, completions, releaseScratch);
@@ -437,6 +443,10 @@ int main() {
     assert(state.files == beforeLoan);
     assert(removedSource.closeReaders());
     assert(!removedSource.path() && !removedSource.manifest());
+    assert(removedSource.inspectCurrentCourse(queried, queriedSource) == CourseContextResult::Ok);
+    assert(queried == request.manifest && queriedSource == CourseContextSource::Removed);
+    assert(!removedSource.path() && !removedSource.manifest());
+    assert(state.files == beforeLoan);
     auto different = candidate;
     different.logicalIdentity[0] ^= 1;
     assert(!removedSource.open(different));

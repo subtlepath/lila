@@ -1182,9 +1182,35 @@ Truncated, extended or malformed replies fail without changing C++ outputs.
 C++ and Swift tests consume the same request/removed-response fixtures and cover
 both source types, malformed metadata and all failure statuses. All 509 Swift
 package tests pass, and the C3 codec probe passes its local-frame check. The
-context codec is not yet a routed reader query: provider integration, Apple
-inventory/context retrieval, explicit confirmation and reader switch-source
-validation remain required before enabling the course-removal capability.
+context query is routed to a read-only native provider on BLE and encrypted
+Wi-Fi. Apple inventory/context retrieval, explicit confirmation and reader
+switch-source validation remain required before enabling the course-removal capability.
 
 The combined routing/context checkpoint passes all 1,768 host tests and 509 Swift
 package tests. Native Apple builds and physical acceptance remain unverified.
+
+The native bound-course query now distinguishes a checked live binding/source
+from a verified removed baseline, a missing course and an unbound legacy pack.
+Unfinished metadata or a retained removal journal refuse context, and corrupt
+binding/cache/evidence never exposes a source manifest. The native owner uses
+checked sync/close, invalidates any old cached-path loan and publishes outputs
+only after verification/close succeeds. Real-pack host tests preserve files and
+outputs across refusal; the 24 installed-SdFat scenarios check busy-before-release
+and removed-after-release without changing stored bytes.
+
+Command 19 is routed through both authenticated transports. The Swift frame
+helper matches command, response flag and request ID; its Wi-Fi helper checks
+transaction/card binding before sending and uses encrypted replies. The complete
+activity C3 probes pass with Tinta on and off: query handling uses 192 bytes and
+source inspection 208 bytes individually. The default firmware build passes.
+Apple automatic query/discovery and removed-source switching remain unconnected,
+and course removal/context capabilities remain unadvertised.
+
+The query checkpoint passes all 1,772 host tests, 511 Swift package tests and
+the installed-SdFat suite. Default firmware image verification passes;
+physical acceptance and automatic Apple context/switch integration remain pending.
+
+The query firmware checkpoint is 6491536 bytes (SHA-256
+`bbc2d72523ec9bd5ff85aec511567796bf2d543bb69e19ff4fd7dba0fce129ae`); its x4/chip-5 tag,
+segments, checksum, SHA trailer and OTA partition fit are checked. This does
+not establish runtime heap headroom or physical acceptance.

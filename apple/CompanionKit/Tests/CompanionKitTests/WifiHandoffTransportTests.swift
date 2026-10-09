@@ -68,12 +68,20 @@ private actor HandoffWireFixture: WifiMessageTransport {
             journalReply.append(Data(repeating: 7, count: count))
             if mode == 6 { journalReply[5] ^= 1 }
         }
+        if request.command == .courseContext {
+            guard request.payload.count == 16 + ReaderCourseContextRequest.encodedSize,
+                  request.payload.prefix(16) == transaction else { throw HandoffFixtureError.disconnected }
+            let query = try ReaderCourseContextRequest(decoding: Data(request.payload.dropFirst(16)))
+            let manifest = try ContentManifest(content: ContentID(String(repeating: "22", count: 32)), kind: .course,
+                length: 4097, formatVersion: 1, logicalIdentity: Data(repeating: 0x33, count: 16))
+            journalReply = Data([0x4c, 0x43, 0x58, 1, 0, 2]) + query.generation + manifest.encoded
+        }
         afterRequest()
         if mode == 3 { throw HandoffFixtureError.disconnected }
         let reply = try ControlFrame(command: mode == 2 ? .commit : request.command,
             response: true, requestID: mode == 1 ? request.requestID + 1 : request.requestID,
             payload: request.command == .journalFormats ? Data([0, 6]) :
-                     request.command == .exchangeChanges || request.command == .readContent ? journalReply :
+                     request.command == .exchangeChanges || request.command == .readContent || request.command == .courseContext ? journalReply :
                      request.command == .wifiHandoff && mode != 5 ? Data([0]) : Data())
         var encrypted = try await cipher.seal(reply.encoded())
         if mode == 4 { encrypted[31] ^= 1 }
@@ -84,6 +92,20 @@ private actor HandoffWireFixture: WifiMessageTransport {
 }
 
 final class WifiHandoffTransportTests: XCTestCase {
+    func testCourseContextUsesEncryptedHandoffAndRejectsForeignCardBeforeSending() async throws {
+        let offer = try offer(), clock = HandoffTestClock()
+        let wire = try HandoffWireFixture(offer: offer)
+        let transport = try transport(offer, wire, clock)
+        let reply = try await transport.courseContext(requestID: 19)
+        XCTAssertEqual(reply.context?.source, .removed)
+        XCTAssertEqual(reply.generation, offer.storageGeneration)
+        let wrong = try ReaderCourseContextRequest(generation: Data(repeating: 9, count: 16))
+        let frame = try ControlFrame(command: .courseContext, requestID: 20,
+                                     payload: offer.transaction + wrong.encoded)
+        do { _ = try await transport.exchange(frame); XCTFail("Foreign card accepted") }
+        catch { XCTAssertEqual(error as? WifiHandoffTransportError, .binding) }
+        let stats = await wire.statistics(); XCTAssertEqual(stats.0, 1); XCTAssertTrue(stats.1)
+    }
     func testContentReadsUseEncryptedTransactionAndGenerationBindings() async throws {
         let offer = try offer(), clock = HandoffTestClock()
         let wire = try HandoffWireFixture(offer: offer)

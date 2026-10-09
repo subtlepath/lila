@@ -310,3 +310,24 @@ TEST(CompanionWifiRequestTest, JournalMergeReadinessIsBoundAndMalformedInputPres
   ASSERT_EQ(replyFixture.size(), reply.size());
   EXPECT_TRUE(std::equal(reply.begin(), reply.end(), replyFixture.begin()));
 }
+
+TEST(CompanionWifiRequestTest, CourseContextRequiresExactHandoffTransactionAndGeneration) {
+  const auto transaction = identity(1), generation = identity(2);
+  std::array<uint8_t, 16 + COURSE_CONTEXT_REQUEST_SIZE> payload{};
+  std::copy(transaction.begin(), transaction.end(), payload.begin());
+  ASSERT_EQ(encodeCourseContextRequest(generation, std::span(payload).subspan(16)), COURSE_CONTEXT_REQUEST_SIZE);
+  FrameView frame{Command::CourseContext, false, 9, payload};
+  EXPECT_TRUE(validWifiTransferRequest(frame, transaction, identity(3), generation));
+  EXPECT_FALSE(validWifiTransferRequest(frame, identity(4), identity(3), generation));
+  EXPECT_FALSE(validWifiTransferRequest(frame, transaction, identity(3), identity(4)));
+  frame.response = true;
+  EXPECT_FALSE(validWifiTransferRequest(frame, transaction, identity(3), generation));
+  frame.response = false;
+  for (size_t length = 0; length < payload.size(); ++length) {
+    frame.payload = std::span(payload).first(length);
+    EXPECT_FALSE(validWifiTransferRequest(frame, transaction, identity(3), generation));
+  }
+  frame.payload = payload;
+  payload[16] ^= 1;
+  EXPECT_FALSE(validWifiTransferRequest(frame, transaction, identity(3), generation));
+}

@@ -85,6 +85,7 @@ class CompanionConnectActivity final : public Activity {
   size_t contentMetadataReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t contentReadReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t contentHandoffReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+  size_t courseContextReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   bool closeContentReaders();
   bool freshFirmwareInfo(companion::FirmwareReaderInfo& output);
   size_t firmwareInstallReply(std::span<const uint8_t> request, std::span<uint8_t> reply);

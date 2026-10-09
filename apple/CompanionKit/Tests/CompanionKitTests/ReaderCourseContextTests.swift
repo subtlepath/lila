@@ -45,6 +45,17 @@ final class ReaderCourseContextTests: XCTestCase {
         XCTAssertThrowsError(try ReaderCourseContextReply(decoding: extended, request: request))
         XCTAssertThrowsError(try ReaderCourseContextRequest(generation: Data(count: 16)))
     }
+    func testContextFramesRejectForeignRequestIdentifiersAndCommands() throws {
+        let request = try ReaderCourseContextRequest(generation: Data(repeating: 0x11, count: 16)).frame(requestID: 7)
+        let body = try fixture("ReaderCourseContextRemoved-v1.fixture")
+        let reply = try ControlFrame(command: .courseContext, response: true, requestID: 7, payload: body)
+        XCTAssertEqual(try ReaderCourseContextReply.decode(reply, request: request).context?.source, .removed)
+        for frame in [try ControlFrame(command: .courseContext, response: true, requestID: 8, payload: body),
+                      try ControlFrame(command: .inventory, response: true, requestID: 7, payload: body),
+                      try ControlFrame(command: .courseContext, requestID: 7, payload: body)] {
+            XCTAssertThrowsError(try ReaderCourseContextReply.decode(frame, request: request))
+        }
+    }
     func testFailureRepliesHaveNoContextAndBindGeneration() throws {
         let request = try ReaderCourseContextRequest(generation: Data(repeating: 0x11, count: 16))
         for result in ReaderCourseContextResult.allCases where result != .ok {

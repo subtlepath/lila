@@ -132,6 +132,12 @@ public actor WifiHandoffTransport: CompanionTransport {
         return try await exchange(bound)
     }
 
+    public func courseContext(requestID: UInt32) async throws -> ReaderCourseContextReply {
+        let request = try ReaderCourseContextRequest(generation: generation).frame(requestID: requestID)
+        let bound = try ControlFrame(command: request.command, requestID: requestID, payload: transaction + request.payload)
+        return try ReaderCourseContextReply.decode(await exchange(bound), request: request)
+    }
+
     public func journalState(requestID: UInt32) async throws -> JournalMergeSnapshot {
         let request = try JournalState.request(generation: generation, requestID: requestID)
         let bound = try ControlFrame(command: request.command, requestID: requestID, payload: transaction + request.payload)
@@ -242,6 +248,11 @@ public actor WifiHandoffTransport: CompanionTransport {
             guard state.transaction == transaction, state.owner == installation, state.storageGeneration == generation else {
                 throw WifiHandoffTransportError.binding
             }
+        case .courseContext:
+            guard request.payload.count == 16 + ReaderCourseContextRequest.encodedSize,
+                  request.payload.prefix(16) == transaction else { throw WifiHandoffTransportError.binding }
+            let context = try ReaderCourseContextRequest(decoding: Data(request.payload.dropFirst(16)))
+            guard context.generation == generation else { throw WifiHandoffTransportError.binding }
         case .readContent:
             guard request.payload.count == 16 + ReaderContentReadRequest.encodedSize,
                   request.payload.prefix(16) == transaction else { throw WifiHandoffTransportError.binding }

@@ -1,19 +1,13 @@
 # Companion protocol v1
 
-Implementation status: the control frame codec is implemented and host-tested.
-A bounded fragmented-frame assembler is also implemented.
-Five bounded record envelopes and shared fixtures are implemented.
-A single-file transfer controller and HAL storage adapter are implemented;
-see `transfers.md` for recovery behavior and outstanding integration.
-A Connect & Sync prototype provides bonded, MITM-authenticated BLE pairing,
-discovery, installation registration/authentication, and forgetting the connected
-bond and its installation credentials. Discovery advertises declared transfer
-support, plus course installation when built with Tinta, and an unknown (zero)
-running-build digest. Unsupported commands return
-Error (11) with payload byte 1. Credential failures return byte 2. Course installation policy and Apple core/app dispatch are implemented; live
-inventory, reader synchronization, font/dictionary installation, Wi-Fi handoff,
-firmware installation and native/hardware acceptance remain pending. This document does not authorize exposing an
-unauthenticated transfer endpoint.
+The control-frame codec, bounded fragmented-frame assembler and fixed record
+codecs are implemented and host-tested. Native handlers include authenticated
+pairing, discovery, inventory, transfer, synchronization, content read/removal
+and firmware flows; the feature-specific documents describe their integration
+and verification limits. Native Apple and physical acceptance remain pending.
+The course-context query is routed but not yet advertised, pending the removed
+course switch and Apple confirmation flow. This protocol does not authorize an
+unauthenticated content endpoint.
 
 ## Control frames
 
@@ -38,7 +32,8 @@ Commands: 1 discovery, 2 inventory, 3 change exchange, 4 begin transfer,
 5 transfer chunk, 6 transfer status, 7 commit, 8 abort, 9 Wi-Fi handoff,
 10 firmware installation, 11 error response, 12 installation registration,
 13 installation authentication, 14 journal format query, 15 content removal,
-16 content read.
+16 content read, 17 content metadata, 18 content-read handoff preparation,
+19 bound-course context.
 Unknown versions, commands, flags, truncation, and
 trailing bytes are rejected. Request IDs correlate responses; they do not provide
 durable transaction identity or replay protection.
@@ -882,3 +877,39 @@ its shared per-reader selection/removal controls and durable runner. Lost replie
 retry the exact persisted request after SQLite reopen. The full Swift host suite
 passes 505 tests; final firmware target/image checks and hardware acceptance are
 still pending for the capability-enabled implementation.
+
+## Bound-course context
+
+Command 19 requires installation authentication on BLE or the current encrypted
+Wi-Fi lease. Its BLE request is exactly 20 bytes: `LCQ`, binary version 1, and
+nonzero card generation (16 bytes). Wi-Fi prefixes the same body with the lease's
+16-byte transaction; both transaction and generation must match before dispatch.
+
+The reply begins `LCX`, binary version 1, result u8, source u8 and generation 16.
+Result values are 0 success, 1 missing, 2 wrong storage, 3 busy, 4 unsupported,
+5 IO error, 6 unauthorized and 7 corrupt. Failures have source 0 and exactly
+22 bytes, with no manifest. Wrong storage reports the current generation; other
+replies echo the requested generation. Unauthorized requests echo the supplied
+generation and expose no stored course metadata.
+
+A successful reply has source 1 (live) or 2 (verified removed), followed by the
+63-byte `ContentManifest`, for 85 bytes total. Only a positive-length course,
+format 1 and nonzero identity/hash are accepted. Live replies verify the retained
+binding and installed SHA. Removed replies additionally require the exact
+completed receipt, sealed plan, cached SHA, state isolation and released removal
+journal. Unfinished publications/journals, an unbound legacy active pack or
+invalid evidence do not yield a course manifest. Querying does not mutate pack,
+binding or learner state, and cached packs remain absent from installed inventory.
+
+The query uses one checked nothrow fixed owner off stack and borrows the transfer
+IO bank, disjoint from request/response storage. Other removal owners are released
+before admission. Hashing and directory scans reuse retained handles/buffers and
+preserve the existing 50 KiB internal-heap reserve. Source context is captured
+while state writers are excluded; it is not authorization to switch a course.
+The reader must independently verify the later consent and source before commit.
+
+Shared C++/Swift fixtures define the body format. The Swift helper validates
+command, response flag and request ID, and the encrypted handoff helper binds the
+request to its transaction and card generation. Automatic Apple discovery/use
+and removed-source switch authorization remain unconnected; no capability is
+advertised for this query yet.

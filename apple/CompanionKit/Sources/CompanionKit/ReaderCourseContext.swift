@@ -7,6 +7,9 @@ public struct ReaderCourseContextRequest: Equatable, Sendable {
         guard generation.count == 16, generation.contains(where: { $0 != 0 }) else { throw ProtocolError.value }
         self.generation = generation
     }
+    public func frame(requestID: UInt32) throws -> ControlFrame {
+        try ControlFrame(command: .courseContext, requestID: requestID, payload: encoded)
+    }
     public var encoded: Data {
         var bytes = Data([0x4c, 0x43, 0x51, 1]); bytes.reserveCapacity(Self.encodedSize)
         bytes.append(generation); return bytes
@@ -39,6 +42,12 @@ public struct ReaderCourseContextReply: Equatable, Sendable {
     public let result: ReaderCourseContextResult
     public let generation: Data
     public let context: ReaderCourseContext?
+    public static func decode(_ reply: ControlFrame, request: ControlFrame) throws -> ReaderCourseContextReply {
+        guard request.command == .courseContext, !request.response, reply.command == request.command,
+              reply.response, reply.requestID == request.requestID else { throw ProtocolError.command }
+        return try ReaderCourseContextReply(decoding: reply.payload,
+                                            request: ReaderCourseContextRequest(decoding: request.payload))
+    }
     public init(decoding bytes: Data, request: ReaderCourseContextRequest) throws {
         guard bytes.count >= Self.headerSize else { throw ProtocolError.length }
         var reader = ByteReader(bytes)

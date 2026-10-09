@@ -42,6 +42,7 @@
 #include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
 #include "lib/hal/HalCourseRemovalRecovery.h"
+#include "lib/hal/HalRemovedCourseBaseline.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
@@ -824,6 +825,95 @@ TEST_F(HalCourseTransferTest, RefusesChecksummedMalformedLocaleWithoutReplacingC
   EXPECT_EQ(hal.renames, 0u);
   EXPECT_FALSE(hal.files.contains(TRANSFER_BACKUP));
 }
+TEST_F(HalCourseTransferTest, CourseContextVerifiesLivePackAndRefusesUnfinishedPublication) {
+  auto& hal = inventory_hal_test::state;
+  ASSERT_TRUE(storage.prepare());
+  ASSERT_TRUE(Storage.ensureDirectoryExists("/tinta"));
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  bool allowed = true;
+  auto permitted = [](void* context) { return *static_cast<bool*>(context); };
+  HalRemovedCourseBaseline owner(generation, scratch, permitted, &allowed);
+  ContentManifest output;
+  auto source = CourseContextSource::None;
+  const auto before = hal.files;
+  ASSERT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Ok);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Live);
+  EXPECT_EQ(hal.files, before);
+  EXPECT_FALSE(owner.path());
+  const auto saved = output;
+  allowed = false;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::IoError);
+  EXPECT_EQ(output, saved);
+  EXPECT_EQ(source, CourseContextSource::Live);
+  EXPECT_EQ(hal.files, before);
+  allowed = true;
+  hal.files[COURSE_BINDING_STAGE] = {1};
+  const auto staged = hal.files;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Busy);
+  EXPECT_EQ(hal.files, staged);
+  EXPECT_EQ(output, saved);
+  hal.files = before;
+  hal.files.at(ACTIVE_COURSE_PATH)[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Corrupt);
+  EXPECT_EQ(hal.files, corrupt);
+  EXPECT_EQ(output, saved);
+}
+TEST_F(HalCourseTransferTest, CourseContextDistinguishesMissingPackFromUnboundLegacyPack) {
+  ASSERT_TRUE(storage.prepare());
+  ASSERT_TRUE(Storage.ensureDirectoryExists("/tinta"));
+  auto& hal = inventory_hal_test::state;
+  HalRemovedCourseBaseline owner(generation, scratch, [](void*) { return true; }, nullptr);
+  auto output = declaration.manifest;
+  auto source = CourseContextSource::Live;
+  const auto before = hal.files;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Missing);
+  EXPECT_EQ(hal.files, before);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Live);
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  const auto legacy = hal.files;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Unsupported);
+  EXPECT_EQ(hal.files, legacy);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_FALSE(owner.path());
+}
+TEST_F(HalCourseTransferTest, CourseContextRequiresCompletedVerifiedRemovedSource) {
+  removeInstalledCourse();
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  HalRemovedCourseBaseline owner(generation, scratch, [](void*) { return true; }, nullptr);
+  ContentManifest output;
+  auto source = CourseContextSource::None;
+  const auto before = hal.files;
+  ASSERT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Ok);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Removed);
+  EXPECT_FALSE(owner.path());
+  EXPECT_EQ(hal.files, before);
+  auto wrong = generation;
+  wrong[0] ^= 2;
+  HalRemovedCourseBaseline foreign(wrong, scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(foreign.inspectCurrentCourse(output, source), CourseContextResult::Corrupt);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Removed);
+  EXPECT_EQ(hal.files, before);
+  const auto cache = std::find_if(hal.files.begin(), hal.files.end(), [](const auto& entry) {
+    return entry.first.starts_with(COURSE_REMOVAL_CACHE_PREFIX);
+  });
+  ASSERT_NE(cache, hal.files.end());
+  cache->second[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_EQ(owner.inspectCurrentCourse(output, source), CourseContextResult::Corrupt);
+  EXPECT_EQ(output, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Removed);
+  EXPECT_FALSE(owner.path());
+  EXPECT_EQ(hal.files, corrupt);
+}
 TEST_F(HalCourseTransferTest, NativeCourseOwnerUsesRealPreparationAndCompletedRetrySkipsLiveInventory) {
   auto& hal = inventory_hal_test::state;
   hal.files[ACTIVE_COURSE_PATH] = bytes;
@@ -953,7 +1043,7 @@ TEST_F(HalCourseTransferTest, ValidatesSameCourseUpdateAgainstCompletedRemovedPa
       storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
   EXPECT_EQ(hal.files, before);
   EXPECT_FALSE(storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, scratch));
-  declaration.state.storageGeneration[0] ^= 1;
+  declaration.state.storageGeneration[0] ^= 2;
   EXPECT_FALSE(
       storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
   EXPECT_EQ(hal.files, before);
@@ -1047,7 +1137,7 @@ TEST_F(HalCourseTransferTest, CommittedCourseRetirementPreservesForeignAndCorrup
   EXPECT_FALSE(storage.finalizeContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, declaration.state, scratch));
   EXPECT_EQ(hal.files, corrupt);
   hal.files = initial;
-  declaration.state.storageGeneration[0] ^= 1;
+  declaration.state.storageGeneration[0] ^= 2;
   EXPECT_FALSE(storage.finalizeContentMetadata(ACTIVE_COURSE_PATH, declaration.manifest, declaration.state, scratch));
   EXPECT_EQ(hal.files, initial);
   declaration.state.storageGeneration = generation;

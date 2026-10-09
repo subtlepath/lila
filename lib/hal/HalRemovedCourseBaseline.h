@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CompanionCourseContext.h"
 #include "CompanionTransferDeclaration.h"
 #include "HalCompletedContentRemovals.h"
 #include "HalContentRemovalJournalStorage.h"
@@ -50,6 +51,54 @@ class HalRemovedCourseBaseline final {
       return fail("completed baseline proof");
     ready = true;
     return true;
+  }
+  CourseContextResult inspectCurrentCourse(ContentManifest& output, CourseContextSource& source) {
+    ready = false;
+    if (!closeReaders() || !guard() || generation == Identity{} || io.size() < COURSE_BINDING_SIZE)
+      return CourseContextResult::IoError;
+    bool present = false;
+    const auto result = readCourseBinding(metadata, COURSE_BINDING_PATH, io, binding, present);
+    if (!guard() || result == CourseBindingResult::IoError) return CourseContextResult::IoError;
+    if (result != CourseBindingResult::Ok) return CourseContextResult::Corrupt;
+    uint64_t size = 0;
+    for (const auto* path : {COURSE_BINDING_STAGE, COURSE_BINDING_BACKUP, COURSE_REMOVAL_PROOF_STAGE}) {
+      const auto status = metadata.stat(path, size);
+      if (!guard() || status == FileStatus::Error) return CourseContextResult::IoError;
+      if (status != FileStatus::Missing) return CourseContextResult::Busy;
+    }
+    const auto recovered = journal.recover(generation);
+    if (!guard()) return CourseContextResult::IoError;
+    if (recovered == ContentRemovalJournalResult::Ok) return CourseContextResult::Busy;
+    if (recovered != ContentRemovalJournalResult::Missing) return CourseContextResult::Corrupt;
+    const auto active = metadata.stat(ACTIVE_COURSE_PATH, size);
+    if (!guard() || active == FileStatus::Error) return CourseContextResult::IoError;
+    if (!present) {
+      if (active == FileStatus::Present) return CourseContextResult::Unsupported;
+      if (metadata.stat(COURSE_REMOVAL_PROOF_PATH, size) != FileStatus::Missing || !guard())
+        return CourseContextResult::Corrupt;
+      return closeReaders() && guard() ? CourseContextResult::Missing : CourseContextResult::IoError;
+    }
+    const ContentManifest candidate = binding;
+    if (!validCourseBinding(candidate) || candidate.formatVersion != 1 || candidate.contentHash == Digest{})
+      return CourseContextResult::Corrupt;
+    CourseContextSource selected = CourseContextSource::Live;
+    if (active == FileStatus::Present) {
+      if (metadata.stat(COURSE_REMOVAL_PROOF_PATH, size) != FileStatus::Missing || !guard())
+        return CourseContextResult::Busy;
+      if (!verifyInstalled(candidate)) return CourseContextResult::Corrupt;
+    } else {
+      if (!open(candidate)) return CourseContextResult::Corrupt;
+      const auto* proven = manifest();
+      if (!proven || *proven != candidate) {
+        closeReaders();
+        return CourseContextResult::Corrupt;
+      }
+      selected = CourseContextSource::Removed;
+    }
+    if (!closeReaders() || !guard()) return CourseContextResult::IoError;
+    output = candidate;
+    source = selected;
+    return CourseContextResult::Ok;
   }
   bool retireInstalled(const ContentManifest& installed, const TransferState& state) {
     ready = false;

@@ -2,6 +2,7 @@
 
 #include <CompanionCapabilities.h>
 #include <CompanionCommandQueue.h>
+#include <CompanionCourseContext.h>
 #include <CompanionFrame.h>
 #include <CompanionInventoryHandler.h>
 #include <CompanionRecords.h>
@@ -27,6 +28,7 @@
 #include "network/FirmwareFlasher.h"
 #if LILA_TINTA
 #include <HalCourseRemovalPreparation.h>
+#include <HalRemovedCourseBaseline.h>
 #include <HalTintaJournalMergeCommitContext.h>
 #include <HalTintaMergedJournalReconciliation.h>
 #endif
@@ -261,6 +263,62 @@ bool CompanionConnectActivity::closeContentReaders() {
   LOG_ERR("COMPANION", "Content export readers could not close");
   return false;
 }
+size_t CompanionConnectActivity::courseContextReply(bool authorized, std::span<const uint8_t> input,
+                                                    std::span<uint8_t> output) {
+  companion::Identity requested{};
+  if (!companion::decodeCourseContextRequest(input, requested)) return 0;
+  companion::CourseContextReply reply;
+  reply.generation = requested;
+  reply.result = companion::CourseContextResult::Unauthorized;
+  if (!authorized) return companion::encodeCourseContextReply(reply, output);
+  reply.generation = identity.storageGeneration;
+  if (requested != identity.storageGeneration) {
+    reply.result = companion::CourseContextResult::WrongStorage;
+    return companion::encodeCourseContextReply(reply, output);
+  }
+  reply.result = companion::CourseContextResult::Unsupported;
+#if LILA_TINTA
+  reply.result = companion::CourseContextResult::Busy;
+  if (!contentReadPermitted()) return companion::encodeCourseContextReply(reply, output);
+  uint64_t size = 0;
+  for (const auto* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, size);
+    if (status == companion::FileStatus::Present) return companion::encodeCourseContextReply(reply, output);
+    if (status == companion::FileStatus::Error) {
+      reply.result = companion::CourseContextResult::IoError;
+      return companion::encodeCourseContextReply(reply, output);
+    }
+  }
+  reply.result = companion::CourseContextResult::IoError;
+  if (!closeContentReaders() || !releaseCourseRemovalOwner()) return companion::encodeCourseContextReply(reply, output);
+  if ((removalOwner && !removalOwner->closeReaders()) ||
+      (dictionaryRemovalOwner && !dictionaryRemovalOwner->closeReaders())) {
+    recoveryBlocked = true;
+    return companion::encodeCourseContextReply(reply, output);
+  }
+  removalOwner.reset();
+  dictionaryRemovalOwner.reset();
+  if (!companion::admitCompanionHeap(sizeof(companion::HalRemovedCourseBaseline),
+                                     sizeof(companion::HalRemovedCourseBaseline)))
+    return companion::encodeCourseContextReply(reply, output);
+  // Reuse fixed proof/hash banks off stack; IO is disjoint from request and response.
+  auto context = makeUniqueNoThrow<companion::HalRemovedCourseBaseline>(
+      identity.storageGeneration,
+      std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE).subspan(companion::TRANSFER_OFFSET),
+      [](void* opaque) {
+        return static_cast<CompanionConnectActivity*>(opaque)->contentReadPermitted() &&
+               companion::admitCompanionHeap();
+      },
+      this);
+  if (!context) {
+    LOG_ERR("COMPANION", "OOM: course context query");
+    return companion::encodeCourseContextReply(reply, output);
+  }
+  reply.result = context->inspectCurrentCourse(reply.manifest, reply.source);
+#endif
+  return companion::encodeCourseContextReply(reply, output);
+}
+
 size_t CompanionConnectActivity::contentReadReply(bool authorized, std::span<const uint8_t> input,
                                                   std::span<uint8_t> output) {
   companion::ContentReadRequest request;
@@ -1308,6 +1366,10 @@ companion::WifiDispatchReply CompanionConnectActivity::wifiTransferDispatch(void
     response[0] = 1;
     return {companion::Command::Error, 1};
   }
+  if (request.command == companion::Command::CourseContext)
+    return {request.command, request.payload.size() >= owner.size()
+                                 ? activity.courseContextReply(true, request.payload.subspan(owner.size()), response)
+                                 : 0};
   if (request.command == companion::Command::RemoveContent)
     return {request.command, activity.removalReply(true, owner, request.payload, response)};
   if (request.command == companion::Command::JournalFormats) return {request.command, journalFormatReply(response)};
@@ -1417,6 +1479,16 @@ void CompanionConnectActivity::processFrame() {
              : request.command == companion::Command::ContentMetadata
                  ? contentMetadataReply(authorized, request.payload, payload)
                  : contentHandoffReply(authorized, request.payload, payload);
+    if (!length) {
+      command = companion::Command::Error;
+      payload[0] = 1;
+      length = 1;
+    }
+  } else if (request.command == companion::Command::CourseContext) {
+    companion::PairingPeer peer;
+    const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&
+                            pairings.boundTo(installation, peer);
+    length = courseContextReply(authorized, request.payload, payload);
     if (!length) {
       command = companion::Command::Error;
       payload[0] = 1;

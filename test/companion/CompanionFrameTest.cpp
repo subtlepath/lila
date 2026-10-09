@@ -23,7 +23,7 @@ TEST(CompanionFrame, DecodesUnalignedGoldenFrame) {
 TEST(CompanionFrame, RequiresAuthenticationExceptDiscovery) {
   std::array<uint8_t, FRAME_HEADER_SIZE> bytes{};
   FrameView output;
-  for (uint8_t command = 1; command <= static_cast<uint8_t>(Command::PrepareContentHandoff); ++command) {
+  for (uint8_t command = 1; command <= static_cast<uint8_t>(Command::CourseContext); ++command) {
     FrameView frame{static_cast<Command>(command), false, 1, {}};
     ASSERT_EQ(encodeFrame(frame, bytes), bytes.size());
     EXPECT_EQ(decodeFrame(bytes, false, output), command == 1 ? FrameError::None : FrameError::Unauthorized);
