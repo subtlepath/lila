@@ -422,6 +422,11 @@ int main() {
     assert(release.release() == CompletedRemovalResult::Ok);
     assert(restoredBaseline.verifyCompleted(proofRecord, completed, request.manifest, request.generation));
     assert(std::string(restoredBaseline.path()) == cachePath.data());
+    auto foreignReplacement = request.manifest;
+    foreignReplacement.logicalIdentity[0] ^= 1;
+    assert(!restoredBaseline.verifyReinstalled(proofRecord, completed, foreignReplacement, request.generation));
+    assert(!restoredBaseline.path());
+    assert(restoredBaseline.verifyCompleted(proofRecord, completed, request.manifest, request.generation));
     auto candidate = request.manifest;
     candidate.contentHash[0] ^= 1;
     ++candidate.length;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CompanionTransferDeclaration.h"
 #include "HalCompletedContentRemovals.h"
 #include "HalContentRemovalJournalStorage.h"
 #include "HalCourseRemovalBaseline.h"
@@ -10,7 +11,8 @@
 
 namespace companion {
 // Retain off stack while all namespace/state writers remain excluded. The loan
-// ends on close, another open, permission loss or destruction; no writes occur.
+// ends on close, another open, permission loss or destruction. Opening is read-only;
+// retirement removes only verified obsolete proof metadata.
 class HalRemovedCourseBaseline final {
  public:
   using Permission = bool (*)(void*);
@@ -49,6 +51,39 @@ class HalRemovedCourseBaseline final {
     ready = true;
     return true;
   }
+  bool retireInstalled(const ContentManifest& installed, const TransferState& state) {
+    ready = false;
+    if (!closeReaders() || !guard() || generation == Identity{} || state.storageGeneration != generation ||
+        !validCourseBinding(installed) || installed.formatVersion != 1 || !matchesTransferManifest(installed, state) ||
+        state.owner == Identity{} || state.transaction == Identity{} || state.phase != TransferPhase::Committed ||
+        state.durableOffset != state.length || io.size() < COURSE_BINDING_SIZE)
+      return fail("retirement admission");
+    bool present = false;
+    if (readCourseBinding(metadata, COURSE_BINDING_PATH, io, binding, present) != CourseBindingResult::Ok || !present ||
+        binding != installed || !guard())
+      return fail("installed binding");
+    uint64_t size = 0;
+    for (const auto* path : {COURSE_BINDING_STAGE, COURSE_BINDING_BACKUP, COURSE_REMOVAL_PROOF_STAGE})
+      if (metadata.stat(path, size) != FileStatus::Missing || !guard()) return fail("retirement publication");
+    if (journal.recover(generation) != ContentRemovalJournalResult::Missing || !guard())
+      return fail("retirement journal");
+    if (!verifyInstalled(installed)) return fail("installed bytes");
+    const auto result = proofs.load(generation, proof);
+    if (!guard()) return fail("retirement permission");
+    if (result == CourseRemovalProofStorageResult::Missing) return closeReaders() && guard();
+    if (result != CourseRemovalProofStorageResult::Ok ||
+        proof.request.manifest.logicalIdentity != installed.logicalIdentity ||
+        completions.load(proof.request, completed) != CompletedRemovalResult::Ok || !guard() ||
+        plans.load(proof.planHash, planBytes, plan) != CourseRemovalPlanStorageResult::Ok ||
+        plan.request != proof.request || !guard() || !isolation.verify(installed.logicalIdentity) || !guard() ||
+        !baseline.verifyReinstalled(proof, completed, installed, generation) || !guard() || !closeReaders() || !guard())
+      return fail("retirement evidence");
+    // The serialized owner excludes proof writers until checked deletion completes.
+    if (!Storage.remove(COURSE_REMOVAL_PROOF_PATH) || !guard() ||
+        metadata.stat(COURSE_REMOVAL_PROOF_PATH, size) != FileStatus::Missing || !guard())
+      return fail("proof retirement");
+    return closeReaders() && guard();
+  }
   const char* path() const {
     if (!ready) return nullptr;
     if (!guard()) {
@@ -68,10 +103,13 @@ class HalRemovedCourseBaseline final {
     const bool planClosed = plans.closeReaders();
     const bool stateClosed = isolation.closeReaders();
     const bool baselineClosed = baseline.closeReaders();
-    return metadataClosed && proofClosed && completionClosed && planClosed && stateClosed && baselineClosed;
+    const bool installedClosed = !installedFile.isOpen() || installedFile.close();
+    return metadataClosed && proofClosed && completionClosed && planClosed && stateClosed && baselineClosed &&
+           installedClosed;
   }
 
  private:
+  HalFile installedFile;
   Identity generation;
   Permission permitted;
   void* context;
@@ -91,6 +129,20 @@ class HalRemovedCourseBaseline final {
   ContentRemovalRecord proof, completed;
   CourseRemovalPlan plan;
   mutable bool ready = false;
+  bool verifyInstalled(const ContentManifest& installed) {
+    uint64_t size = 0, length = 0;
+    Digest actual{};
+    if (!guard() || metadata.stat(ACTIVE_COURSE_PATH, size) != FileStatus::Present || size != installed.length ||
+        !guard() || !Storage.openFileForReadReusing("COMPANION", ACTIVE_COURSE_PATH, installedFile))
+      return false;
+    const bool hashed = !installedFile.isDirectory() &&
+                        hashInventoryFile(
+                            installedFile, io, length, actual,
+                            [](void* ctx) { return static_cast<HalRemovedCourseBaseline*>(ctx)->guard(); }, this);
+    const bool synced = hashed && installedFile.sync();
+    const bool closed = installedFile.close();
+    return hashed && synced && closed && guard() && length == installed.length && actual == installed.contentHash;
+  }
   bool guard() const { return permitted && permitted(context); }
   bool fail(const char* operation) {
     LOG_ERR("COMPANION", "Removed course baseline %s failed", operation);

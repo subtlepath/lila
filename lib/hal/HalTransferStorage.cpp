@@ -226,7 +226,16 @@ bool HalTransferStorage::finalizeContentMetadata([[maybe_unused]] const char* de
       LOG_ERR("COMPANION", "Pending course switch consent stage");
       return false;
     }
-    if (result == CourseSwitchIntentResult::Missing) return true;
+    if (result == CourseSwitchIntentResult::Missing) {
+      if (state.phase == TransferPhase::Aborted) return true;
+      // Proof banks and checked file handles exceed the task-local stack budget.
+      if (!admitCompanionHeap(sizeof(HalRemovedCourseBaseline), sizeof(HalRemovedCourseBaseline)))
+        return failure("course retirement heap admission", destination);
+      auto retirement = makeUniqueNoThrow<HalRemovedCourseBaseline>(
+          state.storageGeneration, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+      if (!retirement) return failure("OOM: course removal retirement", destination);
+      return retirement->retireInstalled(manifest, state);
+    }
     if (result != CourseSwitchIntentResult::Ok || request.transaction != state.transaction ||
         request.generation != state.storageGeneration || request.nextHash != manifest.contentHash ||
         request.nextCourse != manifest.logicalIdentity || !matchesTransferManifest(manifest, state) ||
@@ -393,7 +402,7 @@ bool HalTransferStorage::validateCourseContent(const char* candidate, const Cont
       return false;
     }
   }
-  if (removed && !removed->closeReaders()) return failure("removed course close", previousPath);
+  if (removed && (!removed->path() || !removed->closeReaders())) return failure("removed course close", previousPath);
   return Storage.ensureDirectoryExists("/tinta") || failure("mkdir", "/tinta");
 }
 #endif

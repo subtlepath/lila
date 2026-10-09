@@ -52,13 +52,29 @@ class HalCourseRemovalBaseline final {
   }
   bool verifyCompleted(const ContentRemovalRecord& proof, const ContentRemovalRecord& completed,
                        const ContentManifest& binding, const Identity& generation) {
+    return verifyCompletedContent(proof, completed, binding, generation, nullptr);
+  }
+  bool verifyReinstalled(const ContentRemovalRecord& proof, const ContentRemovalRecord& completed,
+                         const ContentManifest& replacement, const Identity& generation) {
+    verified = false;
+    if (!validCourseBinding(replacement) || replacement.formatVersion != 1 ||
+        replacement.logicalIdentity != proof.request.manifest.logicalIdentity)
+      return fail("replacement identity");
+    return verifyCompletedContent(proof, completed, proof.request.manifest, generation, &replacement);
+  }
+
+ private:
+  bool verifyCompletedContent(const ContentRemovalRecord& proof, const ContentRemovalRecord& completed,
+                              const ContentManifest& binding, const Identity& generation,
+                              const ContentManifest* replacement) {
     verified = false;
     if (!completedCourseRemovalProof(proof, completed, binding, generation) ||
         journal.recover(generation) != ContentRemovalJournalResult::Missing || !select(completed, proof, true))
       return fail("completed owner");
     uint64_t size = 0;
-    if (lookup.stat(ACTIVE_COURSE_PATH, size) != FileStatus::Missing || !guard() ||
-        lookup.stat(backup.data(), size) != FileStatus::Missing || !guard() || !verifyFile(cached.data()))
+    if ((!replacement && lookup.stat(ACTIVE_COURSE_PATH, size) != FileStatus::Missing) || !guard() ||
+        lookup.stat(backup.data(), size) != FileStatus::Missing || !guard() || !verifyFile(cached.data()) ||
+        (replacement && !verifyFile(ACTIVE_COURSE_PATH, *replacement)))
       return fail("completed baseline");
     verified = guard();
     return verified;
@@ -89,17 +105,17 @@ class HalCourseRemovalBaseline final {
     return guard() && courseRemovalCachePath(proof, cached) && removalCohortAddress(hash, record.planHash, 0, backup) &&
            guard();
   }
-  bool verifyFile(const char* path) {
+  bool verifyFile(const char* path) { return verifyFile(path, checkpoint.request.manifest); }
+  bool verifyFile(const char* path, const ContentManifest& manifest) {
     uint64_t storedLength = 0;
     if (!guard() || !closeReaders() || lookup.stat(path, storedLength) != FileStatus::Present || !guard() ||
-        storedLength != checkpoint.request.manifest.length || !Storage.openFileForReadReusing("COMPANION", path, file))
+        storedLength != manifest.length || !Storage.openFileForReadReusing("COMPANION", path, file))
       return fail("file open");
     uint64_t length = 0;
     const bool hashed = hashInventoryFile(file, scratch, length, actual, progress, this);
     const bool synced = hashed && file.sync();
     const bool closed = closeReaders();
-    return (hashed && synced && closed && guard() && length == checkpoint.request.manifest.length &&
-            actual == checkpoint.request.manifest.contentHash) ||
+    return (hashed && synced && closed && guard() && length == manifest.length && actual == manifest.contentHash) ||
            fail("file SHA");
   }
   static bool progress(void* context) { return static_cast<HalCourseRemovalBaseline*>(context)->guard(); }

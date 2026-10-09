@@ -1091,9 +1091,10 @@ Real `mini.pack` host regressions complete native course removal and journal
 release before validating a compatible update. They reject changed language,
 reassigned retired item identity, unfinished/wrong-phase transfer, wrong card
 generation, corrupt proof and insufficient heap, preserving stored files.
-Recoverable retirement of the old removal proof after installation remains
-required, along with the native activity callback, routing and explicit switch
-flow. These host checks do not establish physical SD or device behavior.
+Same-course committed installation now retires the old removal proof through
+checked finalization. The native activity callback, routing and explicit removed
+course switch flow remain required. These host checks do not establish physical
+SD or device behavior.
 
 The integrated validator checkpoint passes all 1,759 host tests and the
 installed-SdFat checker. The actual C3 translation-unit probe passes
@@ -1106,3 +1107,40 @@ board tag, chip ID 5, 6,553,600-byte OTA partition, image segments, checksum and
 SHA trailer. The 6,482,256-byte image has SHA-256
 `07ba7cc874de286057bfca3f516d56528a3f51f6ceadd15ecb59a7a964822bff`.
 The other firmware targets still require their final integration builds.
+
+Course finalization verifies the exact committed transfer, new binding and
+installed SHA before removing obsolete proof metadata. If a proof exists, its
+Retired receipt, sealed plan, original cached pack hash, state isolation and
+absence of a retained removal journal or publication stages must all pass.
+The proof is deleted only after readers close; its checked absence completes
+retirement. Applied deletion that reports failure can retry against the verified
+replacement without repeating state changes. Cached packs, sealed plans, receipts
+and learner state are retained. One checked nothrow owner allocation keeps the
+fixed banks and handles off stack, with the existing 50 KiB heap reserve.
+
+Real-pack host regressions cover reinstall followed by another native removal,
+corrupt/foreign proof refusal, installed-file sync failure, and retry after an
+applied proof deletion reports failure. The installed-SdFat scenarios also
+verify that a rejected replacement invalidates a previous cached-path loan.
+The C3 probe reports individual retirement and installed-hash stack usage of
+128 and 96 bytes respectively; physical stack/heap acceptance remains pending.
+
+The retirement checkpoint passes all 1,762 host tests, the installed-SdFat suite
+and the actual C3 translation-unit frame check. The default firmware build and
+release image validation pass. The 6,483,904-byte image has SHA-256
+`985485cc4e16d45171286164f093e7df8f24a05d51f17121cdf837ca762214e5` and passes the X4 board/chip, partition, segment, checksum
+and SHA-trailer checks. The preparation helper remains unconnected to the activity.
+
+`prepareBoundCourseRemovalState` supplies the native admission preparation callback.
+It validates the active bound pack through the retained transfer parser before
+moving legacy state with Tinta's existing course-state migration functions.
+Permission and internal-heap reserve checks precede validation and follow both
+validation and migration. Parser admission accounts for its fixed size and
+largest required block; no new callback-owned allocation or scan-loop allocation
+is introduced. Real-pack tests refuse unauthorized/corrupt input without file
+changes, preserve the pack and binding, and prove repeated successful preparation
+leaves the scoped learner files and migration receipts unchanged. Its actual C3
+header/call probe passes the local-frame check. Activity wiring remains required.
+
+The preparation checkpoint passes all 1,763 host tests; its C3 callback frame is
+48 bytes. Native activity routing and the removed-course switch flow remain open.
