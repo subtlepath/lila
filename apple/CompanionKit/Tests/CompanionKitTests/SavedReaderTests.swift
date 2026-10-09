@@ -44,6 +44,50 @@ final class SavedReaderTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(final.first?.device.batteryPercent, 50)
         XCTAssertNil(final.first?.lastSuccessfulSync)
     }
+    func testPendingReaderImportsPreventSuccessfulSyncAcrossRestart() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = root.appendingPathComponent("library.sqlite")
+        let library = try LibraryStore(url: url)
+        let device = try DeviceDescriptor(decoding: fixture())
+        let manifest = try ContentManifest(content: ContentID(String(repeating: "a", count: 64)),
+            kind: .epub, length: 100, formatVersion: 1, logicalIdentity: Data(count: 16))
+        let inventory = try ReaderInventory(reader: device.identity, generation: device.storageGeneration,
+            contents: [manifest], complete: true)
+        let frontier = try TintaJournalFrontier.digest([])
+        let checkpoint = VerifiedReaderJournalCheckpoint(reader: device.identity, generation: device.storageGeneration,
+            snapshot: try JournalMergeSnapshot(count: 0, recordSize: 512, frontier: frontier), mutations: [])
+        try await library.saveReader(device)
+        _ = try await library.importReaderJournal([], reader: device.identity, generation: device.storageGeneration,
+            frontier: frontier, count: 0)
+        let job = try await library.enqueueReaderImport(manifest: manifest, inventory: inventory,
+            installation: Data(repeating: 3, count: 16))
+        let reopened = try LibraryStore(url: url)
+        for phase in [ReaderImportJobPhase.queued, .downloading, .paused, .downloading, .verifying] {
+            if phase == .verifying {
+                try await library.checkpointReaderImport(job.id, offset: 100, phase: .downloading)
+            }
+            if phase != .queued {
+                try await library.checkpointReaderImport(job.id, offset: phase == .verifying ? 100 : 0, phase: phase)
+            }
+            let recorded = try await reopened.recordSuccessfulReaderSync(checkpoint, inventory: inventory,
+                at: Date(timeIntervalSince1970: 200))
+            XCTAssertFalse(recorded, "Pending \(phase) import was reported as synchronized")
+            let readers = try await reopened.savedReaders()
+            XCTAssertNil(readers.first?.lastSuccessfulSync)
+        }
+        try await library.abortReaderImport(job.id)
+        let foreign = try ReaderInventory(reader: device.identity, generation: Data(repeating: 9, count: 16),
+            contents: [manifest], complete: true)
+        _ = try await library.enqueueReaderImport(manifest: manifest, inventory: foreign,
+            installation: Data(repeating: 3, count: 16))
+        let completed = try await reopened.recordSuccessfulReaderSync(checkpoint, inventory: inventory,
+            at: Date(timeIntervalSince1970: 200))
+        XCTAssertTrue(completed)
+        let readers = try await reopened.savedReaders()
+        XCTAssertEqual(readers.first?.lastSuccessfulSync, Date(timeIntervalSince1970: 200))
+    }
     func testVerifiedSyncPersistsMonotonicallyAndDoesNotCrossCards() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

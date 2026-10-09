@@ -1740,6 +1740,10 @@ public actor LibraryStore {
         var committed = false
         defer { if !committed { try? database.execute("ROLLBACK") } }
         let saved = try database.query("SELECT descriptor FROM readers WHERE identity=?", [.blob(checkpoint.reader)])
+        let imports = try database.query("""
+            SELECT 1 FROM reader_import_jobs WHERE reader=? AND generation=?
+            AND phase NOT IN ('completed','aborted') LIMIT 1
+            """, [.blob(checkpoint.reader), .blob(checkpoint.generation)])
         guard try saved.next(), try DeviceDescriptor(decoding: saved.blob(0)).storageGeneration == checkpoint.generation,
               let baseline = try readerJournalBaseline(reader: checkpoint.reader, generation: checkpoint.generation),
               baseline.frontier == checkpoint.snapshot.frontier, baseline.count == checkpoint.snapshot.count,
@@ -1749,6 +1753,7 @@ public actor LibraryStore {
               try reconcileContent(reader: checkpoint.reader, generation: checkpoint.generation, inventory: inventory).isEmpty,
               try !pendingJobs().contains(where: { $0.reader == checkpoint.reader && $0.storageGeneration == checkpoint.generation && $0.phase != .aborted }),
               try !pendingRemovalJobs().contains(where: { $0.reader == checkpoint.reader && $0.request.generation == checkpoint.generation }),
+              try !imports.next(),
               try !preferences().contains(where: { $0.requiresResolution }) else { return false }
         let prefix = Set(checkpoint.mutations.map(\.event.identity))
         for mutation in checkpoint.mutations {
