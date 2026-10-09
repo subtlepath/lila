@@ -802,3 +802,7 @@ add_executable(CompanionCourseContextTest CompanionCourseContextTest.cpp ../../l
 target_compile_definitions(CompanionCourseContextTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures/")
 target_link_libraries(CompanionCourseContextTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionCourseContextTest)
+
+add_executable(CompanionCoursePackArchiveTest CompanionCoursePackArchiveTest.cpp ../../lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionCoursePackArchiveTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(CompanionCoursePackArchiveTest)

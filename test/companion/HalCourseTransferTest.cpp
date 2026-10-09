@@ -38,6 +38,7 @@
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
+#include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
 #include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
@@ -1836,6 +1837,91 @@ TEST_F(HalCourseTransferTest, SelectsDifferentCourseOnlyAfterBothLegacyMigration
   EXPECT_EQ(selected, declaration.manifest.logicalIdentity);
   EXPECT_FALSE(bound);
   EXPECT_EQ(hal.files, conflicting);
+}
+
+TEST_F(HalCourseTransferTest, NativeArchiveUsesCheckedLookupAndPreservesOriginalPack) {
+  auto& hal = inventory_hal_test::state;
+  hal.falseExists = true;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  bool allowed = true;
+  auto permitted = [](void* ctx) { return *static_cast<bool*>(ctx); };
+  HalCoursePackArchive archive(scratch, permitted, &allowed);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_NE(archive.path(), nullptr);
+  const std::string cached = archive.path();
+  const std::string reference = archive.referencePath();
+  const auto before = hal.files;
+  EXPECT_EQ(hal.files.at(cached), bytes);
+  EXPECT_EQ(*archive.manifest(), declaration.manifest);
+  EXPECT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files, before);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+  allowed = false;
+  EXPECT_EQ(archive.path(), nullptr);
+  allowed = true;
+  EXPECT_EQ(archive.path(), nullptr);
+  ASSERT_TRUE(archive.closeReaders());
+  HalCoursePackArchive reopened(scratch, permitted, &allowed);
+  EXPECT_EQ(reopened.open(declaration.manifest.logicalIdentity, declaration.manifest.contentHash),
+            CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files, before);
+  hal.files.at(reference)[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_EQ(reopened.open(declaration.manifest.logicalIdentity, declaration.manifest.contentHash),
+            CourseArchiveResult::Corrupt);
+  EXPECT_EQ(reopened.path(), nullptr);
+  EXPECT_EQ(hal.files, corrupt);
+}
+
+TEST_F(HalCourseTransferTest, NativeArchiveResumesOnlyVerifiedOwnedPrefixWithoutTruncation) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  const std::string cached = archive.path();
+  const std::string reference = archive.referencePath();
+  const auto complete = hal.files;
+  ASSERT_TRUE(archive.closeReaders());
+  hal.files.erase(cached);
+  hal.files.erase(reference);
+  const auto count = std::min<size_t>(128, bytes.size());
+  hal.files[cached + ".tmp"] = {bytes.begin(), bytes.begin() + count};
+  hal.files.at(cached + ".tmp")[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Conflict);
+  EXPECT_EQ(hal.files, corrupt);
+  EXPECT_EQ(archive.path(), nullptr);
+  hal.files.at(cached + ".tmp")[0] ^= 1;
+  EXPECT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files, complete);
+  EXPECT_EQ(hal.files.at(cached), bytes);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+}
+
+TEST_F(HalCourseTransferTest, NativeArchiveRefusesSyncCloseAndDirectoryLookupFailuresWithoutLoans) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  const std::string cached = archive.path();
+  const auto before = hal.files;
+  ASSERT_TRUE(archive.closeReaders());
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    SCOPED_TRACE(fault);
+    if (fault == 0) hal.failSyncPath = cached;
+    if (fault == 1) hal.failClosePath = cached;
+    if (fault == 2) hal.directoryErrorPath = "/.crosspoint/companion";
+    EXPECT_NE(archive.open(declaration.manifest.logicalIdentity, declaration.manifest.contentHash),
+              CourseArchiveResult::Ok);
+    EXPECT_EQ(archive.path(), nullptr);
+    EXPECT_EQ(hal.files, before);
+    hal.failSyncPath.clear();
+    hal.failClosePath.clear();
+    hal.directoryErrorPath.clear();
+    EXPECT_TRUE(archive.closeReaders());
+    EXPECT_EQ(archive.open(declaration.manifest.logicalIdentity, declaration.manifest.contentHash),
+              CourseArchiveResult::Ok);
+  }
 }
 
 TEST_F(HalCourseTransferTest, RemovedCourseSwitchAuthorizesExactBaselineAndPreservesStateOnAbort) {

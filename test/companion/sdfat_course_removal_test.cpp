@@ -5,6 +5,7 @@
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalContentRemovalJournalStorage.h"
 #include "lib/hal/HalContentRemovalStartupRecovery.h"
+#include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCourseRemovalBaseline.h"
 #include "lib/hal/HalCourseRemovalBoundParticipant.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
@@ -77,6 +78,52 @@ struct SessionContext {
     return self.refreshReady;
   }
 };
+void archiveRoundTrip() {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  state.falseExists = true;
+  const std::vector<uint8_t> bytes(769, 7);
+  ContentManifest manifest;
+  manifest.kind = ContentKind::Course;
+  manifest.formatVersion = 1;
+  manifest.logicalIdentity.fill(3);
+  manifest.length = bytes.size();
+  digest(bytes, manifest.contentHash);
+  state.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, 512> scratch{};
+  bool allowed = true;
+  HalCoursePackArchive archive(scratch, permitted, &allowed);
+  assert(archive.publish(manifest, ACTIVE_COURSE_PATH) == CourseArchiveResult::Ok);
+  const std::string cached = archive.path(), reference = archive.referencePath();
+  const auto complete = state.files;
+  assert(*archive.manifest() == manifest);
+  assert(state.files.at(cached) == bytes);
+  allowed = false;
+  assert(!archive.path());
+  allowed = true;
+  assert(!archive.path());
+  assert(archive.closeReaders());
+  state.files.erase(cached);
+  state.files.erase(reference);
+  state.files[cached + ".tmp"] = {bytes.begin(), bytes.begin() + 123};
+  assert(archive.publish(manifest, ACTIVE_COURSE_PATH) == CourseArchiveResult::Ok);
+  assert(state.files == complete);
+  assert(archive.closeReaders());
+  state.failClosePath = cached;
+  assert(archive.open(manifest.logicalIdentity, manifest.contentHash) != CourseArchiveResult::Ok);
+  assert(!archive.path());
+  assert(state.files == complete);
+  state.failClosePath.clear();
+  assert(archive.closeReaders());
+  assert(archive.open(manifest.logicalIdentity, manifest.contentHash) == CourseArchiveResult::Ok);
+  state.files.at(cached)[0] ^= 1;
+  const auto corrupt = state.files;
+  assert(archive.open(manifest.logicalIdentity, manifest.contentHash) == CourseArchiveResult::Corrupt);
+  assert(!archive.path());
+  assert(state.files == corrupt);
+  assert(archive.closeReaders());
+}
 void sessionRoundTrip() {
   auto& state = inventory_hal_test::state;
   state = {};
@@ -211,6 +258,7 @@ void sessionRoundTrip() {
 }
 }  // namespace
 int main() {
+  archiveRoundTrip();
   sessionRoundTrip();
   for (unsigned fault = 0; fault < 24; ++fault) {
     auto& state = inventory_hal_test::state;

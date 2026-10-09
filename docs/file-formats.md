@@ -575,3 +575,38 @@ make a real book disappear.
 
 `selfSize` is the expected file size. Comparing it against the real one is a free
 truncation guard: a build cut short by a power failure cannot pass.
+
+## Companion course pack archives (v1)
+
+`CoursePackArchive` retains immutable pack versions for checking course UID
+history when returning to an existing learner-state scope. Production transfer
+wiring and destination-scope enumeration are still pending.
+
+| Path | Content |
+| --- | --- |
+| `/.crosspoint/companion/course-pack-<sha256>` | Exact pack bytes |
+| Same path with `.owner` | 71-byte `LCB` v1 binding record |
+| Same path with `.tmp` | Owned copy prefix, not a published pack |
+| `/tinta/courses/<course-id>/pack-<sha256>.ref` | 71-byte `LCB` v1 binding record |
+| Same course-scoped basename with `.tmp` | Reference publication stage |
+
+Hex identifiers use lowercase digits: 32 for the course identity and 64 for the
+pack hash. Binding records contain `LCB`, binary version 1, the 63-byte
+`ContentManifest`, and little-endian CRC-32 of the first 67 bytes. Archives accept
+only course format 1, positive length and nonzero course/hash identities.
+
+The permanent owner record must match the complete manifest before a copy can
+resume. The existing prefix is compared byte-for-byte with the verified source;
+changed bytes and foreign/unowned stages are preserved and refused. A torn owner
+record is not enough evidence to reclaim a stage and is preserved. Source and
+complete staged bytes are SHA-checked before cache rename; the published cache
+is checked again. Reference stages may resume only against that verified owner
+and exact encoded record. No canonical cache/reference is overwritten.
+
+References are append-only; every retained version in the course scope must be
+checked when validating a proposed update. A reference record does not prove
+pack-format, language or item-history compatibility by itself. The caller must
+validate the complete pack, exclude namespace/state writers, and provide checked
+storage and borrowed scratch. The HAL owner retains/reuses file handles, checks
+lookup/sync/close failures, and yields during copy IO. A verified path/manifest
+loan ends on close, another operation, permission loss or destruction.

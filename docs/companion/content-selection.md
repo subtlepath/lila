@@ -1265,3 +1265,40 @@ The removed-source switch firmware is 6493024 bytes (SHA-256
 tag, segments, checksum, SHA trailer and OTA partition fit pass the release
 validator. This is a default-target checkpoint, not final validation of all
 firmware targets or runtime resource headroom.
+
+A portable append-only pack archive and checked HAL owner now retain immutable
+pack bytes plus course-scoped references. This supplies the persistence primitive
+needed for return-to-course history validation: consumers must check all retained
+versions, rather than infer a baseline from the current active course or folder
+existence. Native transfer preparation/publication and complete destination-scope
+reference enumeration remain to be connected.
+
+Publication uses a full-manifest ownership record and bounded borrowed IO;
+resuming compares the durable copy prefix against the source before appending.
+Torn ownership records, conflicting identities, unowned stages and changed prefixes
+are preserved and refused. Cache/reference publication is idempotent across
+before/after mutation failures. Copy/hash/lookup handles are retained and reused;
+resuming opens its writer once, and subsequent chunks reuse that handle. Native
+checks cover false-positive absence APIs, lookup/sync/close failures and byte-exact
+prefix resume without changing the original pack.
+
+The C3 frame probes pass for portable and native archive publication/opening.
+The portable object is 1,016 bytes; the native object is 2,304 bytes, excluding
+lazy HAL handle allocations. Both must be retained off stack after heap admission.
+The portable functions use individual stack frames of 80–112 bytes; native
+publication uses 96 bytes. These sizes do not prove runtime heap headroom or stack
+watermarks. Archives remain unconnected to production transfer flow, and do not
+yet enable returning to a previously used course with different bytes.
+
+The archive checkpoint passes all 1,785 host tests and the installed-SdFat suite,
+including owned-prefix resume, permission loss, corrupt cache and failed close.
+The native C3 constructor/publication probe also passes the 256-byte local-frame
+check. The default firmware build and image validation pass; these check the
+existing target and do not establish archive behavior until transfer wiring uses
+these owners.
+
+The archive persistence checkpoint firmware is 6493024 bytes (SHA-256
+`8047325ad19d84435b2309eb74846c228e8fdec724bb9f3257b8330e56f252a9`). Its x4/chip-5
+tag, segments, checksum, SHA trailer and OTA partition fit are verified. Archive
+publication is still exercised through host/C3 probes rather than native transfer
+routing in this image.
