@@ -633,7 +633,7 @@ public actor LibraryStore {
     }
     public func queueRemoval(manifest: ContentManifest, inventory: ReaderInventory, installation: Data,
                              transaction: UUID = UUID()) throws -> ContentRemovalJob {
-        guard inventory.complete, (manifest.kind == .epub || manifest.kind == .font), inventory.contents.contains(manifest) else {
+        guard inventory.complete, (manifest.kind == .epub || manifest.kind == .font || manifest.kind == .dictionary), inventory.contents.contains(manifest) else {
             throw StoreError.invalidValue
         }
         let request = try ContentRemovalRequest(transaction: withUnsafeBytes(of: transaction.uuid) { Data($0) },

@@ -10,6 +10,7 @@
 #include <HalCompanionWifiRadio.h>
 #include <HalCompanionWifiSession.h>
 #include <HalContentReadNativeOwner.h>
+#include <HalDictionaryRemovalNativeOwner.h>
 #include <HalEpubRemovalNativeOwner.h>
 #include <HalIdentityStorage.h>
 #include <HalInventoryIndexStorage.h>
@@ -22,6 +23,7 @@
 #include <memory>
 #include <optional>
 
+#include "CompanionDictionaryRemovalSettings.h"
 #include "CompanionFontRemovalSettings.h"
 #include "activities/Activity.h"
 
@@ -70,6 +72,8 @@ class CompanionConnectActivity final : public Activity {
   bool contentReadPermitted() const;
   size_t removalReply(bool authorized, const companion::Identity& owner, std::span<const uint8_t> request,
                       std::span<uint8_t> reply);
+  size_t dictionaryRemovalReply(const companion::Identity& owner, std::span<const uint8_t> request,
+                                std::span<uint8_t> reply);
   size_t contentMetadataReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t contentReadReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t contentHandoffReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
@@ -87,6 +91,8 @@ class CompanionConnectActivity final : public Activity {
 
   std::unique_ptr<uint8_t[]> workspace;
   CompanionFontRemovalSettings fontRemovalSettings;
+  CompanionDictionaryRemovalSettings dictionaryRemovalSettings;
+  std::unique_ptr<companion::HalDictionaryRemovalNativeOwner> dictionaryRemovalOwner;
   std::unique_ptr<companion::HalEpubRemovalNativeOwner> removalOwner;
   std::unique_ptr<companion::HalContentReadNativeOwner> contentReader;
   bool removalActive = false;

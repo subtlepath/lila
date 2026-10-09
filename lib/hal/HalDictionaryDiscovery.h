@@ -21,6 +21,7 @@ class HalDictionaryDiscovery final {
   explicit HalDictionaryDiscovery(Progress progress = nullptr, void* context = nullptr)
       : progress(progress), context(context) {}
   ~HalDictionaryDiscovery() { close(); }
+  bool closeReaders() { return close(); }
   const char* basePath() const { return base.data(); }
   DictionaryDiscoveryResult inspect(std::string_view folder, DictionaryDiscoveryDetails& output) {
     if (!close()) return error("Closing previous dictionary discovery failed");

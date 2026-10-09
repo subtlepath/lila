@@ -25,6 +25,7 @@
 
 #include <cstring>
 
+#include "CompanionDictionaryRemovalSettings.h"
 #include "CompanionFontRemovalSettings.h"
 #include "CompanionReaderPreferences.h"
 #include "CrossPointSettings.h"
@@ -427,8 +428,10 @@ void setup() {
 
 #if LILA_COMPANION
   CompanionFontRemovalSettings fontRemovalSettings;
-  const bool companionRecoveryFailed = !companion::recoverAtStartup(
-      firmware_flash::validateForNextPartition, firmware_flash::runningImageDigest, &fontRemovalSettings);
+  CompanionDictionaryRemovalSettings dictionaryRemovalSettings;
+  const bool companionRecoveryFailed =
+      !companion::recoverAtStartup(firmware_flash::validateForNextPartition, firmware_flash::runningImageDigest,
+                                   &fontRemovalSettings, &dictionaryRemovalSettings);
   if (companionRecoveryFailed) {
     companionRecoveryAllocationBlocked = true;
     setupDisplayAndFonts(true);

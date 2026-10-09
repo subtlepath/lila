@@ -14,6 +14,7 @@ class HalDictionaryCacheStorage final : public DictionaryCacheStorage {
   explicit HalDictionaryCacheStorage(InventoryHashProgress progress = nullptr, void* context = nullptr)
       : lookup(progress, context), progress(progress), context(context) {}
   ~HalDictionaryCacheStorage() override { close(); }
+  bool closeReaders() { return close(); }
   bool prepare() override {
     if (!Storage.ready() || !Storage.ensureDirectoryExists(TRANSFER_DIRECTORY)) return failure("prepare");
     return true;

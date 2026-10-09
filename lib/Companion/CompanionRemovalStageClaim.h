@@ -11,7 +11,8 @@ struct RemovalStageClaim {
 };
 inline bool validRemovalStageClaim(const RemovalStageClaim& claim) {
   return validContentRemovalRequest(claim.request) && claim.inventoryRevision != 0 &&
-         (claim.request.manifest.kind == ContentKind::Epub || claim.request.manifest.kind == ContentKind::Font);
+         (claim.request.manifest.kind == ContentKind::Epub || claim.request.manifest.kind == ContentKind::Font ||
+          claim.request.manifest.kind == ContentKind::Dictionary);
 }
 inline size_t encodeRemovalStageClaim(const RemovalStageClaim& claim, std::span<uint8_t> output) {
   if (output.size() < REMOVAL_STAGE_CLAIM_SIZE || !validRemovalStageClaim(claim)) return 0;

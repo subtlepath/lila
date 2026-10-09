@@ -139,6 +139,102 @@ def main():
         addresses = json.loads((repo / "protocol/fixtures/RemovalCohortAddress.json").read_text())
         subprocess.run([str(binary), fixture["binaryHex"],
                         *[row["address"] for row in addresses["addresses"]]], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_course_removal_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            '-DCOMPANION_FIXTURE_DIR="' + str(repo / "protocol/fixtures") + '"',
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_references_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_cohort_plan_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            '-DCOMPANION_FIXTURE_DIR="' + str(repo / "protocol/fixtures") + '"',
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_cohort_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_plan_writer_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            '-DCOMPANION_FIXTURE_DIR="' + str(repo / "protocol/fixtures") + '"',
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_collection_test.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
+        subprocess.run([
+            args.compiler, "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pedantic", "-DHEX=16",
+            '-DCOMPANION_FIXTURE_DIR="' + str(repo / "protocol/fixtures") + '"',
+            "-I" + str(repo / "test/companion/font_removal_stubs"),
+            "-I" + str(repo / "lib/Memory"),
+            "-I" + str(args.source.parent.parent / "ArduinoJson/src"),
+            "-I" + str(repo / "test/companion/hal_transfer_stubs"),
+            "-I" + str(repo / "lib/Companion"), "-I" + str(repo), "-I" + str(args.source),
+            str(repo / "test/companion/sdfat_dictionary_removal_session_test.cpp"),
+            str(repo / "lib/Companion/CompanionEpubReferenceJson.cpp"),
+            str(repo / "lib/hal/HalInventoryIndexStorage.cpp"),
+            str(repo / "lib/hal/HalInventoryPublicationValidator.cpp"),
+            str(repo / "lib/Companion/CompanionRecords.cpp"),
+            str(repo / "lib/hal/HalInventoryFileHash.cpp"),
+            str(args.source / "common/FsUtf.cpp"), str(args.source / "common/upcase.cpp"),
+            "-lcrypto", "-o", str(binary),
+        ], check=True)
+        subprocess.run([str(binary)], check=True)
     print("Installed SdFat/ArduinoJson removal and snapshot checks passed")
 
 

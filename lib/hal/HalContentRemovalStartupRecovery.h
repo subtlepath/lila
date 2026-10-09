@@ -4,6 +4,9 @@
 #include <Memory.h>
 
 #include "HalContentRemovalTransactions.h"
+#include "HalDictionaryCacheStorage.h"
+#include "HalDictionaryRemovalCohortParticipant.h"
+#include "HalDictionaryRemovalReferences.h"
 #include "HalEpubRemovalCohortParticipant.h"
 #include "HalEpubRemovalReferences.h"
 #include "HalFontRemovalReferences.h"
@@ -14,7 +17,8 @@ namespace companion {
 // Boot-only owner: no reader/store writers may run until recovery completes.
 class HalContentRemovalStartupRecovery final {
  public:
-  explicit HalContentRemovalStartupRecovery(FontRemovalSettings* fontSettings = nullptr)
+  explicit HalContentRemovalStartupRecovery(FontRemovalSettings* fontSettings = nullptr,
+                                            DictionaryRemovalSettings* dictionarySettings = nullptr)
       : journal(storage, journalBytes),
         completions(completionBytes),
         release(journal, storage, completions, releaseBytes),
@@ -22,7 +26,8 @@ class HalContentRemovalStartupRecovery final {
         references(journal, declarationBytes, io),
         participant(journal, references, io),
         removal(journal, participant),
-        fontSettings(fontSettings) {}
+        fontSettings(fontSettings),
+        dictionarySettings(dictionarySettings) {}
   bool pending(bool& output) {
     output = false;
     if (!storage.prepare()) return failure("journal directory");
@@ -46,6 +51,13 @@ class HalContentRemovalStartupRecovery final {
     if (completed == CompletedRemovalResult::Ok)
       return release.release() == CompletedRemovalResult::Ok || failure("release");
     if (completed != CompletedRemovalResult::Missing) return failure("completion receipt");
+    if (checkpoint.request.manifest.kind == ContentKind::Dictionary) {
+      if (!recoverDictionary()) return false;
+      checkpoint = *journal.current();
+      if (completions.persist(checkpoint, journal) != CompletedRemovalResult::Ok)
+        return failure("dictionary completion publication");
+      return release.release() == CompletedRemovalResult::Ok || failure("dictionary release");
+    }
     const bool font = checkpoint.request.manifest.kind == ContentKind::Font;
     if (!font && checkpoint.request.manifest.kind != ContentKind::Epub) return failure("unsupported participant");
     const auto loaded = plans.load(checkpoint.planHash, planBytes, plan);
@@ -99,6 +111,40 @@ class HalContentRemovalStartupRecovery final {
   }
 
  private:
+  struct DictionaryRecovery {
+    std::array<uint8_t, DICTIONARY_BINDING_SIZE> io{};
+    HalDictionaryCacheStorage cache;
+    HalDictionaryBindings bindings;
+    HalDictionaryRemovalCohortPlanStorage plans;
+    HalDictionaryRemovalReferences references;
+    HalDictionaryRemovalCohortParticipant participant;
+    ContentRemoval removal;
+    DictionaryRecovery(ContentRemovalJournal& journal, DictionaryRemovalSettings& settings)
+        : cache([](void*) { return admitCompanionHeap(); }),
+          bindings(cache, io, [](void*) { return admitCompanionHeap(); }),
+          references(journal, settings, bindings),
+          participant(journal, plans, references, io),
+          removal(journal, participant) {}
+  };
+  bool recoverDictionary() {
+    if (!dictionarySettings || !admitCompanionHeap(sizeof(DictionaryRecovery), sizeof(DictionaryRecovery)) ||
+        !dictionarySettings->load())
+      return failure("dictionary settings load");
+    auto worker = makeUniqueNoThrow<DictionaryRecovery>(journal, *dictionarySettings);
+    if (!worker) return failure("OOM: dictionary recovery");
+    initial = checkpoint;
+    initial.phase = ContentRemovalPhase::Prepared;
+    initial.revision = 1;
+    if (!admitCompanionHeap() ||
+        worker->plans.open(checkpoint.planHash, checkpoint.request) != DictionaryRemovalCohortStorageResult::Ok ||
+        !unchanged() || worker->removal.remove(initial) != ContentRemovalJournalResult::Ok)
+      return failure("dictionary cohort recovery");
+    const bool participantClosed = worker->participant.closeReaders();
+    const bool plansClosed = worker->plans.close();
+    const bool bindingsClosed = worker->bindings.closeReaders();
+    const bool cacheClosed = worker->cache.closeReaders();
+    return (participantClosed && plansClosed && bindingsClosed && cacheClosed) || failure("dictionary reader close");
+  }
   struct FontCohortRecovery {
     HalMultiPathRemovalPlanStorage plans;
     HalFontRemovalReferences references;
@@ -136,6 +182,7 @@ class HalContentRemovalStartupRecovery final {
   ContentRemovalRecord checkpoint, receipt, initial;
   SingleFileRemovalPlan plan;
   FontRemovalSettings* fontSettings;
+  DictionaryRemovalSettings* dictionarySettings;
   bool unchanged() const { return journal.current() && *journal.current() == checkpoint; }
   static bool failure(const char* stage) {
     LOG_ERR("COMPANION", "Removal startup recovery failed: %s", stage);

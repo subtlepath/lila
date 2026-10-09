@@ -16,9 +16,15 @@ enum class EpubRemovalAdmissionResult {
   Corrupt,
   IoError
 };
+class ContentRemovalAdmission {
+ public:
+  virtual ~ContentRemovalAdmission() = default;
+  virtual bool supports(ContentKind kind) const = 0;
+  virtual EpubRemovalAdmissionResult admit(const ContentRemovalRequest&, uint64_t revision, ContentRemovalRecord&) = 0;
+};
 // Off-stack owner. Authentication and completed-receipt lookup precede admission.
 // The caller validates the inventory pair and excludes all logical writers.
-class HalEpubRemovalAdmission final {
+class HalEpubRemovalAdmission final : public ContentRemovalAdmission {
  public:
   using InventoryReady = bool (*)(void*, uint64_t& revision);
   HalEpubRemovalAdmission(const Identity& generation, ContentRemovalJournal& journal, RemovalPathCollection& collection,
@@ -31,8 +37,9 @@ class HalEpubRemovalAdmission final {
         plans(plans),
         inventoryReady(inventoryReady),
         context(context) {}
+  bool supports(ContentKind kind) const override { return kind == ContentKind::Epub || kind == ContentKind::Font; }
   EpubRemovalAdmissionResult admit(const ContentRemovalRequest& request, uint64_t inventoryRevision,
-                                   ContentRemovalRecord& output) {
+                                   ContentRemovalRecord& output) override {
     if (!validContentRemovalRequest(request) ||
         (request.manifest.kind != ContentKind::Epub && request.manifest.kind != ContentKind::Font))
       return EpubRemovalAdmissionResult::Invalid;

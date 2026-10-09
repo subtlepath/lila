@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iterator>
 
+#include "lib/hal/HalContentRemovalJournalStorage.h"
 #include "lib/hal/HalDictionaryBindings.h"
 #include "lib/hal/HalDictionaryCacheStorage.h"
 using namespace companion;
@@ -38,6 +39,26 @@ class HalDictionaryBindingsTest : public testing::Test {
   }
   DictionaryArchiveBinding value(bool compressed = false) {
     return {archive(compressed, false), archive(compressed, true)};
+  }
+  static DictionaryRemovalPlan removalPlan(const DictionaryArchiveBinding& binding) {
+    DictionaryRemovalPlan plan;
+    plan.request.transaction.fill(1);
+    plan.request.owner.fill(2);
+    plan.request.generation.fill(3);
+    plan.request.manifest = binding.original;
+    auto& installed = plan.installed;
+    installed.revision = 1;
+    installed.phase = DictionaryInstallationPhase::Committed;
+    installed.archives = binding;
+    installed.extraction.revision = 1;
+    installed.extraction.transaction = plan.request.transaction;
+    installed.extraction.generation = plan.request.generation;
+    installed.extraction.archiveHash = binding.original.contentHash;
+    installed.extraction.sealed = installed.published = 7;
+    installed.extraction.lengths = {100, 200, 300, 0};
+    for (unsigned member = 0; member < 3; ++member) installed.extraction.hashes[member].fill(member + 5);
+    std::strcpy(installed.base.data(), "/dictionaries/es/stem");
+    return plan;
   }
   static std::string target(const char* path = "/dictionaries/es/stem") {
     Digest hash{};
@@ -222,3 +243,132 @@ TEST_F(HalDictionaryBindingsTest, BooleanExistsCannotHideBindingAndDirectoryIoPr
   EXPECT_EQ(inventory_hal_test::state.files, files);
 }
 }  // namespace
+
+TEST_F(HalDictionaryBindingsTest, RemovalRequiresCommittedOwnerAndRetainsArchives) {
+  const auto binding = value();
+  const auto plan = removalPlan(binding);
+  ASSERT_TRUE(bindings.install(plan.installed.base.data(), binding));
+  ASSERT_TRUE(bindings.finalizeInstallation(plan.installed.base.data(), binding));
+  std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> journalScratch{};
+  HalContentRemovalJournalStorage storage;
+  ContentRemovalJournal journal(storage, journalScratch);
+  ContentRemovalRecord initial;
+  initial.request = plan.request;
+  initial.planHash.fill(8);
+  EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+  ASSERT_EQ(journal.begin(initial), ContentRemovalJournalResult::Ok);
+  EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+  ASSERT_EQ(journal.advance(ContentRemovalPhase::Quarantined), ContentRemovalJournalResult::Ok);
+  EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+  ASSERT_EQ(journal.advance(ContentRemovalPhase::Committed), ContentRemovalJournalResult::Ok);
+  auto foreign = plan;
+  foreign.request.owner.fill(9);
+  EXPECT_FALSE(bindings.retireRemoval(journal, foreign, initial.planHash));
+  auto wrongHash = initial.planHash;
+  wrongHash[0] ^= 1;
+  EXPECT_FALSE(bindings.retireRemoval(journal, plan, wrongHash));
+  auto& state = inventory_hal_test::state;
+  const auto before = state.files;
+  ASSERT_TRUE(bindings.retireRemoval(journal, plan, initial.planHash));
+  auto expected = before;
+  expected.erase(target());
+  EXPECT_EQ(state.files, expected);
+  EXPECT_TRUE(bindings.verifyRemovalRetired(journal, plan, initial.planHash));
+  EXPECT_TRUE(bindings.retireRemoval(journal, plan, initial.planHash));
+  EXPECT_EQ(state.files, expected);
+  ASSERT_EQ(journal.advance(ContentRemovalPhase::Retired), ContentRemovalJournalResult::Ok);
+  EXPECT_TRUE(bindings.verifyRemovalRetired(journal, plan, initial.planHash));
+  EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+}
+TEST_F(HalDictionaryBindingsTest, RemovalFailuresBeforeAndAfterDeletionRecoverAfterReconstruction) {
+  for (bool after : {false, true}) {
+    SetUp();
+    const auto binding = value();
+    const auto plan = removalPlan(binding);
+    ASSERT_TRUE(bindings.install(plan.installed.base.data(), binding));
+    ASSERT_TRUE(bindings.finalizeInstallation(plan.installed.base.data(), binding));
+    std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> journalScratch{};
+    HalContentRemovalJournalStorage storage;
+    ContentRemovalJournal journal(storage, journalScratch);
+    ContentRemovalRecord initial;
+    initial.request = plan.request;
+    initial.planHash.fill(8);
+    ASSERT_EQ(journal.begin(initial), ContentRemovalJournalResult::Ok);
+    ASSERT_EQ(journal.advance(ContentRemovalPhase::Quarantined), ContentRemovalJournalResult::Ok);
+    ASSERT_EQ(journal.advance(ContentRemovalPhase::Committed), ContentRemovalJournalResult::Ok);
+    auto& state = inventory_hal_test::state;
+    state.failRemove = !after;
+    state.failRemoveAfter = after;
+    EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+    EXPECT_EQ(state.files.contains(target()), !after);
+    state.failRemove = state.failRemoveAfter = false;
+    ContentRemovalJournal recovered(storage, journalScratch);
+    ASSERT_EQ(recovered.recover(initial), ContentRemovalJournalResult::Ok);
+    HalDictionaryBindings rebooted(cache, scratch);
+    ASSERT_TRUE(rebooted.retireRemoval(recovered, plan, initial.planHash));
+    EXPECT_TRUE(rebooted.verifyRemovalRetired(recovered, plan, initial.planHash));
+  }
+}
+TEST_F(HalDictionaryBindingsTest, RemovalRefusesCorruptForeignOrPendingBindingsWithoutDeletion) {
+  for (unsigned variant = 0; variant < 4; ++variant) {
+    SetUp();
+    const auto binding = value();
+    const auto plan = removalPlan(binding);
+    ASSERT_TRUE(bindings.install(plan.installed.base.data(), binding));
+    ASSERT_TRUE(bindings.finalizeInstallation(plan.installed.base.data(), binding));
+    std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> journalScratch{};
+    HalContentRemovalJournalStorage storage;
+    ContentRemovalJournal journal(storage, journalScratch);
+    ContentRemovalRecord initial;
+    initial.request = plan.request;
+    initial.planHash.fill(8);
+    ASSERT_EQ(journal.begin(initial), ContentRemovalJournalResult::Ok);
+    ASSERT_EQ(journal.advance(ContentRemovalPhase::Quarantined), ContentRemovalJournalResult::Ok);
+    ASSERT_EQ(journal.advance(ContentRemovalPhase::Committed), ContentRemovalJournalResult::Ok);
+    auto& state = inventory_hal_test::state;
+    if (variant == 0) state.files.at(target())[40] ^= 1;
+    if (variant == 1) {
+      const auto different = value(true);
+      ASSERT_TRUE(bindings.install(plan.installed.base.data(), different));
+      ASSERT_TRUE(bindings.finalizeInstallation(plan.installed.base.data(), different));
+    }
+    if (variant >= 2) state.files[target() + (variant == 2 ? ".tmp" : ".bak")] = {1};
+    const auto before = state.files;
+    EXPECT_FALSE(bindings.retireRemoval(journal, plan, initial.planHash));
+    EXPECT_EQ(state.files, before);
+  }
+}
+TEST_F(HalDictionaryBindingsTest, JournalCheckpointChangeDuringLookupPreventsBindingDeletion) {
+  const auto binding = value();
+  const auto plan = removalPlan(binding);
+  ASSERT_TRUE(bindings.install(plan.installed.base.data(), binding));
+  ASSERT_TRUE(bindings.finalizeInstallation(plan.installed.base.data(), binding));
+  std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> journalScratch{};
+  HalContentRemovalJournalStorage storage;
+  ContentRemovalJournal journal(storage, journalScratch);
+  ContentRemovalRecord initial;
+  initial.request = plan.request;
+  initial.planHash.fill(8);
+  ASSERT_EQ(journal.begin(initial), ContentRemovalJournalResult::Ok);
+  ASSERT_EQ(journal.advance(ContentRemovalPhase::Quarantined), ContentRemovalJournalResult::Ok);
+  ASSERT_EQ(journal.advance(ContentRemovalPhase::Committed), ContentRemovalJournalResult::Ok);
+  struct Callback {
+    ContentRemovalJournal* journal;
+    bool changed = false;
+  } callback{&journal};
+  HalDictionaryBindings guarded(
+      cache, scratch,
+      [](void* context) {
+        auto& callback = *static_cast<Callback*>(context);
+        if (!callback.changed) {
+          callback.changed = true;
+          EXPECT_EQ(callback.journal->advance(ContentRemovalPhase::Retired), ContentRemovalJournalResult::Ok);
+        }
+        return true;
+      },
+      &callback);
+  const auto bytes = inventory_hal_test::state.files.at(target());
+  EXPECT_FALSE(guarded.retireRemoval(journal, plan, initial.planHash));
+  EXPECT_TRUE(callback.changed);
+  EXPECT_EQ(inventory_hal_test::state.files.at(target()), bytes);
+}

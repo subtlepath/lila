@@ -4,8 +4,10 @@
 #include <Logging.h>
 #include <mbedtls/sha256.h>
 
+#include "CompanionContentRemovalJournal.h"
 #include "CompanionDictionaryArchiveBinding.h"
 #include "CompanionDictionaryCachePublication.h"
+#include "CompanionDictionaryRemovalPlan.h"
 #include "CompanionInventoryPaths.h"
 #include "HalCompanionFileLookup.h"
 
@@ -24,6 +26,7 @@ class HalDictionaryBindings final : public DictionaryArchiveBindings {
     close();
     mbedtls_sha256_free(&hashContext);
   }
+  bool closeReaders() { return close(); }
   HalDictionaryBindings(const HalDictionaryBindings&) = delete;
   HalDictionaryBindings& operator=(const HalDictionaryBindings&) = delete;
   DictionaryBindingResult read(const char* basePath, DictionaryArchiveBinding& output) override {
@@ -85,6 +88,38 @@ class HalDictionaryBindings final : public DictionaryArchiveBindings {
     return true;
   }
 
+  // The committed parent retains member backups and the exact sealed plan.
+  // Immutable archive caches may be shared by other installations.
+  bool retireRemoval(ContentRemovalJournal& journal, const DictionaryRemovalPlan& plan, const Digest& digest) {
+    if (!journal.current()) return failure("missing removal journal");
+    removalCheckpoint = *journal.current();
+    if (!removalContext(journal, plan, digest, false) || !paths(plan.installed.base.data()) ||
+        !removalContext(journal, plan, digest, false) ||
+        lookup.inspect(stage.data()) != CompanionFilePresence::Missing ||
+        lookup.inspect(backup.data()) != CompanionFilePresence::Missing ||
+        !removalContext(journal, plan, digest, false) || !verifyArchives(plan.installed.archives) ||
+        !removalContext(journal, plan, digest, false))
+      return failure("removal context or pending installation");
+    const auto presence = readFile(target.data(), active);
+    if (!removalContext(journal, plan, digest, false) || presence == DictionaryBindingResult::Error ||
+        (presence == DictionaryBindingResult::Found && active != plan.installed.archives))
+      return failure("removal binding proof");
+    if (presence == DictionaryBindingResult::Found && !Storage.remove(target.data()))
+      return failure("removal binding retirement");
+    return removalContext(journal, plan, digest, false) && verifyRemovalRetired(journal, plan, digest);
+  }
+  bool verifyRemovalRetired(ContentRemovalJournal& journal, const DictionaryRemovalPlan& plan, const Digest& digest) {
+    if (!journal.current()) return failure("missing removal journal");
+    removalCheckpoint = *journal.current();
+    return (removalContext(journal, plan, digest, true) && paths(plan.installed.base.data()) &&
+            removalContext(journal, plan, digest, true) &&
+            lookup.inspect(stage.data()) == CompanionFilePresence::Missing &&
+            lookup.inspect(backup.data()) == CompanionFilePresence::Missing &&
+            readFile(target.data(), active) == DictionaryBindingResult::Missing &&
+            removalContext(journal, plan, digest, true)) ||
+           failure("retired removal binding");
+  }
+
  private:
   DictionaryCachePublication publication;
   std::span<uint8_t> scratch;
@@ -94,6 +129,16 @@ class HalDictionaryBindings final : public DictionaryArchiveBindings {
   Digest pathHash{};
   std::array<char, 120> target{}, stage{}, backup{};
   DictionaryArchiveBinding active, previous, staged;
+  ContentRemovalRecord removalCheckpoint;
+  bool removalContext(ContentRemovalJournal& journal, const DictionaryRemovalPlan& plan, const Digest& digest,
+                      bool retired) {
+    const auto* record = journal.current();
+    return record && *record == removalCheckpoint && validDictionaryRemovalPlan(plan) &&
+           record->request == plan.request && record->planHash == digest &&
+           (record->phase == ContentRemovalPhase::Committed ||
+            (retired && record->phase == ContentRemovalPhase::Retired));
+  }
+
   bool paths(const char* basePath) {
     if (!close() || !Storage.ready() || scratch.size() < DICTIONARY_BINDING_SIZE || !basePath)
       return failure("path arguments");

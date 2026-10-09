@@ -18,6 +18,16 @@ private actor RemovalTransport: CompanionTransport {
     func mismatch(_ value: Bool) { mismatchedReply = value }
 }
 final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
+    func testDictionaryRemovalCapabilityIsIndependentOfTransferAndOtherRemovalKinds() {
+        let otherCapabilities: ReaderCapabilities = [.declaredTransfers, .dictionaryTransfers, .epubRemovals, .fontRemovals]
+        XCTAssertTrue(otherCapabilities.supportsDictionaryTransfer)
+        XCTAssertFalse(otherCapabilities.supportsRemoval(of: .dictionary))
+        XCTAssertTrue(ReaderCapabilities.dictionaryRemovals.supportsRemoval(of: .dictionary))
+        XCTAssertFalse(ReaderCapabilities.dictionaryRemovals.supportsRemoval(of: .font))
+        XCTAssertFalse(ReaderCapabilities.dictionaryRemovals.supportsRemoval(of: .epub))
+        XCTAssertFalse(ReaderCapabilities.dictionaryRemovals.supportsRemoval(of: .course))
+    }
+
     func testLostReplyRetriesTheSameDurableRequest() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -66,8 +76,8 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
         let bodies = await transport.bodies()
         XCTAssertEqual(bodies, [job.request.encoded, job.request.encoded, job.request.encoded])
     }
-    func testFontRemovalRequiresItsOwnCapabilityAndRetainsDurableJob() async throws {
-        for format: UInt32 in [1, 4] {
+    func testFontAndDictionaryRemovalRequireTheirOwnCapabilityAndRetainDurableJobs() async throws {
+        for (kind, format): (ContentKind, UInt32) in [(.font, 1), (.font, 4), (.dictionary, 1)] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             defer { try? FileManager.default.removeItem(at: root) }
             let libraryURL = root.appendingPathComponent("library.sqlite")
@@ -78,9 +88,9 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
             bytes.append(contentsOf: [80, 1, 1]); bytes.append(Data(count: 32))
             let oldDevice = try DeviceDescriptor(decoding: bytes)
             let owner = Data(repeating: 4, count: 16)
-            let manifest = try ContentManifest(content: ContentID(String(repeating: "b", count: 64)), kind: .font,
+            let manifest = try ContentManifest(content: ContentID(String(repeating: "b", count: 64)), kind: kind,
                 length: 123, formatVersion: format, logicalIdentity: Data(count: 16))
-            let content = LibraryContent(id: manifest.content, kind: .font, length: 123, title: "Family",
+            let content = LibraryContent(id: manifest.content, kind: kind, length: 123, title: "Family",
                 originalFilename: format == 4 ? "Family_14.cpfont" : "Family.ttf")
             try await library.put(content)
             let inventory = try ReaderInventory(reader: oldDevice.identity, generation: oldDevice.storageGeneration,
@@ -92,13 +102,13 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
             let runner = TransferRunner(library: library, vault: vault)
             do {
                 _ = try await runner.removeContent(job.id, device: oldDevice, installation: owner, transport: transport)
-                XCTFail("EPUB capability authorized font removal")
+                XCTFail("EPUB capability authorized another content kind removal")
             } catch { XCTAssertEqual(error as? TransferRunnerError, .unsupportedContent) }
             let unsent = await transport.bodies(); XCTAssertTrue(unsent.isEmpty)
             let queued = try await library.removalJob(job.id); XCTAssertEqual(queued, job)
             let reopened = try LibraryStore(url: libraryURL)
             let resumed = TransferRunner(library: reopened, vault: vault)
-            let capability = ReaderCapabilities.fontRemovals.rawValue
+            let capability = (kind == .dictionary ? ReaderCapabilities.dictionaryRemovals : ReaderCapabilities.fontRemovals).rawValue
             for offset in 0..<4 { bytes[35 + offset] = UInt8(truncatingIfNeeded: capability >> (8 * offset)) }
             let compatible = try DeviceDescriptor(decoding: bytes)
             do {

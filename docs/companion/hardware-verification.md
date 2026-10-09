@@ -301,8 +301,8 @@ and S3; command tests and source parsing do not satisfy this acceptance section.
 
 ## Current portable software evidence
 
-The full CompanionKit Linux suite passes 504 tests. The complete configured CTest
-suite passes 1,706 entries. These cover the selected portable implementations,
+The full CompanionKit Linux suite passes 506 tests. The complete configured CTest
+suite passes 1,733 entries. These cover the selected portable implementations,
 including inventory, persistence, migration, synchronization, transfers, removal,
 export codecs and shared fixtures, source verification, encrypted imports,
 restart/fallback, in-flight deletion, immutable filenames, cancellation, and
@@ -324,25 +324,26 @@ serialization or physical SD failure behavior.
 
 ### Current firmware images
 
-The routed font cohort implementation passes all five firmware builds and image
-validation. These images include capability bit 13, complete-path admission,
-checked settings publication, single-file/cohort startup recovery and registry
-refresh, alongside the earlier reader export and font-deletion UI changes.
-Board/chip identity, segment bounds, checksum, SHA trailer and OTA-size validation
-pass through `scripts/build_companion_release_manifest.py`. Saved proof records
-and images are under `/tmp/lila-font-cohort-images`.
+The dictionary-enabled implementation passes all five firmware builds and image
+validation. These images include independent removal capability bits 13 and 14,
+complete-path admission, checked settings publication, dictionary cohort startup
+recovery and inventory refresh, alongside the earlier export and font-removal flows.
+Board/chip identity, segment bounds, checksum, SHA trailer and OTA-size checks pass
+through `scripts/build_companion_release_manifest.py`. Saved proof records and
+images are under `/tmp/lila-dictionary-final-images`.
 
-The dictionary-removal plan codec is host-tested but is not referenced by firmware
-yet; these images do not enable dictionary removal. Earlier stopped build batches
-are checkpoints only; this table contains the final routed-font results.
+The new course-removal codec, participant and storage adapter are host-tested but
+are not referenced by these firmware images; they do not enable course removal.
+The initial X4 Pro attempt stopped during SDK package copying with an operating
+system file-table error. Its successful retry is the result shown below.
 
 | Profile | Static link RAM (bytes) | Image (bytes) | OTA headroom (bytes) | SHA-256 |
 | --- | ---: | ---: | ---: | --- |
-| default | 64984 | 6439040 | 114560 | `8485f123ae87bbb9e838dde7ad9bbc14bbc98d453382b04d1b9c512d662ad7d6` |
-| sticky | 75220 | 5749296 | 804304 | `27720bf7a082cad83699180ca48312d4ba2d6553053e33881e28251dc36dc793` |
-| x4pro | 108900 | 6478672 | 74928 | `6a48e20086082fa6638d6d9cde98b64b56f61a5afdd3e70b3f9c067955402889` |
-| x4c | 108732 | 6449712 | 103888 | `d9bd4eb270377aabc4064c366daeadbe82e5ac23d18ac7675e51364ef5d6bc77` |
-| papermono | 125076 | 5863696 | 689904 | `f42903c5fbdb3167e6e3c84a2a891a767ef8686410d43fbb0ba704e4460fa8d1` |
+| default | 64984 | 6465632 | 87968 | `11e7ab08facba7532d5b351e93a28d9f5ba18078dc53f6239e1c47f802c64a7e` |
+| sticky | 75212 | 5772528 | 781072 | `a257ffcca7a81038e271060543b5dbbbc457ef112dee1d2e86592d6831627c83` |
+| x4pro | 108884 | 6502976 | 50624 | `d44032c592fe97eced8a3b5468adbbae01d86c7b57a305bc98f7bb08290ee28a` |
+| x4c | 108740 | 6474416 | 79184 | `df6ca7dfac68a02b41a6d3c37c49039a82afdb543dc66ad6bd707e0e3ae6a96c` |
+| papermono | 125084 | 5886976 | 666624 | `1163c7a3284b1b5d7d6a90c0b13f09b7e50d76ec4d97de8230fb16ce5ae8196f` |
 
 Static link RAM is not runtime free heap. Firmware-image acceptance does not prove
 radio operation, learner-history preservation, SD power-loss recovery, or the

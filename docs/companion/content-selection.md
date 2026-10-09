@@ -2,12 +2,14 @@
 
 `LibraryStore.setReaderSelection` persists a desired choice by hardware reader identity and SHA-256 content ID. SQLite schema 8 keeps these rows separate from shared library metadata and requires the content to exist. EPUBs, courses, fonts, and dictionaries use this path; firmware installation requires its separate explicit update flow.
 
-The current source advertises EPUB and font removal through authenticated BLE
-and encrypted Wi-Fi commands. A retained owner prepares complete-path plans and publishes
+The current source advertises EPUB, font and dictionary removal through authenticated
+BLE and encrypted Wi-Fi commands. A retained owner prepares complete-path plans and publishes
 metadata before retiring quarantined bytes. Resource admission covers its owner,
 JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
-unverified. Course and dictionary removal still need their own participants.
+unverified. Course removal still needs its own participant. Dictionary removal
+uses sealed member-proof cohorts, preserves unowned folder siblings and cached
+archives, and recovers retained journals before reading resumes.
 Font cohort routing and recovery pass the native host checker and all five
 firmware builds/image checks; physical acceptance remains pending.
 
@@ -57,8 +59,10 @@ byte. Schema-39 interrupted imports can acquire their first authenticated
 filename without losing phase or offset. See protocol.md for wire formats,
 resource ownership, binding checks, and recovery details.
 
-All 504 Swift tests and 1,703 host entries pass. All five firmware profiles build
-with the corrected font-removal codecs, and their saved images pass validation.
+All 506 Swift tests and 1,733 host entries pass. All five dictionary-enabled
+firmware profiles build, and their saved images pass chip, board, segment bounds,
+checksum, SHA-256 trailer and OTA-size checks through the release validator.
+These images do not include the unconnected course-removal components.
 Native source syntax/localization checks pass, but native
 Apple compilation, physical reader operation, power-cut recovery, accessibility,
 and measured runtime heap/stack acceptance remain unverified.
@@ -432,7 +436,7 @@ referenced by current firmware yet. Three host tests cover roundtrip/unaligned
 wire input, all compressed/synonym combinations, every truncated length and
 corrupted byte, valid-checksum ownership mismatch, incomplete proofs, private
 paths, hidden roots, and exact member-path output bounds. All 1,706 configured
-CTest entries pass. Native plan collection/persistence, member quarantine,
+CTest entries pass. Native plan collection/persistence,
 reference/binding publication, completed receipts/startup routing, Apple controls
 and physical acceptance still need implementation. No reader advertises dictionary
 removal capability yet.
@@ -442,3 +446,342 @@ checksums/SHA trailers and OTA-size validation pass for each profile; see the
 current table in `hardware-verification.md`. Native Apple execution, actual
 settings serialization/power-loss behavior, radio transitions and measured
 runtime memory acceptance remain unverified.
+
+### Dictionary member quarantine and recovery
+
+`DictionaryRemovalParticipant` now verifies every declared member before creating
+its removal journal. It quarantines only the owned definitions, index, info and
+optional synonyms, checks reference publication, and retains verified backups
+until the durable commit. Recovery accepts partially renamed or retired members;
+foreign ownership or corrupt member proofs stop further mutations. Reference
+retirement is followed by another complete backup verification before deletion.
+Five host tests cover each storage-operation failure before/after effects,
+publication/retirement failure, corrupt later backups, journal ownership changes,
+and repeated completion. All 1,711 configured CTest entries pass.
+
+`HalDictionaryRemovalStorage` verifies sealed plan bytes against both their SHA
+and complete decoded value, then uses checked HAL lookup, streaming member SHA,
+sync/close checks and plan/member-addressed quarantine names. It borrows immutable
+plan bytes and disjoint hash scratch; fixed codec/path/hash state remains outside
+the task stack and adds no allocation. The installed SdFat Unicode comparison
+check passes 72 scenarios across visible/hidden roots, plain/compressed definitions,
+optional synonyms and injected IO failures. Unowned siblings, including undeclared
+synonyms, survive removal. These tests use fault-injected HAL storage; they do not
+prove physical SD power-loss behavior.
+
+A C3 compiler probe with the repository flags, LTO disabled and a 256-byte
+frame limit passes. The largest new dictionary method frame is 80 bytes; this
+does not measure total call-stack depth or runtime task watermarks.
+
+The backend is not yet connected to reader sessions. Durable native plan
+collection, dictionary reference/binding publication, multiple installed copies,
+startup/completed-receipt routing and Apple capability controls remain required.
+Dictionary removal remains unadvertised until that path is complete.
+
+Dictionary bindings now expose committed-removal retirement and read-only retired
+verification. Cleanup requires the exact journal checkpoint, request and plan
+digest, verifies the stored binding and retained archives, refuses installation
+stage/backup records, and deletes only the path-specific binding. Missing bindings
+are harmless on retry; archive caches remain untouched. Four additional binding
+tests cover phase/ownership gates, before/after deletion failures with reconstructed
+journal/storage owners, corrupt/foreign/pending records, and checkpoint changes
+during lookup. All 13 binding tests and all 1,715 configured CTest entries pass after the final
+host rebuild. The C3 compiler frame probe passes with
+48-byte frames for the new cleanup methods. The retained checkpoint is fixed
+owner state, avoiding a large local record or a separate heap allocation.
+
+Native dictionary settings/reference integration and final affected firmware
+builds remain pending; earlier font build results do not validate these latest
+dictionary binding changes.
+
+### Dictionary selection and binding references
+
+`HalDictionaryRemovalReferences` now preflights saved selection and the installed
+archive binding, publishes checked selection persistence in the Quarantined
+phase, verifies publication, and retires the path-specific binding only after
+Committed. Selected folder names use the installed SdFat Unicode comparison for
+both dictionary roots. Other folder selections survive. A failed save that already
+cleared memory is retried, including after settings/journal/participant
+reconstruction. Repeated successful publication within a checkpoint avoids a
+redundant save. Binding and archive validation fail closed before quarantine;
+legacy canonical bundles may omit a binding when original and canonical manifests
+are identical. Immutable archive caches remain available after removal.
+
+`CompanionDictionaryRemovalSettings` adapts the bounded application settings field
+without allocation. Startup must load settings before constructing recovery
+participants. The native reference checker covers failed selection saves and
+reconstruction through the actual member-removal coordinator, unrelated selection,
+invalid settings/foreign bindings, retained caches/unowned siblings, repeated
+publication and visible/hidden Unicode folder matching. The full installed-SdFat
+checker passes. The C3 compile/frame probe includes the application adapter and
+passes the 256-byte limit; reference methods reach at most 64 bytes individually.
+
+These owners are not wired into sessions yet. Durable plan collection and handling
+of every matching installed copy, startup/completed receipts, capability routing,
+final firmware builds and physical acceptance remain required.
+
+### Dictionary cohort plan verification
+
+`DictionaryRemovalCohortReader` streams fixed dictionary removal records beneath
+an `LDRM` version-1 header containing the complete removal request, inventory
+revision, copy count and payload CRC. Every record must retain the same request
+and valid complete member proofs. Base paths must be strictly increasing, refusing
+duplicate exact paths and unsorted input. Header count arithmetic is bounded,
+file length must be exact, and the header is checked again at iteration end.
+The decoder retains its large plan/codec state off stack, borrows disjoint scratch
+and output, and performs no allocation. Five tests cover every truncated length
+and corrupt byte, header bounds, wrong ownership, duplicates/order, read failure,
+changed headers, iteration and rewind. All 1,720 configured CTest entries pass.
+
+`HalDictionaryRemovalCohortPlanStorage` opens a digest-addressed private plan file,
+checks all records and the complete SHA before exposing the plan, and rechecks SHA
+on rewind and at iteration end. It retains one HAL file and fixed record scratch;
+no allocation occurs in the reader. The installed-SdFat fault checker passes with
+corrupt/truncated plans, read/sync/close failures, changed files and wrong/missing
+ownership bindings. C3 compile/frame probes pass: header decoding reaches 240
+bytes and native storage open reaches 80 bytes. These are individual frames,
+not runtime task-stack or heap acceptance.
+
+The native plan publisher/collector must enumerate and prove every matching
+installed base, exclude filesystem aliases, and retain the immutable plan through
+completion. A reusable cohort participant must bind each copy/member backup to
+that parent plan. These components, session/startup routing and final affected
+firmware/native Apple/hardware checks remain unfinished. No dictionary removal
+capability is advertised yet.
+
+### Reusable dictionary cohort participant
+
+`HalDictionaryRemovalCohortParticipant` now reuses one fixed member owner, decoded
+copy and portable participant across the parent plan's installed copies. Each bind
+rewinds/verifies the complete parent file and matches the decoded record before
+arming member operations. Backup addresses derive from the parent SHA and
+`copy ordinal * 4 + member`, keeping all copy/member addresses disjoint, including
+when synonyms are absent. Bind arithmetic is checked; unbinding releases borrowed
+context and checks the retained file close without removing payloads.
+
+Retirement first verifies publication across every copy, retires references across
+every copy, verifies all remaining backups again, then deletes verified member
+backups. A corrupt later-copy backup therefore stops backup deletion after a
+reference callback. The portable participant exposes separate reference and
+verified-backup retirement steps while preserving its single-copy behavior.
+No allocation occurs during walks; the large member/plan state must be held in
+an admitted native session/startup owner outside the task stack.
+
+The installed-SdFat cohort checker covers two identical installations across both
+roots, partial renames before/after effects, failed selection persistence,
+interrupted binding retirement, corrupt later sources/backups, close failure,
+reconstruction, unowned sibling preservation, and repeated completion without
+extra payload mutations or settings saves. All 1,720 CTest entries and the full
+installed-SdFat checker pass. C3 compile/frame probes pass: cohort walk reaches
+80 bytes, cohort member binding 32 bytes and the split retirement methods 16
+bytes individually. Runtime heap/largest-block and task watermarks remain
+unverified.
+
+Durable plan publishing/collection, filesystem-alias exclusion, session/startup
+routing and capability controls still need implementation. Dictionary removal
+remains unadvertised pending those components and final builds/physical checks.
+
+### Durable dictionary cohort plan writer
+
+`HalDictionaryRemovalCohortPlanWriter` now claims an owned stage before writing
+its unsealed header, streams ordered dictionary proof records within an admitted
+SD quota, seals/syncs the header, verifies the complete staged plan, and publishes
+it by its SHA. Record readback must match the SHA of the intended encoded records,
+not merely their CRCs. Existing identical targets are verified and retained;
+repeated publication cleans only the matching owned stage. Exact and SdFat
+Unicode-equivalent path duplicates are refused. Valid foreign stage headers remain
+untouched. The common removal stage claim codec now accepts dictionary requests
+and retains kind in its digest/ownership binding; a new claim test verifies that
+foreign marker contents cannot authorize stage access.
+
+The native writer fault checks cover corrupted/failed record writes, sync/close
+failures, publication renames before/after effects, repeated-publication cleanup
+failure, quota exhaustion, exact/case-folded duplicates, foreign requests/stages,
+and a changed member proof with valid record CRCs and unchanged aggregate CRC.
+The intended-record SHA rejects that last case. The full installed-SdFat checker
+passes; the final CRC-preserving proof-mutation case also passes in the standalone
+writer binary after its addition. All 1,721 configured CTest entries pass following
+the host rebuild. The C3 compile/frame probe passes with a largest writer-method
+frame of 144 bytes. Writer buffers/decoders remain fixed owner state outside the
+task stack, with no allocation during appends.
+
+Native collection still must discover and prove every matching installation,
+provide canonical long paths in sorted order, and admit/retain the writer under
+exclusive inventory/namespace ownership. Session/startup/completed-receipt routing,
+capability controls, final firmware builds and physical acceptance remain pending.
+
+### Installed dictionary proof assembly
+
+`HalDictionaryRemovalPlanAssembly` now discovers an installed folder, hashes its
+canonical ZIP, verifies the retained canonical cache and any original-archive
+binding, and produces a transaction/card-bound removal record for matching content.
+A read-only cache adapter refuses publication/deletion and avoids directory
+creation. Unrelated and empty folders leave caller output untouched. Invalid
+bindings, changed bytes, missing caches, read/close errors, cancellation and
+short/overlapping scratch refuse assembly without changing payload files.
+
+`HalDictionaryRemovalMemberProofSource` hashes each member in the same sequential
+read used to emit the canonical archive. Its single retained SHA context is reused
+between members; lengths, cursors and hashes are fixed owner state. This avoids a
+separate member-hash read pass and binds member proofs to the bytes that produced
+the canonical archive SHA. It rejects changed lengths/order, incomplete reads and
+latched errors; empty members receive the SHA of empty bytes. Inventory semantic
+validation and exclusive card/revision/member/cache/binding ownership remain
+required at the caller boundary.
+
+All 1,727 configured CTest entries pass. Six assembly tests cover original versus
+canonical archive identity, both roots,
+plain/compressed definitions, exact member proofs, immutable caller output,
+malformed bindings, changed members, read/close/missing-cache failures, empty
+folders, cancellation at every guard, and scratch bounds/overlap. The C3
+compile/frame probe passes: assembly reaches 240 bytes, the member-hash wrapper
+80 bytes and proof finishing 32 bytes individually. Fixed assembler/decoder
+state must remain off the task stack; runtime memory acceptance is still pending.
+
+Native enumeration must still collect every matching installation, filter folders
+consistently with inventory, resolve filesystem names, sort proven records and
+publish under a stable inventory snapshot. Session/startup/completed-receipt
+routing, final firmware builds, Apple controls and physical checks remain pending.
+
+### Native dictionary folder collection
+
+`HalDictionaryRemovalPlanCollection` now enumerates direct folders under both
+dictionary roots, following inventory's dot-folder exclusion. Repeated directory
+name scans select the next folder prefix (including its trailing separator), so
+record ordering remains correct for names such as `A!` versus `A`. Each folder's
+member bytes are assembled once. Fixed off-stack directory/name/plan state replaces
+a growing heap list. A second name scan refuses exact, Unicode-case or short-name
+alias collisions before accepting a folder. Missing roots are determined by
+checked root enumeration; root/file collisions and directory IO failures stop
+publication. All matching proven records are appended to the owned writer.
+
+An authenticated card/revision guard is required. Guard failure is latched within
+collection; cleanup then releases writer handles and retains the owned stage.
+Failed begin also releases handles without discarding another retained owner.
+Only a fresh authorized owner may verify and discard or rebuild that stage.
+The collector respects the existing fixed plan/base bounds and refuses unsupported
+or malformed folders rather than truncating paths or deleting their content.
+
+The installed-SdFat collector checker covers both roots, prefix sorting, unrelated
+original-archive bindings, hidden/empty folders, case and short-name aliases,
+changed members, root/file collisions, directory/close failure, missing matches,
+and early/mid-operation cancellation. Its successful case continues through
+plan verification and cohort removal: all three selected copies disappear while
+notes, caches and the unrelated bound installation survive; repeated completion
+makes no further payload/settings changes. The complete installed-SdFat checker
+passes after the final cleanup edit. The C3 compiler/frame probe passes with
+112-byte name scans and 208-byte collection frames. Runtime heap/largest-block,
+task-stack and physical SD/radio acceptance remain unverified.
+
+Session ownership/admission, durable completed receipts, startup routing and
+capability/Apple controls remain unfinished. Final affected firmware builds are
+still required once these owners are connected; dictionary removal remains
+unadvertised.
+
+Dictionary removal admission and session
+
+The native dictionary session now composes inventory admission, sealed cohort
+collection, journal recovery, member quarantine, settings publication, and durable
+completion receipts. New requests must match the complete inventory manifest;
+reconstructed requests recover their retained plan without requiring an inventory
+scan of partially quarantined content. The session releases every retained reader
+at the radio lifecycle boundary and refuses requests before successful preparation.
+
+The real-SdFat host session check covers authorization, unsupported content kinds,
+missing or conflicting inventory entries, partial rename and failed settings-save
+recovery, repeated completion receipts, and transaction reuse with changed content.
+It verifies that unowned sibling files survive. Activity ownership, startup dispatch,
+capability advertisement, Apple controls, final firmware builds, and physical
+acceptance remain pending; dictionary removal is not yet advertised.
+
+A retained native dictionary owner now validates the published inventory index/path
+pair before admitting a new request, borrows one fixed workspace for validation
+and removal hashing, and closes the path reader together with session readers.
+The caller supplies and may adjust the bounded plan quota before stage ownership.
+The real-SdFat check also constructs this owner and verifies rejection of missing
+inventory, zero revision, and an undersized quota, plus repeated handle release.
+The connection activity and startup recovery route dictionary removal through
+this owner and the retained cohort plan.
+
+Boot recovery now dispatches retained dictionary journals to a lazily allocated,
+heap-admitted cohort worker. It loads dictionary settings before member/reference
+publication, independently verifies the retained cohort plan, publishes the durable
+receipt, and releases the journal. The boot path receives the native settings adapter.
+The real-SdFat session test now exercises partial-rename boot recovery, unavailable
+settings adapters, settings-load failure without file mutation, repeated boot
+recovery, and a subsequent authenticated completion retry without inventory.
+The default firmware build and installed-SdFat startup/session fault suite pass.
+Final verification of the other affected targets remains pending.
+
+The native dictionary owner bounds a fresh plan by the validated path table count:
+one fixed cohort record per inventory entry, plus the cohort header. Dictionary
+folder inventory emits one path record per folder, including repeated archive paths;
+the path builder preserves those records. Quota arithmetic rejects overflow and
+retains the caller's admitted maximum as an additional ceiling. This changes SD
+write bounds without allocating a count-sized buffer.
+
+Connect & Sync now routes dictionary removal after the shared authorization,
+peer identity, storage generation, writer exclusion, and firmware-intent checks.
+Its retained native owner is allocated with makeUniqueNoThrow only after heap
+admission; switching removal kinds closes and releases the other owner. Resetting
+the connection closes dictionary readers before destruction. BLE and encrypted
+Wi-Fi both use the shared command dispatcher. Capability bit 14 advertises
+dictionary removal independently of dictionary transfer, EPUB removal and font
+removal. Apple selection controls and durable removal jobs use that capability;
+unsupported readers retain queued intent without sending a removal command.
+All 505 CompanionKit tests pass, including capability isolation and identical
+request retry after a lost reply and SQLite restart. Native Apple UI execution
+and physical acceptance remain unverified.
+The native dictionary owner C3 compiler probe passes the 256-byte frame gate.
+
+
+### Bound course removal plan
+
+`CourseRemovalPlanCodec` seals the exact removal transaction, Apple installation,
+card generation and bound pack manifest in a fixed 127-byte CRMV version-1 record
+with CRC-32. Its target is always `/tinta/course.pack`; it carries no caller-selected
+path and accepts only a supported bound course. Decoding requires exact length,
+version, reserved bytes, CRC and request validity before changing caller output.
+The codec retains fixed candidate state, uses borrowed output and allocates no heap.
+A C3 compiler probe passes the 256-byte frame limit: encoding and decoding each
+use 64 bytes; request decoding uses 176 bytes. These individual frame sizes do
+not establish runtime task-stack headroom.
+
+Three regression tests cover round-trip request identity, every-byte corruption,
+length rejection, unbound/foreign-kind/unsupported-format requests and unchanged
+outputs on refusal. The complete 1,730-entry CTest suite passes. This codec is not
+linked into the native removal dispatcher and does not advertise course removal.
+The participant must prove learner-state isolation before quarantining the pack;
+publication, boot recovery and same-course reinstallation still need integration.
+Deleting the pack while retaining the current binding would fail the existing
+replacement hash check, so that alone cannot implement safe deselection.
+
+
+`CourseRemovalParticipant` now implements the portable journal participant for
+that fixed pack. Binding requires the sealed plan hash; preflight requires both
+an exact pack proof and the reference owner's proof of learner-state isolation.
+Every operation checks the journal checkpoint before and after storage callbacks.
+Quarantine accepts a verified retained backup on recovery, publication must verify
+before backup retirement, and repeated completed removal makes no payload writes.
+The reference adapter must retain learner state and bound removal proof for later
+reinstallation. The participant borrows fixed state and allocates no heap.
+
+Three portable tests cover storage-operation failures before and after their
+effects, restart and repeated completion, isolation refusal, corrupted source,
+and failed reference publication or retirement retaining the pack backup. The
+complete 1,733-entry CTest suite passes. These use in-memory storage and reference
+owners; they do not prove native course-state persistence or reinstallation.
+Native plan storage, reference/tombstone publication, boot dispatch and capability
+routing remain unfinished, and course removal remains unadvertised.
+
+
+`HalCourseRemovalStorage` verifies the exact sealed plan and SHA-256, rejects
+borrowed-buffer overlap and nonzero pack ordinals, uses HAL checked path lookup,
+and restricts quarantine/deletion to the matching journal phase. It hashes and
+synchronizes the verified source or backup before mutation, retains fixed off-stack
+state and allocates no heap. Nine installed-SdFat adapter scenarios pass, covering
+plan corruption, overlap, absent parent ownership, rename failures before/after
+effect, remove-after-effect, corrupt pack and read/sync/close failures. Recovery
+removes only the proven pack and preserves an unrelated learner-state file.
+The reference owner remains a test substitute; native state isolation, removal
+proof publication, reinstallation and dispatcher wiring are still required.

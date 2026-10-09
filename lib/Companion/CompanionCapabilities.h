@@ -11,6 +11,7 @@ inline constexpr uint32_t CAPABILITY_VECTOR_FONT_TRANSFERS = uint32_t{1} << 6;
 inline constexpr uint32_t CAPABILITY_DICTIONARY_TRANSFERS = uint32_t{1} << 7;
 inline constexpr uint32_t CAPABILITY_EPUB_REMOVALS = uint32_t{1} << 8;
 inline constexpr uint32_t CAPABILITY_FONT_REMOVALS = uint32_t{1} << 13;
+inline constexpr uint32_t CAPABILITY_DICTIONARY_REMOVALS = uint32_t{1} << 14;
 inline constexpr uint32_t CAPABILITY_JOURNAL_MERGE_READINESS = uint32_t{1} << 9;
 inline constexpr uint32_t CAPABILITY_WIFI_CONTENT_READS = uint32_t{1} << 12;
 inline constexpr uint32_t CAPABILITY_CONTENT_METADATA = uint32_t{1} << 11;

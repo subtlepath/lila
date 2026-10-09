@@ -234,3 +234,23 @@ TEST_F(RemovalStageClaimTest, IndependentFixtureMatchesCodecAndDigestAddressedMa
   ASSERT_EQ(store.persist(claim), RemovalStageClaimResult::Ok);
   EXPECT_STREQ(store.markerPath(), expectedPath.c_str());
 }
+TEST_F(RemovalStageClaimTest, DictionaryClaimsRetainKindAndRefuseForeignMarkerContents) {
+  ASSERT_EQ(store.persist(claim), RemovalStageClaimResult::Ok);
+  const auto epubMarker = marker();
+  const auto epubBytes = bytes(claim);
+  claim.request.manifest.kind = ContentKind::Dictionary;
+  ASSERT_TRUE(validRemovalStageClaim(claim));
+  const auto dictionaryBytes = bytes(claim);
+  RemovalStageClaim decoded;
+  ASSERT_TRUE(decodeRemovalStageClaim(dictionaryBytes, decoded));
+  EXPECT_EQ(decoded, claim);
+  ASSERT_EQ(store.persist(claim), RemovalStageClaimResult::Ok);
+  const auto dictionaryMarker = marker();
+  EXPECT_NE(dictionaryMarker, epubMarker);
+  EXPECT_EQ(inventory_hal_test::state.files.at(epubMarker), epubBytes);
+  ASSERT_EQ(store.load(claim), RemovalStageClaimResult::Ok);
+  inventory_hal_test::state.files[dictionaryMarker] = epubBytes;
+  EXPECT_EQ(store.load(claim), RemovalStageClaimResult::Conflict);
+  EXPECT_EQ(store.planStagePath(), nullptr);
+  EXPECT_EQ(inventory_hal_test::state.files.at(dictionaryMarker), epubBytes);
+}

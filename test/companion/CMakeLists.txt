@@ -727,7 +727,35 @@ add_test(NAME FontInstallerFaultCheck
   COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/font_installer_fault_check.py
           --compiler ${CMAKE_CXX_COMPILER})
 
+add_executable(CompanionCourseRemovalPlanTest CompanionCourseRemovalPlanTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionCourseRemovalPlanTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionCourseRemovalPlanTest)
+
+add_executable(CompanionCourseRemovalParticipantTest CompanionCourseRemovalParticipantTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionCourseRemovalParticipantTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionCourseRemovalParticipantTest)
+
 add_executable(CompanionDictionaryRemovalPlanTest CompanionDictionaryRemovalPlanTest.cpp
   ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
 target_link_libraries(CompanionDictionaryRemovalPlanTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionDictionaryRemovalPlanTest)
+
+add_executable(CompanionDictionaryRemovalParticipantTest CompanionDictionaryRemovalParticipantTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionDictionaryRemovalParticipantTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionDictionaryRemovalParticipantTest)
+
+add_executable(CompanionDictionaryRemovalCohortPlanTest CompanionDictionaryRemovalCohortPlanTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp)
+target_link_libraries(CompanionDictionaryRemovalCohortPlanTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionDictionaryRemovalCohortPlanTest)
+
+add_executable(HalDictionaryRemovalPlanAssemblyTest HalDictionaryRemovalPlanAssemblyTest.cpp
+  ${REPO_ROOT}/lib/Companion/CompanionRecords.cpp ${REPO_ROOT}/lib/hal/HalInventoryFileHash.cpp)
+target_include_directories(HalDictionaryRemovalPlanAssemblyTest BEFORE PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${REPO_ROOT}/lib/Companion)
+target_compile_definitions(HalDictionaryRemovalPlanAssemblyTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures")
+target_link_libraries(HalDictionaryRemovalPlanAssemblyTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
+gtest_discover_tests(HalDictionaryRemovalPlanAssemblyTest)

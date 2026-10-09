@@ -354,7 +354,8 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::WrongStorage);
   if (request.generation != identity.storageGeneration) return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Unsupported);
-  if (request.manifest.kind != companion::ContentKind::Epub && request.manifest.kind != companion::ContentKind::Font)
+  if (request.manifest.kind != companion::ContentKind::Epub && request.manifest.kind != companion::ContentKind::Font &&
+      request.manifest.kind != companion::ContentKind::Dictionary)
     return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Busy);
   if (!removalPermitted()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
@@ -369,6 +370,14 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
     }
   }
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::IoError);
+  if (request.manifest.kind == companion::ContentKind::Dictionary) return dictionaryRemovalReply(owner, body, reply);
+  if (dictionaryRemovalOwner) {
+    if (!dictionaryRemovalOwner->closeReaders()) {
+      recoveryBlocked = true;
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    }
+    dictionaryRemovalOwner.reset();
+  }
   if (!removalOwner) {
     if (!companion::admitCompanionHeap(sizeof(companion::HalEpubRemovalNativeOwner),
                                        sizeof(companion::HalEpubRemovalNativeOwner)))
@@ -404,6 +413,55 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
   }
   removalActive = true;
   const auto length = removalOwner->handle(true, owner, body, reply);
+  removalActive = false;
+  if (length && (reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::IoError) ||
+                 reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::Corrupt)))
+    recoveryBlocked = true;
+  return length;
+}
+
+size_t CompanionConnectActivity::dictionaryRemovalReply(const companion::Identity& owner, std::span<const uint8_t> body,
+                                                        std::span<uint8_t> reply) {
+  if (removalOwner) {
+    if (!removalOwner->closeReaders()) {
+      recoveryBlocked = true;
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    }
+    removalOwner.reset();
+  }
+  if (!dictionaryRemovalOwner) {
+    if (!companion::admitCompanionHeap(sizeof(companion::HalDictionaryRemovalNativeOwner),
+                                       sizeof(companion::HalDictionaryRemovalNativeOwner)))
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    dictionaryRemovalOwner = makeUniqueNoThrow<companion::HalDictionaryRemovalNativeOwner>(
+        identity.storageGeneration, UINT64_MAX, dictionaryRemovalSettings,
+        [](void* opaque) { return static_cast<CompanionConnectActivity*>(opaque)->removalPermitted(); },
+        [](void* opaque) {
+          auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
+          if (!activity.dictionaryRemovalOwner->closeReaders()) {
+            activity.recoveryBlocked = true;
+            return false;
+          }
+          return activity.refreshAfterRemoval();
+        },
+        this,
+        [](void* opaque, uint64_t& revision) {
+          auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
+          if (!activity.inventory || !activity.inventory->revision()) {
+            activity.inventory.reset();
+            if (!activity.inventoryStorage.close() || !activity.prepareInventory()) return false;
+          }
+          revision = activity.inventory->revision();
+          return activity.dictionaryRemovalOwner->openInventory(revision);
+        });
+    if (!dictionaryRemovalOwner || !companion::admitCompanionHeap() || !dictionaryRemovalOwner->prepare()) {
+      LOG_ERR("COMPANION", "Dictionary removal owner allocation/heap admission failed");
+      dictionaryRemovalOwner.reset();
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    }
+  }
+  removalActive = true;
+  const auto length = dictionaryRemovalOwner->handle(true, owner, body, reply);
   removalActive = false;
   if (length && (reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::IoError) ||
                  reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::Corrupt)))
@@ -789,6 +847,11 @@ void CompanionConnectActivity::resetJournalSessions(bool preserveExport) {
     LOG_ERR("COMPANION", "Content export session close failed");
     recoveryBlocked = true;
   }
+  if (dictionaryRemovalOwner && !dictionaryRemovalOwner->closeReaders()) {
+    LOG_ERR("COMPANION", "Dictionary removal readers could not close");
+    recoveryBlocked = true;
+  }
+  dictionaryRemovalOwner.reset();
   removalOwner.reset();
   removalActive = false;
   resetJournalExport();
@@ -1208,6 +1271,7 @@ void CompanionConnectActivity::processFrame() {
     descriptor.capabilities |= companion::CAPABILITY_FONT_TRANSFERS;
     descriptor.capabilities |= companion::CAPABILITY_EPUB_REMOVALS;
     descriptor.capabilities |= companion::CAPABILITY_FONT_REMOVALS;
+    descriptor.capabilities |= companion::CAPABILITY_DICTIONARY_REMOVALS;
     if (contentReader)
       descriptor.capabilities |= companion::CAPABILITY_CONTENT_READS | companion::CAPABILITY_CONTENT_METADATA |
                                  companion::CAPABILITY_WIFI_CONTENT_READS;

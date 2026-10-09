@@ -9,7 +9,7 @@ namespace companion {
 class HalEpubRemovalBackend final : public ContentRemovalBackend {
  public:
   using Callback = bool (*)(void*);
-  HalEpubRemovalBackend(HalEpubRemovalAdmission& admission, HalContentRemovalTransactions& transactions,
+  HalEpubRemovalBackend(ContentRemovalAdmission& admission, HalContentRemovalTransactions& transactions,
                         const uint64_t& revision, Callback permitted, Callback refresh, void* context)
       : admission(admission),
         transactions(transactions),
@@ -38,8 +38,7 @@ class HalEpubRemovalBackend final : public ContentRemovalBackend {
   }
   ContentRemovalResult remove(const ContentRemovalRequest& request) override {
     if (!allowed()) return ContentRemovalResult::Busy;
-    if (request.manifest.kind != ContentKind::Epub && request.manifest.kind != ContentKind::Font)
-      return ContentRemovalResult::Unsupported;
+    if (!admission.supports(request.manifest.kind)) return ContentRemovalResult::Unsupported;
     const auto prepared = transactions.prepare(request);
     if (prepared != ContentRemovalJournalResult::Ok) {
       if (prepared == ContentRemovalJournalResult::Conflict) return ContentRemovalResult::Busy;
@@ -86,7 +85,7 @@ class HalEpubRemovalBackend final : public ContentRemovalBackend {
   }
 
  private:
-  HalEpubRemovalAdmission& admission;
+  ContentRemovalAdmission& admission;
   HalContentRemovalTransactions& transactions;
   const uint64_t& revision;
   Callback permitted, refresh;

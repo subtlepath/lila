@@ -870,3 +870,15 @@ Apple SDK compilation, UI/accessibility interaction, post-switch
 reconnection on physical devices, physical BLE/Wi-Fi recovery, power-cut behavior, and measured
 runtime heap/stack acceptance remain unverified or incomplete. These checks do
 not establish completion of COMPANION_PLAN.md.
+
+Dictionary removal uses independent capability bit 14 (`0x00004000`) with command
+15 and the existing complete manifest/request binding. EPUB/font removal and
+dictionary-transfer capabilities do not authorize this operation. Firmware dispatch
+verifies all owned members across matching dictionary folders, journals quarantine,
+clears a matching selection, retires only proved members/bindings, and preserves
+unowned siblings and shared archives. Startup recovery resumes the retained plan.
+Apple queue admission supports dictionary manifests and uses this capability in
+its shared per-reader selection/removal controls and durable runner. Lost replies
+retry the exact persisted request after SQLite reopen. The full Swift host suite
+passes 505 tests; final firmware target/image checks and hardware acceptance are
+still pending for the capability-enabled implementation.

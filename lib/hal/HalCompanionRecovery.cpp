@@ -18,7 +18,8 @@
 namespace companion {
 namespace {
 struct RemovalRecovery {
-  explicit RemovalRecovery(FontRemovalSettings* settings) : removal(settings) {}
+  RemovalRecovery(FontRemovalSettings* settings, DictionaryRemovalSettings* dictionarySettings)
+      : removal(settings, dictionarySettings) {}
   HalContentRemovalStartupRecovery removal;
   HalIdentityStorage identityStorage;
   IdentityState identity;
@@ -67,8 +68,8 @@ bool recoverFirmwareIntent(Recovery& recovery, bool (*runningDigest)(std::span<u
 }
 }  // namespace
 bool recoverAtStartup(bool (*firmwareValidator)(const char*),
-                      bool (*runningDigest)(std::span<uint8_t>, std::span<uint8_t>),
-                      FontRemovalSettings* fontSettings) {
+                      bool (*runningDigest)(std::span<uint8_t>, std::span<uint8_t>), FontRemovalSettings* fontSettings,
+                      DictionaryRemovalSettings* dictionarySettings) {
   if (!Storage.ready()) {
     LOG_ERR("COMPANION", "Startup recovery requires storage");
     return false;
@@ -86,7 +87,7 @@ bool recoverAtStartup(bool (*firmwareValidator)(const char*),
   {
     // Removal buffers/participants exceed the boot stack. Release this owner
     // before allocating the transfer workspace or loading reader stores/fonts.
-    auto recovery = makeUniqueNoThrow<RemovalRecovery>(fontSettings);
+    auto recovery = makeUniqueNoThrow<RemovalRecovery>(fontSettings, dictionarySettings);
     if (!recovery) {
       LOG_ERR("COMPANION", "OOM: removal startup recovery workspace");
       return false;
