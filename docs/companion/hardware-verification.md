@@ -461,3 +461,18 @@ firmware/image identity alongside the results.
 - [ ] Interrupt outgoing-cache retention and incoming history validation, then
       retry/reboot. Measure the combined baseline/archive heap peak and confirm
       history admission happens after outgoing owners are released.
+
+### Legacy identity-bridge acceptance
+
+- [ ] Update a bound legacy pack to an identity-bearing pack with unchanged
+      learning records. Then install a compatible later edition whose nonidentity
+      content differs; confirm progress survives and all versions remain archived.
+- [ ] Add a conflicting archived identity-bearing version to that history.
+      Confirm a matching bridge cannot hide its changed retired UID meaning;
+      validation must refuse without replacing the active pack or binding.
+- [ ] Interrupt outgoing archive renames before ordinary pack replacement, then
+      reconnect/reboot and retry. Confirm the original pack/binding/learner files
+      remain usable until installation and the original version stays archived.
+- [ ] Measure free/largest heap and stack watermarks through nested bridge scans.
+      Both readers use heap admission and share scratch sequentially; require the
+      runtime heap threshold and no accumulating loss across repeated editions.

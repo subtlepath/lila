@@ -587,6 +587,8 @@ TEST_F(HalCourseTransferTest, RecoversCompatibleIdentityUpdateAcrossBothPackRena
     {
       Transfer transfer(storage, scratch);
       receive(transfer);
+      ASSERT_TRUE(storage.validateContent(ACTIVE_COURSE_PATH, TRANSFER_STAGE, declaration.manifest, *transfer.current(),
+                                          scratch));
       hal.failRename = hal.renames + failedRename;
       ASSERT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::IoError);
       ASSERT_EQ(transfer.current()->phase, TransferPhase::Installing);
@@ -1045,12 +1047,18 @@ TEST_F(HalCourseTransferTest, ValidatesSameCourseUpdateAgainstCompletedRemovedPa
   const auto before = hal.files;
   EXPECT_TRUE(
       storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
-  EXPECT_EQ(hal.files, before);
+  for (const auto& [path, content] : before) {
+    ASSERT_TRUE(hal.files.contains(path));
+    EXPECT_EQ(hal.files.at(path), content);
+  }
   EXPECT_FALSE(storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, scratch));
   declaration.state.storageGeneration[0] ^= 2;
   EXPECT_FALSE(
       storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
-  EXPECT_EQ(hal.files, before);
+  for (const auto& [path, content] : before) {
+    ASSERT_TRUE(hal.files.contains(path));
+    EXPECT_EQ(hal.files.at(path), content);
+  }
 }
 TEST_F(HalCourseTransferTest, RejectsReassignedIdentityAgainstCompletedRemovedPack) {
   addIdentityHistory();
@@ -3692,4 +3700,157 @@ TEST_F(HalCourseTransferTest, HistoricalCourseBaselineRefusesCorruptEvidenceAndI
   hal = baseline;
   EXPECT_TRUE(source.open(completed));
   EXPECT_EQ(hal.files, baseline.files);
+}
+
+TEST_F(HalCourseTransferTest, OrdinaryUpdateRefusesIdentityConflictWithEarlierArchivedVersion) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/"] = {};
+  const auto historical = declaration.manifest;
+  const auto original = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(historical, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  bytes.back() ^= 1;
+  bytes[12] ^= 1;
+  sealPack();
+  const auto active = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = active;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  bytes[12] ^= 2;
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  declaration.state.phase = TransferPhase::Receiving;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), active);
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), std::vector<uint8_t>(binding.begin(), binding.end()));
+  ASSERT_EQ(archive.open(historical.logicalIdentity, historical.contentHash), CourseArchiveResult::Ok);
+  EXPECT_EQ(hal.files.at(archive.path()), original);
+}
+
+TEST_F(HalCourseTransferTest, OrdinaryUpdateRecoversOutgoingArchiveRenameFailuresBeforeReplacement) {
+  addIdentityHistory();
+  const auto original = bytes;
+  const auto previous = declaration.manifest;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(previous, binding), binding.size());
+  bytes[12] ^= 1;
+  sealPack();
+  for (unsigned failedRename = 1; failedRename <= 2; ++failedRename) {
+    for (const bool after : {false, true}) {
+      SCOPED_TRACE(failedRename);
+      SCOPED_TRACE(after);
+      auto& hal = inventory_hal_test::state;
+      hal = {};
+      hal.enumerateFileMap = true;
+      hal.files[ACTIVE_COURSE_PATH] = original;
+      hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+      hal.files["/tinta/items.bin"] = {17};
+      HalTransferStorage initial;
+      {
+        Transfer transfer(initial, scratch);
+        receive(transfer);
+        if (after)
+          hal.failRenameAfter = hal.renames + failedRename;
+        else
+          hal.failRename = hal.renames + failedRename;
+        EXPECT_NE(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+        ASSERT_NE(transfer.current(), nullptr);
+        EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+        EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), original);
+        EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), std::vector<uint8_t>(binding.begin(), binding.end()));
+        EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
+      }
+      hal.failRename = hal.failRenameAfter = 0;
+      HalTransferStorage resumed;
+      Transfer transfer(resumed, scratch);
+      ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+      ASSERT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+      EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+      EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
+      HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_EQ(archive.open(previous.logicalIdentity, previous.contentHash), CourseArchiveResult::Ok);
+      EXPECT_EQ(hal.files.at(archive.path()), original);
+    }
+  }
+}
+
+TEST_F(HalCourseTransferTest, LegacyBridgeCannotHideConflictingArchivedIdentityHistory) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/"] = {};
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  addIdentityHistory();
+  const auto bridgeBytes = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  static constexpr char TRANSLATION[] = "house";
+  auto text = std::search(bytes.begin(), bytes.end(), TRANSLATION, TRANSLATION + 5);
+  ASSERT_NE(text, bytes.end());
+  text[4] = 'E';
+  sealPack();
+  const auto candidate = declaration.manifest;
+  hal.files["/candidate.pack"] = bytes;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistory bridges(scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch, &bridges);
+  const auto before = hal.files;
+  EXPECT_EQ(validator.validate(history, candidate, "/candidate.pack"), CourseHistoryResult::Ok);
+  EXPECT_EQ(hal.files, before);
+  bytes = bridgeBytes;
+  bytes.back() ^= 1;
+  bytes[12] ^= 2;
+  sealPack();
+  hal.files["/conflicting.pack"] = bytes;
+  ASSERT_EQ(archive.publish(declaration.manifest, "/conflicting.pack"), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  const auto conflict = hal.files;
+  EXPECT_EQ(validator.validate(history, candidate, "/candidate.pack"), CourseHistoryResult::Incompatible);
+  EXPECT_EQ(hal.files, conflict);
+}
+
+TEST_F(HalCourseTransferTest, OrdinaryUpdateAdmitsBothHistoryReadersBeforeValidation) {
+  addIdentityHistory();
+  const auto original = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  bytes[12] ^= 1;
+  sealPack();
+  for (unsigned shortage = 0; shortage < 2; ++shortage) {
+    SCOPED_TRACE(shortage);
+    auto& hal = inventory_hal_test::state;
+    hal = {};
+    hal.enumerateFileMap = true;
+    hal.files[ACTIVE_COURSE_PATH] = original;
+    hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+    hal.files["/tinta/items.bin"] = {17};
+    HalTransferStorage initial;
+    Transfer transfer(initial, scratch);
+    receive(transfer);
+    auto& heap = companion_memory_test::internal;
+    if (shortage == 0)
+      heap.freeBytes = 50 * 1024 + 2 * sizeof(HalCoursePackHistory);
+    else
+      heap.largestBlockBytes = sizeof(HalCoursePackHistory) - 1;
+    EXPECT_NE(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+    ASSERT_NE(transfer.current(), nullptr);
+    EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+    EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), original);
+    EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), std::vector<uint8_t>(binding.begin(), binding.end()));
+    EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
+    heap = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+    EXPECT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+    EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+    EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
+  }
 }

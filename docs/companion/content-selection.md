@@ -1429,3 +1429,39 @@ uses 160 bytes and hashing uses 64 bytes. Future callers must heap-admit this
 owner. It is not yet used by transfer preparation, and complete receipt scanning,
 legacy baseline import/conflict handling and ordinary-update history checks
 remain unfinished. Physical recovery and runtime memory acceptance are pending.
+
+### Ordinary updates with archived history
+
+Authenticated ordinary updates now retain the exact bound live or removed
+baseline before replacement, then check every archived version. Removed baseline
+loans remain valid through copying; those owners are released before admitting
+the two history readers. First unbound association keeps its existing admission
+rules and archives the installed version during metadata publication.
+
+A legacy archive may establish continuity through an archived identity-bearing
+pack whose legacy records are identical and whose stable identity history remains
+compatible with the candidate. The bridge scan checks complete history and does
+not accept a conflicting identity-bearing version. The secondary reader is
+allocated once and reused across visits; no growing bridge list is retained.
+Both 2,696-byte history owners are admitted before allocation, with lazy HAL
+handle costs checked by the permission guard during I/O. This does not prove
+runtime headroom, and legacy bridge searches can require repeated SD reads.
+
+All 1,805 host tests pass, including legacy-to-identity migration followed by a
+compatible edition, a valid legacy bridge alongside conflicting identity history,
+an earlier archive conflicting with the active pack, pack
+rename recovery and outgoing archive interruptions before replacement, including
+rename failure reported after publication takes effect. The C3
+frame check passes: ordinary update validation uses 224 bytes and history
+admission uses 144 bytes. The C3 compilation also passes with Tinta disabled.
+The default firmware build and image validation pass. Legacy receipt
+enumeration/import and physical memory/recovery acceptance remain unfinished.
+
+
+The ordinary-update checkpoint image is 6,502,464 bytes (SHA-256
+`fabd20eea98a02def6b084632f956a624e1b7507af012cf72adbbe26ef6d83ad`). Its x4/chip-5
+tag, segments, checksum, SHA trailer and OTA partition fit are verified. Host
+admission tests reject insufficient combined reader headroom and an undersized
+largest block while preserving the installed pack, binding and learner files;
+retry succeeds after restoring admission. These mocks and compiler frame checks
+do not establish physical runtime heap or recovery acceptance.

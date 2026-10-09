@@ -229,15 +229,20 @@ bool HalTransferStorage::archiveCourseSwitchSource(const ContentManifest& previo
 }
 bool HalTransferStorage::validateArchivedCourse(const ContentManifest& manifest, const char* candidate,
                                                 std::span<uint8_t> workspace) {
-  if (!courseValidator || !admitCompanionHeap(sizeof(HalCoursePackHistory), sizeof(HalCoursePackHistory)))
+  if (!courseValidator || !admitCompanionHeap(2 * sizeof(HalCoursePackHistory), sizeof(HalCoursePackHistory)))
     return failure("course history heap admission", candidate);
   auto history =
       makeUniqueNoThrow<HalCoursePackHistory>(workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
   if (!history) return failure("OOM: course history", candidate);
-  HalCoursePackHistoryValidator validator(*this, *courseValidator, workspace);
+  auto bridges =
+      makeUniqueNoThrow<HalCoursePackHistory>(workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!bridges) return failure("OOM: course history bridges", candidate);
+  HalCoursePackHistoryValidator validator(*this, *courseValidator, workspace, bridges.get());
   if (validator.validate(*history, manifest, candidate) != CourseHistoryResult::Ok)
     return failure("course history compatibility", candidate);
-  return history->closeReaders() || failure("course history close", candidate);
+  const bool historyClosed = history->closeReaders();
+  const bool bridgesClosed = bridges->closeReaders();
+  return (historyClosed && bridgesClosed) || failure("course history close", candidate);
 }
 bool HalTransferStorage::archiveInstalledCourse(const char* path, const ContentManifest& manifest,
                                                 std::span<uint8_t> workspace) {
@@ -483,6 +488,22 @@ bool HalTransferStorage::validateCourseContent(const char* candidate, const Cont
         !(legacy && (!hasLearnerState || sameLegacyCourseRecords(*this, previousPath, candidate, workspace, yield)))) {
       LOG_ERR("COMPANION", "Course item continuity refused: %u", static_cast<unsigned>(continuity));
       return false;
+    }
+  }
+  if (generation) {
+    ContentManifest previous;
+    bool bound = false;
+    if (readCourseBinding(*this, COURSE_BINDING_PATH, workspace, previous, bound) != CourseBindingResult::Ok)
+      return failure("course history binding", candidate);
+    if (bound) {
+      if (previous.logicalIdentity != manifest.logicalIdentity ||
+          !archiveInstalledCourse(previousPath, previous, workspace))
+        return false;
+      if (removed) {
+        if (!removed->path() || !removed->closeReaders()) return failure("removed history source close", candidate);
+        removed.reset();
+      }
+      return validateArchivedCourse(manifest, candidate, workspace);
     }
   }
   if (removed && (!removed->path() || !removed->closeReaders())) return failure("removed course close", previousPath);
