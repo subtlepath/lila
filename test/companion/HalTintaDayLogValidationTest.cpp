@@ -7,8 +7,11 @@
 #include "../tinta/fakes.h"
 #include "HalTintaCompletionSetView.h"
 #include "HalTintaDayLogValidation.h"
+#include "HalTintaLegacyCourseReferences.h"
 #include "HalTintaLegacyItemCatalogValidation.h"
 #include "HalTintaLegacyItemView.h"
+#include "HalTintaLegacyMarkView.h"
+#include "HalTintaLegacyProfileValidation.h"
 #include "HalTintaLegacyReviewValidation.h"
 #include "HalTintaNativeDerivedPreparation.h"
 #include "HalTintaNativeLessonRecovery.h"
@@ -872,4 +875,218 @@ TEST(HalTintaLegacyReviews, AuditsRetiredReviewUndoAndZeroTailWithoutReplaying) 
     }
     EXPECT_EQ(bytes, original);
   }
+}
+
+TEST(HalTintaLegacyProfile, PreservesReviewedProfileAndReportsUpgradeWithoutSaving) {
+  for (unsigned upgrade = 0; upgrade < 2; ++upgrade) {
+    inventory_hal_test::state = {};
+    auto& bytes = inventory_hal_test::state.files["/reviewed-profile"];
+    bytes.resize(tinta::core::Profile::kEncodedSize);
+    tinta::core::Profile original;
+    original.currentLesson = 7;
+    original.unlockedThrough = 11;
+    original.encode(bytes.data());
+    if (upgrade) {
+      bytes.resize(12 + 300, 0);
+      binary_record::putU16(bytes.data() + 4, 2);
+      binary_record::putU16(bytes.data() + 6, 300);
+      binary_record::putU32(bytes.data() + 308, binary_record::crc32(bytes.data(), 308));
+    }
+    const auto reviewed = bytes;
+    HalFile file("/reviewed-profile");
+    tinta::core::Profile decoded;
+    auto result = tinta::core::Profile::LoadResult::Defaults;
+    ASSERT_TRUE(inspectTintaLegacyProfile(file, decoded, result));
+    EXPECT_EQ(result, upgrade ? tinta::core::Profile::LoadResult::Upgraded : tinta::core::Profile::LoadResult::Loaded);
+    EXPECT_EQ(decoded.currentLesson, 7);
+    EXPECT_EQ(decoded.unlockedThrough, 11);
+    EXPECT_EQ(bytes, reviewed);
+    EXPECT_TRUE(file.isOpen());
+  }
+}
+TEST(HalTintaLegacyProfile, CorruptionReadFailureAndCancellationWithholdOutputs) {
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& bytes = state.files["/reviewed-profile"];
+    bytes.resize(tinta::core::Profile::kEncodedSize);
+    tinta::core::Profile{}.encode(bytes.data());
+    if (fault == 0) bytes.back() ^= 1;
+    if (fault == 1) bytes.push_back(0);
+    if (fault == 2) bytes.resize(12);
+    if (fault == 3) state.failRead = state.reads + 1;
+    if (fault == 4) state.failRead = state.reads + 3;
+    if (fault == 5) state.failRead = state.reads + 4;
+    const auto reviewed = bytes;
+    HalFile file("/reviewed-profile");
+    tinta::core::Profile decoded;
+    decoded.currentLesson = 777;
+    auto result = tinta::core::Profile::LoadResult::Defaults;
+    bool allowed = fault != 6;
+    EXPECT_FALSE(inspectTintaLegacyProfile(
+        file, decoded, result, [](void* context) { return *static_cast<bool*>(context); }, &allowed));
+    EXPECT_EQ(decoded.currentLesson, 777);
+    EXPECT_EQ(result, tinta::core::Profile::LoadResult::Defaults);
+    EXPECT_EQ(bytes, reviewed);
+  }
+}
+
+namespace {
+void legacyMarkRecord(std::vector<uint8_t>& bytes, uint32_t key, uint8_t operation) {
+  const auto at = bytes.size();
+  bytes.resize(at + 8);
+  binary_record::putU32(bytes.data() + at, key);
+  bytes[at + 4] = operation;
+  binary_record::putU16(bytes.data() + at + 6, uint16_t(binary_record::crc32(bytes.data() + at, 6)));
+}
+}  // namespace
+TEST(HalTintaLegacyMarkView, ReconstructsOrderAndIdempotentChangesWithoutCompaction) {
+  inventory_hal_test::state = {};
+  auto& bytes = inventory_hal_test::state.files["/reviewed-marks"];
+  bytes = {'T', 'M', 'K', '1'};
+  legacyMarkRecord(bytes, 7, 1);
+  legacyMarkRecord(bytes, 8, 1);
+  legacyMarkRecord(bytes, 7, 1);
+  legacyMarkRecord(bytes, 9, 2);
+  legacyMarkRecord(bytes, 7, 2);
+  legacyMarkRecord(bytes, 7, 1);
+  const auto original = bytes;
+  HalFile file("/reviewed-marks");
+  HalTintaLegacyMarkView view(file);
+  std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+  ASSERT_TRUE(view.begin(scratch));
+  uint16_t count = 0;
+  ASSERT_TRUE(view.entryCount(count));
+  EXPECT_EQ(count, 2);
+  uint32_t key = 0;
+  ASSERT_TRUE(view.identityAt(0, key));
+  EXPECT_EQ(key, 8u);
+  ASSERT_TRUE(view.identityAt(1, key));
+  EXPECT_EQ(key, 7u);
+  EXPECT_EQ(bytes, original);
+  EXPECT_TRUE(file.isOpen());
+}
+TEST(HalTintaLegacyMarkView, TornCorruptReadFailureAndCapacityOverflowWithholdView) {
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& bytes = state.files["/reviewed-marks"];
+    bytes = {'T', 'M', 'K', '1'};
+    legacyMarkRecord(bytes, 7, 1);
+    if (fault == 0) bytes.back() ^= 1;
+    if (fault == 1) bytes.pop_back();
+    if (fault == 2) bytes[8] = 3;
+    if (fault == 3) state.failRead = state.reads + 2;
+    if (fault == 4) {
+      for (uint32_t key = 8; key <= 103; ++key) legacyMarkRecord(bytes, key, 1);
+    }
+    const auto original = bytes;
+    HalFile file("/reviewed-marks");
+    HalTintaLegacyMarkView view(file);
+    std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+    bool allowed = fault != 5;
+    EXPECT_FALSE(view.begin(scratch, [](void* context) { return *static_cast<bool*>(context); }, &allowed));
+    uint16_t count = 777;
+    EXPECT_FALSE(view.entryCount(count));
+    EXPECT_EQ(count, 777);
+    EXPECT_EQ(bytes, original);
+  }
+}
+
+TEST(HalTintaLegacyReferences, ValidatesNativeLessonIndicesIncludingCompletedSentinel) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  auto pack = std::make_unique<tinta::core::pack::Pack>();
+  ASSERT_EQ(pack->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  const auto lessons = pack->count(tinta::core::pack::Section::Less);
+  ASSERT_GT(lessons, 0u);
+  tinta::core::Profile profile;
+  EXPECT_TRUE(inspectTintaLegacyLessonReferences(profile, *pack));
+  profile.currentLesson = lessons;
+  profile.unlockedThrough = lessons - 1;
+  EXPECT_TRUE(inspectTintaLegacyLessonReferences(profile, *pack));
+  profile.currentLesson = lessons + 1;
+  EXPECT_FALSE(inspectTintaLegacyLessonReferences(profile, *pack));
+  profile.currentLesson = 0;
+  profile.unlockedThrough = lessons;
+  EXPECT_FALSE(inspectTintaLegacyLessonReferences(profile, *pack));
+  pack->close();
+  EXPECT_FALSE(inspectTintaLegacyLessonReferences(profile, *pack));
+}
+TEST(HalTintaLegacyReferences, DistinguishesStarsAndTitleKeysWithoutChangingMarks) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(bytes.data(), bytes.size());
+  auto pack = std::make_unique<tinta::core::pack::Pack>();
+  ASSERT_EQ(pack->open(source), tinta::core::pack::PackStatus::Ok);
+  ASSERT_GT(pack->itemCount(), 0u);
+  CourseUidLookup items(source);
+  ASSERT_TRUE(items.begin());
+  for (unsigned readings = 0; readings < 2; ++readings) {
+    inventory_hal_test::state = {};
+    auto& log = inventory_hal_test::state.files["/reviewed-marks"];
+    log = {'T', 'M', 'K', '1'};
+    uint32_t key = pack->uidAt(0);
+    if (readings) {
+      bool unique = false;
+      for (uint32_t index = 0; index < pack->count(tinta::core::pack::Section::Stor); ++index) {
+        tinta::core::pack::Story story;
+        ASSERT_TRUE(pack->story(index, story));
+        ASSERT_TRUE(tintaLegacyStoryKey(*pack, story, key));
+        uint32_t identity = 0;
+        if (resolveTintaLegacyStoryKey(*pack, key, identity) == LegacyStoryIdentityResult::Matched) {
+          unique = true;
+          break;
+        }
+      }
+      ASSERT_TRUE(unique);
+    }
+    legacyMarkRecord(log, key, 1);
+    const auto original = log;
+    HalFile file("/reviewed-marks");
+    HalTintaLegacyMarkView view(file);
+    std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+    ASSERT_TRUE(view.begin(scratch));
+    LegacyMarkCatalogReport report{777, 888};
+    ASSERT_TRUE(inspectTintaLegacyMarkReferences(view, items, *pack, readings, report));
+    EXPECT_EQ(report.matched, 1);
+    EXPECT_EQ(report.retired, 0);
+    bool permitted = false;
+    report = {777, 888};
+    EXPECT_FALSE(inspectTintaLegacyMarkReferences(
+        view, items, *pack, readings, report, [](void* context) { return *static_cast<bool*>(context); }, &permitted));
+    EXPECT_EQ(report.matched, 777);
+    EXPECT_EQ(report.retired, 888);
+    EXPECT_EQ(log, original);
+    if (readings) {
+      tinta::core::pack::Story ambiguous;
+      ASSERT_TRUE(pack->story(0, ambiguous));
+      ASSERT_TRUE(tintaLegacyStoryKey(*pack, ambiguous, key));
+      uint32_t identity = 0;
+      ASSERT_EQ(resolveTintaLegacyStoryKey(*pack, key, identity), LegacyStoryIdentityResult::Ambiguous);
+      log = {'T', 'M', 'K', '1'};
+      legacyMarkRecord(log, key, 1);
+      const auto reviewedAmbiguity = log;
+      ASSERT_TRUE(view.begin(scratch));
+      EXPECT_FALSE(inspectTintaLegacyMarkReferences(view, items, *pack, true, report));
+      EXPECT_EQ(report.matched, 777);
+      EXPECT_EQ(report.retired, 888);
+      EXPECT_EQ(log, reviewedAmbiguity);
+    }
+  }
+}
+TEST(HalTintaLegacyReferences, ReservedItemUidIsNotRejectedByGenericTitleKeyLogParser) {
+  inventory_hal_test::state = {};
+  auto& bytes = inventory_hal_test::state.files["/reviewed-marks"];
+  bytes = {'T', 'M', 'K', '1'};
+  legacyMarkRecord(bytes, UINT32_MAX, 1);
+  HalFile file("/reviewed-marks");
+  HalTintaLegacyMarkView view(file);
+  std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+  ASSERT_TRUE(view.begin(scratch));
+  uint32_t key = 0;
+  ASSERT_TRUE(view.identityAt(0, key));
+  EXPECT_EQ(key, UINT32_MAX);
 }

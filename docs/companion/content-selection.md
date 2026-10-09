@@ -2370,3 +2370,49 @@ baseline attachment, but the new standalone inspection helpers are not yet wired
 into the production baseline installer. The host suite (1,887 tests), forced C3
 helper probes, and this default build cover separate scopes; they do not prove
 other board builds, complete native compatibility, or physical acceptance.
+
+The reviewed-profile inspector now uses `Profile::load` through a read-only
+`StateStore` adapter over a borrowed HAL handle. It verifies the declared exact
+extent, streams the native CRC/field decoder, refuses defaults/corrupt results,
+and reports Loaded versus Upgraded explicitly. No save or replacement is called;
+future/older payloads do not require an allocation sized to the payload. The
+caller still decides whether an Upgraded profile is acceptable and checks its
+course-dependent lesson fields against the candidate.
+
+`HalTintaLegacyMarkView` reconstructs the actual legacy `TMK1` add/remove logs
+used by `starred.bin` and `read.bin` (see `App.h` and `StateFiles.cpp`). It retains
+insertion order and idempotent changes, and refuses malformed/torn records,
+invalid keys, overflow beyond the native 96-key capacity, read failures, changed
+extents, and cancellation. This is distinct from the canonical companion
+completion-set format. Caller-owned immutable bytes remain untouched; the view
+borrows 384 bytes for keys and occupies 40 bytes on C3. All key access uses byte
+codecs, including the borrowed buffer, so no alignment assumption is introduced.
+
+All 1,891 host tests pass. Standalone C3 probes report 128 bytes for profile
+inspection, 32 bytes for adapter reads, 112 bytes for mark loading, and 32 bytes
+for the mark-key access probe. Neither helper adds heap allocation. The new
+headers are not included by the production installer yet; no existing firmware
+translation unit changed in this checkpoint, so the previous successful default
+image remains the firmware evidence for its stated scope. Profile lesson checks,
+mark-key continuity, saved-session/usage validation, and the native compatibility
+composition remain unfinished, along with the broader companion-plan gates.
+
+The native legacy reference inspectors now check profile lesson indices against
+the explicitly confirmed original pack, including the one-past-the-end completed
+sentinel, and read stable identities for the completed prefix. Mark references
+use the read-checked IUID lookup for starred items and the existing title-key
+resolver for completed readings. Failed reads and ambiguous title keys refuse
+the report; absent references are counted separately without deleting them or
+asserting compatible historical retirement. Explicit original-pack consent and
+course identity continuity remain caller obligations.
+
+The generic `TMK1` view permits `UINT32_MAX` as a legacy title hash. The item-UID
+role rejects that reserved value separately; a title-derived key is not an item
+UID. Tests cover native lesson ranges, the completed sentinel, actual pack UID
+and title references, duplicate-title ambiguity, cancellation, and unchanged
+reviewed marks. All 1,894 host tests pass. Forced C3 compilation reports 32 bytes
+for the lesson probe and 80 bytes for the mark-reference probe; the existing
+story/subject identity readers use 80-byte frames. No allocation or learner
+writes are added. These standalone headers are not yet in the production
+baseline installer. Saved-session/usage validation and a complete native
+compatibility owner are still required before enabling baseline commands.
