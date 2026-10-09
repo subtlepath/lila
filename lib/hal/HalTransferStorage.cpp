@@ -24,7 +24,9 @@
 #include "CompanionCourseStatePaths.h"
 #include "CompanionStoredCourseContinuity.h"
 #include "CompanionTintaJournalPaths.h"
+#include "HalCompanionHeapAdmission.h"
 #include "HalCourseValidation.h"
+#include "HalRemovedCourseBaseline.h"
 #endif
 
 namespace companion {
@@ -261,6 +263,12 @@ bool HalTransferStorage::validateContent(const char* destination, const char* ca
       }
       return prepareCourseSwitch(request, manifest, workspace);
     }
+    const bool retainedContext = matchesTransferManifest(manifest, state) && inventory_detail::nonzero(state.owner) &&
+                                 inventory_detail::nonzero(state.transaction) &&
+                                 inventory_detail::nonzero(state.storageGeneration) &&
+                                 state.durableOffset == state.length &&
+                                 (state.phase == TransferPhase::Receiving || state.phase == TransferPhase::Verified);
+    return validateCourseContent(candidate, manifest, workspace, retainedContext ? &state.storageGeneration : nullptr);
   }
 #endif
   return validateContent(destination, candidate, manifest, workspace);
@@ -314,62 +322,81 @@ bool HalTransferStorage::validateContent([[maybe_unused]] const char* destinatio
   }
 #if LILA_TINTA
   if (manifest.kind == ContentKind::Course && std::strcmp(destination, ACTIVE_COURSE_PATH) == 0) {
-    char candidateLocale[9];
-    if (!validateCourse(candidate, manifest, workspace, candidateLocale)) return false;
-    bool hasLearnerState = false;
-    static constexpr const char* LEARNER_FILES[] = {
-        "/tinta/items.bin",    "/tinta/items.bin.tmp",   "/tinta/reviews.log", "/tinta/reviews.log.tmp",
-        "/tinta/profile.bin",  "/tinta/profile.bin.tmp", "/tinta/days.bin",    "/tinta/days.bin.tmp",
-        "/tinta/session.bin",  "/tinta/session.bin.tmp", "/tinta/starred.bin", "/tinta/starred.bin.tmp",
-        "/tinta/read.bin",     "/tinta/read.bin.tmp",    TINTA_JOURNAL_EVENTS, TINTA_JOURNAL_HEADER_A,
-        TINTA_JOURNAL_HEADER_B};
-    for (const auto* path : LEARNER_FILES) {
-      uint64_t size = 0;
-      const auto status = stat(path, size);
-      if (status == FileStatus::Error) return failure("learner state stat", path);
-      hasLearnerState |= status == FileStatus::Present;
-      if (std::strncmp(path, "/tinta/", 7) == 0) {
-        char scoped[COURSE_STATE_PATH_SIZE];
-        if (!courseStatePath(manifest.logicalIdentity, path + 7, scoped)) return failure("course state path", path);
-        const auto scopedStatus = stat(scoped, size);
-        if (scopedStatus == FileStatus::Error) return failure("course state stat", scoped);
-        hasLearnerState |= scopedStatus == FileStatus::Present;
-      }
-    }
-    const auto result = authorizeCourseReplacement(*this, manifest, hasLearnerState, workspace);
-    if (result != CourseBindingResult::Ok) {
-      LOG_ERR("COMPANION", "Course replacement refused: %u", static_cast<unsigned>(result));
-      return false;
-    }
-    uint64_t currentSize = 0;
-    const auto currentStatus = stat(ACTIVE_COURSE_PATH, currentSize);
-    if (currentStatus == FileStatus::Error) return failure("active course stat", ACTIVE_COURSE_PATH);
-    if (currentStatus == FileStatus::Present) {
-      char currentLocale[9];
-      if (!validateCourse(ACTIVE_COURSE_PATH, manifest, workspace, currentLocale)) return false;
-      for (size_t at = 0; at < sizeof(candidateLocale); ++at) {
-        const auto lower = [](unsigned char byte) { return byte >= 'A' && byte <= 'Z' ? byte + ('a' - 'A') : byte; };
-        if (lower(candidateLocale[at]) != lower(currentLocale[at])) {
-          LOG_ERR("COMPANION", "Course replacement language differs");
-          return false;
-        }
-      }
-      const auto yield = [] { vTaskDelay(1); };
-      const auto continuity = compareStoredCourseItemIdentities(*this, ACTIVE_COURSE_PATH, candidate, yield, workspace);
-      const bool legacy = continuity == CourseItemContinuity::MissingHistory;
-      if (continuity != CourseItemContinuity::Compatible &&
-          !(legacy &&
-            (!hasLearnerState || sameLegacyCourseRecords(*this, ACTIVE_COURSE_PATH, candidate, workspace, yield)))) {
-        LOG_ERR("COMPANION", "Course item continuity refused: %u", static_cast<unsigned>(continuity));
-        return false;
-      }
-    }
-    return Storage.ensureDirectoryExists("/tinta") || failure("mkdir", "/tinta");
+    return validateCourseContent(candidate, manifest, workspace);
   }
 #endif
   LOG_ERR("COMPANION", "Unsupported content installation");
   return false;
 }
+
+#if LILA_TINTA
+bool HalTransferStorage::validateCourseContent(const char* candidate, const ContentManifest& manifest,
+                                               std::span<uint8_t> workspace, const Identity* generation) {
+  char candidateLocale[9];
+  if (!validateCourse(candidate, manifest, workspace, candidateLocale)) return false;
+  bool hasLearnerState = false;
+  static constexpr const char* LEARNER_FILES[] = {
+      "/tinta/items.bin",    "/tinta/items.bin.tmp",   "/tinta/reviews.log", "/tinta/reviews.log.tmp",
+      "/tinta/profile.bin",  "/tinta/profile.bin.tmp", "/tinta/days.bin",    "/tinta/days.bin.tmp",
+      "/tinta/session.bin",  "/tinta/session.bin.tmp", "/tinta/starred.bin", "/tinta/starred.bin.tmp",
+      "/tinta/read.bin",     "/tinta/read.bin.tmp",    TINTA_JOURNAL_EVENTS, TINTA_JOURNAL_HEADER_A,
+      TINTA_JOURNAL_HEADER_B};
+  for (const auto* path : LEARNER_FILES) {
+    uint64_t size = 0;
+    const auto status = stat(path, size);
+    if (status == FileStatus::Error) return failure("learner state stat", path);
+    hasLearnerState |= status == FileStatus::Present;
+    if (std::strncmp(path, "/tinta/", 7) == 0) {
+      char scoped[COURSE_STATE_PATH_SIZE];
+      if (!courseStatePath(manifest.logicalIdentity, path + 7, scoped)) return failure("course state path", path);
+      const auto scopedStatus = stat(scoped, size);
+      if (scopedStatus == FileStatus::Error) return failure("course state stat", scoped);
+      hasLearnerState |= scopedStatus == FileStatus::Present;
+    }
+  }
+  const auto result = authorizeCourseReplacement(*this, manifest, hasLearnerState, workspace);
+  std::unique_ptr<HalRemovedCourseBaseline> removed;
+  const char* previousPath = ACTIVE_COURSE_PATH;
+  if (result == CourseBindingResult::HashMismatch && generation) {
+    // Retained proof buffers and HAL handles exceed the task-local stack budget.
+    if (!admitCompanionHeap(sizeof(HalRemovedCourseBaseline), sizeof(HalRemovedCourseBaseline)))
+      return failure("removed course heap admission", candidate);
+    removed = makeUniqueNoThrow<HalRemovedCourseBaseline>(
+        *generation, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+    if (!removed) return failure("OOM: removed course baseline", candidate);
+    if (!removed->open(manifest) || !(previousPath = removed->path())) return false;
+  } else if (result != CourseBindingResult::Ok) {
+    LOG_ERR("COMPANION", "Course replacement refused: %u", static_cast<unsigned>(result));
+    return false;
+  }
+  uint64_t currentSize = 0;
+  const auto currentStatus = stat(previousPath, currentSize);
+  if (currentStatus == FileStatus::Error) return failure("active course stat", ACTIVE_COURSE_PATH);
+  if (removed && currentStatus != FileStatus::Present) return failure("removed course stat", previousPath);
+  if (currentStatus == FileStatus::Present) {
+    char currentLocale[9];
+    const auto* previousManifest = removed ? removed->manifest() : &manifest;
+    if (!previousManifest || !validateCourse(previousPath, *previousManifest, workspace, currentLocale)) return false;
+    for (size_t at = 0; at < sizeof(candidateLocale); ++at) {
+      const auto lower = [](unsigned char byte) { return byte >= 'A' && byte <= 'Z' ? byte + ('a' - 'A') : byte; };
+      if (lower(candidateLocale[at]) != lower(currentLocale[at])) {
+        LOG_ERR("COMPANION", "Course replacement language differs");
+        return false;
+      }
+    }
+    const auto yield = [] { vTaskDelay(1); };
+    const auto continuity = compareStoredCourseItemIdentities(*this, previousPath, candidate, yield, workspace);
+    const bool legacy = continuity == CourseItemContinuity::MissingHistory;
+    if (continuity != CourseItemContinuity::Compatible &&
+        !(legacy && (!hasLearnerState || sameLegacyCourseRecords(*this, previousPath, candidate, workspace, yield)))) {
+      LOG_ERR("COMPANION", "Course item continuity refused: %u", static_cast<unsigned>(continuity));
+      return false;
+    }
+  }
+  if (removed && !removed->closeReaders()) return failure("removed course close", previousPath);
+  return Storage.ensureDirectoryExists("/tinta") || failure("mkdir", "/tinta");
+}
+#endif
 
 bool HalTransferStorage::installContentMetadata([[maybe_unused]] const char* destination,
                                                 const ContentManifest& manifest,

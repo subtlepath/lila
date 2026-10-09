@@ -52,6 +52,8 @@ class HalTransferStorage final : public TransferStorage {
                            std::span<uint8_t> workspace);
   bool validateCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace,
                       char* locale = nullptr);
+  bool validateCourseContent(const char* candidate, const ContentManifest& manifest, std::span<uint8_t> workspace,
+                             const Identity* generation = nullptr);
   std::unique_ptr<tinta::core::pack::Pack> courseValidator;
 #endif
 };

@@ -37,6 +37,9 @@
 #include "lib/hal/HalTintaJournalMergeCommitContext.h"
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
+#include "lib/hal/HalCompletedRemovalJournalRelease.h"
+#include "lib/hal/HalCourseRemovalMetadata.h"
+#include "lib/hal/HalCourseRemovalRecovery.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
@@ -78,6 +81,42 @@ class HalCourseTransferTest : public testing::Test {
     for (unsigned at = 0; at < 4; ++at) bytes[20 + at] = static_cast<uint8_t>(crc >> (8 * at));
     declaration.manifest.length = bytes.size();
     hashBytes();
+  }
+  void removeInstalledCourse() {
+    auto& hal = inventory_hal_test::state;
+    hal.enumerateFileMap = true;
+    hal.directories["/"] = {};
+    hal.directories["/tinta"] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+    ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+    hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+    ASSERT_TRUE(prepareMigratedCourseState(storage, declaration.manifest.logicalIdentity, scratch));
+    CourseRemovalPlan plan;
+    plan.request.manifest = declaration.manifest;
+    plan.request.generation = generation;
+    plan.request.owner = declaration.state.owner;
+    plan.request.transaction.fill(71);
+    std::array<uint8_t, COURSE_REMOVAL_PLAN_SIZE> encoded{};
+    ASSERT_EQ(CourseRemovalPlanCodec::encode(plan, encoded), encoded.size());
+    std::array<uint8_t, REMOVAL_STAGE_CLAIM_SIZE> comparison{};
+    HalCourseRemovalPlanStorage plans(comparison);
+    ContentRemovalRecord initial;
+    initial.request = plan.request;
+    ASSERT_EQ(plans.publish(encoded, 9, initial.planHash), CourseRemovalPlanStorageResult::Ok);
+    std::array<uint8_t, CONTENT_REMOVAL_RECORD_SIZE> journalBytes{}, receiptBytes{}, releaseBytes{};
+    HalContentRemovalJournalStorage journalStorage;
+    ContentRemovalJournal journal(journalStorage, journalBytes);
+    ASSERT_EQ(journal.begin(initial), ContentRemovalJournalResult::Ok);
+    auto permission = [](void*) { return true; };
+    HalCourseRemovalMetadata metadata(permission, nullptr);
+    HalCourseRemovalRecovery recovery(journal, metadata, scratch, permission, nullptr);
+    ASSERT_TRUE(recovery.run(initial));
+    HalCompletedContentRemovals completions(receiptBytes);
+    ASSERT_EQ(completions.persist(*journal.current(), journal), CompletedRemovalResult::Ok);
+    HalCompletedRemovalJournalRelease release(journal, journalStorage, completions, releaseBytes);
+    ASSERT_EQ(release.release(), CompletedRemovalResult::Ok);
+    ASSERT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
   }
   uint32_t addIdentityHistory() {
     tinta::core::pack::Pack pack;
@@ -777,6 +816,76 @@ TEST_F(HalCourseTransferTest, RefusesChecksummedMalformedLocaleWithoutReplacingC
   EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
   EXPECT_EQ(hal.renames, 0u);
   EXPECT_FALSE(hal.files.contains(TRANSFER_BACKUP));
+}
+TEST_F(HalCourseTransferTest, ValidatesSameCourseUpdateAgainstCompletedRemovedPack) {
+  removeInstalledCourse();
+  ASSERT_FALSE(HasFatalFailure());
+  bytes[12] ^= 1;
+  sealPack();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  const auto before = hal.files;
+  EXPECT_TRUE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, before);
+  EXPECT_FALSE(storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, scratch));
+  declaration.state.storageGeneration[0] ^= 1;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, before);
+}
+TEST_F(HalCourseTransferTest, RejectsReassignedIdentityAgainstCompletedRemovedPack) {
+  addIdentityHistory();
+  removeInstalledCourse();
+  ASSERT_FALSE(HasFatalFailure());
+  bytes.back() = 2;
+  sealPack();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  const auto before = hal.files;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, before);
+}
+TEST_F(HalCourseTransferTest, RemovedBaselineValidationRejectsUnfinishedTransferAndCorruptProof) {
+  removeInstalledCourse();
+  ASSERT_FALSE(HasFatalFailure());
+  auto& hal = inventory_hal_test::state;
+  hal.files["/candidate.pack"] = bytes;
+  const auto before = hal.files;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  declaration.state.durableOffset = declaration.state.length;
+  declaration.state.phase = TransferPhase::Installing;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  declaration.state.phase = TransferPhase::Receiving;
+  companion_memory_test::internal.freeBytes = 50 * 1024;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, before);
+  companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+  hal.files.at(COURSE_REMOVAL_PROOF_PATH)[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, corrupt);
+}
+TEST_F(HalCourseTransferTest, RejectsLanguageChangeAgainstCompletedRemovedPack) {
+  removeInstalledCourse();
+  ASSERT_FALSE(HasFatalFailure());
+  std::fill_n(bytes.begin() + 24, 8, 0);
+  std::copy_n("fr", 2, bytes.begin() + 24);
+  sealPack();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/candidate.pack"] = bytes;
+  declaration.state.durableOffset = declaration.state.length;
+  const auto before = hal.files;
+  EXPECT_FALSE(
+      storage.validateContent(ACTIVE_COURSE_PATH, "/candidate.pack", declaration.manifest, declaration.state, scratch));
+  EXPECT_EQ(hal.files, before);
 }
 TEST_F(HalCourseTransferTest, RefusesDifferentLanguageWithinBoundCourseBeforeReplacingProgress) {
   auto& hal = inventory_hal_test::state;

@@ -1076,8 +1076,33 @@ These are synthetic pack/in-memory HAL tests, not installed Tinta update tests.
 
 The actual C3 project-header/construction probe passes 256-byte frame errors:
 construction is 96 bytes and `open` is 144 bytes individually, with a 256-byte
-maximum imported frame. The selector remains unconnected to the transfer
-validator. Locale/item-continuity validation against its verified source and
-recoverable retirement of the old removal proof after installation remain
+maximum imported frame.
+
+The transfer validator uses this verified source when the active bound pack is
+missing and the candidate has a matching, fully received transfer with nonzero
+owner, transaction and card generation. It applies the same locale and stored
+item-identity continuity checks used for live packs; the four-argument entry
+without transfer context cannot authorize a removed baseline. One checked,
+nothrow allocation retains the selector while validation borrows the transfer
+workspace. Admission and selector operations preserve the 50 KiB internal-heap
+reserve. No allocation occurs in its scan or hash loops.
+
+Real `mini.pack` host regressions complete native course removal and journal
+release before validating a compatible update. They reject changed language,
+reassigned retired item identity, unfinished/wrong-phase transfer, wrong card
+generation, corrupt proof and insufficient heap, preserving stored files.
+Recoverable retirement of the old removal proof after installation remains
 required, along with the native activity callback, routing and explicit switch
-flow. The linked firmware checkpoint is unchanged from startup dispatch above.
+flow. These host checks do not establish physical SD or device behavior.
+
+The integrated validator checkpoint passes all 1,759 host tests and the
+installed-SdFat checker. The actual C3 translation-unit probe passes
+`-Werror=frame-larger-than=256`; its stack-usage report records 272 bytes for
+`validateCourseContent`, including saved registers and call space. This is not
+a runtime stack-watermark or heap measurement. Device acceptance remains pending.
+
+The default X4 firmware build passes. The release validator checks its `x4`
+board tag, chip ID 5, 6,553,600-byte OTA partition, image segments, checksum and
+SHA trailer. The 6,482,256-byte image has SHA-256
+`07ba7cc874de286057bfca3f516d56528a3f51f6ceadd15ecb59a7a964822bff`.
+The other firmware targets still require their final integration builds.

@@ -152,6 +152,15 @@ add_executable(CompanionIdentityUniquenessTest CompanionIdentityUniquenessTest.c
 target_link_libraries(CompanionIdentityUniquenessTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionIdentityUniquenessTest)
 
+# Exercise the same UTF-16 filename comparison as firmware.
+FetchContent_Declare(companion_sdfat
+  GIT_REPOSITORY https://github.com/greiman/SdFat.git
+  GIT_TAG 2.3.1)
+FetchContent_GetProperties(companion_sdfat)
+if(NOT companion_sdfat_POPULATED)
+  FetchContent_Populate(companion_sdfat)
+endif()
+
 add_executable(HalCourseTransferTest HalCourseTransferTest.cpp
   ${REPO_ROOT}/src/activities/tinta/platform/StateFiles.cpp
   ../../lib/hal/HalCourseStateMigration.cpp
@@ -164,6 +173,9 @@ target_sources(HalCourseTransferTest PRIVATE ../../lib/Companion/CompanionIdenti
 target_sources(HalCourseTransferTest PRIVATE ../../lib/hal/HalInventoryRevisions.cpp
   ../../lib/hal/HalInventorySortStorage.cpp ../../lib/hal/HalInventoryPublicationValidator.cpp)
 target_sources(HalCourseTransferTest PRIVATE ${REPO_ROOT}/lib/miniz/src/miniz_impl.c)
+target_sources(HalCourseTransferTest PRIVATE ${companion_sdfat_SOURCE_DIR}/src/common/FsUtf.cpp
+  ${companion_sdfat_SOURCE_DIR}/src/common/upcase.cpp)
+target_include_directories(HalCourseTransferTest PRIVATE ${companion_sdfat_SOURCE_DIR}/src)
 target_include_directories(HalCourseTransferTest PRIVATE ${REPO_ROOT}/lib/miniz/src)
 target_compile_definitions(HalCourseTransferTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures/")
 target_include_directories(HalCourseTransferTest BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs

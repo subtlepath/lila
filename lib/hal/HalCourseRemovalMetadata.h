@@ -17,6 +17,7 @@ class HalCourseRemovalMetadata final : public TransferStorage {
     const std::string_view view(path, length);
     if (!validInventoryPath(view) || !hal_filename::valid(view)) return error("stat path");
     const auto separator = view.find_last_of('/');
+    if (separator == std::string_view::npos || separator >= parent.size()) return error("stat parent path");
     const auto parentLength = separator ? separator : 1;
     std::copy_n(path, parentLength, parent.begin());
     parent[parentLength] = 0;
