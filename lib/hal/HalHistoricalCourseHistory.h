@@ -34,6 +34,16 @@ class HalHistoricalCourseHistory final {
       result = matches ? scan(true, visitor, visitorContext) : HistoricalCourseHistoryResult::Missing;
     return finish(result);
   }
+  HistoricalCourseHistoryResult inspect() {
+    if (visiting) return HistoricalCourseHistoryResult::Busy;
+    if (generation == Identity{} || course == Identity{} || scratch.size() < CONTENT_REMOVAL_RECORD_SIZE)
+      return HistoricalCourseHistoryResult::Invalid;
+    visiting = true;
+    matches = 0;
+    auto result = scan(false, nullptr, nullptr);
+    if (result == HistoricalCourseHistoryResult::Ok && !matches) result = HistoricalCourseHistoryResult::Missing;
+    return finish(result);
+  }
   bool closeReaders() {
     const bool sourceClosed = source.closeReaders();
     const bool metadataClosed = metadata.closeReaders();

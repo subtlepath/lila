@@ -2060,6 +2060,103 @@ TEST_F(HalCourseTransferTest, RemovedCourseSwitchRecoversPublicationAndProofReti
   exercise(0, false, nullptr, true);
 }
 
+TEST_F(HalCourseTransferTest, ReturnToRemovedCourseUsesRetainedReceiptsAfterProofRetirement) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  const auto originalDeclaration = declaration;
+  const auto originalBytes = bytes;
+  removeInstalledCourse();
+  auto authorize = [&](HalTransferStorage& target, Transfer& transfer, const ContentManifest& previous) {
+    CourseSwitchRequest consent;
+    consent.generation = generation;
+    consent.transaction = declaration.state.transaction;
+    consent.previousCourse = previous.logicalIdentity;
+    consent.previousHash = previous.contentHash;
+    consent.nextCourse = declaration.manifest.logicalIdentity;
+    consent.nextHash = declaration.manifest.contentHash;
+    std::array<uint8_t, COURSE_SWITCH_REQUEST_SIZE> body{};
+    std::array<uint8_t, COURSE_SWITCH_REPLY_SIZE> reply{};
+    ASSERT_TRUE(encodeCourseSwitchRequest(consent, body));
+    ASSERT_EQ(handleCourseSwitch(target, transfer, generation, declaration.state.owner, body, reply, scratch),
+              reply.size());
+    ASSERT_EQ(reply[0], static_cast<uint8_t>(TransferResult::Ok));
+  };
+  declaration.manifest.logicalIdentity[0] = 8;
+  bytes[12] ^= 1;
+  sealPack();
+  {
+    Transfer transfer(storage, scratch);
+    receive(transfer, false);
+    ASSERT_FALSE(HasFatalFailure());
+    authorize(storage, transfer, originalDeclaration.manifest);
+    ASSERT_FALSE(HasFatalFailure());
+    ASSERT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  }
+  const auto current = declaration.manifest;
+  const auto currentBytes = bytes;
+  ASSERT_FALSE(hal.files.contains(COURSE_REMOVAL_PROOF_PATH));
+  char oldState[COURSE_STATE_PATH_SIZE], currentState[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(originalDeclaration.manifest.logicalIdentity, "items.bin", oldState));
+  ASSERT_TRUE(courseStatePath(current.logicalIdentity, "items.bin", currentState));
+  hal.files[currentState] = {31};
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.open(originalDeclaration.manifest.logicalIdentity, originalDeclaration.manifest.contentHash),
+            CourseArchiveResult::Ok);
+  const std::string cache = archive.path();
+  const std::string reference = archive.referencePath();
+  ASSERT_TRUE(archive.closeReaders());
+  // Older installations retained removal evidence without immutable pack archives.
+  hal.files.erase(cache);
+  hal.files.erase(cache + ".owner");
+  hal.files.erase(reference);
+  const auto baseline = hal;
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    SCOPED_TRACE(fault);
+    hal = baseline;
+    declaration = originalDeclaration;
+    declaration.state.transaction[0] = 5;
+    bytes = originalBytes;
+    if (fault == 1) bytes.back() ^= 1;
+    if (fault == 2) bytes[offsetof(tinta::core::pack::Header, locale)] = 'f';
+    sealPack();
+    if (fault == 3) {
+      bool corrupted = false;
+      for (auto& [path, data] : hal.files) {
+        if (path.starts_with("/.crosspoint/companion/course-removed-")) {
+          ASSERT_FALSE(data.empty());
+          data.back() ^= 1;
+          corrupted = true;
+        }
+      }
+      ASSERT_TRUE(corrupted);
+    }
+    HalTransferStorage reopened;
+    Transfer transfer(reopened, scratch);
+    receive(transfer, false);
+    ASSERT_FALSE(HasFatalFailure());
+    authorize(reopened, transfer, current);
+    ASSERT_FALSE(HasFatalFailure());
+    const auto result = transfer.commit(declaration.state.transaction, declaration.state.owner);
+    ContentManifest installed;
+    ASSERT_TRUE(decodeCourseBinding(hal.files.at(COURSE_BINDING_PATH), installed));
+    if (fault) {
+      EXPECT_NE(result, TransferResult::Ok);
+      EXPECT_EQ(installed, current);
+      EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), currentBytes);
+    } else {
+      EXPECT_EQ(result, TransferResult::Ok);
+      EXPECT_EQ(installed, declaration.manifest);
+      EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), originalBytes);
+      EXPECT_TRUE(hal.files.contains(cache));
+      EXPECT_TRUE(hal.files.contains(reference));
+    }
+    EXPECT_EQ(hal.files.at(oldState), std::vector<uint8_t>({17}));
+    EXPECT_EQ(hal.files.at(currentState), std::vector<uint8_t>({31}));
+    EXPECT_FALSE(hal.files.contains(COURSE_REMOVAL_PROOF_PATH));
+  }
+}
+
 TEST_F(HalCourseTransferTest, SwitchedProofRetirementRequiresExactConsentAndRetriesAppliedDeletion) {
   const auto previous = declaration.manifest;
   removeInstalledCourse();
@@ -3999,4 +4096,137 @@ TEST_F(HalCourseTransferTest, HistoricalCourseHistoryRejectsDuplicateReceiptsAnd
             HistoricalCourseHistoryResult::Ok);
   EXPECT_EQ(visits, 1u);
   EXPECT_EQ(hal.files, baseline);
+}
+
+TEST_F(HalCourseTransferTest, RemovedCourseUpdateRequiresHistoricalReaderHeapAdmissionAndRetries) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  const auto previous = declaration.manifest;
+  removeInstalledCourse();
+  const auto binding = hal.files.at(COURSE_BINDING_PATH);
+  const auto proof = hal.files.at(COURSE_REMOVAL_PROOF_PATH);
+  bytes[12] ^= 1;
+  sealPack();
+  Transfer transfer(storage, scratch);
+  receive(transfer, false);
+  ASSERT_FALSE(HasFatalFailure());
+  companion_memory_test::internal.largestBlockBytes = sizeof(HalHistoricalCourseHistory) - 1;
+  EXPECT_NE(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  ASSERT_NE(transfer.current(), nullptr);
+  EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+  EXPECT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), binding);
+  EXPECT_EQ(hal.files.at(COURSE_REMOVAL_PROOF_PATH), proof);
+  char statePath[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(previous.logicalIdentity, "items.bin", statePath));
+  EXPECT_EQ(hal.files.at(statePath), std::vector<uint8_t>({17}));
+  companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+  EXPECT_EQ(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+  EXPECT_EQ(hal.files.at(statePath), std::vector<uint8_t>({17}));
+}
+
+TEST_F(HalCourseTransferTest, OrdinaryUpdateRejectsOlderRemovalIdentityDespiteCompatibleCurrentArchive) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/items.bin"] = {17};
+  removeInstalledCourse(71);
+  const auto older = hal.files;
+  bytes.back() ^= 1;
+  bytes[12] ^= 1;
+  sealPack();
+  hal = {};
+  hal.enumerateFileMap = true;
+  hal.files["/tinta/items.bin"] = {17};
+  removeInstalledCourse(72);
+  hal.files.insert(older.begin(), older.end());
+  const auto previous = declaration.manifest;
+  const auto binding = hal.files.at(COURSE_BINDING_PATH);
+  const auto proof = hal.files.at(COURSE_REMOVAL_PROOF_PATH);
+  bytes[12] ^= 2;
+  sealPack();
+  Transfer transfer(storage, scratch);
+  receive(transfer, false);
+  ASSERT_FALSE(HasFatalFailure());
+  EXPECT_NE(transfer.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  ASSERT_NE(transfer.current(), nullptr);
+  EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+  EXPECT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
+  EXPECT_EQ(hal.files.at(COURSE_BINDING_PATH), binding);
+  EXPECT_EQ(hal.files.at(COURSE_REMOVAL_PROOF_PATH), proof);
+  char statePath[COURSE_STATE_PATH_SIZE];
+  ASSERT_TRUE(courseStatePath(previous.logicalIdentity, "items.bin", statePath));
+  EXPECT_EQ(hal.files.at(statePath), std::vector<uint8_t>({17}));
+  for (const auto& [path, data] : older) {
+    if (path != COURSE_BINDING_PATH && path != COURSE_REMOVAL_PROOF_PATH) {
+      EXPECT_EQ(hal.files.at(path), data);
+    }
+  }
+  hal.files["/candidate.pack"] = bytes;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch);
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), CourseHistoryResult::Ok);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalReceiptValidationUsesLegacyIdentityBridgeWithoutWrites) {
+  auto& hal = inventory_hal_test::state;
+  removeInstalledCourse(71);
+  const auto legacy = hal.files;
+  addIdentityHistory();
+  hal = {};
+  hal.enumerateFileMap = true;
+  removeInstalledCourse(72);
+  hal.files.insert(legacy.begin(), legacy.end());
+  static constexpr char TRANSLATION[] = "house";
+  auto text = std::search(bytes.begin(), bytes.end(), TRANSLATION, TRANSLATION + 5);
+  ASSERT_NE(text, bytes.end());
+  text[4] = 'E';
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  const auto before = hal.files;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalHistoricalCourseHistory history(
+      generation, declaration.manifest.logicalIdentity, scratch, [](void*) { return true; }, nullptr);
+  HalHistoricalCourseHistory bridges(
+      generation, declaration.manifest.logicalIdentity, scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch, nullptr, &bridges);
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"), HistoricalCourseHistoryResult::Ok);
+  EXPECT_EQ(hal.files, before);
+  bytes.back() ^= 1;
+  sealPack();
+  hal.files["/candidate.pack"] = bytes;
+  const auto conflicting = hal.files;
+  EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"),
+            HistoricalCourseHistoryResult::Incompatible);
+  EXPECT_EQ(hal.files, conflicting);
+}
+
+TEST_F(HalCourseTransferTest, HistoricalReceiptValidationRejectsRetiredIdentityAndLanguageChanges) {
+  addIdentityHistory();
+  auto& hal = inventory_hal_test::state;
+  removeInstalledCourse();
+  const auto original = bytes;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  HalHistoricalCourseHistory history(
+      generation, declaration.manifest.logicalIdentity, scratch, [](void*) { return true; }, nullptr);
+  HalCoursePackHistoryValidator validator(storage, *parser, scratch);
+  for (unsigned change = 0; change < 2; ++change) {
+    SCOPED_TRACE(change);
+    bytes = original;
+    if (change == 0)
+      bytes.back() ^= 1;
+    else
+      bytes[offsetof(tinta::core::pack::Header, locale)] = 'f';
+    sealPack();
+    hal.files["/candidate.pack"] = bytes;
+    const auto before = hal.files;
+    EXPECT_EQ(validator.validate(history, declaration.manifest, "/candidate.pack"),
+              HistoricalCourseHistoryResult::Incompatible);
+    EXPECT_EQ(hal.files, before);
+  }
 }

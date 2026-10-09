@@ -210,7 +210,7 @@ bool HalTransferStorage::prepareCourseSwitch(const CourseSwitchRequest& request,
     LOG_ERR("COMPANION", "Cannot prepare switched course state");
     return false;
   }
-  return validateArchivedCourse(manifest, candidate, workspace);
+  return validateArchivedCourse(manifest, candidate, request.generation, workspace);
 }
 bool HalTransferStorage::archiveCourseSwitchSource(const ContentManifest& previous, const Identity& generation,
                                                    bool removed, std::span<uint8_t> workspace) {
@@ -228,7 +228,7 @@ bool HalTransferStorage::archiveCourseSwitchSource(const ContentManifest& previo
   return source->closeReaders() || failure("switch archive source close", ACTIVE_COURSE_PATH);
 }
 bool HalTransferStorage::validateArchivedCourse(const ContentManifest& manifest, const char* candidate,
-                                                std::span<uint8_t> workspace) {
+                                                const Identity& generation, std::span<uint8_t> workspace) {
   if (!courseValidator || !admitCompanionHeap(2 * sizeof(HalCoursePackHistory), sizeof(HalCoursePackHistory)))
     return failure("course history heap admission", candidate);
   auto history =
@@ -238,11 +238,40 @@ bool HalTransferStorage::validateArchivedCourse(const ContentManifest& manifest,
       makeUniqueNoThrow<HalCoursePackHistory>(workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
   if (!bridges) return failure("OOM: course history bridges", candidate);
   HalCoursePackHistoryValidator validator(*this, *courseValidator, workspace, bridges.get());
-  if (validator.validate(*history, manifest, candidate) != CourseHistoryResult::Ok)
+  const auto result = validator.validate(*history, manifest, candidate);
+  if (result != CourseHistoryResult::Ok && result != CourseHistoryResult::MissingBaseline)
     return failure("course history compatibility", candidate);
   const bool historyClosed = history->closeReaders();
   const bool bridgesClosed = bridges->closeReaders();
-  return (historyClosed && bridgesClosed) || failure("course history close", candidate);
+  if (!historyClosed || !bridgesClosed) return failure("course history close", candidate);
+  history.reset();
+  bridges.reset();
+  return validateHistoricalCourse(manifest, candidate, generation, workspace,
+                                  result == CourseHistoryResult::MissingBaseline);
+}
+bool HalTransferStorage::validateHistoricalCourse(const ContentManifest& manifest, const char* candidate,
+                                                  const Identity& generation, std::span<uint8_t> workspace,
+                                                  bool required) {
+  if (!admitCompanionHeap(sizeof(HalHistoricalCourseHistory), sizeof(HalHistoricalCourseHistory)))
+    return failure("historical course heap admission", candidate);
+  auto history = makeUniqueNoThrow<HalHistoricalCourseHistory>(
+      generation, manifest.logicalIdentity, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!history) return failure("OOM: historical course history", candidate);
+  const auto presence = history->inspect();
+  if (presence == HistoricalCourseHistoryResult::Missing)
+    return !required || failure("missing historical course baseline", candidate);
+  if (presence != HistoricalCourseHistoryResult::Ok) return failure("historical course receipts", candidate);
+  if (!admitCompanionHeap(sizeof(HalHistoricalCourseHistory), sizeof(HalHistoricalCourseHistory)))
+    return failure("historical bridge heap admission", candidate);
+  auto bridges = makeUniqueNoThrow<HalHistoricalCourseHistory>(
+      generation, manifest.logicalIdentity, workspace, [](void*) { return admitCompanionHeap(); }, nullptr);
+  if (!bridges) return failure("OOM: historical course bridges", candidate);
+  HalCoursePackHistoryValidator validator(*this, *courseValidator, workspace, nullptr, bridges.get());
+  if (validator.validate(*history, manifest, candidate) != HistoricalCourseHistoryResult::Ok)
+    return failure("historical course compatibility", candidate);
+  const bool historyClosed = history->closeReaders();
+  const bool bridgesClosed = bridges->closeReaders();
+  return (historyClosed && bridgesClosed) || failure("historical course close", candidate);
 }
 bool HalTransferStorage::archiveInstalledCourse(const char* path, const ContentManifest& manifest,
                                                 std::span<uint8_t> workspace) {
@@ -503,7 +532,7 @@ bool HalTransferStorage::validateCourseContent(const char* candidate, const Cont
         if (!removed->path() || !removed->closeReaders()) return failure("removed history source close", candidate);
         removed.reset();
       }
-      return validateArchivedCourse(manifest, candidate, workspace);
+      return validateArchivedCourse(manifest, candidate, *generation, workspace);
     }
   }
   if (removed && (!removed->path() || !removed->closeReaders())) return failure("removed course close", previousPath);

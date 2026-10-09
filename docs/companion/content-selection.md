@@ -1490,3 +1490,55 @@ still refuses a used scope without archived references; historical receipt
 validation/import and the no-evidence conflict workflow remain to be integrated.
 No new firmware image or physical recovery result is claimed for this unconnected
 header; the C3 probe forces its constructor and visit implementation directly.
+
+
+### Retained removal history in native transfer validation
+
+Ordinary bound-course updates and explicit course switches now validate all
+matching retained removal receipts after checking immutable archive references.
+A used scope without archive references may reuse learner state only when its
+retained receipts, sealed plans, caches and completed state isolation all verify.
+An absent receipt set remains an explicit refusal for that used scope. Matching
+receipts are also checked when archive validation succeeds, so a compatible
+current archive cannot hide an older incompatible item identity or language.
+
+`HalCoursePackHistoryValidator` accepts either history reader and applies the same
+complete pack parsing, locale and stable-item continuity checks. A retained
+legacy pack can use an identity-bearing retained receipt with identical legacy
+learning records as a bridge. The validator borrows its parser, scratch and
+readers; it adds no allocation during callbacks. Archive and removal sets still
+use separate bridge scans; cross-set legacy bridge selection and the no-evidence
+baseline import/conflict workflow remain unfinished.
+
+The receipt reader is admitted and allocated off stack because its fixed owner
+is 4,496 bytes on C3. A metadata-only inspection avoids allocating a second reader
+when no matching receipts exist. When receipts exist, a separately admitted
+second owner supplies bridge loans; both owners are reused for the complete scan
+and released afterward. Archive readers are released before this phase. The
+validator is 52 bytes on C3. Forced native source compilation passes the
+256-byte frame limit with Tinta enabled and disabled: archive and receipt
+validation each use 128-byte frames, and ordinary course validation uses 224.
+These compiler sizes exclude lazy HAL handles and do not establish runtime heap
+headroom.
+
+The real transfer regression removes course A, installs B, retires A's current
+removal proof, removes A's immutable archive to represent an older installation,
+and returns to A through its retained receipts. The original pack succeeds and
+reconstructs the archive; changed retired-item meaning, changed language and a
+corrupt retained cache refuse before replacement. A's and B's learner files are
+preserved in every case. A separate ordinary-update regression checks that an
+older receipt conflict refuses even when the current archive is compatible.
+All 1,814 host tests pass, including both native transfer regressions and
+contiguous-heap admission refusal followed by successful retry.
+
+On hardware, repeat A-to-B-to-A switching after removal, including a reboot
+between operations. Verify each course's item/star/day files, retained receipts,
+active binding and pack hash; try an incompatible item identity and language and
+confirm the active course remains usable. Measure free/largest heap and task
+watermarks throughout repeated sessions. Physical recovery and memory acceptance
+remain unverified.
+
+The default firmware build passes (544.54 seconds). The retained checkpoint image
+is 6,507,552 bytes, SHA-256 `11ef46f0e3270370256a97d96a49b6ad33cfd498c0c07185256da488ebab4e86`. The release
+validator verifies its x4/chip-5 tag, segment bounds, checksum, SHA trailer and
+OTA partition fit. This image validation does not prove physical acceptance.

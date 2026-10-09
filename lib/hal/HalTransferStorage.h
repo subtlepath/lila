@@ -56,7 +56,10 @@ class HalTransferStorage final : public TransferStorage {
                            std::span<uint8_t> workspace);
   bool archiveCourseSwitchSource(const ContentManifest& previous, const Identity& generation, bool removed,
                                  std::span<uint8_t> workspace);
-  bool validateArchivedCourse(const ContentManifest& manifest, const char* candidate, std::span<uint8_t> workspace);
+  bool validateArchivedCourse(const ContentManifest& manifest, const char* candidate, const Identity& generation,
+                              std::span<uint8_t> workspace);
+  bool validateHistoricalCourse(const ContentManifest& manifest, const char* candidate, const Identity& generation,
+                                std::span<uint8_t> workspace, bool required);
   bool archiveInstalledCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace);
   bool validateCourse(const char* path, const ContentManifest& manifest, std::span<uint8_t> workspace,
                       char* locale = nullptr);
