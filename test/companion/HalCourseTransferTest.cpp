@@ -39,6 +39,7 @@
 #undef HEX
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCoursePackArchive.h"
+#include "lib/hal/HalCoursePackHistory.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
 #include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
@@ -3174,4 +3175,133 @@ TEST_F(HalCourseTransferTest, InitialMigrationAdmissionRequiresOwnerPackJournalA
     EXPECT_EQ(state.files, reconciledFiles);
     EXPECT_EQ(identities.binding, reconciledIdentity);
   }
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryVisitsVerifiedVersionsWithoutChangingState) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  const auto before = hal.files;
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  struct Visits {
+    unsigned count = 0;
+    ContentManifest manifest{};
+  } visits;
+  auto visitor = [](void* ctx, const ContentManifest& manifest, const char* path) {
+    auto& result = *static_cast<Visits*>(ctx);
+    ++result.count;
+    result.manifest = manifest;
+    return path && inventory_hal_test::state.files.contains(path);
+  };
+  EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &visits), CourseHistoryResult::Ok);
+  EXPECT_EQ(visits.count, 1u);
+  EXPECT_EQ(visits.manifest, declaration.manifest);
+  EXPECT_EQ(hal.files, before);
+  EXPECT_EQ(history.visit(
+                declaration.manifest.logicalIdentity, [](void*, const ContentManifest&, const char*) { return false; },
+                nullptr),
+            CourseHistoryResult::Incompatible);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryDistinguishesFreshScopeFromMissingBaseline) {
+  auto& hal = inventory_hal_test::state;
+  char scope[COURSE_STATE_DIRECTORY_SIZE];
+  ASSERT_TRUE(courseStateDirectory(declaration.manifest.logicalIdentity, scope));
+  hal.directories["/tinta/courses"] = {};
+  hal.directories[scope] = {};
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  unsigned visits = 0;
+  auto visitor = [](void* ctx, const ContentManifest&, const char*) {
+    ++*static_cast<unsigned*>(ctx);
+    return true;
+  };
+  EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &visits), CourseHistoryResult::Ok);
+  hal.files[std::string(scope) + "/items.bin"] = {17};
+  const auto before = hal.files;
+  EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &visits),
+            CourseHistoryResult::MissingBaseline);
+  EXPECT_EQ(visits, 0u);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryRefusesUnfinishedMalformedAndCorruptReferences) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  const std::string reference = archive.referencePath();
+  ASSERT_TRUE(archive.closeReaders());
+  const auto complete = hal.files;
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  unsigned visits = 0;
+  auto visitor = [](void* ctx, const ContentManifest&, const char*) {
+    ++*static_cast<unsigned*>(ctx);
+    return true;
+  };
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    SCOPED_TRACE(fault);
+    hal.files = complete;
+    if (fault == 0) hal.files[reference.substr(0, reference.size() - 4) + ".tmp"] = {1};
+    if (fault == 1) hal.files[reference.substr(0, reference.rfind('/') + 1) + "pack-bad.ref"] = {1};
+    if (fault == 2) hal.files.at(reference)[0] ^= 1;
+    const auto before = hal.files;
+    EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &visits),
+              fault == 0 ? CourseHistoryResult::Busy : CourseHistoryResult::Corrupt);
+    EXPECT_EQ(visits, 0u);
+    EXPECT_EQ(hal.files, before);
+  }
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryRefusesIncompleteEnumerationAndPermissionLoss) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(declaration.manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  const auto before = hal.files;
+  bool allowed = true;
+  HalCoursePackHistory history(scratch, [](void* ctx) { return *static_cast<bool*>(ctx); }, &allowed);
+  auto visitor = [](void* ctx, const ContentManifest&, const char*) {
+    *static_cast<bool*>(ctx) = false;
+    return true;
+  };
+  hal.directoryErrorPath = "/tinta/courses";
+  EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &allowed), CourseHistoryResult::IoError);
+  EXPECT_TRUE(allowed);
+  hal.directoryErrorPath.clear();
+  EXPECT_EQ(history.visit(declaration.manifest.logicalIdentity, visitor, &allowed), CourseHistoryResult::Busy);
+  EXPECT_FALSE(allowed);
+  EXPECT_EQ(hal.files, before);
+}
+
+TEST_F(HalCourseTransferTest, CourseHistoryRejectsDuplicateFoldedCourseDirectories) {
+  auto& hal = inventory_hal_test::state;
+  auto manifest = declaration.manifest;
+  manifest.logicalIdentity[0] = 0xaf;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  HalCoursePackArchive archive(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archive.publish(manifest, ACTIVE_COURSE_PATH), CourseArchiveResult::Ok);
+  ASSERT_TRUE(archive.closeReaders());
+  char scope[COURSE_STATE_DIRECTORY_SIZE];
+  ASSERT_TRUE(courseStateDirectory(manifest.logicalIdentity, scope));
+  std::string duplicate = scope;
+  duplicate[COURSE_STATE_ROOT.size()] = 'A';
+  duplicate[COURSE_STATE_ROOT.size() + 1] = 'F';
+  hal.directories[duplicate] = {};
+  const auto before = hal.files;
+  unsigned visits = 0;
+  HalCoursePackHistory history(scratch, [](void*) { return true; }, nullptr);
+  EXPECT_EQ(history.visit(
+                manifest.logicalIdentity,
+                [](void* ctx, const ContentManifest&, const char*) {
+                  ++*static_cast<unsigned*>(ctx);
+                  return true;
+                },
+                &visits),
+            CourseHistoryResult::IoError);
+  EXPECT_EQ(visits, 0u);
+  EXPECT_EQ(hal.files, before);
 }

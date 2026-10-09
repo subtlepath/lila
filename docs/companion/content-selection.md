@@ -1302,3 +1302,27 @@ The archive persistence checkpoint firmware is 6493024 bytes (SHA-256
 tag, segments, checksum, SHA trailer and OTA partition fit are verified. Archive
 publication is still exercised through host/C3 probes rather than native transfer
 routing in this image.
+
+### Archived course-history enumeration
+
+`HalCoursePackHistory` performs a complete checked scan of `/tinta/courses`
+and the selected scope before visiting references. Duplicate folded scope names,
+invalid owned reference names, unfinished reference stages, corrupt archives,
+failed enumeration/close and lost permission refuse the operation. An empty
+scope is distinguishable from learner files that have no archived baseline;
+the latter needs an authoritative legacy baseline before reuse.
+
+Visitors receive a read-only manifest/path loan for each verified archive.
+The reader keeps no growing reference list and checks the visit count against
+its first scan. Namespace/state writers must remain excluded throughout both
+scans and callbacks. Pack parsing and item-identity comparison remain the
+visitor's responsibility; a valid archive hash alone does not establish course
+compatibility.
+
+The history checkpoint passes all 1,790 host tests. Its C3 constructor and
+visit probe pass the 256-byte frame limit: scope selection uses 96 bytes,
+reference classification 144 bytes and scanning 96 bytes. The retained owner
+is 2,696 bytes, excluding lazy HAL handle allocations; callers must admit it
+on the heap rather than use stack or permanent static storage. It is not yet
+wired into native transfer preparation, so this checkpoint does not establish
+return-to-course safety in firmware or on hardware.
