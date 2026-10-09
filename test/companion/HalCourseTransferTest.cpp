@@ -39,6 +39,7 @@
 #undef HEX
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCourseRemovalMetadata.h"
+#include "lib/hal/HalCourseRemovalNativeOwner.h"
 #include "lib/hal/HalCourseRemovalPreparation.h"
 #include "lib/hal/HalCourseRemovalRecovery.h"
 #include "lib/hal/HalTransferStorage.h"
@@ -822,6 +823,93 @@ TEST_F(HalCourseTransferTest, RefusesChecksummedMalformedLocaleWithoutReplacingC
   EXPECT_EQ(hal.files.at("/tinta/items.bin"), std::vector<uint8_t>({17}));
   EXPECT_EQ(hal.renames, 0u);
   EXPECT_FALSE(hal.files.contains(TRANSFER_BACKUP));
+}
+TEST_F(HalCourseTransferTest, NativeCourseOwnerUsesRealPreparationAndCompletedRetrySkipsLiveInventory) {
+  auto& hal = inventory_hal_test::state;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  hal.files["/tinta/items.bin"] = {17};
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  ASSERT_TRUE(storage.prepare());
+  std::vector<uint8_t> paths(INVENTORY_INDEX_HEADER_SIZE + INVENTORY_PATH_MAX_RECORD);
+  const auto pathSize = encodeInventoryPath(declaration.manifest, ACTIVE_COURSE_PATH,
+                                            std::span(paths).subspan(INVENTORY_INDEX_HEADER_SIZE));
+  ASSERT_GT(pathSize, 0u);
+  paths.resize(INVENTORY_INDEX_HEADER_SIZE + pathSize);
+  InventoryIndexHeader header{generation, 9, 1,
+                              inventoryIndexCrc(std::span(paths).subspan(INVENTORY_INDEX_HEADER_SIZE))};
+  ASSERT_EQ(encodeInventoryPathsHeader(header, paths), INVENTORY_INDEX_HEADER_SIZE);
+  hal.files[InventoryPublication::PATHS] = paths;
+  std::vector<uint8_t> index(INVENTORY_INDEX_HEADER_SIZE + INVENTORY_PATH_MAX_RECORD);
+  const auto entrySize =
+      encodeInventoryIndexEntry(declaration.manifest, std::span(index).subspan(INVENTORY_INDEX_HEADER_SIZE));
+  ASSERT_GT(entrySize, 0u);
+  index.resize(INVENTORY_INDEX_HEADER_SIZE + entrySize);
+  header.entriesCrc = inventoryIndexCrc(std::span(index).subspan(INVENTORY_INDEX_HEADER_SIZE));
+  ASSERT_EQ(encodeInventoryIndexHeader(header, index), INVENTORY_INDEX_HEADER_SIZE);
+  hal.files[InventoryPublication::INDEX] = index;
+  struct Context {
+    HalTransferStorage* storage;
+    HalCourseRemovalNativeOwner* owner = nullptr;
+    bool allowed = true, inventoryReady = true;
+    unsigned preparations = 0, refreshes = 0;
+    static bool permitted(void* context) { return static_cast<Context*>(context)->allowed; }
+    static bool inventory(void* context, uint64_t& revision) {
+      revision = 9;
+      return static_cast<Context*>(context)->inventoryReady;
+    }
+    static bool prepare(void* context, const ContentManifest& manifest, std::span<uint8_t> io) {
+      auto& self = *static_cast<Context*>(context);
+      ++self.preparations;
+      return prepareBoundCourseRemovalState(*self.storage, manifest, io, permitted, context);
+    }
+    static bool refresh(void* context) {
+      auto& self = *static_cast<Context*>(context);
+      ++self.refreshes;
+      return self.owner->closeReaders();
+    }
+  } context{&storage};
+  ContentRemovalRequest request;
+  request.manifest = declaration.manifest;
+  request.generation = generation;
+  request.owner = declaration.state.owner;
+  request.transaction.fill(81);
+  std::array<uint8_t, CONTENT_REMOVAL_REQUEST_SIZE> command{};
+  std::array<uint8_t, CONTENT_REMOVAL_REPLY_SIZE> reply{};
+  ASSERT_EQ(encodeContentRemovalRequest(request, command), command.size());
+  HalCourseRemovalNativeOwner owner(generation, Context::permitted, Context::refresh, &context, Context::inventory,
+                                    Context::prepare);
+  context.owner = &owner;
+  ASSERT_TRUE(owner.prepare());
+  const auto before = hal.files;
+  EXPECT_EQ(owner.handle(false, request.owner, command, reply), reply.size());
+  EXPECT_EQ(reply[0], static_cast<uint8_t>(ContentRemovalResult::Unauthorized));
+  EXPECT_EQ(hal.files, before);
+  EXPECT_EQ(context.preparations, 0u);
+  hal.files.at(InventoryPublication::PATHS)[0] ^= 1;
+  const auto corrupt = hal.files;
+  EXPECT_EQ(owner.handle(true, request.owner, command, reply), reply.size());
+  EXPECT_NE(reply[0], static_cast<uint8_t>(ContentRemovalResult::Ok));
+  EXPECT_EQ(hal.files, corrupt);
+  EXPECT_EQ(context.preparations, 0u);
+  hal.files = before;
+  ASSERT_EQ(owner.handle(true, request.owner, command, reply), reply.size());
+  ASSERT_EQ(reply[0], static_cast<uint8_t>(ContentRemovalResult::Ok));
+  EXPECT_EQ(context.preparations, 1u);
+  EXPECT_EQ(context.refreshes, 1u);
+  EXPECT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
+  EXPECT_FALSE(hal.files.contains("/tinta/items.bin"));
+  std::array<char, COURSE_STATE_PATH_SIZE> scoped{};
+  ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", scoped));
+  EXPECT_EQ(hal.files.at(scoped.data()), std::vector<uint8_t>({17}));
+  context.inventoryReady = false;
+  hal.files.at(InventoryPublication::PATHS)[0] ^= 1;
+  const auto completed = hal.files;
+  EXPECT_EQ(owner.handle(true, request.owner, command, reply), reply.size());
+  EXPECT_EQ(reply[0], static_cast<uint8_t>(ContentRemovalResult::Ok));
+  EXPECT_EQ(context.preparations, 1u);
+  EXPECT_EQ(hal.files, completed);
 }
 TEST_F(HalCourseTransferTest, NativeRemovalPreparationValidatesPackBeforeIsolatingLegacyState) {
   auto& hal = inventory_hal_test::state;

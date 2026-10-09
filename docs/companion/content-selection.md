@@ -9,8 +9,9 @@ JSON preparation and startup cohort allocations; low/fragmented-heap refusal and
 retry pass the native SdFat checker. Native Apple and physical acceptance remain
 unverified. Course removal has a portable participant, sealed-plan publication,
 removal-proof publication and verified baseline retention. Its production
-native activity owner, routing and replacement flow remain incomplete, so it
-is not advertised. Dictionary removal
+native activity owner and authenticated routing are connected, including Tinta
+state preparation and same-course reinstall. Switching from a removed course and
+the matching Apple context flow remain incomplete, so course removal is not advertised. Dictionary removal
 uses sealed member-proof cohorts, preserves unowned folder siblings and cached
 archives, and recovers retained journals before reading resumes.
 Font cohort routing and recovery pass the native host checker and all five
@@ -1129,7 +1130,7 @@ The retirement checkpoint passes all 1,762 host tests, the installed-SdFat suite
 and the actual C3 translation-unit frame check. The default firmware build and
 release image validation pass. The 6,483,904-byte image has SHA-256
 `985485cc4e16d45171286164f093e7df8f24a05d51f17121cdf837ca762214e5` and passes the X4 board/chip, partition, segment, checksum
-and SHA-trailer checks. The preparation helper remains unconnected to the activity.
+and SHA-trailer checks. The preparation helper is connected to the native activity.
 
 `prepareBoundCourseRemovalState` supplies the native admission preparation callback.
 It validates the active bound pack through the retained transfer parser before
@@ -1140,7 +1141,50 @@ largest required block; no new callback-owned allocation or scan-loop allocation
 is introduced. Real-pack tests refuse unauthorized/corrupt input without file
 changes, preserve the pack and binding, and prove repeated successful preparation
 leaves the scoped learner files and migration receipts unchanged. Its actual C3
-header/call probe passes the local-frame check. Activity wiring remains required.
+header/call probe passes the local-frame check. The native activity uses this callback.
 
 The preparation checkpoint passes all 1,763 host tests; its C3 callback frame is
-48 bytes. Native activity routing and the removed-course switch flow remain open.
+48 bytes. The removed-course switch and matching Apple context flow remain open.
+
+`CompanionConnectActivity` routes authenticated course removal through one retained
+`HalCourseRemovalNativeOwner` on Tinta-enabled builds. BLE and encrypted Wi-Fi
+both use the shared removal handler, with owner/card checks, writer exclusion and
+firmware-intent refusal. Other removal owners close and release before course
+allocation; leaving the course path, resetting the connection and activity exit
+release its handles and buffers. Checked nothrow admission accounts for the owner
+size and largest block, with the existing 50 KiB reserve. Decoder/migration IO is
+retained in the owner and no allocation occurs in scan/hash loops.
+
+The complete activity translation unit passes actual C3 frame checks with Tinta
+both enabled and disabled. The course route reports 112-byte individual stack
+usage and owner release 16 bytes. A real-pack native-owner test publishes a full
+inventory pair, invokes the production preparation callback, preserves scoped
+learner bytes, and proves completed retries bypass invalid live inventory and
+missing pack bytes. All 1,764 host tests pass. Physical BLE/Wi-Fi acceptance and
+the final target builds remain pending. The course-removal capability remains
+unadvertised until removed-course switching and its Apple confirmation/context
+flow are connected.
+
+The native routing default build passes release image validation. Its
+6,489,280-byte X4 image has SHA-256
+`71d7790e0082610e28b73791022aa8241fa3be2541f29ea316a1101bcaa154fc`.
+Board/chip, OTA partition, image segments, checksum and SHA trailer pass.
+
+The shared course-context body codec distinguishes live and verified removed
+sources without adding cached packs to installed inventory. Requests contain a
+versioned prefix and nonzero card generation (20 bytes). Successful replies
+contain status, source, generation and the complete course manifest (85 bytes);
+failures contain no source or manifest (22 bytes). Wrong-storage replies report
+the current generation; other replies must match the requested generation.
+Only course format 1 with nonzero identity/hash and positive length is accepted.
+Truncated, extended or malformed replies fail without changing C++ outputs.
+
+C++ and Swift tests consume the same request/removed-response fixtures and cover
+both source types, malformed metadata and all failure statuses. All 509 Swift
+package tests pass, and the C3 codec probe passes its local-frame check. The
+context codec is not yet a routed reader query: provider integration, Apple
+inventory/context retrieval, explicit confirmation and reader switch-source
+validation remain required before enabling the course-removal capability.
+
+The combined routing/context checkpoint passes all 1,768 host tests and 509 Swift
+package tests. Native Apple builds and physical acceptance remain unverified.

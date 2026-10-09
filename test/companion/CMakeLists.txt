@@ -797,3 +797,8 @@ target_include_directories(HalCourseRemovalAdmissionTest BEFORE PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/hal_transfer_stubs ${REPO_ROOT}/lib/Companion)
 target_link_libraries(HalCourseRemovalAdmissionTest PRIVATE crosspoint_test_common GTest::gtest_main OpenSSL::Crypto)
 gtest_discover_tests(HalCourseRemovalAdmissionTest)
+
+add_executable(CompanionCourseContextTest CompanionCourseContextTest.cpp ../../lib/Companion/CompanionRecords.cpp)
+target_compile_definitions(CompanionCourseContextTest PRIVATE COMPANION_FIXTURE_DIR="${REPO_ROOT}/protocol/fixtures/")
+target_link_libraries(CompanionCourseContextTest PRIVATE crosspoint_test_common GTest::gtest_main)
+gtest_discover_tests(CompanionCourseContextTest)

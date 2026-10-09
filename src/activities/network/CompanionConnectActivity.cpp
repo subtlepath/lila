@@ -26,6 +26,7 @@
 #include "SdCardFontSystem.h"
 #include "network/FirmwareFlasher.h"
 #if LILA_TINTA
+#include <HalCourseRemovalPreparation.h>
 #include <HalTintaJournalMergeCommitContext.h>
 #include <HalTintaMergedJournalReconciliation.h>
 #endif
@@ -355,7 +356,11 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
   if (request.generation != identity.storageGeneration) return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Unsupported);
   if (request.manifest.kind != companion::ContentKind::Epub && request.manifest.kind != companion::ContentKind::Font &&
-      request.manifest.kind != companion::ContentKind::Dictionary)
+      request.manifest.kind != companion::ContentKind::Dictionary
+#if LILA_TINTA
+      && request.manifest.kind != companion::ContentKind::Course
+#endif
+  )
     return companion::CONTENT_REMOVAL_REPLY_SIZE;
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::Busy);
   if (!removalPermitted()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
@@ -370,6 +375,10 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
     }
   }
   reply[0] = static_cast<uint8_t>(companion::ContentRemovalResult::IoError);
+#if LILA_TINTA
+  if (request.manifest.kind == companion::ContentKind::Course) return courseRemovalReply(owner, body, reply);
+  if (!releaseCourseRemovalOwner()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
+#endif
   if (request.manifest.kind == companion::ContentKind::Dictionary) return dictionaryRemovalReply(owner, body, reply);
   if (dictionaryRemovalOwner) {
     if (!dictionaryRemovalOwner->closeReaders()) {
@@ -468,6 +477,75 @@ size_t CompanionConnectActivity::dictionaryRemovalReply(const companion::Identit
     recoveryBlocked = true;
   return length;
 }
+
+#if LILA_TINTA
+bool CompanionConnectActivity::releaseCourseRemovalOwner() {
+  const bool closed = !courseRemovalOwner || courseRemovalOwner->closeReaders();
+  if (!closed) {
+    LOG_ERR("COMPANION", "Course removal readers could not close");
+    recoveryBlocked = true;
+  }
+  courseRemovalOwner.reset();
+  return closed;
+}
+
+size_t CompanionConnectActivity::courseRemovalReply(const companion::Identity& owner, std::span<const uint8_t> body,
+                                                    std::span<uint8_t> reply) {
+  if ((removalOwner && !removalOwner->closeReaders()) ||
+      (dictionaryRemovalOwner && !dictionaryRemovalOwner->closeReaders())) {
+    recoveryBlocked = true;
+    return companion::CONTENT_REMOVAL_REPLY_SIZE;
+  }
+  removalOwner.reset();
+  dictionaryRemovalOwner.reset();
+  if (!courseRemovalOwner) {
+    if (!companion::admitCompanionHeap(sizeof(companion::HalCourseRemovalNativeOwner),
+                                       sizeof(companion::HalCourseRemovalNativeOwner)))
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    // Retain decoder banks and handles off stack, reusing them for this connection.
+    courseRemovalOwner = makeUniqueNoThrow<companion::HalCourseRemovalNativeOwner>(
+        identity.storageGeneration,
+        [](void* opaque) { return static_cast<CompanionConnectActivity*>(opaque)->removalPermitted(); },
+        [](void* opaque) {
+          auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
+          if (!activity.courseRemovalOwner->closeReaders()) {
+            activity.recoveryBlocked = true;
+            return false;
+          }
+          return activity.refreshAfterRemoval();
+        },
+        this,
+        [](void* opaque, uint64_t& revision) {
+          auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
+          if (!activity.inventory || !activity.inventory->revision()) {
+            activity.inventory.reset();
+            if (!activity.inventoryStorage.close() || !activity.prepareInventory()) return false;
+          }
+          revision = activity.inventory->revision();
+          return true;
+        },
+        [](void* opaque, const companion::ContentManifest& manifest, std::span<uint8_t> io) {
+          auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
+          return companion::prepareBoundCourseRemovalState(
+              activity.transferStorage, manifest, io,
+              [](void* context) { return static_cast<CompanionConnectActivity*>(context)->removalPermitted(); },
+              opaque);
+        });
+    if (!courseRemovalOwner || !companion::admitCompanionHeap() || !courseRemovalOwner->prepare()) {
+      LOG_ERR("COMPANION", "Course removal owner allocation/heap admission failed");
+      courseRemovalOwner.reset();
+      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+    }
+  }
+  removalActive = true;
+  const auto length = courseRemovalOwner->handle(true, owner, body, reply);
+  removalActive = false;
+  if (length && (reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::IoError) ||
+                 reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::Corrupt)))
+    recoveryBlocked = true;
+  return length;
+}
+#endif
 
 bool CompanionConnectActivity::refreshAfterRemoval() {
   sdFontSystem.markRegistryDirty();
@@ -842,6 +920,9 @@ void CompanionConnectActivity::resetJournalExport() {
 }
 
 void CompanionConnectActivity::resetJournalSessions(bool preserveExport) {
+#if LILA_TINTA
+  releaseCourseRemovalOwner();
+#endif
   if (!preserveExport) exportTransaction = {};
   if (contentReader && !contentReader->resetSource(preserveExport)) {
     LOG_ERR("COMPANION", "Content export session close failed");

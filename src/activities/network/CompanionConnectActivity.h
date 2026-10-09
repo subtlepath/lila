@@ -11,6 +11,9 @@
 #include <HalCompanionWifiSession.h>
 #include <HalContentReadNativeOwner.h>
 #include <HalDictionaryRemovalNativeOwner.h>
+#if LILA_TINTA
+#include <HalCourseRemovalNativeOwner.h>
+#endif
 #include <HalEpubRemovalNativeOwner.h>
 #include <HalIdentityStorage.h>
 #include <HalInventoryIndexStorage.h>
@@ -69,6 +72,11 @@ class CompanionConnectActivity final : public Activity {
   bool prepareInventory();
   bool refreshAfterRemoval();
   bool removalPermitted() const;
+#if LILA_TINTA
+  size_t courseRemovalReply(const companion::Identity& owner, std::span<const uint8_t> request,
+                            std::span<uint8_t> reply);
+  bool releaseCourseRemovalOwner();
+#endif
   bool contentReadPermitted() const;
   size_t removalReply(bool authorized, const companion::Identity& owner, std::span<const uint8_t> request,
                       std::span<uint8_t> reply);
@@ -93,6 +101,9 @@ class CompanionConnectActivity final : public Activity {
   CompanionFontRemovalSettings fontRemovalSettings;
   CompanionDictionaryRemovalSettings dictionaryRemovalSettings;
   std::unique_ptr<companion::HalDictionaryRemovalNativeOwner> dictionaryRemovalOwner;
+#if LILA_TINTA
+  std::unique_ptr<companion::HalCourseRemovalNativeOwner> courseRemovalOwner;
+#endif
   std::unique_ptr<companion::HalEpubRemovalNativeOwner> removalOwner;
   std::unique_ptr<companion::HalContentReadNativeOwner> contentReader;
   bool removalActive = false;
