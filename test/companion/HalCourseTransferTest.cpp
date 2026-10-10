@@ -1132,6 +1132,7 @@ TEST_F(HalCourseTransferTest, CourseContextRequiresCompletedVerifiedRemovedSourc
   EXPECT_EQ(hal.files, corrupt);
 }
 TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcrossRemovalAndRetry) {
+  addIdentityHistory();
   auto& hal = inventory_hal_test::state;
   hal.files[ACTIVE_COURSE_PATH] = bytes;
   std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
@@ -1156,7 +1157,7 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcr
     HalTintaJournalMergeCommitContext baseline;
     ASSERT_TRUE(baseline.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
   }
-  uint32_t uid = 0;
+  uint32_t uid = 0, lessonUid = 0;
   {
     HalInventoryIndexStorage packStorage;
     ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
@@ -1166,6 +1167,11 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcr
     ASSERT_EQ(validateCourseCandidate(pack, source, scratch), CourseValidationResult::Ok);
     uid = pack.uidAt(0);
     ASSERT_NE(uid, 0u);
+    tinta::core::pack::Lesson lesson;
+    tinta::core::pack::Unit unit;
+    ASSERT_TRUE(pack.lesson(0, lesson));
+    ASSERT_TRUE(pack.unit(lesson.unit, unit));
+    lessonUid = (uint32_t(unit.number) << 16) | lesson.number;
     pack.close();
   }
   {
@@ -1188,6 +1194,14 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcr
     event.kind = body.kind;
     ASSERT_TRUE(journalStorage.digest(std::span(encoded).first(length), event.bodyHash));
     ASSERT_EQ(journal.append(event, std::span(encoded).first(length)), TintaJournalResult::Ok);
+    body.kind = EventKind::LessonComplete;
+    body.uid = lessonUid;
+    const auto completedLength = encodeTintaBody(body, encoded);
+    ASSERT_GT(completedLength, 0u);
+    event.identity.origin.fill(6);
+    event.kind = body.kind;
+    ASSERT_TRUE(journalStorage.digest(std::span(encoded).first(completedLength), event.bodyHash));
+    ASSERT_EQ(journal.append(event, std::span(encoded).first(completedLength)), TintaJournalResult::Ok);
   }
   {
     HalTintaJournalMergeCommitContext baseline;
@@ -1358,6 +1372,29 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcr
   HalTintaJournalMergeCommitContext retry;
   EXPECT_TRUE(retry.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
   EXPECT_EQ(hal.files, published);
+  tinta::core::pack::Header packHeader{};
+  std::memcpy(&packHeader, bytes.data(), sizeof(packHeader));
+  bool changedLesson = false;
+  for (uint16_t at = 0; at < packHeader.sectionCount; ++at) {
+    tinta::core::pack::DirEntry entry{};
+    std::memcpy(&entry, bytes.data() + packHeader.directoryOffset + at * sizeof(entry), sizeof(entry));
+    if (entry.tag != tinta::core::pack::makeTag("LESS")) continue;
+    const auto number = entry.offset + offsetof(tinta::core::pack::Lesson, number);
+    binary_record::putU16(bytes.data() + number, 32000);
+    changedLesson = true;
+  }
+  ASSERT_TRUE(changedLesson);
+  sealPack();
+  declaration.state.transaction[0] = 23;
+  Transfer incompatible(storage, scratch);
+  receive(incompatible);
+  ASSERT_FALSE(HasFatalFailure());
+  const auto installed = hal.files.at(ACTIVE_COURSE_PATH);
+  const auto canonical = hal.files.at(receiptPath.data());
+  EXPECT_NE(incompatible.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), installed);
+  EXPECT_EQ(hal.files.at(receiptPath.data()), canonical);
+  EXPECT_EQ(hal.files.at(TINTA_JOURNAL_EVENTS), journal);
 }
 TEST_F(HalCourseTransferTest, NativeRemovalPreparationValidatesPackBeforeIsolatingLegacyState) {
   auto& hal = inventory_hal_test::state;

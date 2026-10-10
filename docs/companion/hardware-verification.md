@@ -218,6 +218,12 @@ and retained history before and after each attempt.
 - [ ] Import the Spanish course pack, supported fonts, and StarDict bundles.
       Reject incompatible/corrupt packs and invalid archives. Preserve stable
       course item identities across updates.
+- [ ] Complete a lesson and a reading, then transfer a structurally valid update
+      that retains item identities but drops or renames those subjects. Confirm
+      refusal before active-pack replacement, unchanged canonical receipt and
+      journal bytes, and usable learning progress after reconnect/reboot. Repeat
+      with an update retaining all subjects; verify the new pack-bound receipt
+      and retained history. Record heap and stack watermarks on C3 and S3.
 - [ ] Interrupt multi-file dictionary/derived-state installation after every
       mutation; recovery yields one consistent version, not a mixture.
 - [ ] Test stable-release and manually imported firmware, wrong chip/board,

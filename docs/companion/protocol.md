@@ -880,6 +880,12 @@ still pending for the capability-enabled implementation.
 
 ## Bound-course context
 
+Before replacing a course pack, firmware validates the candidate catalog against
+the authoritative journal for that course. Stable item identities alone do not
+prove compatibility: recorded lesson and reading identities must also remain
+available. Corrupt authority, missing subjects, or failed catalog reads refuse
+installation before replacing the active pack or its learner receipt.
+
 After a compatible installed-pack update, canonical learner recovery verifies
 the current binding and pack hash, opens the receipt's previous pack from its
 verified archive, and checks language and item-identity continuity. It proves

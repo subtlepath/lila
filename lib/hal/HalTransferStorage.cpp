@@ -30,6 +30,7 @@
 #include "HalCoursePackHistoryValidator.h"
 #include "HalCourseValidation.h"
 #include "HalRemovedCourseBaseline.h"
+#include "HalTintaCandidateAuthority.h"
 #endif
 
 namespace companion {
@@ -473,6 +474,20 @@ bool HalTransferStorage::validateCourseContent(const char* candidate, const Cont
                                                std::span<uint8_t> workspace, const Identity* generation) {
   char candidateLocale[9];
   if (!validateCourse(candidate, manifest, workspace, candidateLocale)) return false;
+  bool hasAuthority = false;
+  for (const auto* path : {TINTA_JOURNAL_EVENTS, TINTA_JOURNAL_HEADER_A, TINTA_JOURNAL_HEADER_B}) {
+    uint64_t size = 0;
+    const auto status = stat(path, size);
+    if (status == FileStatus::Error) return failure("candidate history stat", path);
+    hasAuthority |= status == FileStatus::Present;
+  }
+  if (hasAuthority) {
+    if (!courseValidator || !admitCompanionHeap(sizeof(HalTintaCandidateAuthority), sizeof(HalTintaCandidateAuthority)))
+      return failure("candidate history heap admission", candidate);
+    auto authority = makeUniqueNoThrow<HalTintaCandidateAuthority>(*courseValidator);
+    if (!authority) return failure("OOM: candidate history catalog", candidate);
+    if (!authority->verify(candidate, manifest.logicalIdentity, workspace)) return false;
+  }
   bool hasLearnerState = false;
   static constexpr const char* LEARNER_FILES[] = {
       "/tinta/items.bin",    "/tinta/items.bin.tmp",   "/tinta/reviews.log", "/tinta/reviews.log.tmp",
