@@ -3861,3 +3861,15 @@ with no allocation. Verify with the HAL companion Tinta host suite. Original/
 installed pack binding, authoritative replay correspondence, retired-history
 handling and recoverable native publication remain unfinished; firmware runtime
 and migration capability advertisement are unchanged.
+
+Portable completed-reading mapping now bridges original native title keys through
+story identity to installed keys, preserving original identity when the installed
+reading is absent. Unknown original keys, ambiguity, invalid inputs and I/O errors
+remain distinct outcomes; no log or completion event is written. All 1,994 host
+tests pass, including identical-pack mapping and synthetic installed-story changes
+that exercise retirement and title-key ambiguity, plus invalid/unknown original
+keys. The C3 mapping frame is 32 bytes and all emitted frames are within 256
+(largest 80), with no allocation. Verify with the companion Tinta host suite.
+Native hash-bound pack composition, guarded sources, retired-reading policy,
+authoritative replay agreement and recoverable learner publication remain
+unfinished; runtime firmware is unchanged.

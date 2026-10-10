@@ -12,6 +12,7 @@
 #include "lib/Companion/CompanionTintaDayLog.h"
 #include "lib/Companion/CompanionTintaDerivedManifest.h"
 #include "lib/Companion/CompanionTintaLegacyLessonMapping.h"
+#include "lib/Companion/CompanionTintaLegacyReadingMapping.h"
 #include "lib/Companion/CompanionTintaLegacyStoryIdentity.h"
 #include "lib/Companion/CompanionTintaNativeMarkIdentity.h"
 #include "lib/Companion/CompanionTintaPackStoryIdentity.h"
@@ -633,4 +634,67 @@ TEST(TintaLegacyLessonMapping, MissingLessonsRemainExplicitAndFailuresPreserveOu
   original.fail = false;
   EXPECT_FALSE(mapTintaLegacyLessons(original, installed, 4, 1, scratch, result));
   EXPECT_EQ(result.currentLesson, 123);
+}
+
+TEST(TintaLegacyReadingMapping, RetainsOriginalIdentityAndDistinguishesMissingAndAmbiguousInstalledKeys) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  pk::Pack original;
+  ASSERT_EQ(original.open(bytes.data(), bytes.size()), pk::PackStatus::Ok);
+  uint32_t key = 0, identity = 0;
+  pk::Story selected;
+  uint32_t selectedIndex = 0;
+  bool found = false;
+  for (uint32_t index = 0; index < original.count(pk::Section::Stor); ++index) {
+    ASSERT_TRUE(original.story(index, selected));
+    ASSERT_TRUE(tintaLegacyStoryKey(original, selected, key));
+    if (resolveTintaLegacyStoryKey(original, key, identity) == LegacyStoryIdentityResult::Matched) {
+      selectedIndex = index;
+      found = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(found);
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    auto installedBytes = bytes;
+    pk::Header header;
+    std::memcpy(&header, installedBytes.data(), sizeof(header));
+    for (uint16_t index = 0; index < header.sectionCount; ++index) {
+      pk::DirEntry entry;
+      std::memcpy(&entry, installedBytes.data() + header.directoryOffset + index * sizeof(entry), sizeof(entry));
+      if (entry.tag != pk::makeTag("STOR") || !fault) continue;
+      const uint32_t target = fault == 1 ? selectedIndex : selectedIndex == 0 ? 1 : 0;
+      ASSERT_LT(target, entry.count);
+      pk::Story story;
+      auto* location = installedBytes.data() + entry.offset + target * sizeof(story);
+      std::memcpy(&story, location, sizeof(story));
+      if (fault == 1)
+        story.kind = static_cast<decltype(story.kind)>(1 - static_cast<uint8_t>(story.kind));
+      else
+        story.title = selected.title;
+      std::memcpy(location, &story, sizeof(story));
+    }
+    pk::Pack installed;
+    ASSERT_EQ(installed.open(installedBytes.data(), installedBytes.size()), pk::PackStatus::Ok);
+    TintaLegacyReadingMapping result{123, 456};
+    EXPECT_EQ(mapTintaLegacyReadingKey(original, installed, key, result),
+              fault == 0   ? LegacyReadingMappingResult::Mapped
+              : fault == 1 ? LegacyReadingMappingResult::InstalledMissing
+                           : LegacyReadingMappingResult::Ambiguous);
+    if (fault < 2) {
+      EXPECT_EQ(result.identity, identity);
+      EXPECT_EQ(result.installedKey, fault == 0 ? key : 0u);
+    } else {
+      EXPECT_EQ(result.identity, 123u);
+      EXPECT_EQ(result.installedKey, 456u);
+    }
+    result = {123, 456};
+    EXPECT_EQ(mapTintaLegacyReadingKey(original, installed, 0, result), LegacyReadingMappingResult::Invalid);
+    EXPECT_EQ(result.identity, 123u);
+    EXPECT_EQ(mapTintaLegacyReadingKey(original, installed, 123, result), LegacyReadingMappingResult::OriginalMissing);
+    EXPECT_EQ(result.identity, 123u);
+    EXPECT_EQ(result.installedKey, 456u);
+  }
 }

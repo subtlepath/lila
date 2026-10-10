@@ -1203,3 +1203,13 @@ boundary rather than remapping decoded defaults as a learner choice. Identity
 reads check permission and heap admission and yield every 32 reads. Failure
 preserves output and neither profile nor pack is changed. This adapter does not
 publish derived state or authorize retirement of missing completion history.
+
+Portable completed-reading mapping resolves the original native title key to its
+story identity, then resolves that identity to an unambiguous installed title
+key. Successful mapping retains both identity and installed key. A reading absent
+from the installed pack retains the confirmed original identity with no installed
+key, as retirement evidence requiring migration policy. An unknown original key
+is a distinct outcome; ambiguous keys, invalid inputs and I/O errors withhold
+output. The adapter neither writes mark logs nor invents completion events.
+Callers must bind validated immutable packs and bounded/yielding sources; changed
+story identities require explicit retained evidence rather than guessing by title.
