@@ -43,6 +43,7 @@
 #include "lib/Companion/CompanionLegacyTintaEventCursor.h"
 #include "lib/Companion/CompanionLegacyTintaJournal.h"
 #include "lib/Companion/CompanionLegacyTintaMutation.h"
+#include "lib/Companion/CompanionLegacyTintaReplay.h"
 #include "lib/Companion/CompanionTintaApplicationReceipt.h"
 #include "lib/Companion/CompanionTintaAuthorityCheckpoint.h"
 #include "lib/Companion/CompanionTintaItemReplay.h"
@@ -5262,4 +5263,156 @@ TEST(CompanionTintaJournal, LegacyConversionFailuresNeverConsumeReservedIdentiti
     EXPECT_EQ(conversion.event(0), nullptr);
     EXPECT_FALSE(conversion.complete());
   }
+}
+
+namespace {
+class LegacyCandidateStore final : public TintaReplayStore {
+ public:
+  std::map<uint32_t, tinta::core::ItemState> items;
+  std::map<uint16_t, TintaReplayDay> days;
+  unsigned calls = 0, failAt = 0;
+  bool failAfterWrite = false;
+  LegacyTintaReplay* cancel = nullptr;
+  bool step() {
+    ++calls;
+    if (cancel) cancel->close();
+    return calls != failAt;
+  }
+  bool item(uint32_t uid, tinta::core::ItemState& value) override {
+    if (!step()) return false;
+    value = items.contains(uid) ? items.at(uid) : tinta::core::ItemState::fresh(uid);
+    return true;
+  }
+  bool putItem(const tinta::core::ItemState& value) override {
+    const bool valid = step();
+    if (valid || failAfterWrite) items[value.uid] = value;
+    return valid;
+  }
+  bool day(uint16_t day, TintaReplayDay& value) override {
+    if (!step()) return false;
+    value = days.contains(day) ? days.at(day) : TintaReplayDay{};
+    return true;
+  }
+  bool putDay(uint16_t day, const TintaReplayDay& value) override {
+    const bool valid = step();
+    if (valid || failAfterWrite) days[day] = value;
+    return valid;
+  }
+  bool completion(EventKind, uint32_t, bool) override { return false; }
+};
+}  // namespace
+TEST(CompanionTintaJournal, LegacyReplayMatchesNativeProgressAndRestoresUndoneDayTotals) {
+  Fixture fixture;
+  auto reservation = journalEpochReservation(fixture);
+  reservation.records = 6;
+  reservation.events = 7;
+  tinta_test::MemStore nativeFiles;
+  auto catalog = tinta_test::FakeCatalog::vocab(1, 1, 1);
+  tinta::core::Fsrs scheduler(0.87f, 730);
+  tinta::core::ProgressStore native(nativeFiles, catalog, scheduler);
+  std::array<uint16_t, 2> slots{};
+  ASSERT_NE(native.open(slots.data(), slots.size(), nullptr, 0), tinta::core::ProgressStore::OpenResult::Failed);
+  LegacyCandidateStore candidate;
+  LegacyTintaReplay replay(candidate, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(replay.begin(reservation, {8700, 730}));
+  LegacyTintaJournalDecoder decoder;
+  for (uint32_t index = 0; index < 6; ++index) {
+    const uint32_t itemIndex = index == 1 || index == 2 ? 1 : 0;
+    tinta::core::ItemState expectedPrior;
+    ASSERT_TRUE(native.load(itemIndex, expectedPrior));
+    using Status = tinta::core::ProgressStore::Status;
+    if (index == 0 || index == 1 || index == 4) {
+      const auto day = index == 0 ? 5 : index == 1 ? 9 : 12;
+      const auto grade = index == 1 ? tinta::core::Grade::Again : tinta::core::Grade::Good;
+      ASSERT_EQ(native.review(itemIndex, grade, 0, 1000, day, 1234).status, Status::Stored);
+    } else if (index == 2 || index == 5) {
+      ASSERT_EQ(native.undo(index == 2 ? 10 : 13, 1235), Status::Stored);
+    } else {
+      ASSERT_EQ(native.setFlags(0, tinta::core::item_flag::kSuspended | tinta::core::item_flag::kStarred, 11, 1236),
+                Status::Stored);
+    }
+    const auto& bytes = nativeFiles.files["reviews.log"];
+    LegacyTintaEntry entry;
+    ASSERT_EQ(decoder.next(std::span(bytes).subspan(index * 12, 12), entry), LegacyTintaDecodeResult::Record);
+    tinta::core::ItemState prior;
+    ASSERT_TRUE(replay.apply(reservation, index, entry, prior));
+    EXPECT_EQ(prior, expectedPrior);
+    for (uint32_t at = 0; at < 2; ++at) {
+      tinta::core::ItemState expected, actual;
+      ASSERT_TRUE(native.load(at, expected));
+      ASSERT_TRUE(candidate.item(at + 1, actual));
+      EXPECT_EQ(actual, expected);
+    }
+  }
+  EXPECT_TRUE(replay.complete(reservation));
+  EXPECT_EQ(candidate.days.at(5).newItems, 1u);
+  EXPECT_EQ(candidate.days.at(5).gradedReviews, 1u);
+  EXPECT_EQ(candidate.days.at(5).responseMilliseconds, 1000u);
+  EXPECT_EQ(candidate.days.at(9).gradedReviews, 0u);
+  EXPECT_EQ(candidate.days.at(9).responseMilliseconds, 0u);
+  EXPECT_EQ(candidate.days.at(12).gradedReviews, 0u);
+  EXPECT_EQ(candidate.days.at(12).reviews, 0u);
+  auto foreign = reservation;
+  ++foreign.epoch;
+  EXPECT_FALSE(replay.complete(foreign));
+  EXPECT_TRUE(replay.complete(reservation));
+}
+TEST(CompanionTintaJournal, LegacyReplayStoreFailuresPoisonCandidateAndPreservePriorOutput) {
+  for (const auto operation : {LegacyTintaOperation::Review, LegacyTintaOperation::Undo, LegacyTintaOperation::Flags}) {
+    const unsigned operations = operation == LegacyTintaOperation::Review ? 4
+                                : operation == LegacyTintaOperation::Undo ? 3
+                                                                          : 2;
+    for (unsigned failAt = 1; failAt <= operations; ++failAt) {
+      for (const bool failAfter : {false, true}) {
+        Fixture fixture;
+        auto reservation = journalEpochReservation(fixture);
+        reservation.records = 2;
+        reservation.events = 3;
+        LegacyCandidateStore candidate;
+        LegacyTintaReplay replay(candidate, [](void*) { return true; }, nullptr);
+        ASSERT_TRUE(replay.begin(reservation, {}));
+        LegacyTintaEntry entry;
+        entry.uid = 1;
+        entry.grade = 3;
+        entry.studyDay = 5;
+        tinta::core::ItemState prior;
+        if (operation == LegacyTintaOperation::Undo) {
+          ASSERT_TRUE(replay.apply(reservation, 0, entry, prior));
+        }
+        entry.operation = operation;
+        entry.flags = tinta::core::item_flag::kStarred;
+        entry.undoRecord = 0;
+        candidate.calls = 0;
+        candidate.failAt = failAt;
+        candidate.failAfterWrite = failAfter;
+        prior = tinta::core::ItemState::fresh(123);
+        const auto sentinel = prior;
+        const uint32_t index = operation == LegacyTintaOperation::Undo ? 1 : 0;
+        EXPECT_FALSE(replay.apply(reservation, index, entry, prior));
+        EXPECT_EQ(prior, sentinel);
+        candidate.failAt = 0;
+        EXPECT_FALSE(replay.apply(reservation, index, entry, prior));
+        EXPECT_EQ(prior, sentinel);
+        EXPECT_FALSE(replay.complete(reservation));
+      }
+    }
+  }
+
+  Fixture fixture;
+  const auto reservation = journalEpochReservation(fixture);
+  LegacyCandidateStore candidate;
+  LegacyTintaReplay replay(candidate, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(replay.begin(reservation, {}));
+  candidate.cancel = &replay;
+  LegacyTintaEntry entry;
+  entry.uid = 1;
+  entry.grade = 3;
+  auto prior = tinta::core::ItemState::fresh(123);
+  const auto sentinel = prior;
+  EXPECT_FALSE(replay.apply(reservation, 0, entry, prior));
+  EXPECT_EQ(prior, sentinel);
+  EXPECT_TRUE(candidate.items.empty());
+  candidate.cancel = nullptr;
+  EXPECT_FALSE(replay.apply(reservation, 0, entry, prior));
+  EXPECT_EQ(prior, sentinel);
 }

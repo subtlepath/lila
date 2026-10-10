@@ -4134,3 +4134,20 @@ The owner reuses its event/body members and the single session workspace without
 internal allocation. This composition does not establish snapshot replay
 agreement, authorize an epoch, write a journal or enable a runtime migration
 command. Those remain required before learner-state publication.
+
+Legacy replay now reconstructs prior item states in an initially empty disposable
+`TintaReplayStore`, using the same portable FSRS item rules as authoritative
+replay. Immediate undo restores the exact pre-review item and that review day's
+previous derived totals, including quantized response time; undo on another day
+does not shift those totals. Flag records preserve representable suspension/star
+state and reject unsupported leech changes. Exact reserved identities enforce
+record order and undo targets. No partial write can expose prior-state output or
+permit continuing the candidate: any failure requires an empty-store rebuild.
+
+The Native frozen conversion fixture now uses this provider with a HAL-backed
+baseline-proof store, closes it and removes only its disposable working file.
+Independent host comparisons match native `ProgressStore` item state after
+reviews, undo and flags. The reusable owner adds no internal heap allocation.
+Candidate reconstruction and complete frozen conversion still require comparison
+with the frozen committed item snapshot and other learner evidence before any
+journal/learner publication; diagnostic day logs remain separate.

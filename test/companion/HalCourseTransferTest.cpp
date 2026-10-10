@@ -40,6 +40,7 @@
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
 #include "lib/Companion/CompanionLegacyTintaEventCursor.h"
+#include "lib/Companion/CompanionLegacyTintaReplay.h"
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportBegin.h"
@@ -9618,6 +9619,53 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
         EXPECT_TRUE(conversion->closeReaders());
         EXPECT_EQ(hal.files, conversionFiles);
+        if (fault == 9) {
+          auto working = makeUniqueNoThrow<HalTintaReplayStore>(TintaReplayStoreTarget::BaselineProof);
+          ASSERT_TRUE(working);
+          ASSERT_TRUE(working->begin(intent.request.original.manifest.logicalIdentity));
+          auto replay = makeUniqueNoThrow<LegacyTintaReplay>(*working, [](void*) { return true; }, nullptr);
+          ASSERT_TRUE(replay);
+          const auto* frozen = migration->report(intent);
+          ASSERT_NE(frozen, nullptr);
+          TintaSchedulerConfiguration configuration;
+          configuration.retentionBasisPoints = frozen->learner.profile.profile.retentionPermille * 10u;
+          configuration.maximumInterval = frozen->learner.profile.profile.maxInterval;
+          ASSERT_TRUE(replay->begin(reviewReservation, configuration));
+          struct ReplayContext {
+            LegacyTintaReplay* replay;
+            const UnboundCourseReviewReservation* reservation;
+          } replayContext{replay.get(), &reviewReservation};
+          ASSERT_TRUE(conversion->open(
+              reviewReservation,
+              [](void* raw, const UnboundCourseReviewEntry& entry, tinta::core::ItemState& before) {
+                auto& state = *static_cast<ReplayContext*>(raw);
+                return state.replay->apply(*state.reservation, entry.index, entry.entry, before);
+              },
+              &replayContext));
+          for (unsigned index = 0; index < 3; ++index) {
+            ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+            ASSERT_NE(conversion->event(reviewReservation, 0), nullptr);
+          }
+          EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::End);
+          EXPECT_TRUE(conversion->completed(reviewReservation));
+          EXPECT_TRUE(replay->complete(reviewReservation));
+          tinta::core::ItemState state;
+          ASSERT_TRUE(working->item(reviewUid, state));
+          auto expected = tinta::core::ItemState::fresh(reviewUid);
+          expected.flags = tinta::core::item_flag::kSuspended;
+          EXPECT_EQ(state, expected);
+          TintaReplayDay day;
+          ASSERT_TRUE(working->day(0, day));
+          EXPECT_EQ(day.gradedReviews, 0u);
+          EXPECT_EQ(day.responseMilliseconds, 0u);
+          EXPECT_TRUE(conversion->closeReaders());
+          EXPECT_TRUE(working->close());
+          std::array<char, COURSE_STATE_PATH_SIZE> temporary{};
+          ASSERT_TRUE(baselineReplayFilePath(intent.request.original.manifest.logicalIdentity,
+                                             BaselineReplayFile::Working, temporary));
+          EXPECT_TRUE(Storage.remove(temporary.data()));
+          EXPECT_EQ(hal.files, conversionFiles);
+        }
 
         EXPECT_FALSE(parser->isOpen());
         EXPECT_FALSE(installedParser->isOpen());
