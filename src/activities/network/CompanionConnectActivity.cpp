@@ -364,9 +364,11 @@ size_t CompanionConnectActivity::courseBaselineReviewReply(bool authorized, uint
   };
   if (!baselineReviewStore) {
     constexpr size_t PEAK =
-        sizeof(companion::HalCourseBaselineReviewStore) + sizeof(companion::HalCourseBaselineReviewCapture);
-    if (!companion::admitCompanionHeap(PEAK, std::max(sizeof(companion::HalCourseBaselineReviewStore),
-                                                      sizeof(companion::HalCourseBaselineReviewCapture))))
+        sizeof(companion::HalCourseBaselineReviewStore) +
+        std::max(sizeof(companion::HalCourseBaselineReviewCapture), sizeof(companion::HalCourseBaselineReviewBackup));
+    if (!companion::admitCompanionHeap(PEAK, std::max({sizeof(companion::HalCourseBaselineReviewStore),
+                                                       sizeof(companion::HalCourseBaselineReviewCapture),
+                                                       sizeof(companion::HalCourseBaselineReviewBackup)})))
       return 1;
     baselineReviewStore = makeUniqueNoThrow<companion::HalCourseBaselineReviewStore>(
         std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE)

@@ -12,6 +12,7 @@
 #include "lib/Companion/CompanionCourseBaselinePublicationStore.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
 #include "lib/Companion/CompanionCourseBaselineReviewPage.h"
+#include "lib/Companion/CompanionUnboundCourseMigrationRequest.h"
 
 using namespace companion;
 namespace {
@@ -562,6 +563,48 @@ TEST(CompanionCourseBaselineImport, RefusesReentryAndInsufficientScratchBeforeMu
   const auto mutations = f.storage.mutations;
   EXPECT_EQ(shortOwner.persist(f.request), CourseBaselineConsentResult::Invalid);
   EXPECT_EQ(f.storage.mutations, mutations);
+}
+
+TEST(UnboundCourseMigrationRequest, SharedConsentBindsReviewAndTransferWithoutBecomingArchiveConsent) {
+  const std::string path = COURSE_BASELINE_IMPORT_FIXTURE;
+  const auto directory = path.substr(0, path.find_last_of('/') + 1);
+  std::ifstream input(directory + "UnboundCourseMigrationRequest-v1.fixture", std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+  UnboundCourseMigrationRequest request;
+  ASSERT_TRUE(decodeUnboundCourseMigrationRequest(bytes, request));
+  std::array<uint8_t, UNBOUND_COURSE_MIGRATION_REQUEST_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseMigrationRequest(request, encoded));
+  EXPECT_TRUE(std::equal(encoded.begin(), encoded.end(), bytes.begin()));
+  CourseBaselineImportRequest archive;
+  EXPECT_FALSE(decodeCourseBaselineImportRequest(bytes, archive));
+  std::ifstream roster(directory + "CourseBaselineReview-unbound-v2.fixture", std::ios::binary);
+  const std::vector<uint8_t> review{std::istreambuf_iterator<char>(roster), std::istreambuf_iterator<char>()};
+  Identity reader{}; reader.fill(1);
+  TransferDeclaration transfer;
+  transfer.manifest = request.original.manifest;
+  transfer.state.transaction = request.original.transaction;
+  transfer.state.owner = request.original.owner;
+  transfer.state.storageGeneration = request.original.generation;
+  transfer.state.contentHash = request.original.manifest.contentHash;
+  transfer.state.length = request.original.manifest.length;
+  ASSERT_TRUE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, reader,
+                                                   request.original.generation, request.original.owner, transfer));
+  auto foreign = reader; foreign[0] ^= 1;
+  EXPECT_FALSE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, foreign,
+                                                    request.original.generation, request.original.owner, transfer));
+  auto changed = transfer; changed.state.transaction[0] ^= 1;
+  EXPECT_FALSE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, reader,
+                                                    request.original.generation, request.original.owner, changed));
+  std::ifstream isolated(directory + "CourseBaselineReview-v1.fixture", std::ios::binary);
+  const std::vector<uint8_t> wrongScope{std::istreambuf_iterator<char>(isolated), std::istreambuf_iterator<char>()};
+  EXPECT_FALSE(matchesUnboundCourseMigrationRequest(request, wrongScope, request.original.reviewHash, reader,
+                                                    request.original.generation, request.original.owner, transfer));
+  for (size_t size = 0; size < bytes.size(); ++size)
+    EXPECT_FALSE(decodeUnboundCourseMigrationRequest(std::span(bytes).first(size), request));
+  for (size_t index = 0; index < bytes.size(); ++index) {
+    auto corrupt = bytes; corrupt[index] ^= 1;
+    EXPECT_FALSE(decodeUnboundCourseMigrationRequest(corrupt, request));
+  }
 }
 
 TEST(CompanionCourseBaselineReview, SharedUnboundFixtureRequiresExplicitReadOnlyDecode) {

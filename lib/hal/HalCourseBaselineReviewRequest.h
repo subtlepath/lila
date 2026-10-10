@@ -2,6 +2,7 @@
 
 #include <Memory.h>
 
+#include "HalCourseBaselineReviewBackup.h"
 #include "HalCourseBaselineReviewCapture.h"
 #include "HalCourseBaselineReviewPage.h"
 
@@ -36,6 +37,7 @@ inline size_t handleHalCourseBaselineReviewRequest(HalCourseBaselineReviewStore&
     return 0;
   }
   size_t captured = 0;
+  bool unbound = false;
   if (!course_review_detail::nonzero(hash)) {
     if (!admitCompanionHeap(sizeof(HalCourseBaselineReviewCapture), sizeof(HalCourseBaselineReviewCapture))) return 0;
     auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, permitted, context);
@@ -55,6 +57,7 @@ inline size_t handleHalCourseBaselineReviewRequest(HalCourseBaselineReviewStore&
     }
     hash = *verified;
     captured = bytes.size();
+    unbound = bytes[6] == 1;
     if (!capture->closeReaders() || !permitted(context) || !admitCompanionHeap()) {
       LOG_ERR("COMPANION", "Baseline review capture close or permission refused");
       return 0;
@@ -67,6 +70,20 @@ inline size_t handleHalCourseBaselineReviewRequest(HalCourseBaselineReviewStore&
   if (captured && store.publish(scratch.first(captured), hash) != CourseBaselineReviewStoreResult::Ok) {
     LOG_ERR("COMPANION", "Baseline review sealing refused");
     return 0;
+  }
+  if (unbound) {
+    if (!store.closeReaders() ||
+        !admitCompanionHeap(sizeof(HalCourseBaselineReviewBackup), sizeof(HalCourseBaselineReviewBackup))) {
+      LOG_ERR("COMPANION", "Legacy review backup admission refused");
+      return 0;
+    }
+    // Fixed paths, hashes and file handles exceed the stack budget; reuse the session workspace.
+    auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, permitted, context);
+    if (!backups || !backups->preserveUnbound(hash, nativeReader, selected.generation, selected.course) ||
+        !backups->unboundComplete() || !backups->closeReaders()) {
+      LOG_ERR("COMPANION", "Legacy review backup preservation refused");
+      return 0;
+    }
   }
   return readHalCourseBaselineReviewPage(store, permitted, context, hash, nativeReader, selected.generation,
                                          selected.course, selected.offset, selected.limit, scratch, response);

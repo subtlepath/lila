@@ -230,6 +230,27 @@ class HalCourseTransferTest : public testing::Test {
     hash = *capture->hash();
     encoded.assign(capture->bytes().begin(), capture->bytes().end());
   }
+  std::string prepareUnboundBackupReview(Digest& hash, Identity& reader) {
+    auto& hal = inventory_hal_test::state;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files["/tinta/ITEMS.BIN"] = std::vector<uint8_t>(12000, 17);
+    hal.files["/tinta/usage.bin"] = {23};
+    reader[0] = 51;
+    auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+    if (!capture ||
+        capture->capture(reader, generation, declaration.manifest.logicalIdentity) != CourseBaselineReviewResult::Ok)
+      return {};
+    hash = *capture->hash();
+    const std::vector<uint8_t> encoded(capture->bytes().begin(), capture->bytes().end());
+    capture.reset();
+    auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+        std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+    if (!store || store->publish(encoded, hash) != CourseBaselineReviewStoreResult::Ok) return {};
+    std::string prefix = store->path();
+    prefix.replace(prefix.find("course-review-"), strlen("course-review-"), "course-review-state-");
+    return prefix;
+  }
   void prepareBaselineApproval(CourseBaselineImportRequest& request, Identity& reader, std::string& consentPath,
                                std::span<const uint8_t> learnerItems = {}) {
     std::vector<uint8_t> encoded;
@@ -5217,6 +5238,115 @@ TEST_F(HalCourseTransferTest, ReviewedBaselineBackupsPreserveEveryPresentFileAnd
   ASSERT_TRUE(backups->preserve(hash, reader, generation, declaration.manifest.logicalIdentity));
   EXPECT_TRUE(backups->closeReaders());
   EXPECT_FALSE(backups->complete());
+}
+
+TEST_F(HalCourseTransferTest, UnboundBackupsPreserveGlobalSpellingAndDiagnosticsWithoutOfferingIsolationLoan) {
+  Digest hash{};
+  Identity reader{};
+  const auto prefix = prepareUnboundBackupReview(hash, reader);
+  ASSERT_FALSE(prefix.empty());
+  auto& hal = inventory_hal_test::state;
+  const auto originals = hal.files;
+  bool allowed = true;
+  auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(
+      scratch, [](void* p) { return *static_cast<bool*>(p); }, &allowed);
+  ASSERT_TRUE(backups);
+  EXPECT_FALSE(backups->preserve(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_FALSE(backups->verifyCurrent(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_EQ(hal.files, originals);
+  ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_TRUE(backups->unboundComplete());
+  EXPECT_FALSE(backups->complete());
+  EXPECT_EQ(hal.files.at(prefix + "-00"), originals.at("/tinta/ITEMS.BIN"));
+  EXPECT_EQ(hal.files.at(prefix + "-01"), originals.at("/tinta/usage.bin"));
+  for (const auto& [path, data] : originals) EXPECT_EQ(hal.files.at(path), data);
+  const auto preserved = hal.files;
+  const auto renames = hal.renames;
+  ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_EQ(hal.files, preserved);
+  EXPECT_EQ(hal.renames, renames);
+  allowed = false;
+  EXPECT_FALSE(backups->unboundComplete());
+  allowed = true;
+  EXPECT_FALSE(backups->unboundComplete());
+  ASSERT_TRUE(backups->verifyStoredUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_FALSE(backups->unboundComplete());
+  EXPECT_FALSE(backups->verifyStored(hash, reader, generation, declaration.manifest.logicalIdentity));
+  hal.files.erase("/tinta/ITEMS.BIN");
+  ASSERT_TRUE(backups->verifyStoredUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_FALSE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_EQ(hal.files.at(prefix + "-00"), originals.at("/tinta/ITEMS.BIN"));
+}
+
+TEST_F(HalCourseTransferTest, UnboundBackupsResumeOwnedPartialCopiesAndRefuseConflictingEvidence) {
+  Digest hash{};
+  Identity reader{};
+  const auto prefix = prepareUnboundBackupReview(hash, reader);
+  ASSERT_FALSE(prefix.empty());
+  auto& hal = inventory_hal_test::state;
+  const auto baseline = hal;
+  const auto destination = prefix + "-00";
+  auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(backups);
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    hal = baseline;
+    if (fault == 0) {
+      hal.failWritePath = destination + ".tmp";
+      hal.failMatchingWrite = 2;
+    }
+    if (fault == 1) hal.failSyncPath = destination + ".tmp";
+    if (fault == 2) hal.failClosePath = destination + ".tmp";
+    if (fault == 3) hal.failRename = hal.renames + 1;
+    if (fault == 4) hal.failRenameAfter = hal.renames + 1;
+    EXPECT_FALSE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+    EXPECT_FALSE(backups->unboundComplete());
+    for (const auto& [path, data] : baseline.files) EXPECT_EQ(hal.files.at(path), data);
+    hal.failWritePath.clear();
+    hal.failSyncPath.clear();
+    hal.failClosePath.clear();
+    hal.failRename = hal.failRenameAfter = 0;
+    ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+    EXPECT_EQ(hal.files.at(destination), baseline.files.at("/tinta/ITEMS.BIN"));
+    EXPECT_FALSE(hal.files.contains(destination + ".tmp"));
+  }
+  hal.files[destination][0] ^= 1;
+  const auto conflicting = hal.files;
+  EXPECT_FALSE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_FALSE(backups->verifyStoredUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+  EXPECT_EQ(hal.files, conflicting);
+}
+
+TEST_F(HalCourseTransferTest, NativeUnboundReviewReturnsPagesOnlyAfterBackupRecovery) {
+  Digest hash{};
+  Identity reader{};
+  const auto prefix = prepareUnboundBackupReview(hash, reader);
+  ASSERT_FALSE(prefix.empty());
+  auto& hal = inventory_hal_test::state;
+  const auto originals = hal.files;
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(store);
+  CourseBaselineReviewPageRequest request;
+  request.generation = generation;
+  request.course = declaration.manifest.logicalIdentity;
+  auto response = std::span(scratch).last(MAX_CONTROL_PAYLOAD);
+  hal.failWritePath = prefix + "-00.tmp";
+  hal.failMatchingWrite = 1;
+  hal.matchingWrites = 0;
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(
+                *store, reader, generation, request, [](void*) { return true; }, nullptr, scratch, response),
+            0u);
+  for (const auto& [path, data] : originals) EXPECT_EQ(hal.files.at(path), data);
+  hal.failWritePath.clear();
+  const auto size = handleHalCourseBaselineReviewRequest(
+      *store, reader, generation, request, [](void*) { return true; }, nullptr, scratch, response);
+  ASSERT_GT(size, 0u);
+  CourseBaselineReviewPageView page;
+  ASSERT_TRUE(decodeCourseBaselineReviewPage(response.first(size), page));
+  EXPECT_EQ(page.hash, hash);
+  EXPECT_EQ(hal.files.at(prefix + "-00"), originals.at("/tinta/ITEMS.BIN"));
+  EXPECT_EQ(hal.files.at(prefix + "-01"), originals.at("/tinta/usage.bin"));
+  for (const auto& [path, data] : originals) EXPECT_EQ(hal.files.at(path), data);
 }
 
 TEST_F(HalCourseTransferTest, ReviewedBaselineBackupsRecoverWriteSyncCloseAndRenameBoundaries) {

@@ -1023,7 +1023,26 @@ The existing paged review command carries either format without changing `TCBQ`
 or `TCBP`. Native import consumers require the isolated format; Swift consent
 matching and queueing also refuse unbound reviews.
 
+A fresh unbound capture preserves verified file copies under the review hash
+before returning its first page. Copies use owned staging files and can resume
+after interruption; sources remain unchanged. Diagnostic usage files are
+preserved as evidence and are not merged. Explicit unbound backup verification
+is separate from the isolated backup loan used by archive import. Retrieving a
+previously sealed roster by hash alone does not attest backup completeness or
+authorize migration; migration must verify the saved copies and current cohort.
+
 Firmware advertisement of bit 17 remains pending. Initial unbound `/tinta`
 migration still needs consent-driven backups and recoverable isolation before
 archive installation can consume that review. Discovery must not infer archive
 installation support from review capability bit 16 alone.
+
+The separate, currently unwired migration-consent record is `TCUM`, 155 bytes:
+magic at 0, version 1 at 4, explicit approval 1 at 5, reserved zeros at 6–7,
+card generation at 8, Apple installation at 24, transaction at 40, original-pack
+manifest at 56, frozen review SHA-256 at 119, and CRC32 at 151. Its matcher
+requires an unbound review and binds the authenticated reader, generation,
+installation, transaction and proposed course identity. It cannot replace
+`TCBI` archive consent. The caller must hash immutable review bytes and verify
+native identities; pack validation, backup verification, durable authorization
+and recoverable namespace migration remain separate obligations. No command or
+capability currently exposes this record as an executable migration request.

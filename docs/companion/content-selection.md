@@ -3539,3 +3539,50 @@ an archive, and a lost commit acknowledgement recovers by status alone after
 library deletion. All 554 portable Swift tests pass after the final code edits
 (14.927 seconds). SwiftUI source parsing and diff checks pass. Apple SDK builds,
 physical acceptance and consent-driven unbound isolation remain unfinished.
+
+
+Fresh unbound review capture now preserves the reviewed global files before
+returning the first page. `HalCourseBaselineReviewBackup` has explicit unbound
+preservation and stored-verification entry points; ordinary preservation,
+stored verification and live comparison remain isolated-only. Learner paths use
+`/tinta` only for the explicit unbound operation. Copies remain bound to the full
+review hash, reader/card identities and proposed course, and source spelling is
+resolved through HAL enumeration. Diagnostic usage files are copied as evidence,
+not imported into merged learner state. Unbound completion cannot offer the
+isolated loan consumed by existing archive authorization.
+
+The native request releases the capture owner, seals its roster, then admits a
+checked temporary backup owner using the same 8 KiB workspace. Measured C3 owner
+payloads are store 1,568 bytes, capture 2,360 and backup 6,144. The retained-store
+plus largest transient-owner peak is 7,712 bytes; allocator and HAL handle costs
+are additional and runtime heap guards remain in effect. No second session
+buffer is allocated. C3 stack probes pass enabled and disabled configurations:
+backup preservation 176 bytes, request handler 176, enabled reply 224, disabled
+reply 32, with no frame above 256 bytes.
+
+All 1,963 host tests pass after the final edits (11.84 seconds). New coverage
+proves retained global spelling and usage bytes, repeat preservation without
+new publication, absence of an isolated loan, stored evidence after source loss,
+write/sync/close/rename interruption recovery, refusal of conflicting copies,
+and native first-page refusal until a failed copy is recovered. The first failure
+injection test omitted the matching-write ordinal; it was corrected before the
+final checked build/test run. Existing import admission still refuses unbound
+reviews without consent or learner-state changes.
+
+The final firmware batch completed for default, sticky, x4pro, x4c and papermono.
+All 32 production fingerprints still match, and all five retained images pass
+independent release validation. Default is 6,492,272 bytes (61,328 bytes OTA
+headroom); x4pro is 6,523,488 bytes (30,112 bytes headroom). Physical acceptance,
+consent-driven isolation/binding and initial legacy merge remain unfinished.
+Reading an older frozen roster by hash does not assert that its backups exist;
+future migration must verify both copies and the live cohort.
+
+A separate `TCUM` migration-consent codec now exists in C++ and Swift, with a
+shared 155-byte fixture. Matching binds the unbound review, authenticated reader,
+card generation, Apple installation, transaction and proposed original-pack
+course. Archive consent cannot be substituted for migration consent. This is
+an unwired protocol prerequisite: no mutation command, advertised capability,
+namespace assignment or migration action is enabled. The final portable runs
+pass all 1,964 host tests (12.66 seconds) and 556 Swift tests (17.806 seconds),
+including cross-purpose rejection, truncation and corruption checks. Apple SDK
+builds and physical verification remain outstanding.

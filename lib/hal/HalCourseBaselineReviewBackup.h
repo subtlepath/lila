@@ -19,7 +19,27 @@ class HalCourseBaselineReviewBackup final {
   ~HalCourseBaselineReviewBackup() { closeReaders(); }
   HalCourseBaselineReviewBackup(const HalCourseBaselineReviewBackup&) = delete;
   HalCourseBaselineReviewBackup& operator=(const HalCourseBaselineReviewBackup&) = delete;
-  bool preserve(const Digest& reviewHash, const Identity& reader, const Identity& generation, const Identity& course) {
+  bool preserve(const Digest& hash, const Identity& reader, const Identity& generation, const Identity& course) {
+    return preserveScope(hash, reader, generation, course, false);
+  }
+  bool preserveUnbound(const Digest& hash, const Identity& reader, const Identity& generation, const Identity& course) {
+    return preserveScope(hash, reader, generation, course, true);
+  }
+  bool verifyStored(const Digest& hash, const Identity& reader, const Identity& generation, const Identity& course) {
+    return verifyStoredScope(hash, reader, generation, course, false);
+  }
+  bool verifyStoredUnbound(const Digest& hash, const Identity& reader, const Identity& generation,
+                           const Identity& course) {
+    return verifyStoredScope(hash, reader, generation, course, true);
+  }
+  bool verifyCurrent(const Digest& hash, const Identity& reader, const Identity& generation, const Identity& course,
+                     HalCoursePackArchive* archive = nullptr) {
+    return verifyCurrentScope(hash, reader, generation, course, archive);
+  }
+
+ private:
+  bool preserveScope(const Digest& reviewHash, const Identity& reader, const Identity& generation,
+                     const Identity& course, bool legacy) {
     if (operating) return failure("reentry");
     ready = false;
     if (scratch.size() < COURSE_BASELINE_REVIEW_MAX_SIZE + 512 ||
@@ -30,13 +50,14 @@ class HalCourseBaselineReviewBackup final {
     selectedReader = reader;
     selectedGeneration = generation;
     selectedCourse = course;
+    unbound = legacy;
     if (!closeReaders() || !guard() ||
         store.open(selectedHash, selectedReader, selectedGeneration, selectedCourse,
                    scratch.first(COURSE_BASELINE_REVIEW_MAX_SIZE)) != CourseBaselineReviewStoreResult::Ok ||
         !currentReview())
       return finish(false);
     CourseBaselineReviewView view;
-    if (!view.decode(capture.bytes())) return finish(false);
+    if (!view.decode(capture.bytes(), unbound) || view.isolated() == unbound) return finish(false);
     for (size_t index = 0; index < view.count(); ++index) {
       const auto entry = view.entry(index);
       paths(index);
@@ -62,8 +83,8 @@ class HalCourseBaselineReviewBackup final {
     return finish(currentReview());
   }
   // Historical evidence only: no live-state validation or current-state loan.
-  bool verifyStored(const Digest& reviewHash, const Identity& reader, const Identity& generation,
-                    const Identity& course) {
+  bool verifyStoredScope(const Digest& reviewHash, const Identity& reader, const Identity& generation,
+                         const Identity& course, bool legacy) {
     if (operating) return failure("reentry");
     ready = false;
     if (scratch.size() < COURSE_BASELINE_REVIEW_MAX_SIZE + 512 ||
@@ -74,6 +95,7 @@ class HalCourseBaselineReviewBackup final {
     selectedReader = reader;
     selectedGeneration = generation;
     selectedCourse = course;
+    unbound = legacy;
     if (!closeReaders() || !guard() ||
         store.open(selectedHash, selectedReader, selectedGeneration, selectedCourse,
                    scratch.first(COURSE_BASELINE_REVIEW_MAX_SIZE)) != CourseBaselineReviewStoreResult::Ok)
@@ -81,7 +103,8 @@ class HalCourseBaselineReviewBackup final {
     const auto count = course_review_detail::number(scratch, 56, 2);
     CourseBaselineReviewView view;
     if (count > COURSE_BASELINE_REVIEW_MAX_FILES ||
-        !view.decode(scratch.first(64 + count * COURSE_BASELINE_REVIEW_ENTRY_SIZE)))
+        !view.decode(scratch.first(64 + count * COURSE_BASELINE_REVIEW_ENTRY_SIZE), unbound) ||
+        view.isolated() == unbound)
       return finish(false);
     for (size_t index = 0; index < view.count(); ++index) {
       const auto record = view.entry(index);
@@ -101,8 +124,8 @@ class HalCourseBaselineReviewBackup final {
   }
   // Read-only live cohort comparison. Owned reference omission requires a fully
   // verified native archive; this operation never offers a backup-complete loan.
-  bool verifyCurrent(const Digest& reviewHash, const Identity& reader, const Identity& generation,
-                     const Identity& course, HalCoursePackArchive* ownedArchive = nullptr) {
+  bool verifyCurrentScope(const Digest& reviewHash, const Identity& reader, const Identity& generation,
+                          const Identity& course, HalCoursePackArchive* ownedArchive = nullptr) {
     if (operating) return failure("reentry");
     ready = false;
     if (scratch.size() < COURSE_BASELINE_REVIEW_MAX_SIZE + 512 ||
@@ -113,11 +136,18 @@ class HalCourseBaselineReviewBackup final {
     selectedGeneration = generation;
     selectedCourse = course;
     operating = true;
+    unbound = false;
     return finish(closeReaders() && currentReview(ownedArchive), false);
   }
+
+ public:
   bool complete() const {
     if (!guard()) ready = false;
-    return ready;
+    return ready && !unbound;
+  }
+  bool unboundComplete() const {
+    if (!guard()) ready = false;
+    return ready && unbound;
   }
   bool closeReaders() {
     ready = false;
@@ -144,7 +174,7 @@ class HalCourseBaselineReviewBackup final {
   std::array<char, INVENTORY_PATH_LIMIT + 1> name{};
   Digest selectedHash{}, expectedFileHash{};
   Identity selectedReader{}, selectedGeneration{}, selectedCourse{};
-  bool operating = false;
+  bool operating = false, unbound = false;
   mutable bool ready = false;
   std::span<uint8_t> io() const {
     return scratch.size() > COURSE_BASELINE_REVIEW_MAX_SIZE ? scratch.subspan(COURSE_BASELINE_REVIEW_MAX_SIZE)
@@ -152,10 +182,12 @@ class HalCourseBaselineReviewBackup final {
   }
   bool guard() const { return permitted && permitted(context); }
   bool currentReview(HalCoursePackArchive* ownedArchive = nullptr) {
+    CourseBaselineReviewView view;
     return guard() &&
            capture.capture(selectedReader, selectedGeneration, selectedCourse, ownedArchive) ==
                CourseBaselineReviewResult::Ok &&
-           capture.hash() && *capture.hash() == selectedHash;
+           capture.hash() && *capture.hash() == selectedHash && view.decode(capture.bytes(), unbound) &&
+           view.isolated() != unbound;
   }
   void paths(size_t index) {
     static constexpr std::string_view PREFIX = "/.crosspoint/companion/course-review-state-";
@@ -179,7 +211,12 @@ class HalCourseBaselineReviewBackup final {
     if (record[0] == static_cast<uint8_t>(CourseBaselineReviewDomain::Learner)) {
       std::copy_n(record.begin() + 4, record[2], name.begin());
       name[record[2]] = 0;
-      if (!courseStatePath(selectedCourse, name.data(), original)) return false;
+      if (unbound) {
+        const auto count = snprintf(original.data(), original.size(), "/tinta/%s", name.data());
+        if (count <= 0 || static_cast<size_t>(count) >= original.size()) return false;
+      } else if (!courseStatePath(selectedCourse, name.data(), original)) {
+        return false;
+      }
     } else {
       static constexpr const char* JOURNAL[] = {TINTA_JOURNAL_EVENTS, TINTA_JOURNAL_HEADER_A, TINTA_JOURNAL_HEADER_B};
       static constexpr std::string_view JOURNAL_NAMES[] = {"events.bin", "header-a.bin", "header-b.bin"};
