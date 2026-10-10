@@ -73,6 +73,7 @@
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
+#include "lib/hal/HalUnboundCourseReviewInspection.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
@@ -8623,6 +8624,99 @@ TEST_F(HalCourseTransferTest, UnboundItemInspectionValidatesCopiedUidsAndPreserv
     } else {
       EXPECT_FALSE(report.present);
       EXPECT_EQ(report.committedRecords, 123u);
+    }
+    EXPECT_EQ(reviewed->borrowed(), nullptr);
+    EXPECT_EQ(hal.files, files);
+  }
+}
+
+TEST_F(HalCourseTransferTest, UnboundReviewInspectionChecksCommittedCountUidsAndUndoSyntax) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  const auto uid = parser->uidAt(0);
+  parser->close();
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    auto& hal = inventory_hal_test::state;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    auto& items = hal.files["/tinta/items.bin"];
+    items.resize(1040, 0);
+    for (unsigned slot = 0; slot < 2; ++slot) {
+      auto* header = items.data() + slot * 512;
+      std::memcpy(header, "TIS1", 4);
+      binary_record::putU16(header + 4, 1);
+      binary_record::putU16(header + 6, 80);
+      binary_record::putU32(header + 8, slot + 1);
+      binary_record::putU32(header + 12, 1);
+      binary_record::putU32(header + 16, fault == 0 || fault == 5 ? 3 : 1);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    tinta::core::ItemState::fresh(uid).encode(items.data() + 1024);
+    if (fault != 1) {
+      auto& log = hal.files["/tinta/reviews.log"];
+      log.resize(fault == 0 ? 39 : 12, 0);
+      binary_record::putU32(log.data(), fault == 2 ? UINT32_MAX - 1 : uid);
+      log[10] = fault == 3 ? 8 : 3;
+      if (fault == 0) {
+        binary_record::putU32(log.data() + 12, uid);
+        log[22] = 8;
+        binary_record::putU32(log.data() + 24, uid);
+        log[34] = 16;
+        log[35] = 1;
+      }
+      if (fault == 4) log.pop_back();
+    }
+    Identity reader{};
+    reader.fill(51);
+    Digest hash{};
+    {
+      auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(capture);
+      ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+                CourseBaselineReviewResult::Ok);
+      hash = *capture->hash();
+      const std::vector<uint8_t> encoded(capture->bytes().begin(), capture->bytes().end());
+      capture.reset();
+      auto roster = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+          std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(roster);
+      ASSERT_EQ(roster->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    }
+    {
+      auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(backups);
+      ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+      ASSERT_TRUE(backups->closeReaders());
+    }
+    UnboundCourseMigrationRequest request;
+    request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+    auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+        reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+    HalInventoryIndexStorage packStorage;
+    ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
+    StoredCourseSource original(packStorage);
+    ASSERT_TRUE(original.attach());
+    UnboundCourseItemReport itemReport;
+    ASSERT_TRUE(inspectUnboundCourseItems(
+        *reviewed, request, original, scratch, itemReport, [](void*) { return true; }, nullptr));
+    UnboundCourseReviewReport report;
+    report.journal.records = 123;
+    const auto files = hal.files;
+    EXPECT_EQ(inspectUnboundCourseReviews(
+                  *reviewed, request, original, itemReport, scratch, report, [](void*) { return true; }, nullptr),
+              fault == 0);
+    if (!fault) {
+      EXPECT_TRUE(report.present);
+      EXPECT_EQ(report.journal.records, 3u);
+      EXPECT_EQ(report.journal.zeroTailBytes, 3u);
+    } else {
+      EXPECT_FALSE(report.present);
+      EXPECT_EQ(report.journal.records, 123u);
     }
     EXPECT_EQ(reviewed->borrowed(), nullptr);
     EXPECT_EQ(hal.files, files);

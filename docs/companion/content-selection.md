@@ -3741,3 +3741,19 @@ still match. Sizes/headroom are default 6,493,152/60,448 bytes, sticky
 5,816,768/736,832. Verify software with the host suite and release-image validator;
 Apple SDK and physical acceptance remain outstanding. No migration action or
 capability advertisement has been enabled.
+
+The frozen unbound review log is now inspected against the item header's committed
+record count and original-pack UID history. The native legacy decoder validates
+review/undo/flag syntax and zero padding; a missing log cannot satisfy a nonzero
+committed count. Unknown UIDs, malformed undo, short records and insufficient
+records refuse inspection while preserving its report and copied bytes. Both
+item and review inspection reject overlapping workspace/report storage.
+
+All 1,985 host tests pass after the final edits. The end-to-end HAL test captures
+and backs up real item/log bytes, validates items first, then accepts review/undo/
+flag records with padding and rejects five mismatching histories. Both final C3
+inspection frames are 176 bytes; every emitted frame remains within 256. No new
+allocation is introduced. Verify with the HAL companion host suite. These helpers
+remain outside runtime firmware, so the five validated images are unchanged.
+Profiles, marks, days, sessions, distributed provenance/replay correspondence and
+native migration composition remain unfinished; inspection is not authorization.

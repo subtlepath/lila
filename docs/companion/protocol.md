@@ -1109,3 +1109,11 @@ pack and retained identity history, and reports the committed review count for
 later journal/session checks. Missing items remain distinct from malformed data.
 Failure preserves the caller's report and releases the file loan. Other learner
 files and distributed journal provenance remain separate migration obligations.
+
+Unbound review inspection validates the copied legacy log, checks its committed
+record count against the item snapshot, and verifies every recorded UID against
+the confirmed original pack and retained identity history. Undo syntax and zero
+padding use the existing legacy decoder. A missing log is refused when items
+claim committed records; malformed or insufficient history preserves the output
+report and releases the file loan. Workspace/report overlap is refused before
+reading. Distributed ancestry and replay correspondence still require validation.

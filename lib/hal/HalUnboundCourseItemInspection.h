@@ -52,7 +52,9 @@ inline bool inspectUnboundCourseItems(HalUnboundCourseReviewedFile& reviewed,
     LOG_ERR("COMPANION", "Unbound course item inspection refused");
     return false;
   };
-  if (!permitted || !permitted(context)) return failure();
+  if (!permitted || !permitted(context) ||
+      course_baseline_detail::overlaps(scratch.data(), scratch.size(), &output, sizeof(output)))
+    return failure();
   const auto opened = reviewed.open(request, "items.bin");
   if (opened != UnboundReviewedFileResult::Present && opened != UnboundReviewedFileResult::Missing) return failure();
   UnboundCourseItemReport report;
