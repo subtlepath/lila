@@ -3061,7 +3061,121 @@ probe frame exceeds 256 bytes. The 332-byte retained manifest and projection
 handle are members of the already heap-admitted owner, preserving the single
 scratch loan. These are object/frame measurements, not hardware heap acceptance.
 
-The final five-target firmware batch is running under
+The native receipt fixture also covers a missing retained day file, CRC-valid
+receipts bound to a different course, pack, journal frontier or storage generation,
+and a malformed saved queue with valid inner and outer checksums. Incorrect
+bindings remain nonzero and structurally valid so these cases exercise native
+cohort correspondence rather than only receipt syntax checks.
+
+A subsequent C3 allocation audit measures the archive reader at 4,496 bytes,
+reviewed journal audit at 5,384, retained projection at 268, reducer at 232 and
+replay workspace at 640. During native replay the last four coexist: 6,524 bytes
+above the import owner, compared with its current 5,384-byte temporary preflight.
+The former entry preflight understated that branch by 1,140 bytes. It now admits
+the import owner plus the largest complete temporary branch: historical archive
+inspection, journal replay or receipt export. This adds no heap allocation; the
+calculation uses compile-time object sizes and preserves the 50 KiB reserve.
+Boundary coverage checks refusal when the replay peak leaves exactly 50 KiB and
+admission with one additional byte, alongside largest-block and authorization
+checks. On C3 the resulting payload budget is 38,036 bytes. Allocator overhead and
+other concurrent allocations remain subject to the per-allocation guards and
+physical heap acceptance.
+
+The preceding five-target firmware batch is running under
 `.cache/companion-verification/baseline-native-receipt-final/`. Live baseline
 commands, Apple baseline UI, legacy reconciliation and physical acceptance remain
 unfinished; the full companion plan is not complete.
+
+That batch began before the import peak-preflight correction and does not prove
+the final firmware source state. A subsequent final batch must include the import
+session header in its source fingerprints.
+
+The preceding batch subsequently completed all five targets. Retained images were
+independently revalidated for board/chip, image integrity and OTA size: default
+6,477,808 bytes, sticky 5,703,616, x4pro 6,509,920, x4c 6,478,816 and papermono
+5,816,752. These are intermediate results because the preflight changed during
+that batch. The final peak-admission batch has now started and fingerprints all
+13 relevant source files, including the import session header.
+
+After the preflight correction, the host rebuild and all 1,944 tests pass (10.86
+seconds), including the replay reserve boundary and the expanded eleven-case
+native receipt fixture. The C3 factory probe has a 192-byte frame and no compiled
+frame above 256 bytes. Final firmware verification is running under
+`.cache/companion-verification/baseline-peak-admission-final/`, serialized after
+the preceding build batch. Hardware verification must measure free/largest
+internal heap throughout replay and receipt export, retaining more than 50 KiB
+free heap across repeated Connect & Sync sessions.
+
+Frozen review paging now has a portable codec in
+`CompanionCourseBaselineReviewPage.h`. The `TCBP` version 1 envelope has a
+44-byte header: magic at 0, version/reserved bytes at 4/5, little-endian review
+length at 6, byte offset at 8, slice length at 10 and whole-review SHA-256 at 12.
+Review bytes follow at 44, then a four-byte CRC32 over the preceding page bytes.
+Maximum review data per page is 976 bytes, keeping the envelope within the
+1,024-byte control payload. The producer supplies a verified immutable review
+and its full digest; the codec does not compute or authenticate that digest.
+The receiver must require one matching digest/length across pages, reassemble
+the complete review, verify its SHA-256 and validate its reader, generation and
+course before presenting approval. Page receipt never grants consent.
+
+The codec borrows caller buffers, rejects overlapping outputs, checks canonical
+review syntax before encoding and preserves the output view on decode failure.
+It adds no heap allocation or static RAM buffer. Tests cover exact reconstruction
+with one-byte, 97-byte and maximum slices, all byte corruptions/truncations, and
+CRC-valid malformed lengths, offsets and missing hashes. Live command handling
+and Apple reassembly are still required; this codec alone does not enable them.
+
+The C3 paging probe passes with an 80-byte encode frame and a 128-byte decode
+frame; no compiled probe frame exceeds 256 bytes. The helper is not yet included
+by a firmware translation unit, so the active five-board batch validates the
+corrected import path while this separate probe validates the paging API.
+The final host rebuild and all 1,945 tests pass (17.96 seconds).
+
+Apple now decodes the same bounded page envelope and collects a single frozen
+review with `CourseBaselineReviewAssembly`. It requires a matching whole-review
+digest and length throughout collection, rejects skipped or partial-overlap
+pages, and accepts byte-identical complete duplicates. Rejected pages preserve
+accepted state. Completion decodes the canonical roster, verifies its actual
+SHA-256, and checks the expected reader, storage generation and course before
+returning a review. This is collection evidence, not import consent or proof of
+the retained files' contents. Live command routing and approval UI remain
+unfinished.
+
+`protocol/fixtures/CourseBaselineReviewPage-v1.fixture` contains the first 97
+bytes of the existing shared review with its actual full SHA-256. The C++ codec
+round-trips it exactly and the Swift tests compare it with the Apple encoder
+oracle. Tests also cover one-byte and maximum-slice collection, harmless
+duplicates, out-of-order/changed/overlapping pages, whole-record hash mismatch
+and incorrect reader/generation/course contexts. The final C++ rebuild and all
+1,945 tests pass (11.77 seconds). All 533 Swift package tests pass (16.514 seconds)
+with the restored, signature-verified Swift 6.0.3 toolchain, including the four new
+paging/assembly tests. Apple-native builds and physical acceptance remain required.
+
+`readHalCourseBaselineReviewPage` now connects the portable codec to a borrowed
+`HalCourseBaselineReviewStore`. Each page reopens the persisted canonical roster,
+verifies its complete SHA-256 and expected reader/generation/course, closes all
+store readers, then encodes from the verified bytes. Permission and heap guards
+run before and after I/O/encoding. The caller must prove authentication and an
+exclusive full-workspace lease; page response bytes must be outside the 4,416-byte
+review region. The response can occupy the tail of the same 8 KiB workspace after
+the store's comparison scratch is released.
+
+This helper adds no allocation: it borrows the existing admitted store and
+workspace, and copies only the 32-byte digest onto the stack to keep its binding
+stable when input aliases loaned scratch. The C3 probe passes with a 144-byte
+frame and no compiled frame above 256 bytes. Native tests collect the exact
+review in 97-byte pages and refuse permission loss, overlapping response loans,
+foreign reader identity and corrupt persisted bytes without changing learner
+files. It remains a read-only producer; live command dispatch, review capture,
+approval UI and the workspace-lease consumer still require integration.
+
+The final peak-admission firmware batch completed all five targets. Independent
+validation of the retained images confirms board/chip, image checksum and OTA
+size, and all 13 recorded import-path source fingerprints still match. Results:
+default 6,477,808 bytes (75,792 headroom), sticky 5,703,616 (849,984), x4pro
+6,509,920 (43,680), x4c 6,478,816 (74,784) and papermono 5,816,752 (736,848).
+The new standalone page producer is not yet called by a firmware translation
+unit; its C3 probe is separate evidence for that API. Physical resources and the
+full companion acceptance gates remain unverified.
+The final host rebuild and all 1,946 tests pass (10.91 seconds), including native
+verified page production; all 533 Swift tests remain green for the Apple changes.

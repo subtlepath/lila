@@ -61,9 +61,12 @@ inline std::unique_ptr<HalCourseBaselineImportSession> createHalCourseBaselineIm
   if (parentWorkspace.empty()) parentWorkspace = scratch;
   const auto fullStart = reinterpret_cast<uintptr_t>(scratch.data());
   const auto parentStart = reinterpret_cast<uintptr_t>(parentWorkspace.data());
-  constexpr size_t PEAK_BYTES =
-      sizeof(HalCourseBaselineImportSession) +
-      std::max(sizeof(HalHistoricalCourseHistory), sizeof(HalCourseBaselineReviewedJournalAudit));
+  constexpr size_t REPLAY_BYTES = sizeof(HalCourseBaselineReplaySession) +
+                                  sizeof(HalCourseBaselineReviewedJournalAudit) + sizeof(TintaReplayReducer) +
+                                  HalJournalCausalAuditSession::replayWorkspaceBytes();
+  constexpr size_t RECEIPT_BYTES = sizeof(HalCourseBaselineReplaySession) + sizeof(HalCourseBaselineReplayReceipt);
+  constexpr size_t PEAK_BYTES = sizeof(HalCourseBaselineImportSession) +
+                                std::max(sizeof(HalHistoricalCourseHistory), std::max(REPLAY_BYTES, RECEIPT_BYTES));
   if (reader == Identity{} || generation == Identity{} || owner == Identity{} || !permitted || !permitted(context) ||
       !limits.depth || !limits.screens || !limits.queued || scratch.size() < COURSE_BASELINE_REVIEW_MAX_SIZE + 512 ||
       parentWorkspace.size() < TRANSFER_JOURNAL_SIZE || parentWorkspace.size() > scratch.size() ||

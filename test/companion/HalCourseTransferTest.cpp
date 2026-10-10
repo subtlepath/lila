@@ -52,6 +52,7 @@
 #include "lib/hal/HalCourseBaselineReplaySession.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
+#include "lib/hal/HalCourseBaselineReviewPage.h"
 #include "lib/hal/HalCourseBaselineReviewStore.h"
 #include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCoursePackHistory.h"
@@ -4820,6 +4821,58 @@ TEST_F(HalCourseTransferTest, SealedBaselineReviewPreservesForeignCorruptAndDupl
   }
 }
 
+TEST_F(HalCourseTransferTest, NativeBaselineReviewPagesRequireVerifiedImmutableSourceAndExclusiveLoan) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  bool allowed = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), permission, &allowed);
+  ASSERT_TRUE(store);
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  const std::string path = store->path();
+  const auto retained = inventory_hal_test::state.files;
+  auto response = std::span(scratch).last(MAX_CONTROL_PAYLOAD);
+  std::vector<uint8_t> collected(encoded.size());
+  size_t offset = 0;
+  while (offset < encoded.size()) {
+    const auto size =
+        readHalCourseBaselineReviewPage(*store, permission, &allowed, hash, reader, generation,
+                                        declaration.manifest.logicalIdentity, offset, 97, scratch, response);
+    ASSERT_NE(size, 0u);
+    CourseBaselineReviewPageView page;
+    ASSERT_TRUE(decodeCourseBaselineReviewPage(response.first(size), page));
+    EXPECT_EQ(page.hash, hash);
+    EXPECT_EQ(page.offset, offset);
+    std::copy(page.bytes.begin(), page.bytes.end(), collected.begin() + offset);
+    offset += page.bytes.size();
+  }
+  EXPECT_EQ(collected, encoded);
+  EXPECT_EQ(inventory_hal_test::state.files, retained);
+  allowed = false;
+  EXPECT_EQ(readHalCourseBaselineReviewPage(*store, permission, &allowed, hash, reader, generation,
+                                            declaration.manifest.logicalIdentity, 0, 97, scratch, response),
+            0u);
+  allowed = true;
+  EXPECT_EQ(readHalCourseBaselineReviewPage(*store, permission, &allowed, hash, reader, generation,
+                                            declaration.manifest.logicalIdentity, 0, 97, scratch,
+                                            std::span(scratch).first(MAX_CONTROL_PAYLOAD)),
+            0u);
+  auto foreign = reader;
+  foreign[0] ^= 0x80;
+  EXPECT_EQ(readHalCourseBaselineReviewPage(*store, permission, &allowed, hash, foreign, generation,
+                                            declaration.manifest.logicalIdentity, 0, 97, scratch, response),
+            0u);
+  inventory_hal_test::state.files[path].back() ^= 1;
+  EXPECT_EQ(readHalCourseBaselineReviewPage(*store, permission, &allowed, hash, reader, generation,
+                                            declaration.manifest.logicalIdentity, 0, 97, scratch, response),
+            0u);
+  EXPECT_EQ(inventory_hal_test::state.files[path].back(), uint8_t(retained.at(path).back() ^ 1));
+}
+
 TEST_F(HalCourseTransferTest, SealedBaselineReviewRejectsForeignContextAndCorruptLoads) {
   std::vector<uint8_t> encoded;
   Digest hash{};
@@ -6700,7 +6753,7 @@ TEST_F(HalCourseTransferTest, NativeLearnerInspectionAuditsFrozenJournalMembersh
 }
 
 TEST_F(HalCourseTransferTest, NativeLearnerInspectionProvesCanonicalReceiptFromFrozenCohort) {
-  for (unsigned fault = 0; fault < 5; ++fault) {
+  for (unsigned fault = 0; fault < 11; ++fault) {
     SetUp();
     SCOPED_TRACE(fault);
     CourseBaselinePublicationRecord record;
@@ -6801,6 +6854,25 @@ TEST_F(HalCourseTransferTest, NativeLearnerInspectionProvesCanonicalReceiptFromF
         ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, name, removed));
         hal.files.erase(removed.data());
       }
+    }
+    if (fault == 5) {
+      std::array<char, COURSE_STATE_PATH_SIZE> removed{};
+      ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, "days.bin", removed));
+      hal.files.erase(removed.data());
+    }
+    if (fault >= 6 && fault <= 9) {
+      static constexpr size_t BINDING_OFFSETS[] = {4, 20, 52, 100};
+      auto& changed = hal.files.at(receiptPath.data());
+      changed[BINDING_OFFSETS[fault - 6]] ^= 0x80;
+      binary_record::putU32(changed.data() + 328, binary_record::crc32(changed.data(), 328));
+      TintaDerivedManifestView valid;
+      ASSERT_TRUE(valid.decode(changed));
+    }
+    if (fault == 10) {
+      auto& changed = hal.files.at(sessionPath.data());
+      changed[30] = 'X';
+      binary_record::putU32(changed.data() + 58, binary_record::crc32(changed.data() + 30, 28));
+      binary_record::putU32(changed.data() + 94, binary_record::crc32(changed.data(), 94));
     }
     output.reset();
     working.reset();
@@ -7022,7 +7094,7 @@ TEST_F(HalCourseTransferTest, NativeLearnerInspectionAdmissionPreservesHeapReser
   EXPECT_EQ(inventory_hal_test::state.files, evidence);
 }
 
-TEST_F(HalCourseTransferTest, BaselineImportSessionAdmissionIncludesTemporaryArchiveReader) {
+TEST_F(HalCourseTransferTest, BaselineImportSessionAdmissionIncludesConcurrentReplayAllocations) {
   Identity reader{};
   reader[0] = 51;
   bool permitted = true;
@@ -7033,6 +7105,16 @@ TEST_F(HalCourseTransferTest, BaselineImportSessionAdmissionIncludesTemporaryArc
   companion_memory_test::internal.freeBytes = 50 * 1024 + peak;
   EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
                                                     permission, &permitted));
+  const auto replayPeak = sizeof(HalCourseBaselineImportSession) + sizeof(HalCourseBaselineReplaySession) +
+                          sizeof(HalCourseBaselineReviewedJournalAudit) + sizeof(TintaReplayReducer) +
+                          HalJournalCausalAuditSession::replayWorkspaceBytes();
+  ASSERT_GT(replayPeak, peak);
+  companion_memory_test::internal.freeBytes = 50 * 1024 + replayPeak;
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permission, &permitted));
+  companion_memory_test::internal.freeBytes += 1;
+  EXPECT_TRUE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                   permission, &permitted));
   companion_memory_test::internal = memory;
   companion_memory_test::internal.largestBlockBytes = sizeof(HalCourseBaselineImportSession) - 1;
   EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},

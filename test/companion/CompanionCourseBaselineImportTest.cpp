@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <string>
 #include <vector>
@@ -10,6 +11,7 @@
 #include "lib/Companion/CompanionCourseBaselinePublication.h"
 #include "lib/Companion/CompanionCourseBaselinePublicationStore.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
+#include "lib/Companion/CompanionCourseBaselineReviewPage.h"
 
 using namespace companion;
 namespace {
@@ -594,6 +596,79 @@ TEST(CompanionCourseBaselineReview, SharedFixtureRefusesMalformedNoncanonicalAnd
   EXPECT_FALSE(view.decode(invalid));
   EXPECT_FALSE(view.decode(std::span(bytes).first(bytes.size() - 1)));
   EXPECT_TRUE(view.decode(bytes));
+}
+
+TEST(CompanionCourseBaselineReview, BoundedPagesRetainOneWholeReviewBinding) {
+  std::ifstream input(COURSE_BASELINE_REVIEW_FIXTURE, std::ios::binary);
+  const std::vector<uint8_t> review((std::istreambuf_iterator<char>(input)), {});
+  CourseBaselineReviewView original;
+  ASSERT_TRUE(original.decode(review));
+  Digest verifiedHash{};
+  verifiedHash.fill(9);
+  std::array<uint8_t, MAX_CONTROL_PAYLOAD> page{};
+  for (const size_t limit : {size_t(1), size_t(97), COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES}) {
+    std::vector<uint8_t> assembled(review.size());
+    size_t offset = 0;
+    while (offset < review.size()) {
+      const auto length = encodeCourseBaselineReviewPage(review, verifiedHash, offset, limit, page);
+      ASSERT_GT(length, COURSE_BASELINE_REVIEW_PAGE_OVERHEAD);
+      ASSERT_LE(length, MAX_CONTROL_PAYLOAD);
+      CourseBaselineReviewPageView decoded;
+      ASSERT_TRUE(decodeCourseBaselineReviewPage(std::span(page).first(length), decoded));
+      EXPECT_EQ(decoded.total, review.size());
+      EXPECT_EQ(decoded.offset, offset);
+      EXPECT_EQ(decoded.hash, verifiedHash);
+      std::copy(decoded.bytes.begin(), decoded.bytes.end(), assembled.begin() + offset);
+      offset += decoded.bytes.size();
+    }
+    EXPECT_EQ(assembled, review);
+  }
+  const auto length = encodeCourseBaselineReviewPage(review, verifiedHash, 0, 97, page);
+  ASSERT_NE(length, 0u);
+  CourseBaselineReviewPageView saved;
+  ASSERT_TRUE(decodeCourseBaselineReviewPage(std::span(page).first(length), saved));
+  for (size_t at = 0; at < length; ++at) {
+    auto changed = page;
+    changed[at] ^= 1;
+    auto output = saved;
+    EXPECT_FALSE(decodeCourseBaselineReviewPage(std::span(changed).first(length), output));
+    EXPECT_EQ(output.bytes.data(), saved.bytes.data());
+    EXPECT_EQ(output.hash, saved.hash);
+    EXPECT_FALSE(decodeCourseBaselineReviewPage(std::span(page).first(at), output));
+  }
+  EXPECT_EQ(encodeCourseBaselineReviewPage(review, verifiedHash, review.size(), 1, page), 0u);
+  EXPECT_EQ(encodeCourseBaselineReviewPage(review, verifiedHash, 0, 0, page), 0u);
+  EXPECT_EQ(encodeCourseBaselineReviewPage(review, verifiedHash, 0, COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES + 1, page),
+            0u);
+  EXPECT_EQ(encodeCourseBaselineReviewPage(review, {}, 0, 1, page), 0u);
+  EXPECT_EQ(encodeCourseBaselineReviewPage(review, verifiedHash, 0, 97, std::span(page).first(length - 1)), 0u);
+  auto overlapping = review;
+  EXPECT_EQ(encodeCourseBaselineReviewPage(overlapping, verifiedHash, 0, 1, overlapping), 0u);
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    auto changed = page;
+    auto bytes = std::span(changed).first(length);
+    if (fault == 0) course_review_detail::number(bytes, 6, review.size() + 1, 2);
+    if (fault == 1) course_review_detail::number(bytes, 8, review.size(), 2);
+    if (fault == 2) course_review_detail::number(bytes, 10, 0, 2);
+    if (fault == 3) course_review_detail::number(bytes, 10, 98, 2);
+    if (fault == 4) std::fill_n(bytes.begin() + 12, 32, 0);
+    seal(bytes);
+    auto output = saved;
+    EXPECT_FALSE(decodeCourseBaselineReviewPage(bytes, output));
+    EXPECT_EQ(output.bytes.data(), saved.bytes.data());
+    EXPECT_EQ(output.hash, saved.hash);
+  }
+  const std::string reviewPath = COURSE_BASELINE_REVIEW_FIXTURE;
+  const auto pagePath = reviewPath.substr(0, reviewPath.find_last_of('/') + 1) + "CourseBaselineReviewPage-v1.fixture";
+  std::ifstream sharedInput(pagePath, std::ios::binary);
+  const std::vector<uint8_t> shared((std::istreambuf_iterator<char>(sharedInput)), {});
+  CourseBaselineReviewPageView native;
+  ASSERT_TRUE(decodeCourseBaselineReviewPage(shared, native));
+  EXPECT_EQ(native.total, review.size());
+  EXPECT_EQ(native.offset, 0u);
+  ASSERT_EQ(native.bytes.size(), 97u);
+  ASSERT_EQ(encodeCourseBaselineReviewPage(review, native.hash, 0, 97, page), shared.size());
+  EXPECT_TRUE(std::equal(shared.begin(), shared.end(), page.begin()));
 }
 
 TEST(CompanionCourseBaselinePublication, SharedFixtureAndBothPhasesRoundTripWithCorruptionRefusal) {
