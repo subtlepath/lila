@@ -598,6 +598,57 @@ TEST(CompanionCourseBaselineReview, SharedFixtureRefusesMalformedNoncanonicalAnd
   EXPECT_TRUE(view.decode(bytes));
 }
 
+TEST(CompanionCourseBaselineReview, PageRequestsBindCaptureAndImmutableResume) {
+  const std::string reviewPath = COURSE_BASELINE_REVIEW_FIXTURE;
+  std::ifstream input(
+      reviewPath.substr(0, reviewPath.find_last_of('/') + 1) + "CourseBaselineReviewPageRequest-v1.fixture",
+      std::ios::binary);
+  const std::vector<uint8_t> fixture((std::istreambuf_iterator<char>(input)), {});
+  CourseBaselineReviewPageRequest request;
+  ASSERT_TRUE(decodeCourseBaselineReviewPageRequest(fixture, request));
+  EXPECT_EQ(request.offset, 0u);
+  EXPECT_EQ(request.limit, 97u);
+  EXPECT_EQ(request.hash, Digest{});
+  std::array<uint8_t, COURSE_BASELINE_REVIEW_PAGE_REQUEST_SIZE> bytes{};
+  ASSERT_TRUE(encodeCourseBaselineReviewPageRequest(request, bytes));
+  ASSERT_TRUE(std::equal(bytes.begin(), bytes.end(), fixture.begin()));
+  for (size_t size = 0; size < bytes.size(); ++size) {
+    auto output = request;
+    EXPECT_FALSE(decodeCourseBaselineReviewPageRequest(std::span(bytes).first(size), output));
+    EXPECT_EQ(output, request);
+  }
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    auto changed = bytes;
+    if (fault == 0) changed[5] = 1;
+    if (fault == 1) std::fill_n(changed.begin() + 6, 16, 0);
+    if (fault == 2) std::fill_n(changed.begin() + 22, 16, 0);
+    if (fault == 3) course_review_detail::number(changed, 70, 1, 2);
+    if (fault == 4) course_review_detail::number(changed, 70, COURSE_BASELINE_REVIEW_MAX_SIZE, 2);
+    if (fault == 5) course_review_detail::number(changed, 72, 0, 2);
+    if (fault == 6) course_review_detail::number(changed, 72, COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES + 1, 2);
+    auto output = request;
+    EXPECT_FALSE(decodeCourseBaselineReviewPageRequest(changed, output));
+    EXPECT_EQ(output, request);
+  }
+  request.hash.fill(9);
+  request.offset = 97;
+  request.limit = COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES;
+  ASSERT_TRUE(encodeCourseBaselineReviewPageRequest(request, bytes));
+  CourseBaselineReviewPageRequest resumed;
+  ASSERT_TRUE(decodeCourseBaselineReviewPageRequest(bytes, resumed));
+  EXPECT_EQ(resumed, request);
+  std::ifstream framedInput(
+      reviewPath.substr(0, reviewPath.find_last_of('/') + 1) + "CourseBaselineReviewRequestFrame-v1.fixture",
+      std::ios::binary);
+  const std::vector<uint8_t> framed((std::istreambuf_iterator<char>(framedInput)), {});
+  FrameView frame;
+  EXPECT_EQ(decodeFrame(framed, false, frame), FrameError::Unauthorized);
+  ASSERT_EQ(decodeFrame(framed, true, frame), FrameError::None);
+  EXPECT_EQ(frame.command, Command::CourseBaselineReview);
+  EXPECT_EQ(frame.requestId, 0x12345678u);
+  EXPECT_TRUE(std::equal(frame.payload.begin(), frame.payload.end(), fixture.begin(), fixture.end()));
+}
+
 TEST(CompanionCourseBaselineReview, BoundedPagesRetainOneWholeReviewBinding) {
   std::ifstream input(COURSE_BASELINE_REVIEW_FIXTURE, std::ios::binary);
   const std::vector<uint8_t> review((std::istreambuf_iterator<char>(input)), {});

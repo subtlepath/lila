@@ -3179,3 +3179,89 @@ unit; its C3 probe is separate evidence for that API. Physical resources and the
 full companion acceptance gates remain unverified.
 The final host rebuild and all 1,946 tests pass (10.91 seconds), including native
 verified page production; all 533 Swift tests remain green for the Apple changes.
+
+Review paging requests now have a shared owned C++/Swift codec. The 74-byte
+`TCBQ` version 1 body contains generation at 6, course identity at 22, frozen
+review SHA-256 at 38, little-endian byte offset at 70 and page limit at 72.
+Generation/course must be nonzero; limits are 1 through 976 and offsets below
+4,416. A zero hash requests a new capture and is permitted only at offset zero;
+nonzero hashes select the same persisted immutable roster, including a retry of
+its first page. The transport must authenticate the frame and match the native
+storage generation before loading or capturing any review.
+
+The decoded native request owns its identities and digest so the consumer can
+finish frame loans before acquiring the full BLE workspace lease. This adds no
+heap allocation. The C3 request probe passes with encode/decode frames of 48/128
+bytes and no compiled frame above 256. Both languages use
+`CourseBaselineReviewPageRequest-v1.fixture`; malformed identities, reserved
+bytes, capture offsets, lengths and limits are refused, and C++ decode failures
+preserve outputs. All 534 Swift package tests pass (16.438 seconds). Live command
+assignment/dispatch, initial capture and the lease consumer remain required;
+the body codec does not enable capture, authorize consent or install a pack.
+
+The Apple assembly now derives each next request from its accepted byte offset
+and bound digest, keeping the expected generation/course fixed. Its first request
+uses the capture marker; later requests always select the original frozen hash.
+Completed assemblies refuse further requests. The final host rebuild passes all
+1,947 tests (10.30 seconds); the final Swift rebuild passes all 534 tests (17.238
+seconds), including these request transitions. Firmware discovery and command
+routing are unchanged by these standalone codecs.
+
+`handleHalCourseBaselineReviewRequest` now composes initial capture, immutable
+roster publication and verified paging. It checks native generation, request
+syntax, permission and heap before I/O. The full workspace must be exactly 8 KiB;
+the response must fit the requested page in a disjoint tail region, and the
+request/native identities and retained store must remain outside that workspace.
+The transport consumer must decode its frame before obtaining the exclusive
+lease and keep these inputs stable until the operation returns.
+
+Initial requests allocate one checked `HalCourseBaselineReviewCapture` because
+its retained paths, hash context and HAL handles exceed the small local budget.
+The capture is released before publishing the verified bytes from the same
+workspace. The operation borrows a retained review store with the same permission
+context, so frozen-hash page retries allocate neither a new store nor another
+review buffer. No static RAM buffer or import consent is introduced. The final
+C3 probe passes with a 224-byte request-operation frame and no compiled frame
+above 256 bytes.
+
+Native tests seal the expected review, repeat initial capture idempotently, retain
+all original files, and read an already-frozen page even after the live learner
+file changes. Permission loss, wrong native generation, overlapping/short replies,
+low heap and a nonzero initial offset refuse before sealing. Live transport
+dispatch, journal-readiness/workspace-lease wiring and approval UI remain
+unfinished; this operation alone does not expose a command or install a pack.
+The final host rebuild passes all 1,949 tests (10.38 seconds). The standalone
+handler is not yet included by firmware translation units; its C3 probe validates
+the API, while the preceding five-board result still covers the unchanged live
+import path.
+
+The live BLE activity now exposes authenticated command 20 (`CourseBaselineReview`)
+and advertises capability bit 16 when Tinta is enabled. It decodes the owned
+request before leasing the full existing 8 KiB workspace, checks the native card
+generation and recovery/firmware/Wi-Fi gates, closes other content readers, and
+holds the lease throughout capture, publication and verified paging. Storage-loop
+persistence and home navigation are blocked during that loan. The response lives
+in the disjoint frame tail and is encoded only after releasing the lease.
+
+A checked review store is retained once per activity and destroyed before BLE
+teardown; its comparison buffer borrows the same workspace. Initial allocation
+admission includes both the store and capture, including the largest individual
+block. This avoids another permanent workspace or a store allocation per page.
+The EPUB removal owner preparation is kept in a separate non-inlined function to
+keep its construction frame separate from the decoded removal request.
+
+The Apple collector accepts an authenticated reader session, checks capabilities,
+binds response command/ID/offset/count/hash, and returns only a fully verified,
+reader/card/course-bound review. Typed control errors, disconnect and cancellation
+abort collection; a later collection starts fresh. Shared fixtures now include
+both the request body and its authenticated command frame. Approval, installation,
+Wi-Fi review dispatch and the user-facing approval flow remain unfinished.
+
+Checkpoint validation: all 1,949 host tests pass (11.85 seconds), all 538 portable
+Swift tests pass (19.119 seconds), and the default firmware image is validated at
+6,482,816 bytes, within the 6,553,600-byte OTA partition. Enabled/disabled C3
+activity probes report no compiled frame above 256 bytes; enabled review/removal
+frames are 224/208 bytes. Those probes precede the final home-gesture guard; the
+default firmware build includes that guard. The other four firmware targets are
+still building at this checkpoint. Physical heap, task-stack and reader behavior
+remain unverified; portable Swift tests do not establish Apple SDK/UI acceptance.

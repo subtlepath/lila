@@ -28,6 +28,7 @@
 #include "network/FirmwareFlasher.h"
 #if LILA_TINTA
 #include <HalCourseBaselineRecovery.h>
+#include <HalCourseBaselineReviewRequest.h>
 #include <HalCourseRemovalPreparation.h>
 #include <HalRemovedCourseBaseline.h>
 #include <HalTintaJournalMergeCommitContext.h>
@@ -73,6 +74,35 @@ struct InventoryScanSession {
 constexpr size_t FRAME_SIZE = companion::FRAME_BUFFER_SIZE;
 constexpr size_t OUTPUT_START = companion::REQUEST_OFFSET;
 static_assert(OUTPUT_START + 2 * FRAME_SIZE <= companion::SESSION_WORKSPACE_SIZE);
+
+#if LILA_TINTA
+class ScopedReviewWorkspace final {
+ public:
+  ScopedReviewWorkspace(HalCompanionBluetooth& bluetooth, uint64_t session, bool& active)
+      : bluetooth(bluetooth),
+        session(session),
+        active(active),
+        acquired(!active && bluetooth.acquireWorkspace(session)) {
+    if (acquired) active = true;
+  }
+  ~ScopedReviewWorkspace() { release(); }
+  bool owns() const { return acquired; }
+  bool release() {
+    if (!acquired) return true;
+    const bool released = bluetooth.releaseWorkspace(session);
+    acquired = false;
+    active = false;
+    if (!released) LOG_ERR("COMPANION", "Baseline review workspace release failed");
+    return released;
+  }
+
+ private:
+  HalCompanionBluetooth& bluetooth;
+  uint64_t session;
+  bool& active;
+  bool acquired;
+};
+#endif
 
 void logInventoryHeap(const char* phase) {
 #if defined(ENABLE_SERIAL_LOG) && LOG_LEVEL >= 1
@@ -282,6 +312,78 @@ bool CompanionConnectActivity::closeContentReaders() {
   LOG_ERR("COMPANION", "Content export readers could not close");
   return false;
 }
+size_t CompanionConnectActivity::courseBaselineReviewReply(bool authorized, uint64_t session,
+                                                           std::span<const uint8_t> input, companion::Command& command,
+                                                           std::span<uint8_t> output) {
+  if (output.empty()) return 0;
+  command = companion::Command::Error;
+  output[0] = 2;
+  if (!authorized || session != installationSession) return 1;
+  output[0] = 6;
+#if LILA_TINTA
+  companion::CourseBaselineReviewPageRequest parsed;
+  output[0] = 1;
+  if (!companion::decodeCourseBaselineReviewPageRequest(input, parsed)) return 1;
+  output[0] = 4;
+  if (parsed.generation != identity.storageGeneration) return 1;
+  output[0] = 3;
+  if (!contentReadPermitted() || wifiPhase != WifiPhase::None || baselineReviewActive) return 1;
+  uint64_t size = 0;
+  for (const auto* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, size);
+    if (status != companion::FileStatus::Missing) {
+      if (status == companion::FileStatus::Error) output[0] = 5;
+      return 1;
+    }
+  }
+  output[0] = 5;
+  if (!closeContentReaders() || !releaseCourseRemovalOwner() || (removalOwner && !removalOwner->closeReaders()) ||
+      (dictionaryRemovalOwner && !dictionaryRemovalOwner->closeReaders()))
+    return 1;
+  removalOwner.reset();
+  dictionaryRemovalOwner.reset();
+  ScopedReviewWorkspace lease(bluetooth, session, baselineReviewActive);
+  if (!lease.owns()) {
+    output[0] = 3;
+    return 1;
+  }
+  auto permitted = [](void* context) {
+    auto& activity = *static_cast<CompanionConnectActivity*>(context);
+    return activity.baselineReviewActive && activity.contentReadPermitted() && activity.wifiPhase == WifiPhase::None &&
+           activity.bluetooth.workspaceOwned(activity.installationSession) && companion::admitCompanionHeap();
+  };
+  if (!baselineReviewStore) {
+    constexpr size_t PEAK =
+        sizeof(companion::HalCourseBaselineReviewStore) + sizeof(companion::HalCourseBaselineReviewCapture);
+    if (!companion::admitCompanionHeap(PEAK, std::max(sizeof(companion::HalCourseBaselineReviewStore),
+                                                      sizeof(companion::HalCourseBaselineReviewCapture))))
+      return 1;
+    baselineReviewStore = makeUniqueNoThrow<companion::HalCourseBaselineReviewStore>(
+        std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE)
+            .subspan(companion::COURSE_BASELINE_REVIEW_MAX_SIZE),
+        permitted, this);
+    if (!baselineReviewStore) {
+      LOG_ERR("COMPANION", "OOM: baseline review store");
+      return 1;
+    }
+  }
+  const auto length = companion::handleHalCourseBaselineReviewRequest(
+      *baselineReviewStore, identity.device, identity.storageGeneration, parsed, permitted, this,
+      std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE), output);
+  const bool released = lease.release();
+  if (!released) recoveryBlocked = true;
+  if (!length || !released) {
+    output[0] = 5;
+    return 1;
+  }
+  command = companion::Command::CourseBaselineReview;
+  return length;
+#else
+  (void)input;
+#endif
+  return 1;
+}
+
 size_t CompanionConnectActivity::courseContextReply(bool authorized, std::span<const uint8_t> input,
                                                     std::span<uint8_t> output) {
   companion::Identity requested{};
@@ -464,10 +566,21 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
     }
     dictionaryRemovalOwner.reset();
   }
+  if (!prepareEpubRemovalOwner()) return companion::CONTENT_REMOVAL_REPLY_SIZE;
+  removalActive = true;
+  const auto length = removalOwner->handle(true, owner, body, reply);
+  removalActive = false;
+  if (length && (reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::IoError) ||
+                 reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::Corrupt)))
+    recoveryBlocked = true;
+  return length;
+}
+
+[[gnu::noinline]] bool CompanionConnectActivity::prepareEpubRemovalOwner() {
   if (!removalOwner) {
     if (!companion::admitCompanionHeap(sizeof(companion::HalEpubRemovalNativeOwner),
                                        sizeof(companion::HalEpubRemovalNativeOwner)))
-      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+      return false;
     // Retain fixed buffers/handles off stack and reuse for this connection.
     removalOwner = makeUniqueNoThrow<companion::HalEpubRemovalNativeOwner>(
         identity.storageGeneration,
@@ -494,16 +607,10 @@ size_t CompanionConnectActivity::removalReply(bool authorized, const companion::
     if (!removalOwner || !companion::admitCompanionHeap() || !removalOwner->prepare()) {
       LOG_ERR("COMPANION", "Removal owner allocation/heap admission failed");
       removalOwner.reset();
-      return companion::CONTENT_REMOVAL_REPLY_SIZE;
+      return false;
     }
   }
-  removalActive = true;
-  const auto length = removalOwner->handle(true, owner, body, reply);
-  removalActive = false;
-  if (length && (reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::IoError) ||
-                 reply[0] == static_cast<uint8_t>(companion::ContentRemovalResult::Corrupt)))
-    recoveryBlocked = true;
-  return length;
+  return true;
 }
 
 size_t CompanionConnectActivity::dictionaryRemovalReply(const companion::Identity& owner, std::span<const uint8_t> body,
@@ -860,6 +967,10 @@ void CompanionConnectActivity::onExit() {
   if (!wifiRadio.end()) LOG_ERR("COMPANION", "Wi-Fi teardown incomplete on exit");
   wifiLease.reset();
   clearWifiMaterial();
+#if LILA_TINTA
+  baselineReviewStore.reset();
+#endif
+  baselineReviewActive = false;
   bluetooth.stop();
   resetJournalSessions();
   journalExport.reset();
@@ -1444,6 +1555,7 @@ void CompanionConnectActivity::processFrame() {
     if (journalExport) descriptor.capabilities |= companion::CAPABILITY_JOURNAL_EXPORT;
 #if LILA_TINTA
     descriptor.capabilities |= companion::CAPABILITY_COURSE_TRANSFERS | companion::CAPABILITY_COURSE_SWITCHES;
+    descriptor.capabilities |= companion::CAPABILITY_COURSE_BASELINE_REVIEWS;
     if (journalExport) descriptor.capabilities |= companion::CAPABILITY_JOURNAL_MERGE_READINESS;
 #endif
     length = companion::encodeRecord(descriptor, payload);
@@ -1503,6 +1615,11 @@ void CompanionConnectActivity::processFrame() {
       payload[0] = 1;
       length = 1;
     }
+  } else if (request.command == companion::Command::CourseBaselineReview) {
+    companion::PairingPeer peer;
+    const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&
+                            pairings.boundTo(installation, peer);
+    length = courseBaselineReviewReply(authorized, session, request.payload, command, payload);
   } else if (request.command == companion::Command::CourseContext) {
     companion::PairingPeer peer;
     const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&

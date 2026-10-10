@@ -53,6 +53,7 @@
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
 #include "lib/hal/HalCourseBaselineReviewPage.h"
+#include "lib/hal/HalCourseBaselineReviewRequest.h"
 #include "lib/hal/HalCourseBaselineReviewStore.h"
 #include "lib/hal/HalCoursePackArchive.h"
 #include "lib/hal/HalCoursePackHistory.h"
@@ -4871,6 +4872,98 @@ TEST_F(HalCourseTransferTest, NativeBaselineReviewPagesRequireVerifiedImmutableS
                                             declaration.manifest.logicalIdentity, 0, 97, scratch, response),
             0u);
   EXPECT_EQ(inventory_hal_test::state.files[path].back(), uint8_t(retained.at(path).back() ^ 1));
+}
+
+TEST_F(HalCourseTransferTest, NativeReviewRequestSealsCaptureAndResumesTheNamedFrozenRoster) {
+  std::vector<uint8_t> encoded;
+  Digest expected{};
+  Identity reader{};
+  prepareBaselineReview(encoded, expected, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  const auto retained = inventory_hal_test::state.files;
+  CourseBaselineReviewPageRequest request;
+  request.generation = generation;
+  request.course = declaration.manifest.logicalIdentity;
+  request.limit = 97;
+  bool allowed = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), permission, &allowed);
+  ASSERT_TRUE(store);
+  auto response = std::span(scratch).last(MAX_CONTROL_PAYLOAD);
+  const auto size = handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed,
+                                                         scratch, response);
+  ASSERT_NE(size, 0u);
+  CourseBaselineReviewPageView first;
+  ASSERT_TRUE(decodeCourseBaselineReviewPage(response.first(size), first));
+  EXPECT_EQ(first.hash, expected);
+  EXPECT_EQ(first.offset, 0u);
+  for (const auto& [path, data] : retained) EXPECT_EQ(inventory_hal_test::state.files.at(path), data);
+  const auto sealed = inventory_hal_test::state.files;
+  EXPECT_EQ(sealed.size(), retained.size() + 1);
+  ASSERT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 response),
+            size);
+  EXPECT_EQ(inventory_hal_test::state.files, sealed);
+  std::array<char, COURSE_STATE_PATH_SIZE> learner{};
+  ASSERT_TRUE(courseStatePath(request.course, "items.bin", learner));
+  inventory_hal_test::state.files[learner.data()] = {19};
+  request.hash = expected;
+  request.offset = 97;
+  const auto changed = inventory_hal_test::state.files;
+  const auto nextSize = handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed,
+                                                             scratch, response);
+  ASSERT_NE(nextSize, 0u);
+  CourseBaselineReviewPageView next;
+  ASSERT_TRUE(decodeCourseBaselineReviewPage(response.first(nextSize), next));
+  EXPECT_EQ(next.hash, expected);
+  EXPECT_EQ(next.offset, 97u);
+  EXPECT_TRUE(std::equal(next.bytes.begin(), next.bytes.end(), encoded.begin() + 97));
+  EXPECT_EQ(inventory_hal_test::state.files, changed);
+}
+
+TEST_F(HalCourseTransferTest, NativeReviewRequestRefusesInvalidContextAndLowHeapBeforeSealing) {
+  std::vector<uint8_t> encoded;
+  Digest hash{};
+  Identity reader{};
+  prepareBaselineReview(encoded, hash, reader);
+  ASSERT_FALSE(HasFatalFailure());
+  const auto retained = inventory_hal_test::state.files;
+  CourseBaselineReviewPageRequest request;
+  request.generation = generation;
+  request.course = declaration.manifest.logicalIdentity;
+  bool allowed = false;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), permission, &allowed);
+  ASSERT_TRUE(store);
+  auto response = std::span(scratch).last(MAX_CONTROL_PAYLOAD);
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 response),
+            0u);
+  allowed = true;
+  auto foreign = generation;
+  foreign[0] ^= 0x80;
+  EXPECT_EQ(
+      handleHalCourseBaselineReviewRequest(*store, reader, foreign, request, permission, &allowed, scratch, response),
+      0u);
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 std::span(scratch).first(MAX_CONTROL_PAYLOAD)),
+            0u);
+  const auto memory = companion_memory_test::internal;
+  companion_memory_test::internal.freeBytes = 50 * 1024 + sizeof(HalCourseBaselineReviewCapture);
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 response),
+            0u);
+  companion_memory_test::internal = memory;
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 response.first(COURSE_BASELINE_REVIEW_PAGE_OVERHEAD)),
+            0u);
+  request.offset = 1;
+  EXPECT_EQ(handleHalCourseBaselineReviewRequest(*store, reader, generation, request, permission, &allowed, scratch,
+                                                 response),
+            0u);
+  EXPECT_EQ(inventory_hal_test::state.files, retained);
 }
 
 TEST_F(HalCourseTransferTest, SealedBaselineReviewRejectsForeignContextAndCorruptLoads) {

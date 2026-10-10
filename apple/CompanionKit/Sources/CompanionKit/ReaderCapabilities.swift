@@ -6,6 +6,8 @@ public struct ReaderCapabilities: OptionSet, Equatable, Sendable {
     public static let declaredTransfers = ReaderCapabilities(rawValue: 1 << 0)
     public static let courseTransfers = ReaderCapabilities(rawValue: 1 << 1)
     public static let courseContexts = ReaderCapabilities(rawValue: 1 << 15)
+    public static let courseBaselineReviews = ReaderCapabilities(rawValue: 1 << 16)
+    public var supportsCourseBaselineReview: Bool { contains([.courseTransfers, .courseBaselineReviews]) }
     public var supportsCourseContext: Bool { contains([.courseTransfers, .courseContexts]) }
     public static let courseSwitches = ReaderCapabilities(rawValue: 1 << 4)
     public static let fontTransfers = ReaderCapabilities(rawValue: 1 << 5)

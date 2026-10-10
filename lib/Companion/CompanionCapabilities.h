@@ -16,6 +16,7 @@ inline constexpr uint32_t CAPABILITY_JOURNAL_MERGE_READINESS = uint32_t{1} << 9;
 inline constexpr uint32_t CAPABILITY_WIFI_CONTENT_READS = uint32_t{1} << 12;
 inline constexpr uint32_t CAPABILITY_CONTENT_METADATA = uint32_t{1} << 11;
 inline constexpr uint32_t CAPABILITY_CONTENT_READS = uint32_t{1} << 10;
+inline constexpr uint32_t CAPABILITY_COURSE_BASELINE_REVIEWS = uint32_t{1} << 16;
 inline constexpr bool supportsCourseTransfer(uint32_t capabilities) {
   constexpr uint32_t required = CAPABILITY_DECLARED_TRANSFERS | CAPABILITY_COURSE_TRANSFERS;
   return (capabilities & required) == required;

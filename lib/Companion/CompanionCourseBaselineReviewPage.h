@@ -7,6 +7,14 @@ namespace companion {
 inline constexpr size_t COURSE_BASELINE_REVIEW_PAGE_OVERHEAD = 48;
 inline constexpr size_t COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES =
     MAX_CONTROL_PAYLOAD - COURSE_BASELINE_REVIEW_PAGE_OVERHEAD;
+inline constexpr size_t COURSE_BASELINE_REVIEW_PAGE_REQUEST_SIZE = 74;
+struct CourseBaselineReviewPageRequest {
+  Identity generation{}, course{};
+  Digest hash{};
+  uint16_t offset = 0, limit = 97;
+  bool operator==(const CourseBaselineReviewPageRequest&) const = default;
+};
+static_assert(sizeof(CourseBaselineReviewPageRequest) < 256);
 struct CourseBaselineReviewPageView {
   uint16_t total = 0, offset = 0;
   Digest hash{};
@@ -14,12 +22,51 @@ struct CourseBaselineReviewPageView {
 };
 namespace course_review_page_detail {
 inline constexpr std::array<uint8_t, 6> PREFIX = {'T', 'C', 'B', 'P', 1, 0};
+inline constexpr std::array<uint8_t, 6> REQUEST_PREFIX = {'T', 'C', 'B', 'Q', 1, 0};
+inline bool valid(const CourseBaselineReviewPageRequest& request) {
+  return course_review_detail::nonzero(request.generation) && course_review_detail::nonzero(request.course) &&
+         request.offset < COURSE_BASELINE_REVIEW_MAX_SIZE && request.limit &&
+         request.limit <= COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES &&
+         (course_review_detail::nonzero(request.hash) || !request.offset);
+}
 inline bool valid(size_t total, size_t offset, size_t count) {
   return total >= 64 + 8 * COURSE_BASELINE_REVIEW_ENTRY_SIZE && total <= COURSE_BASELINE_REVIEW_MAX_SIZE &&
          (total - 64) % COURSE_BASELINE_REVIEW_ENTRY_SIZE == 0 && offset < total && count &&
          count <= COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES && count <= total - offset;
 }
 }  // namespace course_review_page_detail
+// Zero hash requests an initial capture; a nonzero hash selects an immutable roster.
+inline bool encodeCourseBaselineReviewPageRequest(const CourseBaselineReviewPageRequest& request,
+                                                  std::span<uint8_t> output) {
+  if (output.size() != COURSE_BASELINE_REVIEW_PAGE_REQUEST_SIZE || !course_review_page_detail::valid(request) ||
+      course_baseline_detail::overlaps(&request, sizeof(request), output.data(), output.size()))
+    return false;
+  std::copy(course_review_page_detail::REQUEST_PREFIX.begin(), course_review_page_detail::REQUEST_PREFIX.end(),
+            output.begin());
+  std::copy(request.generation.begin(), request.generation.end(), output.begin() + 6);
+  std::copy(request.course.begin(), request.course.end(), output.begin() + 22);
+  std::copy(request.hash.begin(), request.hash.end(), output.begin() + 38);
+  course_review_detail::number(output, 70, request.offset, 2);
+  course_review_detail::number(output, 72, request.limit, 2);
+  return true;
+}
+inline bool decodeCourseBaselineReviewPageRequest(std::span<const uint8_t> input,
+                                                  CourseBaselineReviewPageRequest& output) {
+  if (input.size() != COURSE_BASELINE_REVIEW_PAGE_REQUEST_SIZE ||
+      course_baseline_detail::overlaps(input.data(), input.size(), &output, sizeof(output)) ||
+      !std::equal(course_review_page_detail::REQUEST_PREFIX.begin(), course_review_page_detail::REQUEST_PREFIX.end(),
+                  input.begin()))
+    return false;
+  CourseBaselineReviewPageRequest parsed;
+  std::copy_n(input.begin() + 6, parsed.generation.size(), parsed.generation.begin());
+  std::copy_n(input.begin() + 22, parsed.course.size(), parsed.course.begin());
+  std::copy_n(input.begin() + 38, parsed.hash.size(), parsed.hash.begin());
+  parsed.offset = course_review_detail::number(input, 70, 2);
+  parsed.limit = course_review_detail::number(input, 72, 2);
+  if (!course_review_page_detail::valid(parsed)) return false;
+  output = parsed;
+  return true;
+}
 // The owner supplies the verified whole-review SHA-256. Paging grants no consent.
 // Input must remain immutable until all borrowed pages have been consumed.
 inline size_t encodeCourseBaselineReviewPage(std::span<const uint8_t> review, const Digest& verifiedHash, size_t offset,
