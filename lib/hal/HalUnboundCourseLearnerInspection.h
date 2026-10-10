@@ -62,10 +62,12 @@ class HalUnboundCourseLearnerInspection final {
     operating = false;
     return ready || failure();
   }
-  const UnboundCourseLearnerReport* report() const {
-    if (operating) return nullptr;
+  const UnboundCourseLearnerReport* report(const UnboundCourseMigrationRequest& request) const {
+    if (operating || selected != request) return nullptr;
+    operating = true;
     if (!guard()) ready = false;
-    return ready ? &result : nullptr;
+    operating = false;
+    return ready && selected == request ? &result : nullptr;
   }
   bool closeReaders() {
     ready = false;
@@ -84,7 +86,7 @@ class HalUnboundCourseLearnerInspection final {
   UnboundCourseMigrationRequest selected;
   UnboundCourseLearnerReport result;
   mbedtls_sha256_context digest;
-  bool operating = false;
+  mutable bool operating = false;
   mutable bool ready = false;
   bool guard() const { return permitted && permitted(context) && admitCompanionHeap(); }
   static bool allowed(void* context) { return static_cast<HalUnboundCourseLearnerInspection*>(context)->guard(); }

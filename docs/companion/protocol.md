@@ -1176,3 +1176,10 @@ manifest format-major check precede learner reference checks. Hashing reuses the
 session workspace; its SHA context lives in the off-stack inspection owner and
 is initialized/freed for each pass. Explicit original-payload confirmation and
 live/installed-state correspondence remain separate migration requirements.
+
+The combined learner report is borrowed only for the exact inspected migration
+request, including owner, transaction, original manifest and review hash. Report
+retrieval holds the operation guard during permission checks, so a callback cannot
+start a replacement inspection or recursively expose evidence. A mismatching
+request receives no report without discarding the original inspected result.
+Permission loss still revokes that result until a fresh inspection succeeds.

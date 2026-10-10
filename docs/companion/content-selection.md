@@ -3827,3 +3827,13 @@ entry is 80 bytes, hashing 96 and validation 64; all emitted frames remain withi
 256 (largest 240). Verify with the HAL companion host suite. Runtime firmware
 remains unchanged. Explicit original confirmation, live cohort/installed-pack
 mapping, authoritative replay and native migration recovery remain unfinished.
+
+Combined learner report retrieval now requires the exact inspected request and
+holds the operation guard while evaluating permission. Changed owner/transaction/
+review contexts receive no evidence; callback reentry cannot replace or expose a
+result during retrieval. All 1,990 host tests pass, including retrieval reentry,
+three altered request contexts and persistent permission revocation. The C3
+retrieval wrapper is 16 bytes; every emitted frame remains within 256 (largest
+240), with no new allocation. Verify with the HAL companion host suite. Runtime
+firmware remains unchanged; installed-state mapping, authoritative replay and
+native migration integration remain unfinished.

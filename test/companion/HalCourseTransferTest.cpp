@@ -9136,7 +9136,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
           if (permission.checking && !permission.nested) {
             permission.nested = true;
             EXPECT_FALSE(permission.owner->inspect(*permission.request, *permission.source, *permission.pack));
-            EXPECT_EQ(permission.owner->report(), nullptr);
+            EXPECT_EQ(permission.owner->report(*permission.request), nullptr);
             ++permission.probes;
             permission.nested = false;
           }
@@ -9151,19 +9151,32 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     permission.checking = false;
     EXPECT_GT(permission.probes, 0u);
     if (fault == 0 || fault == 4) {
-      ASSERT_NE(inspection->report(), nullptr);
-      EXPECT_TRUE(inspection->report()->profile.present);
-      EXPECT_FALSE(inspection->report()->items.present);
-      EXPECT_FALSE(inspection->report()->session.present);
+      auto foreign = request;
+      foreign.original.transaction[0] ^= 1;
+      EXPECT_EQ(inspection->report(foreign), nullptr);
+      foreign = request;
+      foreign.original.owner[0] ^= 1;
+      EXPECT_EQ(inspection->report(foreign), nullptr);
+      foreign = request;
+      foreign.original.reviewHash[0] ^= 1;
+      EXPECT_EQ(inspection->report(foreign), nullptr);
+      permission.checking = true;
+      const auto probes = permission.probes;
+      ASSERT_NE(inspection->report(request), nullptr);
+      EXPECT_GT(permission.probes, probes);
+      permission.checking = false;
+      EXPECT_TRUE(inspection->report(request)->profile.present);
+      EXPECT_FALSE(inspection->report(request)->items.present);
+      EXPECT_FALSE(inspection->report(request)->session.present);
       permission.permitted = false;
-      EXPECT_EQ(inspection->report(), nullptr);
+      EXPECT_EQ(inspection->report(request), nullptr);
       permission.permitted = true;
-      EXPECT_EQ(inspection->report(), nullptr);
+      EXPECT_EQ(inspection->report(request), nullptr);
       ASSERT_TRUE(inspection->inspect(request, original, *parser));
-      ASSERT_NE(inspection->report(), nullptr);
+      ASSERT_NE(inspection->report(request), nullptr);
       ASSERT_TRUE(inspection->closeReaders());
     }
-    EXPECT_EQ(inspection->report(), nullptr);
+    EXPECT_EQ(inspection->report(request), nullptr);
     EXPECT_EQ(reviewed->borrowed(), nullptr);
     EXPECT_EQ(hal.files, files);
   }
