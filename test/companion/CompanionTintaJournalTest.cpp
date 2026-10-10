@@ -5315,6 +5315,10 @@ TEST(CompanionTintaJournal, LegacyReplayMatchesNativeProgressAndRestoresUndoneDa
   LegacyCandidateStore candidate;
   LegacyTintaReplay replay(candidate, [](void*) { return true; }, nullptr);
   ASSERT_TRUE(replay.begin(reservation, {8700, 730}));
+  LegacyCandidateStore other;
+  EXPECT_TRUE(replay.at(reservation, candidate, 0));
+  EXPECT_FALSE(replay.at(reservation, other, 0));
+  EXPECT_FALSE(replay.at(reservation, candidate, 1));
   LegacyTintaJournalDecoder decoder;
   for (uint32_t index = 0; index < 6; ++index) {
     const uint32_t itemIndex = index == 1 || index == 2 ? 1 : 0;

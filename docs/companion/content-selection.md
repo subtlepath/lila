@@ -4151,3 +4151,21 @@ reviews, undo and flags. The reusable owner adds no internal heap allocation.
 Candidate reconstruction and complete frozen conversion still require comparison
 with the frozen committed item snapshot and other learner evidence before any
 journal/learner publication; diagnostic day logs remain separate.
+
+Frozen committed item comparison now binds the replay cursor to the exact
+candidate store and checks its record count against the frozen item header's
+committed journal boundary. It compares the complete UID set and every native
+item field, including header-carried pending records. Missing/extra items,
+duplicate UIDs, tombstones or mismatched schedules/flags refuse the report. A
+missing snapshot requires an empty replay item set at boundary zero; fresh default
+values cannot hide candidate membership. The frozen file is rehashed again after
+comparison and all its handles close before a report is exposed.
+
+The scoped report expires when replay advances beyond that boundary. The Native
+fixture pauses review streaming and lends the unused workspace tail to a separate
+reviewed-file reader, preserving the retained review buffer and using no second
+session workspace. SD rescans avoid a per-item heap table; this trades additional
+I/O for bounded RAM and is not a performance improvement. The reusable inspector
+has no internal allocation. Undo metadata, progress counters, other learner files,
+archived journal coverage and recoverable runtime publication remain separate
+required checks.

@@ -84,6 +84,14 @@ class LegacyTintaReplay final {
     operating = false;
     return valid;
   }
+  bool at(const UnboundCourseReviewReservation& input, const TintaReplayStore& candidate, uint32_t records) const {
+    if (operating || !ready || input != selected || &candidate != &store) return false;
+    operating = true;
+    if (!guard()) ready = false;
+    const bool valid = ready && input == selected && cursor.records() == records && records <= selected.records;
+    operating = false;
+    return valid;
+  }
   void close() {
     if (operating) cancelled = true;
     ready = false;

@@ -83,6 +83,7 @@
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
 #include "lib/hal/HalUnboundCourseProfileInspection.h"
+#include "lib/hal/HalUnboundCourseReplayItemInspection.h"
 #include "lib/hal/HalUnboundCourseReviewConversion.h"
 #include "lib/hal/HalUnboundCourseReviewCountInspection.h"
 #include "lib/hal/HalUnboundCourseReviewInspection.h"
@@ -9107,7 +9108,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
   const auto reviewUid = parser->uidAt(0);
-  for (unsigned fault = 0; fault < 10; ++fault) {
+  for (unsigned fault = 0; fault < 12; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9139,7 +9140,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       marks[8] = 1;
       binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
     }
-    if (fault == 9) {
+    if (fault >= 9) {
       auto& items = hal.files["/tinta/items.bin"];
       items.resize(1040, 0);
       for (unsigned slot = 0; slot < 2; ++slot) {
@@ -9152,7 +9153,13 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         binary_record::putU32(header + 16, 1);
         binary_record::putU32(header + 76, binary_record::crc32(header, 76));
       }
-      tinta::core::ItemState::fresh(reviewUid).encode(items.data() + 1024);
+      auto snapshot = tinta::core::ItemState::fresh(reviewUid);
+      if (fault == 10) {
+        tinta::core::Fsrs scheduler;
+        tinta::core::applyReview(scheduler, snapshot, tinta::core::Grade::Good, 0);
+      }
+      if (fault == 11) snapshot = tinta::core::ItemState::fresh(UINT32_MAX);
+      snapshot.encode(items.data() + 1024);
       auto& log = hal.files["/tinta/reviews.log"];
       log.resize(39, 0);
       binary_record::putU32(log.data(), reviewUid);
@@ -9243,10 +9250,10 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     permission.checking = true;
     const auto files = hal.files;
     EXPECT_EQ(inspection->inspect(request, original, *parser),
-              fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9);
+              fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault >= 9);
     permission.checking = false;
     EXPECT_GT(permission.probes, 0u);
-    if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9) {
+    if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault >= 9) {
       auto foreign = request;
       foreign.original.transaction[0] ^= 1;
       EXPECT_EQ(inspection->report(foreign), nullptr);
@@ -9262,9 +9269,9 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       EXPECT_GT(permission.probes, probes);
       permission.checking = false;
       EXPECT_TRUE(inspection->report(request)->profile.present);
-      EXPECT_EQ(inspection->report(request)->items.present, fault == 9);
+      EXPECT_EQ(inspection->report(request)->items.present, fault >= 9);
       EXPECT_FALSE(inspection->report(request)->session.present);
-      if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9) {
+      if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault >= 9) {
         UnboundCourseMigrationIntent intent;
         intent.reader = reader;
         intent.request = request;
@@ -9287,7 +9294,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(mapUnboundCourseBoundReadings(
             *inspection, *reviewed, *oldReader, *newReader, intent, scratch, readings, [](void*) { return true; },
             nullptr));
-        EXPECT_EQ(readings.present, fault != 4 && fault != 9);
+        EXPECT_EQ(readings.present, fault != 4 && fault < 9);
         EXPECT_EQ(readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(readings.installedMissing, 0);
         EXPECT_EQ(readings.originalMissing, fault == 8 ? 1 : 0);
@@ -9346,7 +9353,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         const auto* report = migration->report(intent);
         ASSERT_NE(report, nullptr);
         EXPECT_EQ(report->lessons.currentLesson, 0);
-        EXPECT_EQ(report->readings.present, fault != 4 && fault != 9);
+        EXPECT_EQ(report->readings.present, fault != 4 && fault < 9);
         EXPECT_EQ(report->readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(report->readings.originalMissing, fault == 8 ? 1 : 0);
         EXPECT_TRUE(report->learner.profile.present);
@@ -9384,7 +9391,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         reviewEntry.index = 123;
         EXPECT_EQ(stream->next(foreign, reviewEntry), LegacyTintaReadResult::Unavailable);
         EXPECT_EQ(reviewEntry.index, 123u);
-        if (fault == 9) {
+        if (fault >= 9) {
           EventIdentity reservation;
           reservation.origin.fill(61);
           reservation.epoch = 62;
@@ -9422,7 +9429,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         EXPECT_EQ(reviewEntry.index, 123u);
         streamPermission.permitted = true;
         EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
-        if (fault == 9) {
+        if (fault >= 9) {
           ASSERT_TRUE(stream->open(intent));
           for (unsigned index = 0; index < 3; ++index)
             ASSERT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Record);
@@ -9473,8 +9480,8 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(counts->inspect(intent));
         EXPECT_GT(countPermission.probes, 0u);
         ASSERT_NE(counts->report(intent), nullptr);
-        EXPECT_EQ(counts->report(intent)->records, fault == 9 ? 3u : 0u);
-        EXPECT_EQ(counts->report(intent)->events, fault == 9 ? 4u : 0u);
+        EXPECT_EQ(counts->report(intent)->records, fault >= 9 ? 3u : 0u);
+        EXPECT_EQ(counts->report(intent)->events, fault >= 9 ? 4u : 0u);
         EXPECT_EQ(counts->report(foreign), nullptr);
         ASSERT_NE(counts->report(intent), nullptr);
         countPermission.allowed = false;
@@ -9488,7 +9495,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         EXPECT_FALSE(counts->inspect(intent));
         ASSERT_TRUE(counts->inspect(intent));
         EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
-        if (fault == 9) {
+        if (fault >= 9) {
           std::string frozenLog;
           for (const auto& [path, file] : hal.files)
             if (path.find("course-review-state-") != std::string::npos && file.size() == 39) frozenLog = path;
@@ -9502,8 +9509,8 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         UnboundCourseReviewReservation reviewReservation;
         reviewReservation.intent = intent;
         reviewReservation.epoch = 77;
-        reviewReservation.records = fault == 9 ? 3 : 0;
-        reviewReservation.events = fault == 9 ? 4 : 0;
+        reviewReservation.records = fault >= 9 ? 3 : 0;
+        reviewReservation.events = fault >= 9 ? 4 : 0;
         struct ConversionContext {
           HalUnboundCourseReviewConversion* owner = nullptr;
           const UnboundCourseReviewReservation* reservation;
@@ -9541,7 +9548,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         auto wrongReservation = reviewReservation;
         ++wrongReservation.epoch;
         EXPECT_EQ(conversion->next(wrongReservation), LegacyTintaReadResult::Unavailable);
-        if (fault == 9) {
+        if (fault >= 9) {
           for (unsigned index = 0; index < 3; ++index) {
             ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
             const auto* event = conversion->event(reviewReservation, 0);
@@ -9574,7 +9581,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         conversionContext.allowed = true;
         EXPECT_FALSE(conversion->completed(reviewReservation));
         ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
-        if (fault == 9) {
+        if (fault >= 9) {
           conversionContext.failPrior = true;
           EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::IoError);
           EXPECT_EQ(conversion->event(reviewReservation, 0), nullptr);
@@ -9619,7 +9626,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
         EXPECT_TRUE(conversion->closeReaders());
         EXPECT_EQ(hal.files, conversionFiles);
-        if (fault == 9) {
+        {
           auto working = makeUniqueNoThrow<HalTintaReplayStore>(TintaReplayStoreTarget::BaselineProof);
           ASSERT_TRUE(working);
           ASSERT_TRUE(working->begin(intent.request.original.manifest.logicalIdentity));
@@ -9635,24 +9642,116 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
             LegacyTintaReplay* replay;
             const UnboundCourseReviewReservation* reservation;
           } replayContext{replay.get(), &reviewReservation};
-          ASSERT_TRUE(conversion->open(
-              reviewReservation,
-              [](void* raw, const UnboundCourseReviewEntry& entry, tinta::core::ItemState& before) {
-                auto& state = *static_cast<ReplayContext*>(raw);
-                return state.replay->apply(*state.reservation, entry.index, entry.entry, before);
+          auto replayPrior = [](void* raw, const UnboundCourseReviewEntry& entry, tinta::core::ItemState& before) {
+            auto& state = *static_cast<ReplayContext*>(raw);
+            return state.replay->apply(*state.reservation, entry.index, entry.entry, before);
+          };
+          ASSERT_TRUE(conversion->open(reviewReservation, replayPrior, &replayContext));
+          static constexpr size_t RETAINED_REVIEW_BYTES = 32 * LegacyTintaJournalDecoder::RECORD_SIZE;
+          const auto itemScratch = std::span(scratch).subspan(RETAINED_REVIEW_BYTES);
+          auto snapshotReader = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+              intent.reader, generation, itemScratch, [](void*) { return true; }, nullptr);
+          ASSERT_TRUE(snapshotReader);
+          struct SnapshotPermission {
+            bool allowed = true;
+            HalUnboundCourseReplayItemInspection* owner = nullptr;
+            const UnboundCourseReviewReservation* reservation;
+            bool checking = false, closeNext = false;
+          } snapshotPermission{true, nullptr, &reviewReservation};
+          auto snapshotProof = makeUniqueNoThrow<HalUnboundCourseReplayItemInspection>(
+              *migration, *snapshotReader, *replay, *working, itemScratch,
+              [](void* raw) {
+                auto& state = *static_cast<SnapshotPermission*>(raw);
+                if (state.checking) {
+                  EXPECT_FALSE(state.owner->inspect(*state.reservation));
+                  EXPECT_EQ(state.owner->report(*state.reservation), nullptr);
+                }
+                if (state.closeNext) {
+                  state.closeNext = false;
+                  EXPECT_TRUE(state.owner->closeReaders());
+                }
+                return state.allowed;
               },
-              &replayContext));
-          for (unsigned index = 0; index < 3; ++index) {
+              &snapshotPermission);
+          ASSERT_TRUE(snapshotProof);
+          snapshotPermission.owner = snapshotProof.get();
+          if (fault >= 9) {
+            EXPECT_FALSE(snapshotProof->inspect(reviewReservation));
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+            ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+          }
+          snapshotPermission.checking = true;
+          const bool matching = fault < 9 || fault == 10;
+          EXPECT_EQ(snapshotProof->inspect(reviewReservation), matching);
+          snapshotPermission.checking = false;
+          if (matching) {
+            ASSERT_NE(snapshotProof->report(reviewReservation), nullptr);
+            EXPECT_EQ(snapshotProof->report(reviewReservation)->compared, fault < 9 ? 0u : 1u);
+            EXPECT_EQ(snapshotProof->report(reviewReservation)->committedRecords, fault < 9 ? 0u : 1u);
+            auto foreign = reviewReservation;
+            ++foreign.epoch;
+            EXPECT_EQ(snapshotProof->report(foreign), nullptr);
+            EXPECT_NE(snapshotProof->report(reviewReservation), nullptr);
+            snapshotPermission.allowed = false;
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+            snapshotPermission.allowed = true;
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+            ASSERT_TRUE(snapshotProof->inspect(reviewReservation));
+            snapshotPermission.closeNext = true;
+            EXPECT_FALSE(snapshotProof->inspect(reviewReservation));
+            ASSERT_TRUE(snapshotProof->inspect(reviewReservation));
+            if (fault == 10) {
+              tinta::core::ItemState original;
+              ASSERT_TRUE(working->item(reviewUid, original));
+              auto changed = original;
+              changed.flags ^= tinta::core::item_flag::kStarred;
+              ASSERT_TRUE(working->putItem(changed));
+              EXPECT_FALSE(snapshotProof->inspect(reviewReservation));
+              EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+              ASSERT_TRUE(working->putItem(original));
+              ASSERT_TRUE(snapshotProof->inspect(reviewReservation));
+              std::string frozenItems;
+              for (const auto& [path, file] : hal.files) {
+                if (path.find("course-review-state-") != std::string::npos && file.size() == 1040) frozenItems = path;
+              }
+              ASSERT_FALSE(frozenItems.empty());
+              hal.files[frozenItems][1032] ^= 1;
+              EXPECT_FALSE(snapshotProof->inspect(reviewReservation));
+              EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+              hal.files[frozenItems][1032] ^= 1;
+              ASSERT_TRUE(snapshotProof->inspect(reviewReservation));
+            }
+            const auto extraUid = reviewUid == UINT32_MAX - 1 ? 1u : reviewUid + 1u;
+            ASSERT_TRUE(working->putItem(tinta::core::ItemState::fresh(extraUid)));
+            EXPECT_FALSE(snapshotProof->inspect(reviewReservation));
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+            ASSERT_TRUE(working->begin(intent.request.original.manifest.logicalIdentity));
+            ASSERT_TRUE(replay->begin(reviewReservation, configuration));
+            ASSERT_TRUE(conversion->open(reviewReservation, replayPrior, &replayContext));
+            if (fault >= 9) {
+              ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+            }
+            ASSERT_TRUE(snapshotProof->inspect(reviewReservation));
+          } else {
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+          }
+          for (unsigned index = 1; index < reviewReservation.records; ++index) {
             ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
             ASSERT_NE(conversion->event(reviewReservation, 0), nullptr);
           }
+          if (fault >= 9) {
+            EXPECT_EQ(snapshotProof->report(reviewReservation), nullptr);
+          } else {
+            EXPECT_NE(snapshotProof->report(reviewReservation), nullptr);
+          }
+          EXPECT_TRUE(snapshotProof->closeReaders());
           EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::End);
           EXPECT_TRUE(conversion->completed(reviewReservation));
           EXPECT_TRUE(replay->complete(reviewReservation));
           tinta::core::ItemState state;
           ASSERT_TRUE(working->item(reviewUid, state));
           auto expected = tinta::core::ItemState::fresh(reviewUid);
-          expected.flags = tinta::core::item_flag::kSuspended;
+          expected.flags = fault >= 9 ? tinta::core::item_flag::kSuspended : 0;
           EXPECT_EQ(state, expected);
           TintaReplayDay day;
           ASSERT_TRUE(working->day(0, day));
