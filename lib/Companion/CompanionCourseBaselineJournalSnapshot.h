@@ -7,7 +7,7 @@
 namespace companion {
 enum class CourseBaselineJournalSnapshotResult { Ok, Missing, Invalid, Busy, IoError };
 // Admit off stack. Caller excludes backup writers and lends scratch only during
-// open. Reads use verified immutable copies; native recovery cannot mutate them.
+// open/reopen. Reads use verified immutable copies; native recovery cannot mutate them.
 class CourseBaselineJournalSnapshot final : public TintaJournalStorage {
  public:
   using Permission = bool (*)(void*);
@@ -23,7 +23,7 @@ class CourseBaselineJournalSnapshot final : public TintaJournalStorage {
       bool& operating;
       ~Operation() { operating = false; }
     } operation{operating};
-    ready = false;
+    ready = captured = false;
     CourseBaselineReviewView view;
     if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
     if (scratch.empty() || !hash ||
@@ -45,18 +45,23 @@ class CourseBaselineJournalSnapshot final : public TintaJournalStorage {
     }
     if (copied != files.size()) return CourseBaselineJournalSnapshotResult::Invalid;
     // All borrowed review fields are copied before verification can reuse scratch.
-    for (const auto& file : files) {
-      uint64_t length = 0;
-      if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
-      const auto status = storage.stat(file.path.data(), length);
-      if (file.present ? status != FileStatus::Present || length != file.length ||
-                             !storage.verify(file.path.data(), file.length, file.hash, scratch)
-                       : status != FileStatus::Missing)
-        return CourseBaselineJournalSnapshotResult::IoError;
-    }
-    if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
-    ready = present;
+    const auto verified = verify(scratch);
+    if (verified != CourseBaselineJournalSnapshotResult::Ok) return verified;
+    ready = captured = present;
     return present ? CourseBaselineJournalSnapshotResult::Ok : CourseBaselineJournalSnapshotResult::Missing;
+  }
+  CourseBaselineJournalSnapshotResult reopen(std::span<uint8_t> scratch) {
+    if (operating) return CourseBaselineJournalSnapshotResult::Busy;
+    ready = false;
+    if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
+    if (!captured || scratch.empty() ||
+        course_baseline_detail::overlaps(scratch.data(), scratch.size(), this, sizeof(*this)))
+      return CourseBaselineJournalSnapshotResult::Invalid;
+    operating = true;
+    const auto result = verify(scratch);
+    operating = false;
+    ready = result == CourseBaselineJournalSnapshotResult::Ok;
+    return result;
   }
   void close() { ready = false; }
   bool size(uint32_t& bytes) override {
@@ -92,6 +97,19 @@ class CourseBaselineJournalSnapshot final : public TintaJournalStorage {
   }
 
  private:
+  CourseBaselineJournalSnapshotResult verify(std::span<uint8_t> scratch) {
+    for (const auto& file : files) {
+      uint64_t length = 0;
+      if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
+      const auto status = storage.stat(file.path.data(), length);
+      if (file.present ? status != FileStatus::Present || length != file.length ||
+                             !storage.verify(file.path.data(), file.length, file.hash, scratch)
+                       : status != FileStatus::Missing)
+        return CourseBaselineJournalSnapshotResult::IoError;
+    }
+    if (!guard()) return CourseBaselineJournalSnapshotResult::Busy;
+    return CourseBaselineJournalSnapshotResult::Ok;
+  }
   struct File {
     std::array<char, 112> path{};
     Digest hash{};
@@ -105,7 +123,7 @@ class CourseBaselineJournalSnapshot final : public TintaJournalStorage {
   void* hashContext;
   std::array<File, 3> files{};
   Digest computed{};
-  bool ready = false, operating = false;
+  bool ready = false, operating = false, captured = false;
   bool guard() const { return permitted && permitted(context); }
   bool checked(const File& file) {
     uint64_t length = 0;

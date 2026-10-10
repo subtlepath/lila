@@ -92,6 +92,7 @@ class HalJournalCausalAuditSession {
     return true;
   }
   using ReplayVisitor = bool (*)(void*, uint32_t, const SyncEvent&, std::span<const uint8_t>, bool);
+  static constexpr size_t replayWorkspaceBytes() { return sizeof(ReplayWorkspace); }
   using KnowledgeHeadVisitor = bool (*)(void*, const EventIdentity&);
   using BookmarkIdentityVisitor = bool (*)(void*, const Identity&);
   // Explicit IDs in legacy caches must not be borrowed from another edition.

@@ -2862,3 +2862,27 @@ Legacy learner state also cannot be assumed to come entirely from a partial
 canonical journal; the legacy migration draft separately confirms scheduler
 configuration and ambiguous history/reading correspondence. Full baseline
 replay verification and live commands remain unfinished.
+
+The reviewed-journal audit now supports native replay from the immutable backup
+copies. `CourseBaselineJournalSnapshot::reopen` rechecks the captured paths,
+presence, lengths and full hashes without requiring the borrowed review bytes
+again. A failed or absent initial capture cannot be reopened as authority.
+The native owner consumes one successful audit for replay, reopens before visiting
+records and rechecks source hashes after callbacks before reporting success.
+Callback failure, permission loss and changed source bytes withhold success;
+neither audit nor replay repairs immutable journal headers or tails.
+
+All 149 HAL course-transfer tests pass, including reopening after audit cleanup,
+changed backup bytes, missing subjects, replay before/after an audit, source
+changes between audit and replay, callback failure, permission loss during the
+callback and source mutation detected by the final proof. A C3 production-header
+probe passes the 256-byte frame limit: snapshot verification 64 bytes, reopen
+32 bytes and native audited replay 160 bytes. The reviewed owner occupies
+5,352 bytes and the existing replay workspace occupies 640 bytes on this target.
+That workspace is heap-admitted against the 50 KiB reserve and largest block,
+allocated once for replay and released through RAII; its ordering state and
+retained SD handles exceed the local stack budget. Captured descriptors and the
+borrowed scratch loan are reused; no second 8 KiB buffer was added. All 1,938 host
+tests pass; final firmware and physical-device checks after this change remain pending. This replay visitor
+path is a prerequisite; it does not yet compare learner caches or establish the
+saved-session receipt digest.

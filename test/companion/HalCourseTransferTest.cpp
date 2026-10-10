@@ -7064,6 +7064,23 @@ TEST_F(HalCourseTransferTest, ReviewedJournalSnapshotUsesNativeHeadersAndNeverRe
       audit.reset();
       EXPECT_EQ(cleanup.calls, 2u);
       for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+      ASSERT_EQ(snapshot->reopen(scratch), CourseBaselineJournalSnapshotResult::Ok);
+      uint32_t reopenedLength = UINT32_MAX;
+      ASSERT_TRUE(snapshot->size(reopenedLength));
+      EXPECT_EQ(reopenedLength, 0u);
+      snapshot->close();
+      EXPECT_EQ(snapshot->reopen({}), CourseBaselineJournalSnapshotResult::Invalid);
+      for (const auto& [path, data] : retained) {
+        if (!path.starts_with("/.crosspoint/companion/course-review-state-")) continue;
+        auto& changed = hal.files.at(path);
+        if (changed.empty())
+          changed.resize(1, 1);
+        else
+          changed.back() ^= 1;
+        EXPECT_EQ(snapshot->reopen(scratch), CourseBaselineJournalSnapshotResult::IoError);
+        EXPECT_FALSE(snapshot->size(reopenedLength));
+        changed = data;
+      }
       ASSERT_EQ(snapshot->open(review, expected, scratch), CourseBaselineJournalSnapshotResult::Ok);
       cleanup.succeeds = false;
       audit = makeUniqueNoThrow<HalJournalCausalAuditSession>(*snapshot, close, &cleanup);
@@ -7145,6 +7162,76 @@ TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFro
     uint32_t length = 17;
     EXPECT_FALSE(snapshot->size(length));
     EXPECT_EQ(length, 17u);
+    auto reviewed = createHalCourseBaselineReviewedJournalAudit(*pack, source, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+    struct ReplayCheck {
+      Identity course;
+      uint32_t uid;
+      unsigned calls = 0;
+    } check{declaration.manifest.logicalIdentity, pack->uidAt(0)};
+    auto visitor = [](void* context, uint32_t, const SyncEvent& event, std::span<const uint8_t> bytes, bool undone) {
+      auto& check = *static_cast<ReplayCheck*>(context);
+      ++check.calls;
+      TintaBody body;
+      if (!decodeTintaBody(bytes, body)) return false;
+      EXPECT_EQ(event.kind, EventKind::Star);
+      EXPECT_EQ(body.course, check.course);
+      EXPECT_EQ(body.uid, check.uid);
+      EXPECT_TRUE(body.enabled);
+      EXPECT_FALSE(undone);
+      return event.kind == EventKind::Star && body.course == check.course && body.uid == check.uid && !undone;
+    };
+    EXPECT_FALSE(reviewed->replay(&check, visitor, scratch));
+    EXPECT_EQ(reviewed->run(review, expected, declaration.manifest.logicalIdentity, scratch), !missing);
+    EXPECT_EQ(reviewed->replay(&check, visitor, scratch), !missing);
+    EXPECT_EQ(check.calls, missing ? 0u : 1u);
+    EXPECT_FALSE(reviewed->replay(&check, visitor, scratch));
+    for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+    if (!missing) {
+      auto backup = std::find_if(hal.files.begin(), hal.files.end(), [](const auto& entry) {
+        return entry.first.starts_with("/.crosspoint/companion/course-review-state-") && entry.first.ends_with("-01");
+      });
+      ASSERT_NE(backup, hal.files.end());
+      ASSERT_FALSE(backup->second.empty());
+      const auto path = backup->first;
+      const auto original = backup->second;
+      bool permitted = true;
+      auto guarded = createHalCourseBaselineReviewedJournalAudit(
+          *pack, source, [](void* context) { return *static_cast<bool*>(context); }, &permitted);
+      ASSERT_TRUE(guarded);
+      struct Fault {
+        bool* permitted;
+        const std::string* path;
+        unsigned mode, calls = 0;
+      } fault{&permitted, &path, 0};
+      auto reject = [](void* context, uint32_t, const SyncEvent&, std::span<const uint8_t>, bool) {
+        auto& fault = *static_cast<Fault*>(context);
+        ++fault.calls;
+        if (fault.mode == 1) return false;
+        if (fault.mode == 2) *fault.permitted = false;
+        if (fault.mode == 3) inventory_hal_test::state.files.at(*fault.path).back() ^= 1;
+        return true;
+      };
+      for (unsigned mode = 0; mode < 4; ++mode) {
+        SCOPED_TRACE(mode);
+        fault.mode = mode;
+        fault.calls = 0;
+        permitted = true;
+        hal.files.at(path) = original;
+        ASSERT_TRUE(guarded->run(review, expected, declaration.manifest.logicalIdentity, scratch));
+        if (mode == 0) hal.files.at(path).back() ^= 1;
+        EXPECT_FALSE(guarded->replay(&fault, reject, scratch));
+        EXPECT_EQ(fault.calls, mode == 0 ? 0u : 1u);
+        permitted = true;
+        EXPECT_FALSE(guarded->replay(&fault, reject, scratch));
+        for (const auto& [name, data] : retained) {
+          if (name != path) {
+            EXPECT_EQ(hal.files.at(name), data);
+          }
+        }
+      }
+      hal.files.at(path) = original;
+    }
     ASSERT_TRUE(packStorage.close());
   }
 }
