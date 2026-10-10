@@ -1117,3 +1117,11 @@ padding use the existing legacy decoder. A missing log is refused when items
 claim committed records; malformed or insufficient history preserves the output
 report and releases the file loan. Workspace/report overlap is refused before
 reading. Distributed ancestry and replay correspondence still require validation.
+
+Frozen unbound profile inspection checks the copied file's integrity and lesson
+indices against the confirmed original pack. Missing profiles remain explicit
+absence; corrupt files and invalid lesson references leave the output unchanged.
+The decoder's `Loaded` or `Upgraded` status is retained without saving repaired
+bytes. Device-local fields in this evidence are not portable preference changes.
+Mapping lessons to the installed pack and proving scheduler correspondence remain
+required before migration can authorize learner mutations.

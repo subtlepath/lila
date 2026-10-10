@@ -3757,3 +3757,13 @@ allocation is introduced. Verify with the HAL companion host suite. These helper
 remain outside runtime firmware, so the five validated images are unchanged.
 Profiles, marks, days, sessions, distributed provenance/replay correspondence and
 native migration composition remain unfinished; inspection is not authorization.
+
+Frozen profile inspection now retains absence and decoder repair status, checks
+lesson indices against the confirmed original pack, and preserves copied bytes
+and output on failure. All 1,986 host tests pass, including actual captured and
+backed-up valid, corrupt, repaired, missing and invalid-lesson profiles. The C3
+inspection frame is 112 bytes and all emitted frames remain within 256 bytes;
+there is no new allocation. Verify with the HAL companion host suite. This
+helper remains outside runtime firmware. Stable lesson mapping to the installed
+pack, marks/days/sessions, distributed replay correspondence and native migration
+composition remain unfinished. Device-local profile fields are evidence only.

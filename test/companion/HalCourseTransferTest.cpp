@@ -73,6 +73,7 @@
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
+#include "lib/hal/HalUnboundCourseProfileInspection.h"
 #include "lib/hal/HalUnboundCourseReviewInspection.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "platform/StateFiles.h"
@@ -8717,6 +8718,75 @@ TEST_F(HalCourseTransferTest, UnboundReviewInspectionChecksCommittedCountUidsAnd
     } else {
       EXPECT_FALSE(report.present);
       EXPECT_EQ(report.journal.records, 123u);
+    }
+    EXPECT_EQ(reviewed->borrowed(), nullptr);
+    EXPECT_EQ(hal.files, files);
+  }
+}
+
+TEST_F(HalCourseTransferTest, UnboundProfileInspectionPreservesRepairsAndRejectsInvalidLessons) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    auto& hal = inventory_hal_test::state;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    hal.files["/tinta/items.bin"] = {1};
+    if (fault != 4) {
+      tinta::core::Profile profile;
+      if (fault == 2) profile.currentLesson = UINT16_MAX;
+      if (fault == 3) profile.frontlightBrightness = 255;
+      auto& encoded = hal.files["/tinta/profile.bin"];
+      encoded.resize(tinta::core::Profile::kEncodedSize);
+      profile.encode(encoded.data());
+      if (fault == 1) encoded.back() ^= 1;
+    }
+    Identity reader{};
+    reader.fill(51);
+    Digest hash{};
+    {
+      auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(capture);
+      ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+                CourseBaselineReviewResult::Ok);
+      hash = *capture->hash();
+      const std::vector<uint8_t> encoded(capture->bytes().begin(), capture->bytes().end());
+      capture.reset();
+      auto roster = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+          std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(roster);
+      ASSERT_EQ(roster->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    }
+    {
+      auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(backups);
+      ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+      ASSERT_TRUE(backups->closeReaders());
+    }
+    UnboundCourseMigrationRequest request;
+    request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+    auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+        reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+
+    UnboundCourseProfileReport report;
+    report.profile.newPerDay = 123;
+    const auto files = hal.files;
+    EXPECT_EQ(inspectUnboundCourseProfile(
+                  *reviewed, request, *parser, scratch, report, [](void*) { return true; }, nullptr),
+              fault == 0 || fault == 3 || fault == 4);
+    if (fault == 1 || fault == 2) {
+      EXPECT_EQ(report.profile.newPerDay, 123);
+      EXPECT_FALSE(report.present);
+    } else {
+      EXPECT_EQ(report.present, fault != 4);
+      EXPECT_EQ(report.status, fault == 4   ? tinta::core::Profile::LoadResult::Defaults
+                               : fault == 3 ? tinta::core::Profile::LoadResult::Upgraded
+                                            : tinta::core::Profile::LoadResult::Loaded);
     }
     EXPECT_EQ(reviewed->borrowed(), nullptr);
     EXPECT_EQ(hal.files, files);
