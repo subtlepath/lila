@@ -24,6 +24,7 @@
 #include "HalTintaReplayLessonCorrespondence.h"
 #include "HalTintaReplayMarkCorrespondence.h"
 #include "HalUnboundCourseLessonMapping.h"
+#include "HalUnboundCoursePackReader.h"
 
 using namespace companion;
 
@@ -1507,4 +1508,61 @@ TEST(HalUnboundLessonMapping, MissingProfilesCarryNoProgressAndPresentProfilesUs
   profile.status = tinta::core::Profile::LoadResult::Corrupt;
   EXPECT_FALSE(mapUnboundCourseLessons(profile, *pack, *pack, scratch, result, [](void*) { return true; }, nullptr));
   EXPECT_EQ(result.currentLesson, 123);
+}
+
+TEST(HalUnboundPackReader, LoansAreIntentBoundAndPermissionLossRevokesRetainedSources) {
+  inventory_hal_test::state = {};
+  inventory_hal_test::state.enumerateFileMap = true;
+  companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.files["/tinta/original.pack"] = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  UnboundCourseMigrationIntent intent;
+  intent.reader.fill(1);
+  intent.request.original.generation.fill(2);
+  intent.request.original.owner.fill(3);
+  intent.request.original.transaction.fill(4);
+  intent.request.original.reviewHash.fill(5);
+  auto& manifest = intent.request.original.manifest;
+  manifest.kind = ContentKind::Course;
+  manifest.formatVersion = 1;
+  manifest.logicalIdentity.fill(6);
+  manifest.length = bytes.size();
+  SHA256(bytes.data(), bytes.size(), manifest.contentHash.data());
+  intent.activePack = manifest;
+  std::array<uint8_t, 8192> scratch{};
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  bool permission = true;
+  auto owner = makeUniqueNoThrow<HalUnboundCoursePackReader>(
+      scratch, *parser, [](void* context) { return *static_cast<bool*>(context); }, &permission);
+  ASSERT_TRUE(owner);
+  const auto files = hal.files;
+  ASSERT_TRUE(owner->open(intent, UnboundPackRole::Original, "/tinta/original.pack"));
+  auto loan = owner->borrowed(intent, UnboundPackRole::Original);
+  ASSERT_TRUE(loan);
+  uint8_t byte = 0;
+  ASSERT_TRUE(loan.source->read(0, &byte, 1));
+  EXPECT_EQ(byte, 'T');
+  auto foreign = intent;
+  foreign.request.original.transaction[0] ^= 1;
+  EXPECT_FALSE(owner->borrowed(foreign, UnboundPackRole::Original));
+  EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Installed));
+  permission = false;
+  EXPECT_FALSE(loan.source->read(0, &byte, 1));
+  EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Original));
+  permission = true;
+  EXPECT_FALSE(loan.source->read(0, &byte, 1));
+  ASSERT_TRUE(owner->open(intent, UnboundPackRole::Installed));
+  EXPECT_TRUE(owner->borrowed(intent, UnboundPackRole::Installed));
+  hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
+  EXPECT_FALSE(owner->open(intent, UnboundPackRole::Installed));
+  EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Installed));
+  EXPECT_FALSE(parser->isOpen());
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  EXPECT_EQ(hal.files, files);
 }

@@ -3883,3 +3883,16 @@ with `TintaLegacyReadingMapping.EveryOriginalAndInstalledReadFailureWithholdsEvi
 in the companion Tinta host suite. Production code is unchanged, so the existing
 C3 stack proof and firmware images remain applicable. Native pack binding,
 retirement policy, replay agreement and recoverable migration remain unfinished.
+
+Native unbound pack loans now retain a full-validated/hash-checked parser and
+permission-checked source scoped to an intent and original/installed role. All
+1,996 host tests pass after replacing a feature-gated include with direct
+requirements. Tests exercise original/installed opens, wrong intent/role,
+retained-source revocation, fresh-open recovery and damaged payload refusal,
+with files preserved. The final C3 probe includes source construction/read:
+open is 48 bytes, read 64, and every emitted frame is within 256 (largest 224).
+The initial compiler stopped at a system open-file limit; a separate terminal
+retry passed. No internal allocation is added; parser/workspace/owner stay
+caller-owned off stack. Verify with the HAL companion Tinta host suite. Runtime
+firmware is unchanged. Pack-pair continuity, explicit confirmation, learner
+mapping/replay composition and recoverable native migration remain unfinished.

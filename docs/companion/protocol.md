@@ -1213,3 +1213,16 @@ is a distinct outcome; ambiguous keys, invalid inputs and I/O errors withhold
 output. The adapter neither writes mark logs nor invents completion events.
 Callers must bind validated immutable packs and bounded/yielding sources; changed
 story identities require explicit retained evidence rather than guessing by title.
+
+A native unbound pack reader retains the validated parser and guarded source for
+one migration intent and original/installed role. Original paths are explicitly
+supplied; installed reads use the active course path. Opening verifies length,
+SHA-256, full pack content/identities and format, then verifies SHA-256 again
+without closing the successful parser. Borrowing requires the exact intent/role.
+Reads check permission/heap admission, bound offsets, use HAL metadata access and
+yield periodically. Read failure or permission loss revokes retained sources;
+permission restoration requires a fresh open. Operation guards reject open/loan
+reentry during reads. Close releases parser and handles. The caller excludes pack
+writers and lends the off-stack parser and shared workspace; no internal buffer
+allocation is added. These loans prove payload readability, not pack-pair
+continuity, human confirmation, learner replay agreement or migration authority.
