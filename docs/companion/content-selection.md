@@ -3439,3 +3439,103 @@ verified course isolation before scanning the selected scope
 exercise previously isolated learner state; they do not prove review or import
 of global unbound `/tinta` learner files. Course identity discovery and reviewed,
 recoverable isolation must be completed before enabling that workflow.
+
+
+The app now offers explicit original-pack confirmation on the frozen review
+screen, gated by import capability bit 17 and the matching authenticated reader,
+card generation and course association. Queueing revalidates vault content and
+complete pack metadata, rechecks connection identity after asynchronous work,
+and saves review-bound consent through the existing atomic store operation.
+Prepared content work distinguishes baseline archives from ordinary course
+transfers. The app dispatches them through the dedicated baseline runner for BLE,
+Wi-Fi preparation, authenticated handoff, Bluetooth fallback and commit recovery;
+ordinary active-course admission is not applied to an archive job.
+
+New tests show that a queued baseline job keeps its route across SQLite restart,
+partial resume and commit recovery even when its pack appears in the inventory.
+Foreign owners still require inspection, deselection still requests abort, and
+replacement cards retain a stale-job action. Testing exposed that replacement
+card reconciliation also queued an ordinary installation of the selected original
+pack. It now suppresses that conversion while stale baseline consent remains
+unresolved. All 548 portable Swift tests pass after the correction (16.155
+seconds). The SwiftUI source parses and the string catalog and diff checks pass;
+Apple SDK builds and physical acceptance remain pending. No firmware source was
+changed in this step. Import capability advertisement and initial unbound legacy
+review/isolation remain unfinished.
+
+
+Unbound legacy learner files can now be reviewed without creating a course
+binding or moving learner state. Native capture selects global `/tinta` only when
+all binding publication and state/mark migration records are absent. It rechecks
+that namespace after capture, rejects unknown subdirectories and pending learner
+files, and records every stable root file plus the existing journal roster.
+A distinct `TCBV` version-2 scope flag marks the course identity as proposed;
+isolation proof entries must be absent. Version-1 isolated reviews are unchanged.
+No extra buffer or heap owner is introduced: capture reuses its admitted owner,
+fixed paths and the existing 8 KiB workspace.
+
+The review store and paging codec explicitly accept the unbound read-only format.
+Native import consumers keep their default isolated-only decoder. Swift parses
+both formats, labels a proposed identity on the review screen, and refuses
+archive consent matching/queueing for an unbound review. Tests use a shared
+unbound fixture and cover malformed/truncated records, unchanged native learner
+files, refusal of partial binding/migration metadata, paged Apple collection and
+SQLite queue rollback without selection changes. All 551 portable Swift tests
+pass (16.170 seconds). The actual C3 activity translation unit passes the stack
+probe: capture 128 bytes, namespace check 64, review reply 224; no frame exceeds
+256 bytes. Initial consent-driven backup/isolation and physical acceptance remain
+unfinished. The five-target firmware verification is running for this source.
+
+
+Final native paging coverage reconstructs an unbound review through the actual
+HAL request handler and immutable paged store, with exact byte/hash equality.
+All 1,960 host tests pass after the last test edit (11.88 seconds). The first
+shared-fixture test build failed because its target uses a fixture-specific
+compile definition rather than `COMPANION_FIXTURE_DIR`; that path was corrected
+and a fresh checked build completed before this final ctest run. The earlier
+ctest result from the failed-build attempt is not used as final-source proof.
+
+
+Native admission coverage now sends a reader/card/owner-bound baseline request
+using the actual frozen unbound review hash. The existing approval callback
+refuses it with `Unauthorized`, leaves no current transfer, and preserves the
+complete file map without writing consent or starting an upload. All 1,960 host
+tests pass after the final expected-result correction (12.63 seconds).
+
+The running firmware batch has validated and retained the default image at
+6,491,712 bytes with 61,888 bytes OTA headroom. Its copied image was independently
+revalidated against the recorded metadata and hash. The same process continues
+through the remaining targets; previous firmware images are not substituted for
+this source. All 31 production source fingerprints remain unchanged. No migration
+approval or namespace mutation has been enabled by these review changes.
+
+Sticky also completed and its retained image was independently validated at
+5,703,632 bytes with 849,968 bytes OTA headroom. The original verification
+process has advanced to x4pro; x4pro, x4c and papermono remain pending.
+
+
+All five unbound-review firmware targets subsequently completed and their retained
+images were independently revalidated against board/chip, image integrity, OTA
+sizes and recorded hashes. Final sizes/headroom are default 6,491,712 / 61,888;
+sticky 5,703,632 / 849,968; x4pro 6,522,928 / 30,672; x4c 6,492,560 / 61,040;
+papermono 5,816,768 / 736,832 bytes. All 31 production fingerprints still match.
+
+Archive confirmation is now independent of active-course selection. The prior
+queue operation deselected other courses and selected the original pack, allowing
+ordinary reconciliation to install that pack after archiving. Queueing now saves
+only the consent-bound job and preserves every existing selection. Prepared work
+and the baseline runner use that durable archive consent, with explicit abort and
+global deletion checks. Ordinary selected-content commit refuses archive jobs;
+a dedicated atomic archive commit checks consent, complete offset and cancellation.
+
+Deletion before commit refuses upload/approval and leaves abort work. Once the
+job is committing, retained metadata and declarations remain available for recovery
+even when the library copy is hidden. Public course manifest lookup still refuses
+deleted content; only internal consent/recovery validation reads the retained
+metadata. Tests prove that a selected current edition remains selected across
+original-pack archive queueing/completion, no subsequent installation is queued,
+explicit abort/deletion sends no approval, ordinary selected commit cannot commit
+an archive, and a lost commit acknowledgement recovers by status alone after
+library deletion. All 554 portable Swift tests pass after the final code edits
+(14.927 seconds). SwiftUI source parsing and diff checks pass. Apple SDK builds,
+physical acceptance and consent-driven unbound isolation remain unfinished.

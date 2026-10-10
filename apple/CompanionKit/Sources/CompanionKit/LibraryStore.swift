@@ -1977,7 +1977,11 @@ public actor LibraryStore {
         }
     }
     public func courseManifest(_ id: ContentID) throws -> ContentManifest {
-        guard let content = try content(id), content.kind == .course, try !isLibraryContentDeleted(id),
+        guard try !isLibraryContentDeleted(id) else { throw StoreError.missingContent }
+        return try storedCourseManifest(id)
+    }
+    private func storedCourseManifest(_ id: ContentID) throws -> ContentManifest {
+        guard let content = try content(id), content.kind == .course,
               let details = try coursePackDetails(id), let identity = try courseIdentity(id) else {
             throw StoreError.missingContent
         }
@@ -2695,10 +2699,6 @@ public actor LibraryStore {
                 [.text(id.uuidString), .blob(review.reader), .blob(review.generation), .blob(installation), .text(content.hex)])
         }
         _ = try confirmCourseBaselineImportInTransaction(id, review: review)
-        try database.execute("UPDATE reader_selections SET selected=0 WHERE reader=? AND content IN (SELECT hash FROM content WHERE kind=2) AND content!=? AND selected=1",
-            [.blob(review.reader), .text(content.hex)])
-        try database.execute("INSERT INTO reader_selections(reader,content,selected) VALUES(?,?,1) ON CONFLICT(reader,content) DO UPDATE SET selected=1 WHERE selected!=1",
-            [.blob(review.reader), .text(content.hex)])
         guard let job = try job(id) else { throw StoreError.missingJob }
         try database.execute("COMMIT"); committed = true
         return job
@@ -2711,7 +2711,7 @@ public actor LibraryStore {
         let review = try CourseBaselineReview(decoding: query.blob(1))
         guard let job = try job(id), request.generation == job.storageGeneration,
               request.owner == job.installation, request.transaction == withUnsafeBytes(of: id.uuid, { Data($0) }),
-              try request.manifest == courseManifest(job.content), review.matches(request, reader: job.reader) else {
+              try request.manifest == storedCourseManifest(job.content), review.matches(request, reader: job.reader) else {
             throw StoreError.conflictingJob
         }
         return request
@@ -2860,7 +2860,7 @@ public actor LibraryStore {
         defer { if !committed { try? database.execute("ROLLBACK") } }
         guard let job = try job(id), let consent = try courseBaselineConfirmation(id),
               let content = try content(job.content), content.kind == .course,
-              try !isLibraryContentDeleted(job.content), job.phase != .aborted,
+              job.phase != .aborted, try job.phase == .committing || !isLibraryContentDeleted(job.content),
               try !hasTransferAbort(id) else { throw StoreError.invalidTransition }
         guard content.length == verifiedLength, consent.manifest.length == verifiedLength else {
             throw VaultError.integrity
@@ -2868,7 +2868,7 @@ public actor LibraryStore {
         let transaction = withUnsafeBytes(of: job.id.uuid) { Data($0) }
         let state = try TransferState(transaction: transaction, owner: job.installation,
             storageGeneration: job.storageGeneration, contentHash: job.content.digest, length: verifiedLength)
-        let declaration = try TransferDeclaration(manifest: courseManifest(job.content), state: state)
+        let declaration = try TransferDeclaration(manifest: storedCourseManifest(job.content), state: state)
         guard consent.matches(generation: job.storageGeneration, owner: job.installation,
                               reviewed: consent.reviewHash, transfer: declaration) else {
             throw StoreError.conflictingJob
@@ -3038,7 +3038,21 @@ public actor LibraryStore {
         defer { if !committed { try? database.execute("ROLLBACK") } }
         guard let job = try job(id), let asset = try content(job.content) else { throw StoreError.missingJob }
         guard job.phase != .aborted, job.phase != .completed, job.durableOffset == asset.length, asset.kind != .firmware,
+              try courseBaselineConfirmation(id) == nil,
               try isReaderContentSelected(reader: job.reader, content: job.content) else { throw StoreError.invalidTransition }
+        try checkpoint(id, offset: asset.length, phase: .committing)
+        try database.execute("COMMIT"); committed = true
+    }
+    public func commitCourseBaselineTransfer(_ id: UUID) throws {
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        guard let job = try job(id), let asset = try content(job.content) else { throw StoreError.missingJob }
+        guard asset.kind == .course, job.phase != .aborted, job.phase != .completed,
+              job.durableOffset == asset.length, try courseBaselineConfirmation(id) != nil,
+              try job.phase == .committing || !isLibraryContentDeleted(job.content), try !hasTransferAbort(id) else {
+            throw StoreError.invalidTransition
+        }
         try checkpoint(id, offset: asset.length, phase: .committing)
         try database.execute("COMMIT"); committed = true
     }

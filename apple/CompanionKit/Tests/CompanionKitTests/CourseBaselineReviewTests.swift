@@ -76,4 +76,27 @@ final class CourseBaselineReviewTests: XCTestCase {
             owner: request.owner, transaction: request.transaction, manifest: otherManifest, reviewHash: review.hash)
         XCTAssertFalse(review.matches(otherCourse, reader: review.reader))
     }
+    func testSharedUnboundReviewCannotAuthorizeArchiveImport() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let bytes = try Data(contentsOf: root.appendingPathComponent("protocol/fixtures/CourseBaselineReview-unbound-v2.fixture"))
+        let review = try CourseBaselineReview(decoding: bytes)
+        XCTAssertFalse(review.isolated)
+        XCTAssertEqual(review.files.filter { $0.domain == .isolation }.count, 4)
+        XCTAssertTrue(review.files.filter { $0.domain == .isolation }.allSatisfy { !$0.present && $0.length == 0 })
+        let manifest = try ContentManifest(content: ContentID(String(repeating: "04", count: 32)),
+            kind: .course, length: 4097, formatVersion: 1, logicalIdentity: review.course)
+        let request = try CourseBaselineImportRequest(generation: review.generation,
+            owner: Data(repeating: 5, count: 16), transaction: Data(repeating: 6, count: 16),
+            manifest: manifest, reviewHash: review.hash)
+        XCTAssertFalse(review.matches(request, reader: review.reader))
+        let faults: [(Int, UInt8)] = [(4, 1), (6, 0), (7, 1), (61 + 4 * 68, 1)]
+        for (offset, value) in faults {
+            var invalid = bytes; invalid[offset] = value
+            XCTAssertThrowsError(try CourseBaselineReview(decoding: seal(invalid)))
+        }
+        for length in 0..<bytes.count {
+            XCTAssertThrowsError(try CourseBaselineReview(decoding: Data(bytes.prefix(length))))
+        }
+    }
 }

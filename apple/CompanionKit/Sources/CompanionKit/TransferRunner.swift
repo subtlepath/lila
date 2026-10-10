@@ -362,8 +362,8 @@ public actor TransferRunner {
         }
         guard job.phase != .aborted else { throw TransferRunnerError.aborted }
         guard try await !library.hasTransferAbort(id) else { throw TransferRunnerError.abortPending }
-        let checkSelection = requireSelection && job.phase != .committing
-        if checkSelection { try await ensureSelected(job) }
+        let checkApproval = (requireSelection || baselineAdmitted) && job.phase != .committing
+        if checkApproval { try await ensureTransferApproved(job, baseline: baselineAdmitted) }
         let object = try await vault.verifiedObject(job.content)
         if content.kind == .course { try await validateCourse(content, job: job.id, url: object.url, device: device, baselineAdmitted: baselineAdmitted) }
         if content.kind == .font {
@@ -419,7 +419,7 @@ public actor TransferRunner {
                     throw TransferCommandError.remote(result)
                 }
                 try Task.checkCancellation()
-                if checkSelection { try await ensureSelected(job) }
+                if checkApproval { try await ensureTransferApproved(job, baseline: baselineAdmitted) }
                 guard try await !library.hasTransferAbort(id), let consent = baselineConsent else {
                     throw TransferRunnerError.abortPending
                 }
@@ -446,7 +446,7 @@ public actor TransferRunner {
         if prepareOnly && state.phase != .committed {
             guard state.phase == .receiving || state.phase == .verified else { throw TransferRunnerError.handoffUnavailable }
             try Task.checkCancellation()
-            if checkSelection { try await ensureSelected(job) }
+            if checkApproval { try await ensureTransferApproved(job, baseline: baselineAdmitted) }
             guard try await !library.hasTransferAbort(id) else { throw TransferRunnerError.abortPending }
             try await library.checkpoint(id, offset: state.durableOffset, phase: .paused)
             guard let prepared = try await library.job(id) else { throw StoreError.missingJob }
@@ -454,12 +454,12 @@ public actor TransferRunner {
         }
         if state.phase != .committed {
             try await library.checkpoint(id, offset: state.durableOffset,
-                                         phase: state.phase == .receiving || (checkSelection && state.phase == .verified) ? .transferring : .committing)
+                                         phase: state.phase == .receiving || (checkApproval && state.phase == .verified) ? .transferring : .committing)
             let input = try FileHandle(forReadingFrom: object.url)
             defer { try? input.close() }
             while state.durableOffset < state.length {
                 try Task.checkCancellation()
-                if checkSelection { try await ensureSelected(job) }
+                if checkApproval { try await ensureTransferApproved(job, baseline: baselineAdmitted) }
                 let offset = state.durableOffset
                 try input.seek(toOffset: offset)
                 let count = Int(min(UInt64(TransferCommands.maximumChunk), state.length - offset))
@@ -471,7 +471,8 @@ public actor TransferRunner {
                 try await library.checkpoint(id, offset: state.durableOffset, phase: .transferring)
             }
             try Task.checkCancellation()
-            if checkSelection { try await library.commitSelectedTransfer(id) }
+            if baselineAdmitted { try await library.commitCourseBaselineTransfer(id) }
+            else if checkApproval { try await library.commitSelectedTransfer(id) }
             else { try await library.checkpoint(id, offset: state.length, phase: .committing) }
             do {
                 state = try await send(TransferCommands.transaction(.commit, identity: transaction, requestID: nextRequestID()),
@@ -501,7 +502,15 @@ public actor TransferRunner {
         requestID += 1
         return requestID
     }
-    private func ensureSelected(_ job: TransferJob) async throws {
+    private func ensureTransferApproved(_ job: TransferJob, baseline: Bool) async throws {
+        if baseline {
+            guard try await !library.isLibraryContentDeleted(job.content),
+                  try await !library.hasTransferAbort(job.id) else { throw TransferRunnerError.abortPending }
+            guard try await library.courseBaselineConfirmation(job.id) != nil else {
+                throw TransferRunnerError.unsupportedContent
+            }
+            return
+        }
         guard try await library.isReaderContentSelected(reader: job.reader, content: job.content) else {
             throw TransferRunnerError.deselected
         }

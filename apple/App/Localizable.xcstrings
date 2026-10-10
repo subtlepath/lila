@@ -4640,6 +4640,106 @@
           }
         }
       }
+    },
+    "The original pack archive could not be queued. Refresh the reader review and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original pack archive could not be queued. Refresh the reader review and try again."
+          }
+        }
+      }
+    },
+    "Original learning pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original learning pack"
+          }
+        }
+      }
+    },
+    "Confirm only if this is the original pack used to create these learning files. Matching the language or course title is not enough.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm only if this is the original pack used to create these learning files. Matching the language or course title is not enough."
+          }
+        }
+      }
+    },
+    "Confirm original pack…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm original pack…"
+          }
+        }
+      }
+    },
+    "Original pack archive queued. Use Transfer selected content to send it to the reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original pack archive queued. Use Transfer selected content to send it to the reader."
+          }
+        }
+      }
+    },
+    "Is this the original learning pack?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Is this the original learning pack?"
+          }
+        }
+      }
+    },
+    "Confirm and queue original pack": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm and queue original pack"
+          }
+        }
+      }
+    },
+    "The reader will preserve an archive and check it against the reviewed learning files. This confirmation does not authorize a different course or resolve ambiguous legacy history.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The reader will preserve an archive and check it against the reviewed learning files. This confirmation does not authorize a different course or resolve ambiguous legacy history."
+          }
+        }
+      }
+    },
+    "Proposed course identity": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposed course identity"
+          }
+        }
+      }
+    },
+    "These learning files are not yet assigned to a course. Review and migration approval are required before they can be isolated or merged.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These learning files are not yet assigned to a course. Review and migration approval are required before they can be isolated or merged."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

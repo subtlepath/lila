@@ -27,7 +27,7 @@ class HalCourseBaselineReviewStore final {
     if (operating) return CourseBaselineReviewStoreResult::Busy;
     ready = false;
     CourseBaselineReviewView view;
-    if (!arguments(input, expected) || !view.decode(input)) return invalid("publish arguments");
+    if (!arguments(input, expected) || !view.decode(input, true)) return invalid("publish arguments");
     operating = true;
     selected = expected;
     if (!hash(input) || actual != selected || !paths()) return finish(CourseBaselineReviewStoreResult::Corrupt);
@@ -102,7 +102,7 @@ class HalCourseBaselineReviewStore final {
     const bool synced = read && file.sync(), closed = file.close();
     if (!read || !synced || !closed || !guard()) return finish(CourseBaselineReviewStoreResult::IoError);
     CourseBaselineReviewView view;
-    if (!hash(bytes) || actual != selected || !view.decode(bytes) ||
+    if (!hash(bytes) || actual != selected || !view.decode(bytes, true) ||
         !std::equal(view.reader().begin(), view.reader().end(), selectedReader.begin()) ||
         !std::equal(view.generation().begin(), view.generation().end(), selectedGeneration.begin()) ||
         !std::equal(view.course().begin(), view.course().end(), selectedCourse.begin()))

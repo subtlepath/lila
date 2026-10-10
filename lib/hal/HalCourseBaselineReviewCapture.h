@@ -50,6 +50,8 @@ class HalCourseBaselineReviewCapture final {
     selectedReader = reader;
     selectedGeneration = generation;
     selectedCourse = course;
+    unbound = namespaceUnbound();
+    if (unbound) std::copy_n("/tinta", 7, scope.begin());
     count = 0;
     referencePresent = ownedArchive != nullptr;
     referenceSeen = false;
@@ -65,7 +67,7 @@ class HalCourseBaselineReviewCapture final {
       std::copy_n(reference, std::strlen(reference) + 1, referencePath.begin());
     }
     if (!guard()) return finish(CourseBaselineReviewResult::Busy);
-    if (!closeReaders() || (referencePresent && !referenceMatches()) || !isolation.verify(course))
+    if (!closeReaders() || (unbound && referencePresent) || (referencePresent && !referenceMatches()) || !verifyScope())
       return finish(CourseBaselineReviewResult::Corrupt);
     auto result = scanScope();
     if (result != CourseBaselineReviewResult::Ok) return finish(result);
@@ -76,23 +78,24 @@ class HalCourseBaselineReviewCapture final {
                                                   COURSE_STATE_MIGRATION_PATHS.intent};
     static constexpr std::string_view PROOF_NAMES[] = {"mark-done", "mark-intent", "state-done", "state-intent"};
     for (unsigned at = 0; at < 4; ++at) {
-      result = captureFile(CourseBaselineReviewDomain::Isolation, PROOF_NAMES[at], PROOF_PATHS[at], false);
+      result = captureFile(CourseBaselineReviewDomain::Isolation, PROOF_NAMES[at], PROOF_PATHS[at], unbound);
       if (result != CourseBaselineReviewResult::Ok) return finish(result);
     }
-    if (!isolation.verify(selectedCourse) || (referencePresent && !referenceMatches()) || !closeReaders() || !guard())
+    if (!verifyScope() || (referencePresent && !referenceMatches()) || !closeReaders() || !guard())
       return finish(CourseBaselineReviewResult::Corrupt);
     auto bytes = scratch.first(64 + count * COURSE_BASELINE_REVIEW_ENTRY_SIZE);
     std::fill_n(bytes.begin(), COURSE_BASELINE_REVIEW_HEADER_SIZE, 0);
     std::copy(course_review_detail::MAGIC.begin(), course_review_detail::MAGIC.end(), bytes.begin());
-    bytes[4] = 1;
+    bytes[4] = unbound ? 2 : 1;
     bytes[5] = journalPresent;
+    bytes[6] = unbound;
     std::copy(selectedReader.begin(), selectedReader.end(), bytes.begin() + 8);
     std::copy(selectedGeneration.begin(), selectedGeneration.end(), bytes.begin() + 24);
     std::copy(selectedCourse.begin(), selectedCourse.end(), bytes.begin() + 40);
     course_review_detail::number(bytes, 56, count, 2);
     course_review_detail::number(bytes, bytes.size() - 4, binary_record::crc32(bytes.data(), bytes.size() - 4), 4);
     CourseBaselineReviewView view;
-    if (!view.decode(bytes) || mbedtls_sha256_starts(&digestContext, 0) ||
+    if (!view.decode(bytes, true) || mbedtls_sha256_starts(&digestContext, 0) ||
         mbedtls_sha256_update(&digestContext, bytes.data(), bytes.size()) ||
         mbedtls_sha256_finish(&digestContext, reviewHash.data()))
       return finish(CourseBaselineReviewResult::Corrupt);
@@ -131,8 +134,27 @@ class HalCourseBaselineReviewCapture final {
   bool referencePresent = false, referenceSeen = false, referencePending = false;
   size_t count = 0;
   bool journalPresent = false, capturing = false;
+  bool unbound = false;
   mutable bool ready = false;
   bool guard() const { return permitted && permitted(context); }
+  bool namespaceUnbound() {
+    static constexpr const char* PATHS[] = {COURSE_BINDING_PATH,
+                                            COURSE_BINDING_STAGE,
+                                            COURSE_BINDING_BACKUP,
+                                            COURSE_STATE_MIGRATION_PATHS.intent,
+                                            COURSE_STATE_MIGRATION_PATHS.stage,
+                                            COURSE_STATE_MIGRATION_PATHS.done,
+                                            COURSE_STATE_MIGRATION_PATHS.doneStage,
+                                            COURSE_MARK_MIGRATION_PATHS.intent,
+                                            COURSE_MARK_MIGRATION_PATHS.stage,
+                                            COURSE_MARK_MIGRATION_PATHS.done,
+                                            COURSE_MARK_MIGRATION_PATHS.doneStage};
+    uint64_t size = 0;
+    for (const auto* candidate : PATHS)
+      if (!guard() || metadata.stat(candidate, size) != FileStatus::Missing || !guard()) return false;
+    return true;
+  }
+  bool verifyScope() { return unbound ? namespaceUnbound() : isolation.verify(selectedCourse); }
   bool loan() const {
     if (!guard()) ready = false;
     return ready;
@@ -210,7 +232,13 @@ class HalCourseBaselineReviewCapture final {
       if (!course_review_detail::validName(normalized)) return CourseBaselineReviewResult::Corrupt;
       if (normalized.starts_with("pack-")) return CourseBaselineReviewResult::Corrupt;
       if (!course_review_detail::stableLearnerName(normalized)) return CourseBaselineReviewResult::Busy;
-      if (!courseStatePath(selectedCourse, filename, path)) return CourseBaselineReviewResult::Corrupt;
+      if (unbound) {
+        const auto length =
+            snprintf(path.data(), path.size(), "/tinta/%.*s", static_cast<int>(filename.size()), filename.data());
+        if (length <= 0 || static_cast<size_t>(length) >= path.size()) return CourseBaselineReviewResult::Corrupt;
+      } else if (!courseStatePath(selectedCourse, filename, path)) {
+        return CourseBaselineReviewResult::Corrupt;
+      }
       const auto result = captureFile(CourseBaselineReviewDomain::Learner, normalized, path.data(), false);
       if (result != CourseBaselineReviewResult::Ok) return result;
       if (++steps == 32) {

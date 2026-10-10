@@ -111,18 +111,25 @@ public extension LibraryStore {
         for choice in choices { selected[choice.content] = choice.selected }
         let jobs = try pendingJobs().filter { $0.reader == reader }
         var active = Set<ContentID>(); active.reserveCapacity(jobs.count)
+        var staleBaselines = Set<ContentID>(); staleBaselines.reserveCapacity(jobs.count)
         var result: [ContentWork] = []; result.reserveCapacity(jobs.count + actions.count)
         for job in jobs {
-            guard job.storageGeneration == generation else { result.append(.staleGeneration(job)); continue }
+            let baseline = try courseBaselineConfirmation(job.id) != nil
+            guard job.storageGeneration == generation else {
+                if baseline { staleBaselines.insert(job.content) }
+                result.append(.staleGeneration(job)); continue
+            }
             guard active.insert(job.content).inserted else { throw StoreError.conflictingJob }
             if job.installation != installation {
                 result.append(.inspect(job))
             } else if try hasTransferAbort(job.id) {
                 result.append(.abort(job))
-            } else if job.phase == .failed || selected[job.content] == nil {
+            } else if job.phase == .failed || (!baseline && selected[job.content] == nil) {
                 result.append(.inspect(job))
             } else if job.phase == .committing {
                 result.append(.recoverCommit(job))
+            } else if baseline {
+                result.append(try isLibraryContentDeleted(job.content) ? .abort(job) : .resume(job))
             } else if selected[job.content] == false {
                 result.append(.abort(job))
             } else {
@@ -131,7 +138,8 @@ public extension LibraryStore {
         }
         for action in actions {
             switch action {
-            case let .install(content): if !active.contains(content.id) { result.append(.install(content)) }
+            case let .install(content):
+                if !active.contains(content.id) && !staleBaselines.contains(content.id) { result.append(.install(content)) }
             case let .remove(manifest): if !active.contains(manifest.content) { result.append(.remove(manifest)) }
             }
         }
@@ -141,6 +149,7 @@ public extension LibraryStore {
 
 public enum PreparedContentWork: Equatable, Sendable {
     case transfer(TransferJob), abort(TransferJob), remove(ContentManifest)
+    case courseBaseline(TransferJob)
     case inspect(TransferJob), staleGeneration(TransferJob)
 }
 public extension LibraryStore {
@@ -156,7 +165,8 @@ public extension LibraryStore {
             case .install(let content):
                 prepared.append(.transfer(try enqueueSelectedContent(content: content.id, reader: reader,
                     storageGeneration: generation, installation: installation)))
-            case .resume(let job), .recoverCommit(let job): prepared.append(.transfer(job))
+            case .resume(let job), .recoverCommit(let job):
+                prepared.append(try courseBaselineConfirmation(job.id) == nil ? .transfer(job) : .courseBaseline(job))
             case .abort(let job): prepared.append(.abort(job))
             case .remove(let manifest): prepared.append(.remove(manifest))
             case .inspect(let job): prepared.append(.inspect(job))

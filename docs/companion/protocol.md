@@ -1002,6 +1002,28 @@ The Apple transfer runner has a dedicated baseline path requiring import
 capability bit 17, saved original-pack consent and a retained declaration. It
 queries status before initial approval or resume, and prepared Wi-Fi handoffs
 cannot issue new approval. Ordinary course transfer entry points refuse baseline
-jobs. Firmware advertisement of bit 17 and app confirmation/routing integration
-remain pending. Discovery must not infer archive installation support from review
-capability bit 16 alone.
+jobs. The app review screen requires explicit original-pack confirmation before
+queueing; prepared content work routes that saved intent to the baseline runner,
+including Wi-Fi preparation, BLE fallback and commit recovery. A stale baseline
+job cannot generate an ordinary installation on a replacement card.
+Archive consent is separate from active-course selection: queueing and completing
+an archive never changes those selections or requests installation of the
+original pack. Explicit cancellation and global deletion abort an upload before
+commit; an already committing job retains its declaration and finishes recovery.
+
+Frozen isolated reviews retain `TCBV` version 1. An unbound global `/tinta`
+review uses version 2 with scope byte 6 set to 1; byte 7 remains zero. Its course
+identity is proposed, not an existing assignment. The same sorted file roster,
+journal records, identity binding, CRC and whole-review hash apply. All four
+isolation records must be absent, with zero length/hash. Reader capture requires
+binding and migration records to be absent before and after capture and refuses
+unexpected subdirectories or unfinished learner files. Pack and diagnostic files
+in the root are recorded as evidence; recording does not authorize merging them.
+The existing paged review command carries either format without changing `TCBQ`
+or `TCBP`. Native import consumers require the isolated format; Swift consent
+matching and queueing also refuse unbound reviews.
+
+Firmware advertisement of bit 17 remains pending. Initial unbound `/tinta`
+migration still needs consent-driven backups and recoverable isolation before
+archive installation can consume that review. Discovery must not infer archive
+installation support from review capability bit 16 alone.

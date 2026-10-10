@@ -4539,6 +4539,107 @@ TEST_F(HalCourseTransferTest, HistoricalReceiptValidationRejectsRetiredIdentityA
   }
 }
 
+TEST_F(HalCourseTransferTest, BaselineReviewCapturesUnboundGlobalFilesWithoutMigrationOrImportAuthority) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  hal.files["/tinta/items.bin"] = {17};
+  hal.files["/tinta/usage.bin"] = {23};
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  const auto before = hal.files;
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  const auto encoded = std::vector<uint8_t>(review->bytes().begin(), review->bytes().end());
+  CourseBaselineReviewView view;
+  EXPECT_FALSE(view.decode(encoded));
+  ASSERT_TRUE(view.decode(encoded, true));
+  EXPECT_FALSE(view.isolated());
+  EXPECT_EQ(view.count(), 10u);
+  EXPECT_EQ(encoded[4], 2);
+  EXPECT_EQ(encoded[6], 1);
+  EXPECT_EQ(hal.files, before);
+  ASSERT_TRUE(review->closeReaders());
+  auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+      std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+  Digest hash{};
+  SHA256(encoded.data(), encoded.size(), hash.data());
+  ASSERT_EQ(store->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+  ASSERT_EQ(store->open(hash, nativeReader, generation, declaration.manifest.logicalIdentity,
+                        std::span(scratch).first(COURSE_BASELINE_REVIEW_MAX_SIZE)),
+            CourseBaselineReviewStoreResult::Ok);
+  EXPECT_FALSE(view.decode(std::span(scratch).first(encoded.size())));
+  EXPECT_TRUE(view.decode(std::span(scratch).first(encoded.size()), true));
+  CourseBaselineReviewPageRequest request;
+  request.generation = generation;
+  request.course = declaration.manifest.logicalIdentity;
+  std::vector<uint8_t> collected;
+  collected.reserve(encoded.size());
+  auto response = std::span(scratch).last(MAX_CONTROL_PAYLOAD);
+  do {
+    const auto length = handleHalCourseBaselineReviewRequest(
+        *store, nativeReader, generation, request, [](void*) { return true; }, nullptr, scratch, response);
+    ASSERT_GT(length, 0u);
+    CourseBaselineReviewPageView page;
+    ASSERT_TRUE(decodeCourseBaselineReviewPage(response.first(length), page));
+    EXPECT_EQ(page.hash, hash);
+    EXPECT_EQ(page.offset, collected.size());
+    collected.insert(collected.end(), page.bytes.begin(), page.bytes.end());
+    request.hash = hash;
+    request.offset = collected.size();
+  } while (collected.size() < encoded.size());
+  EXPECT_EQ(collected, encoded);
+  ASSERT_TRUE(store->closeReaders());
+  store.reset();
+  review.reset();
+  CourseBaselineImportRequest approval;
+  approval.generation = generation;
+  approval.owner = declaration.state.owner;
+  approval.transaction = declaration.state.transaction;
+  approval.manifest = declaration.manifest;
+  approval.reviewHash = hash;
+  Transfer transfer(storage, std::span(scratch).subspan(TRANSFER_OFFSET));
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  const auto preserved = hal.files;
+  EXPECT_EQ(
+      beginHalCourseBaselineImport(
+          transfer, nativeReader, generation, approval.owner, approval, scratch, [](void*) { return true; }, nullptr),
+      TransferResult::Unauthorized);
+  EXPECT_EQ(transfer.current(), nullptr);
+  EXPECT_EQ(hal.files, preserved);
+}
+
+TEST_F(HalCourseTransferTest, UnboundReviewRefusesPendingBindingMigrationAndUnknownDirectories) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  hal.files["/tinta/items.bin"] = {17};
+  Identity nativeReader{};
+  nativeReader[0] = 51;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  for (const auto* marker :
+       {COURSE_BINDING_PATH, COURSE_BINDING_STAGE, COURSE_BINDING_BACKUP, COURSE_STATE_MIGRATION_PATHS.intent,
+        COURSE_STATE_MIGRATION_PATHS.stage, COURSE_STATE_MIGRATION_PATHS.done, COURSE_STATE_MIGRATION_PATHS.doneStage,
+        COURSE_MARK_MIGRATION_PATHS.intent, COURSE_MARK_MIGRATION_PATHS.stage, COURSE_MARK_MIGRATION_PATHS.done,
+        COURSE_MARK_MIGRATION_PATHS.doneStage}) {
+    hal.files[marker] = {1};
+    const auto before = hal.files;
+    EXPECT_NE(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+              CourseBaselineReviewResult::Ok);
+    EXPECT_EQ(hal.files, before);
+    hal.files.erase(marker);
+  }
+  hal.directories["/tinta/courses"] = {};
+  const auto before = hal.files;
+  EXPECT_NE(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+  EXPECT_EQ(hal.files, before);
+}
+
 TEST_F(HalCourseTransferTest, BaselineReviewCapturesFullIsolatedStateAndGlobalAuthorityWithoutWrites) {
   auto& hal = inventory_hal_test::state;
   hal.files["/tinta/items.bin"] = {17};

@@ -72,7 +72,7 @@ inline bool decodeCourseBaselineReviewPageRequest(std::span<const uint8_t> input
 inline size_t encodeCourseBaselineReviewPage(std::span<const uint8_t> review, const Digest& verifiedHash, size_t offset,
                                              size_t limit, std::span<uint8_t> output) {
   CourseBaselineReviewView view;
-  if (!view.decode(review) || !course_review_detail::nonzero(verifiedHash) || !limit ||
+  if (!view.decode(review, true) || !course_review_detail::nonzero(verifiedHash) || !limit ||
       limit > COURSE_BASELINE_REVIEW_PAGE_MAX_BYTES || offset >= review.size() ||
       course_baseline_detail::overlaps(review.data(), review.size(), output.data(), output.size()) ||
       course_baseline_detail::overlaps(&verifiedHash, sizeof(verifiedHash), output.data(), output.size()))

@@ -51,6 +51,28 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
         guard sqlite3_exec(connection, statement, nil, nil, nil) == SQLITE_OK else { throw StoreError.invalidValue }
     }
 
+    func testUnboundReviewCannotQueueArchiveOrChangeReaderSelection() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let f = try await setup(root)
+        var repository = URL(fileURLWithPath: #filePath)
+        for _ in 0..<5 { repository.deleteLastPathComponent() }
+        let unbound = try CourseBaselineReview(decoding: Data(contentsOf:
+            repository.appendingPathComponent("protocol/fixtures/CourseBaselineReview-unbound-v2.fixture")))
+        let beforeJobs = try await f.library.pendingJobs()
+        let beforeSelections = try await f.library.readerSelections(reader: f.job.reader)
+        do {
+            _ = try await f.library.queueCourseBaselineImport(content: f.job.content, review: unbound,
+                installation: f.job.installation)
+            XCTFail("Unbound review authorized an isolated archive")
+        } catch { XCTAssertEqual(error as? StoreError, .conflictingJob) }
+        let afterJobs = try await f.library.pendingJobs()
+        let afterSelections = try await f.library.readerSelections(reader: f.job.reader)
+        let consent = try await f.library.courseBaselineConfirmation(f.job.id)
+        XCTAssertEqual(afterJobs, beforeJobs)
+        XCTAssertEqual(afterSelections, beforeSelections)
+        XCTAssertNil(consent)
+    }
     func testConfirmationSurvivesRestartAndCannotReplaceFrozenReview() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -152,7 +174,7 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(retained, f.job)
     }
 
-    func testQueueAtomicallySelectsConfirmsAndReusesExactJobAfterRestart() async throws {
+    func testQueueConfirmsWithoutSelectingAndReusesExactJobAfterRestart() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let f = try await setup(root)
@@ -161,7 +183,7 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
             review: f.review, installation: f.job.installation)
         XCTAssertNotEqual(queued.id, f.job.id)
         let selected = try await f.library.isReaderContentSelected(reader: f.review.reader, content: queued.content)
-        XCTAssertTrue(selected)
+        XCTAssertFalse(selected)
         let saved = try await f.library.courseBaselineConfirmation(queued.id)
         XCTAssertNotNil(saved)
         let reopened = try LibraryStore(url: f.database)
@@ -177,12 +199,12 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(retained, saved)
     }
 
-    func testFailedSelectionRollsBackNewJobAndConsentTogether() async throws {
+    func testFailedConsentRollsBackNewJobWithoutChangingSelections() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let f = try await setup(root)
         try await f.library.checkpoint(f.job.id, offset: 0, phase: .aborted)
-        try sql(f.database, "CREATE TRIGGER reject_baseline_selection BEFORE INSERT ON reader_selections BEGIN SELECT RAISE(ABORT,'injected'); END;")
+        try sql(f.database, "CREATE TRIGGER reject_baseline_consent BEFORE INSERT ON course_baseline_confirmations BEGIN SELECT RAISE(ABORT,'injected'); END;")
         do {
             _ = try await f.library.queueCourseBaselineImport(content: f.job.content,
                 review: f.review, installation: f.job.installation)
@@ -192,7 +214,7 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
         XCTAssertTrue(jobs.isEmpty)
         let selections = try await f.library.readerSelections(reader: f.review.reader)
         XCTAssertTrue(selections.isEmpty)
-        try sql(f.database, "DROP TRIGGER reject_baseline_selection;")
+        try sql(f.database, "DROP TRIGGER reject_baseline_consent;")
         let retried = try await f.library.queueCourseBaselineImport(content: f.job.content,
             review: f.review, installation: f.job.installation)
         let saved = try await f.library.courseBaselineConfirmation(retried.id)
@@ -231,6 +253,27 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
             _ = try await reopened.prepareTransferDeclaration(f.job.id, verifiedLength: object.length)
             XCTFail("Expected durable role refusal")
         } catch StoreError.invalidTransition { }
+    }
+    func testArchiveCommitUsesConsentAndRejectsOrdinarySelectedCommit() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let f = try await setup(root)
+        _ = try await f.library.confirmCourseBaselineImport(f.job.id, review: f.review)
+        let content = try await f.library.content(f.job.content)!
+        _ = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: content.length)
+        _ = try await f.library.setReaderSelection(reader: f.job.reader, content: f.job.content, selected: true)
+        try await f.library.checkpoint(f.job.id, offset: content.length, phase: .transferring)
+        do {
+            try await f.library.commitSelectedTransfer(f.job.id)
+            XCTFail("Ordinary commit accepted archive consent")
+        } catch { XCTAssertEqual(error as? StoreError, .invalidTransition) }
+        try await f.library.commitCourseBaselineTransfer(f.job.id)
+        let committed = try await f.library.job(f.job.id)
+        XCTAssertEqual(committed?.phase, .committing)
+        _ = try await f.library.deleteLibraryContent(f.job.content)
+        try await f.library.commitCourseBaselineTransfer(f.job.id)
+        let declaration = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: content.length)
+        XCTAssertEqual(declaration.manifest.content, f.job.content)
     }
 
     func testDeletedOrAbortedBaselineCannotPrepareDeclaration() async throws {

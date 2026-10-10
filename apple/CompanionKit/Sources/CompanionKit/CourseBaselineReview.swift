@@ -21,6 +21,7 @@ public struct CourseBaselineReview: Equatable, Sendable {
     public let generation: Data
     public let course: Data
     public let journalPresent: Bool
+    public let isolated: Bool
     public let files: [CourseBaselineReviewFile]
     public let encoded: Data
     public var hash: Data { Data(SHA256.hash(data: encoded)) }
@@ -28,10 +29,12 @@ public struct CourseBaselineReview: Equatable, Sendable {
     public init(decoding bytes: Data) throws {
         guard bytes.count >= 64, bytes.count <= Self.maximumSize else { throw ProtocolError.length }
         var cursor = ByteReader(bytes)
-        guard try cursor.take(4) == Data([0x54, 0x43, 0x42, 0x56]),
-              try cursor.number(1) == 1 else { throw ProtocolError.version }
+        guard try cursor.take(4) == Data([0x54, 0x43, 0x42, 0x56]) else { throw ProtocolError.version }
+        let version = try cursor.number(1)
         let journal = try cursor.number(1)
-        guard journal <= 1, try cursor.number(2) == 0 else { throw ProtocolError.value }
+        let scope = try cursor.number(1)
+        guard (version == 1 && scope == 0) || (version == 2 && scope == 1) else { throw ProtocolError.version }
+        guard journal <= 1, try cursor.number(1) == 0 else { throw ProtocolError.value }
         let reader = try cursor.take(16), generation = try cursor.take(16), course = try cursor.take(16)
         guard [reader, generation, course].allSatisfy({ $0.contains(where: { $0 != 0 }) }) else {
             throw ProtocolError.value
@@ -80,8 +83,10 @@ public struct CourseBaselineReview: Equatable, Sendable {
                 if present == 1 { presentJournal |= 1 << journals }
                 journals += 1
             case .isolation:
-                guard isolation < isolationNames.count, name == isolationNames[isolation], present == 1,
-                      length == (isolation % 2 == 0 ? 24 : 28) else { throw ProtocolError.value }
+                guard isolation < isolationNames.count, name == isolationNames[isolation],
+                      scope == 1 ? present == 0 : (present == 1 && length == (isolation % 2 == 0 ? 24 : 28)) else {
+                    throw ProtocolError.value
+                }
                 isolation += 1
             }
             files.append(CourseBaselineReviewFile(domain: domain, present: present == 1,
@@ -92,10 +97,11 @@ public struct CourseBaselineReview: Equatable, Sendable {
               try cursor.number(4) == UInt64(legacyCRC32(Data(bytes.dropLast(4)))) else { throw ProtocolError.value }
         self.reader = reader; self.generation = generation; self.course = course
         journalPresent = journal == 1; self.files = files; encoded = bytes
+        isolated = scope == 0
     }
 
     public func matches(_ request: CourseBaselineImportRequest, reader: Data) -> Bool {
-        self.reader == reader && generation == request.generation && course == request.manifest.logicalIdentity &&
+        isolated && self.reader == reader && generation == request.generation && course == request.manifest.logicalIdentity &&
         hash == request.reviewHash
     }
 }

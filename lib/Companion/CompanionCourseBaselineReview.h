@@ -67,11 +67,12 @@ inline bool encodeCourseBaselineReviewFile(const CourseBaselineReviewFile& file,
 // Borrows canonical review bytes until the owner/scratch is reused.
 class CourseBaselineReviewView final {
  public:
-  bool decode(std::span<const uint8_t> input) {
+  bool decode(std::span<const uint8_t> input, bool allowUnbound = false) {
     bytes = {};
     if (input.size() < 64 ||
         !std::equal(course_review_detail::MAGIC.begin(), course_review_detail::MAGIC.end(), input.begin()) ||
-        input[4] != 1 || input[5] > 1 || input[6] || input[7] || input[58] || input[59])
+        !((input[4] == 1 && input[6] == 0) || (allowUnbound && input[4] == 2 && input[6] == 1)) || input[5] > 1 ||
+        input[7] || input[58] || input[59])
       return false;
     const auto count = course_review_detail::number(input, 56, 2);
     if (count < 8 || count > COURSE_BASELINE_REVIEW_MAX_FILES ||
@@ -109,7 +110,8 @@ class CourseBaselineReviewView final {
         ++journals;
       } else {
         static constexpr std::string_view NAMES[] = {"mark-done", "mark-intent", "state-done", "state-intent"};
-        if (isolation >= 4 || name != NAMES[isolation] || !entry[1] || length != (isolation % 2 ? 28 : 24))
+        if (isolation >= 4 || name != NAMES[isolation] ||
+            (input[6] ? entry[1] != 0 : (!entry[1] || length != (isolation % 2 ? 28 : 24))))
           return false;
         ++isolation;
       }
@@ -123,6 +125,7 @@ class CourseBaselineReviewView final {
     return true;
   }
   size_t count() const { return bytes.empty() ? 0 : course_review_detail::number(bytes, 56, 2); }
+  bool isolated() const { return !bytes.empty() && bytes[6] == 0; }
   std::span<const uint8_t> reader() const { return bytes.empty() ? bytes : bytes.subspan(8, 16); }
   std::span<const uint8_t> generation() const { return bytes.empty() ? bytes : bytes.subspan(24, 16); }
   std::span<const uint8_t> course() const { return bytes.empty() ? bytes : bytes.subspan(40, 16); }

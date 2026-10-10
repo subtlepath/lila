@@ -702,6 +702,13 @@ final class CompanionModel {
                                 guard connectionOperation == operation else { throw CancellationError() }
                             }
                         } else { unsupported = true }
+                    case .courseBaseline(let job):
+                        if currentSession.device.readerCapabilities.supportsCourseBaselineImport {
+                            if wifiAssistance, job.phase != .committing,
+                               let content = try await library.content(job.content), content.length > 1024 * 1024 {
+                                usedWifi = try await transferThroughWifi(job, session: currentSession, runner: transfers)
+                            } else { _ = try await transfers.runCourseBaseline(job.id, session: currentSession) }
+                        } else { unsupported = true }
                     case .abort(let job): _ = try await transfers.abort(job.id, session: currentSession)
                     case .remove(let manifest):
                         if currentSession.device.readerCapabilities.supportsRemoval(of: manifest.kind) {
@@ -984,16 +991,21 @@ final class CompanionModel {
         let mode = wifiNetworkMode
         let preparation: FirmwareHandoffPreparation?
         let staged: TransferJob
+        guard let library else { throw StoreError.missingContent }
+        let baseline = try await library.courseBaselineConfirmation(job.id) != nil
+        guard !firmware || !baseline else { throw StoreError.conflictingJob }
         if firmware {
             let prepared = try await runner.prepareFirmwareHandoff(job.id, session: session)
             preparation = prepared; staged = prepared.job
         } else {
             preparation = nil
-            staged = try await runner.prepareForHandoff(job.id, session: session)
+            staged = baseline ? try await runner.prepareCourseBaselineHandoff(job.id, session: session)
+                : try await runner.prepareForHandoff(job.id, session: session)
         }
         if staged.phase == .completed { return false }
-        if let content = try await library?.content(job.content), staged.durableOffset == content.length {
+        if let content = try await library.content(job.content), staged.durableOffset == content.length {
             if firmware { _ = try await runner.stageFirmware(job.id, session: session) }
+            else if baseline { _ = try await runner.runCourseBaseline(job.id, session: session) }
             else { _ = try await runner.run(job.id, session: session) }
             return false
         }
@@ -1007,6 +1019,7 @@ final class CompanionModel {
             if (code == 1 || code == 5), let bluetooth, case .ready = bluetooth.state {
                 wifiHandoffInProgress = false
                 if firmware { _ = try await runner.stageFirmware(job.id, session: session) }
+                else if baseline { _ = try await runner.runCourseBaseline(job.id, session: session) }
                 else { _ = try await runner.run(job.id, session: session) }
                 return false
             }
@@ -1025,6 +1038,7 @@ final class CompanionModel {
             transaction: transaction, receivedAtNanoseconds: negotiation.receivedAtNanoseconds)
         do {
             if let preparation { _ = try await runner.stageFirmware(preparation, session: session, handoff: handoff) }
+            else if baseline { _ = try await runner.runCourseBaseline(job.id, session: session, handoff: handoff) }
             else { _ = try await runner.run(job.id, session: session, handoff: handoff) }
             try await handoff.finish(requestID: UInt32.random(in: 1...UInt32.max))
         } catch {
@@ -1277,6 +1291,40 @@ final class CompanionModel {
               authenticated?.device.storageGeneration == review.generation,
               courseIdentities[content] == review.course else { throw ReaderSessionError.busy }
         return review
+    }
+
+    func canQueueCourseBaseline(_ content: ContentID, review: CourseBaselineReview) -> Bool {
+        guard review.isolated, canReviewCourseBaseline(content), let session = authenticated,
+              session.device.readerCapabilities.supportsCourseBaselineImport,
+              session.device.identity == review.reader, session.device.storageGeneration == review.generation,
+              courseIdentities[content] == review.course else { return false }
+        return true
+    }
+
+    func queueCourseBaseline(_ content: ContentID, review: CourseBaselineReview) async -> Bool {
+        guard canQueueCourseBaseline(content, review: review), let session = authenticated,
+              let library, let contentVault else { return false }
+        let operation = connectionOperation
+        transferBusy = true
+        defer { if connectionOperation == operation { transferBusy = false } }
+        do {
+            let object = try await contentVault.verifiedObject(content)
+            let details = try CoursePackDetails(CoursePackInspector.inspect(object.url))
+            guard try await library.coursePackDetails(content) == details else { throw VaultError.integrity }
+            try Task.checkCancellation()
+            guard connectionOperation == operation, authenticated?.device.identity == review.reader,
+                  authenticated?.device.storageGeneration == review.generation,
+                  courseIdentities[content] == review.course else { throw ReaderSessionError.busy }
+            _ = try await library.queueCourseBaselineImport(content: content, review: review, installation: session.installation)
+            await reload()
+            await reloadPendingTransfers(operation: operation)
+            return connectionOperation == operation
+        } catch {
+            if connectionOperation == operation {
+                error = String(localized: "The original pack archive could not be queued. Refresh the reader review and try again.")
+            }
+            return false
+        }
     }
 
     func switchInventory(_ content: ContentID) -> ReaderInventory? {
@@ -2048,6 +2096,9 @@ private struct CourseBaselineReviewView: View {
     @State private var loading = false
     @State private var failed = false
     @State private var attempt = 0
+    @State private var confirmingOriginal = false
+    @State private var saving = false
+    @State private var queued = false
 
     var body: some View {
         Form {
@@ -2065,7 +2116,12 @@ private struct CourseBaselineReviewView: View {
                 Section("Reader review") {
                     LabeledContent("Reader identity", value: hex(review.reader))
                     LabeledContent("Storage generation", value: hex(review.generation))
-                    LabeledContent("Course identity", value: hex(review.course))
+                    if review.isolated {
+                        LabeledContent("Course identity", value: hex(review.course))
+                    } else {
+                        LabeledContent("Proposed course identity", value: hex(review.course))
+                        Text("These learning files are not yet assigned to a course. Review and migration approval are required before they can be isolated or merged.")
+                    }
                     LabeledContent("Review hash", value: hex(review.hash))
                     Text("This review records the reader’s files at one moment. Confirming the original pack and checking learning history are required before installation.")
                 }
@@ -2083,12 +2139,34 @@ private struct CourseBaselineReviewView: View {
                     }
                 }
                 Button("Refresh reader review") { attempt += 1 }
-                    .disabled(!model.canReviewCourseBaseline(content.id))
+                    .disabled(saving || !model.canReviewCourseBaseline(content.id))
+                Section("Original learning pack") {
+                    Text("Confirm only if this is the original pack used to create these learning files. Matching the language or course title is not enough.")
+                    Button("Confirm original pack…") { confirmingOriginal = true }
+                        .disabled(saving || queued || !model.canQueueCourseBaseline(content.id, review: review))
+                    if queued {
+                        Text("Original pack archive queued. Use Transfer selected content to send it to the reader.")
+                    }
+                }
             }
         }
         .navigationTitle("Reader learning review")
+        .confirmationDialog("Is this the original learning pack?", isPresented: $confirmingOriginal, titleVisibility: .visible) {
+            if let review {
+                Button("Confirm and queue original pack") {
+                    saving = true
+                    Task {
+                        queued = await model.queueCourseBaseline(content.id, review: review)
+                        saving = false
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("The reader will preserve an archive and check it against the reviewed learning files. This confirmation does not authorize a different course or resolve ambiguous legacy history.")
+        }
         .task(id: attempt) {
-            review = nil; failed = false; loading = true
+            review = nil; failed = false; loading = true; queued = false
             defer { loading = false }
             do { review = try await model.reviewCourseBaseline(content.id) }
             catch is CancellationError { }

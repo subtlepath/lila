@@ -564,6 +564,41 @@ TEST(CompanionCourseBaselineImport, RefusesReentryAndInsufficientScratchBeforeMu
   EXPECT_EQ(f.storage.mutations, mutations);
 }
 
+TEST(CompanionCourseBaselineReview, SharedUnboundFixtureRequiresExplicitReadOnlyDecode) {
+  const std::string reviewPath = COURSE_BASELINE_REVIEW_FIXTURE;
+  std::ifstream input(
+      reviewPath.substr(0, reviewPath.find_last_of('/') + 1) + "CourseBaselineReview-unbound-v2.fixture",
+      std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+  ASSERT_FALSE(bytes.empty());
+  CourseBaselineReviewView view;
+  EXPECT_FALSE(view.decode(bytes));
+  ASSERT_TRUE(view.decode(bytes, true));
+  EXPECT_FALSE(view.isolated());
+  EXPECT_EQ(view.count(), 8u);
+  for (size_t at = 0; at < view.count(); ++at) {
+    const auto entry = view.entry(at);
+    if (entry[0] == uint8_t(CourseBaselineReviewDomain::Isolation)) {
+      EXPECT_EQ(entry[1], 0);
+      EXPECT_EQ(course_review_detail::number(entry, 28, 8), 0u);
+      EXPECT_FALSE(course_review_detail::nonzero(entry.subspan(36, 32)));
+    }
+  }
+  for (size_t size = 0; size < bytes.size(); ++size) EXPECT_FALSE(view.decode(std::span(bytes).first(size), true));
+  for (size_t at = 0; at < bytes.size(); ++at) {
+    auto invalid = bytes;
+    invalid[at] ^= 1;
+    EXPECT_FALSE(view.decode(invalid, true));
+  }
+  for (size_t at : {4u, 6u, 7u}) {
+    auto invalid = bytes;
+    invalid[at] = at == 4 ? 1 : at == 6 ? 0 : 1;
+    course_review_detail::number(invalid, invalid.size() - 4, binary_record::crc32(invalid.data(), invalid.size() - 4),
+                                 4);
+    EXPECT_FALSE(view.decode(invalid, true));
+  }
+}
+
 TEST(CompanionCourseBaselineReview, SharedFixtureRefusesMalformedNoncanonicalAndOverlimitRecords) {
   std::array<uint8_t, 64 + 8 * COURSE_BASELINE_REVIEW_ENTRY_SIZE> bytes{};
   std::ifstream input(COURSE_BASELINE_REVIEW_FIXTURE, std::ios::binary);

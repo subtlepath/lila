@@ -62,11 +62,12 @@ private actor SuspendedBaselineReviewWire: CompanionTransport {
 }
 
 final class CourseBaselineReviewCollectorTests: XCTestCase {
-    private func review() throws -> CourseBaselineReview {
+    private func review(unbound: Bool = false) throws -> CourseBaselineReview {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         return try CourseBaselineReview(decoding: Data(contentsOf:
-            root.appendingPathComponent("protocol/fixtures/CourseBaselineReview-v1.fixture")))
+            root.appendingPathComponent(unbound ? "protocol/fixtures/CourseBaselineReview-unbound-v2.fixture"
+                : "protocol/fixtures/CourseBaselineReview-v1.fixture")))
     }
     private func device(_ review: CourseBaselineReview, supported: Bool = true) throws -> DeviceDescriptor {
         var bytes = Data([1, 1]); bytes.append(review.reader); bytes.append(review.generation)
@@ -84,6 +85,16 @@ final class CourseBaselineReviewCollectorTests: XCTestCase {
         let requests = await wire.requests
         XCTAssertEqual(requests.count, 7)
         XCTAssertEqual(requests.map(\.offset), [0, 97, 194, 291, 388, 485, 582])
+        XCTAssertTrue(requests.dropFirst().allSatisfy { $0.hash == expected.hash })
+    }
+    func testCollectsUnboundReviewWithoutTreatingProposedCourseAsIsolated() async throws {
+        let expected = try review(unbound: true), wire = BaselineReviewWire(expected)
+        let collected = try await CourseBaselineReviewCollector().collect(device: device(expected), transport: wire,
+            course: expected.course, pageLimit: 97)
+        XCTAssertEqual(collected, expected)
+        XCTAssertFalse(collected.isolated)
+        let requests = await wire.requests
+        XCTAssertEqual(requests.count, 7)
         XCTAssertTrue(requests.dropFirst().allSatisfy { $0.hash == expected.hash })
     }
     func testRemoteFailuresAndDisconnectDoNotPreventFreshCollection() async throws {
