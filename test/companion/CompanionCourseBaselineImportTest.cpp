@@ -16,6 +16,7 @@
 #include "lib/Companion/CompanionUnboundCourseMigrationIntent.h"
 #include "lib/Companion/CompanionUnboundCourseMigrationIntentStore.h"
 #include "lib/Companion/CompanionUnboundCourseMigrationRequest.h"
+#include "lib/Companion/CompanionUnboundCourseReviewReservation.h"
 
 using namespace companion;
 namespace {
@@ -1749,4 +1750,91 @@ TEST(CompanionCourseBaselinePublicationStore, ReadOrPermissionFailuresCannotFall
     EXPECT_EQ(f.publicationCalls, calls);
     EXPECT_EQ(f.base.storage.files, files);
   }
+}
+
+TEST(UnboundCourseReviewReservation, FixtureRetainsMigrationScopeAndReservedEpochAcrossRestart) {
+  const std::string path = COURSE_BASELINE_IMPORT_FIXTURE;
+  std::ifstream input(path.substr(0, path.find_last_of('/') + 1) + "UnboundCourseReviewReservation-v1.fixture",
+                      std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+  ASSERT_EQ(bytes.size(), UNBOUND_COURSE_REVIEW_RESERVATION_SIZE);
+  UnboundCourseReviewReservation reservation;
+  ASSERT_TRUE(decodeUnboundCourseReviewReservation(bytes, reservation));
+  EXPECT_EQ(reservation.epoch, 0x0102030405060708ULL);
+  EXPECT_EQ(reservation.records, 4u);
+  EXPECT_EQ(reservation.events, 6u);
+  EXPECT_NE(reservation.intent.activePack.contentHash, reservation.intent.request.original.manifest.contentHash);
+  EXPECT_EQ(reservation.first().origin, reservation.intent.reader);
+  EXPECT_EQ(reservation.first().epoch, reservation.epoch);
+  EXPECT_EQ(reservation.first().sequence, 1u);
+  std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseReviewReservation(reservation, encoded));
+  EXPECT_TRUE(std::equal(bytes.begin(), bytes.end(), encoded.begin(), encoded.end()));
+  UnboundCourseReviewReservation restored;
+  ASSERT_TRUE(decodeUnboundCourseReviewReservation(encoded, restored));
+  EXPECT_EQ(restored, reservation);
+  LegacyTintaEventCursor cursor;
+  ASSERT_TRUE(cursor.begin(restored.first(), restored.records));
+  const auto unchanged = reservation;
+  for (size_t size = 0; size < bytes.size(); ++size) {
+    EXPECT_FALSE(decodeUnboundCourseReviewReservation(std::span(bytes).first(size), reservation));
+    EXPECT_EQ(reservation, unchanged);
+  }
+  for (size_t index = 0; index < bytes.size(); ++index) {
+    auto corrupt = bytes;
+    corrupt[index] ^= 1;
+    EXPECT_FALSE(decodeUnboundCourseReviewReservation(corrupt, reservation));
+    EXPECT_EQ(reservation, unchanged);
+  }
+}
+
+TEST(UnboundCourseReviewReservation, ValidChecksumsCannotAuthorizeInvalidEpochCountsOrMigrationPhase) {
+  Fixture f;
+  UnboundCourseReviewReservation value;
+  value.intent.reader.fill(17);
+  value.intent.request.original = f.request;
+  value.intent.activePack = f.request.manifest;
+  value.epoch = 19;
+  value.records = 3;
+  value.events = 4;
+  std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseReviewReservation(value, encoded));
+  const auto sentinel = value;
+  for (unsigned fault = 0; fault < 9; ++fault) {
+    auto corrupt = encoded;
+    if (fault == 0) course_review_detail::number(corrupt, 254, 0, 8);
+    if (fault == 1) course_review_detail::number(corrupt, 266, 2, 4);
+    if (fault == 2) course_review_detail::number(corrupt, 266, 7, 4);
+    if (fault == 3) {
+      corrupt[13] = static_cast<uint8_t>(UnboundCourseMigrationPhase::Bound);
+      course_review_detail::number(corrupt, 250, binary_record::crc32(corrupt.data() + 8, 242), 4);
+    }
+    if (fault == 4) corrupt[5] = 1;
+    if (fault == 5) {
+      course_review_detail::number(corrupt, 262, UINT32_MAX, 4);
+      course_review_detail::number(corrupt, 266, UINT32_MAX, 4);
+    }
+    if (fault == 6) {
+      course_review_detail::number(corrupt, 262, 0, 4);
+      course_review_detail::number(corrupt, 266, 1, 4);
+    }
+    if (fault == 7) corrupt[250] ^= 1;
+    if (fault == 8) {
+      corrupt[234] ^= 1;
+      course_review_detail::number(corrupt, 250, binary_record::crc32(corrupt.data() + 8, 242), 4);
+    }
+    course_review_detail::number(corrupt, 270, binary_record::crc32(corrupt.data(), 270), 4);
+    EXPECT_FALSE(decodeUnboundCourseReviewReservation(corrupt, value));
+    EXPECT_EQ(value, sentinel);
+  }
+  value.intent.phase = UnboundCourseMigrationPhase::Isolated;
+  encoded.fill(99);
+  EXPECT_FALSE(encodeUnboundCourseReviewReservation(value, encoded));
+  EXPECT_TRUE(std::all_of(encoded.begin(), encoded.end(), [](uint8_t byte) { return byte == 99; }));
+  value = sentinel;
+  value.records = value.events = 0;
+  ASSERT_TRUE(encodeUnboundCourseReviewReservation(value, encoded));
+  UnboundCourseReviewReservation empty;
+  ASSERT_TRUE(decodeUnboundCourseReviewReservation(encoded, empty));
+  EXPECT_EQ(empty, value);
 }

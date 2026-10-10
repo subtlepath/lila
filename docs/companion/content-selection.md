@@ -4002,3 +4002,21 @@ deterministic restart, expanded flag records before review/undo, rejected
 record order/UID/undo, and Native frozen-stream composition. The ESP32-C3
 compile probe emits no frame above 176 bytes. Re-run `ctest --test-dir
 .cache/companion-verification/host --output-on-failure` for the host suite.
+
+Legacy review migration now has a checksummed retained reservation format that
+binds its dedicated reader epoch and record/event counts to the full Prepared
+migration intent, including the frozen review hash and both pack manifests.
+Recovery can retain that epoch instead of calling Native identity provisioning
+again and assigning new identities to the same records. The codec writes into
+caller buffers and validates immutable input before extraction, without
+allocation or a large stack copy. The reservation must be retained off stack.
+Native code still must exclusively reserve the epoch, verify the actual frozen
+counts, seal/recover the record and exclude other use before publication.
+Validation: the full incremental host build succeeds and all 2,000 tests
+pass, including the shared reservation fixture, truncation/bit corruption,
+invalid epoch/counts, nested CRC/course mismatch and wrong migration phase.
+ESP32-C3 probes for the new codec and existing intent/portable-store/Native-store
+paths all pass with no emitted frame above 224 bytes. Existing unrelated
+GoogleTest assertion-brace warnings remain in the baseline-import test source.
+Re-run `ctest --test-dir .cache/companion-verification/host --output-on-failure`.
+Native reservation sealing/recovery and hardware migration remain unfinished.

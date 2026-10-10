@@ -50,9 +50,8 @@ inline bool encodeUnboundCourseMigrationIntent(const UnboundCourseMigrationInten
   course_review_detail::number(output, 242, binary_record::crc32(output.data(), 242), 4);
   return true;
 }
-inline bool decodeUnboundCourseMigrationIntent(std::span<const uint8_t> input, UnboundCourseMigrationIntent& output) {
+inline bool validEncodedUnboundCourseMigrationIntent(std::span<const uint8_t> input) {
   if (input.size() != UNBOUND_COURSE_MIGRATION_INTENT_SIZE ||
-      course_baseline_detail::overlaps(input.data(), input.size(), &output, sizeof(output)) ||
       !std::equal(unbound_course_detail::INTENT_PREFIX.begin(), unbound_course_detail::INTENT_PREFIX.end(),
                   input.begin()) ||
       input[5] < 1 || input[5] > 3 || input[6] || input[7] || !course_review_detail::nonzero(input.subspan(8, 16)) ||
@@ -60,6 +59,12 @@ inline bool decodeUnboundCourseMigrationIntent(std::span<const uint8_t> input, U
       !unbound_course_detail::validIntentRequest(input.subspan(24, UNBOUND_COURSE_MIGRATION_REQUEST_SIZE)) ||
       !unbound_course_detail::validIntentPack(input.subspan(179, CONTENT_MANIFEST_SIZE)) ||
       !std::equal(input.begin() + 127, input.begin() + 143, input.begin() + 226))
+    return false;
+  return true;
+}
+inline bool decodeUnboundCourseMigrationIntent(std::span<const uint8_t> input, UnboundCourseMigrationIntent& output) {
+  if (course_baseline_detail::overlaps(input.data(), input.size(), &output, sizeof(output)) ||
+      !validEncodedUnboundCourseMigrationIntent(input))
     return false;
   // Validate immutable input first to retain output on failure without a large stack copy.
   decodeUnboundCourseMigrationRequest(input.subspan(24, UNBOUND_COURSE_MIGRATION_REQUEST_SIZE), output.request);

@@ -1307,3 +1307,20 @@ record count was assigned; successful frozen-stream completion, durable origin
 reservation, causal provenance, scheduler/clock evidence, replay correspondence
 and journal publication remain separate requirements. An origin must never be
 reused for another migration or inferred from unconfirmed shared legacy bytes.
+
+`TCRR` v1 is a 274-byte retained Native legacy-review reservation record. It
+contains the eight-byte prefix `TCRR`, version 1 and three zero reserved bytes;
+a complete 246-byte Prepared `TCUI` intent at offset 8; a nonzero reader epoch
+at offset 254; legacy record count at 262; expanded review-event count at 266;
+and CRC32 over the first 270 bytes at offset 270. Numbers use little endian.
+The embedded intent binds hardware reader, storage generation, owner,
+transaction, original/installed manifests and frozen review hash. Event origin
+is the embedded reader identity and first sequence is one. Counts permit one
+or two events per legacy record, bounded by the legacy journal limit; an empty
+stream has both counts zero. The record must retain the originally reserved
+epoch across recovery, even if newer reading/sync lifecycles reserve later
+epochs. Decoding checks both CRCs and all embedded intent invariants, preserving
+output on refusal. It does not prove exclusive Native epoch reservation,
+actual frozen-stream event counts, shared ancestry or publication authority.
+`protocol/fixtures/UnboundCourseReviewReservation-v1.fixture` supplies canonical
+bytes. Native persistence/reservation verification is not yet wired.
