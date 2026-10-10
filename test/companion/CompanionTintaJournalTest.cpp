@@ -8,6 +8,7 @@
 
 #include "../../lib/Companion/CompanionBookmarkIdentityCursor.h"
 #include "../../lib/Companion/CompanionBookmarkResolution.h"
+#include "../../lib/Companion/CompanionLegacyTintaStarPlan.h"
 #include "../../lib/Companion/CompanionPortablePreferenceResolution.h"
 #include "../../lib/Companion/CompanionReaderPreferenceApplication.h"
 #include "../../lib/Companion/CompanionReaderPreferenceCapture.h"
@@ -5438,4 +5439,120 @@ TEST(CompanionTintaJournal, LegacyReplayStoreFailuresPoisonCandidateAndPreserveP
   candidate.cancel = nullptr;
   EXPECT_FALSE(replay.apply(reservation, 0, entry, prior));
   EXPECT_EQ(prior, sentinel);
+}
+
+namespace {
+struct LegacyStarPlanSource {
+  std::map<uint32_t, tinta::core::ItemState> items;
+  bool permitted = true, failRead = false, cancel = false, nested = false, malformed = false;
+  LegacyTintaStarPlan* owner = nullptr;
+  unsigned calls = 0;
+  static bool next(void* raw, bool previous, uint32_t uid, tinta::core::ItemState& item, bool& found) {
+    auto& source = *static_cast<LegacyStarPlanSource*>(raw);
+    ++source.calls;
+    if (source.cancel) source.owner->close();
+    if (source.nested) {
+      TintaBody sentinel;
+      sentinel.uid = 123;
+      EXPECT_EQ(source.owner->next(sentinel), LegacyTintaStarPlanResult::Unavailable);
+      EXPECT_EQ(sentinel.uid, 123u);
+    }
+    if (source.failRead) return false;
+    const auto at = previous ? source.items.upper_bound(uid) : source.items.begin();
+    found = at != source.items.end();
+    if (found) item = at->second;
+    if (source.malformed && found) item.uid = 0;
+    return true;
+  }
+  static bool allowed(void* raw) { return static_cast<LegacyStarPlanSource*>(raw)->permitted; }
+};
+}  // namespace
+
+TEST(CompanionTintaJournal, LegacyStarPlanReconcilesIndependentMembershipWithoutChangingSchedules) {
+  LegacyStarPlanSource source;
+  for (uint32_t uid : {1u, 2u, 3u}) {
+    auto item = tinta::core::ItemState::fresh(uid);
+    item.stability = 321;
+    item.flags = tinta::core::item_flag::kSuspended | tinta::core::item_flag::kStarred;
+    source.items[uid] = item;
+  }
+  const auto original = source.items;
+  LegacyTintaStarPlan plan(LegacyStarPlanSource::next, LegacyStarPlanSource::allowed, &source);
+  source.owner = &plan;
+  source.nested = true;
+  Identity course{};
+  course.fill(7);
+  std::array<uint32_t, 2> membership{3, 4};
+  ASSERT_TRUE(plan.begin(course, membership));
+  membership.fill(99);
+  TintaBody body;
+  for (uint32_t uid : {1u, 2u, 3u, 4u}) {
+    ASSERT_EQ(plan.next(body), LegacyTintaStarPlanResult::Record);
+    EXPECT_EQ(body.kind, EventKind::Star);
+    EXPECT_EQ(body.course, course);
+    EXPECT_EQ(body.uid, uid);
+    EXPECT_EQ(body.enabled, uid >= 3);
+    std::array<uint8_t, MAX_TINTA_BODY_SIZE> encoded{};
+    EXPECT_EQ(encodeTintaBody(body, encoded), 23u);
+    auto item = source.items.contains(uid) ? source.items.at(uid) : tinta::core::ItemState::fresh(uid);
+    const auto before = item;
+    tinta::core::Fsrs scheduler;
+    TintaReplayCounts counts;
+    ASSERT_TRUE(applyTintaItemReplay(body, 0, scheduler, item, counts));
+    auto expected = before;
+    expected.flags = body.enabled ? before.flags | tinta::core::item_flag::kStarred
+                                  : before.flags & ~tinta::core::item_flag::kStarred;
+    EXPECT_EQ(item, expected);
+    EXPECT_FALSE(counts.newItem);
+    EXPECT_FALSE(counts.review);
+  }
+  EXPECT_EQ(plan.next(body), LegacyTintaStarPlanResult::End);
+  EXPECT_TRUE(plan.completed());
+  EXPECT_EQ(plan.next(body), LegacyTintaStarPlanResult::End);
+  EXPECT_EQ(source.items, original);
+  ASSERT_TRUE(plan.begin(course, {}));
+  for (uint32_t uid : {1u, 2u, 3u}) {
+    ASSERT_EQ(plan.next(body), LegacyTintaStarPlanResult::Record);
+    EXPECT_EQ(body.uid, uid);
+    EXPECT_FALSE(body.enabled);
+  }
+  EXPECT_EQ(plan.next(body), LegacyTintaStarPlanResult::End);
+}
+
+TEST(CompanionTintaJournal, LegacyStarPlanRejectsInvalidMembershipAndPoisonsInterruptedScans) {
+  Identity course{};
+  course.fill(7);
+  LegacyStarPlanSource source;
+  source.items[1] = tinta::core::ItemState::fresh(1);
+  LegacyTintaStarPlan plan(LegacyStarPlanSource::next, LegacyStarPlanSource::allowed, &source);
+  source.owner = &plan;
+  for (const auto members : {std::array<uint32_t, 2>{1, 1}, {0, 1}, {UINT32_MAX, 1}}) {
+    EXPECT_FALSE(plan.begin(course, members));
+    EXPECT_FALSE(plan.completed());
+  }
+  std::array<uint32_t, LegacyTintaStarPlan::CAPACITY + 1> tooMany{};
+  EXPECT_FALSE(plan.begin(course, tooMany));
+  EXPECT_FALSE(plan.begin(Identity{}, {}));
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    source.permitted = true;
+    source.cancel = source.failRead = source.malformed = false;
+    ASSERT_TRUE(plan.begin(course, {}));
+    if (fault == 0) source.permitted = false;
+    if (fault == 1) source.cancel = true;
+    if (fault == 2) source.failRead = true;
+    if (fault == 3) source.malformed = true;
+    TintaBody output;
+    output.uid = 123;
+    const auto sentinel = output;
+    EXPECT_EQ(plan.next(output), fault == 2   ? LegacyTintaStarPlanResult::IoError
+                                 : fault == 3 ? LegacyTintaStarPlanResult::Invalid
+                                              : LegacyTintaStarPlanResult::Unavailable);
+    EXPECT_EQ(output, sentinel);
+    EXPECT_FALSE(plan.completed());
+    source.permitted = true;
+    source.cancel = source.failRead = source.malformed = false;
+    EXPECT_EQ(plan.next(output), LegacyTintaStarPlanResult::Unavailable);
+    ASSERT_TRUE(plan.begin(course, {}));
+    EXPECT_EQ(plan.next(output), LegacyTintaStarPlanResult::End);
+  }
 }

@@ -4214,3 +4214,23 @@ membership, reentrant calls, cancellation and damage after an entry was exposed.
 This reader supplies frozen membership evidence only. Migration still needs
 durable identities for mark events, replay reconciliation, provenance/conflict
 handling and recoverable publication before runtime activation.
+
+The portable legacy-star planner now reconciles that independent membership
+against the complete disposable review projection. It emits removals for starred
+projection items absent from the frozen mark set, followed by additions for every
+retained mark in native order. Additions include unreviewed and retired UIDs; an
+existing review flag alone cannot override the frozen membership. The planner
+does not write the projection or assign distributed identities. Publication must
+first bind these bodies to durable reserved identities and causal ordering after
+the converted review stream.
+
+Its fixed 96-UID snapshot occupies 384 bytes inside an off-stack owner, with no
+internal allocation. Copying the membership allows the session workspace to be
+reused after frozen-file hashing; source enumeration remains exclusive and
+immutable. The native fixture supplies the real SD replay store and requires
+completed review conversion, completed replay and matching course identity before
+planning. SD enumeration trades repeated reads for bounded RAM. Portable tests
+cover removals, unreviewed additions, snapshot ownership, cancellation and source
+failure, and verify that applying the planned star bodies preserves schedules,
+other flags and review counters. Failed scans withhold completion and require a
+fresh begin. These checks do not yet provide runtime migration publication.

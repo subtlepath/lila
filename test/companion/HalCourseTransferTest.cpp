@@ -41,6 +41,7 @@
 #undef HEX
 #include "lib/Companion/CompanionLegacyTintaEventCursor.h"
 #include "lib/Companion/CompanionLegacyTintaReplay.h"
+#include "lib/Companion/CompanionLegacyTintaStarPlan.h"
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportBegin.h"
@@ -9861,6 +9862,59 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
           ASSERT_TRUE(working->day(0, day));
           EXPECT_EQ(day.gradedReviews, 0u);
           EXPECT_EQ(day.responseMilliseconds, 0u);
+          {
+            static_assert(LegacyTintaStarPlan::CAPACITY == tinta::core::library::MarkLog::kCapacity);
+            auto stars = makeUniqueNoThrow<HalUnboundCourseStarReader>(
+                *migration, *snapshotReader, itemScratch, [](void*) { return true; }, nullptr);
+            ASSERT_TRUE(stars);
+            ASSERT_TRUE(stars->open(intent));
+            std::array<uint32_t, LegacyTintaStarPlan::CAPACITY> membership{};
+            size_t memberCount = 0;
+            UnboundCourseStarEntry member;
+            auto starResult = stars->next(intent, member);
+            while (starResult == UnboundCourseStarReadResult::Record) {
+              ASSERT_LT(memberCount, membership.size());
+              membership[memberCount++] = member.uid;
+              starResult = stars->next(intent, member);
+            }
+            ASSERT_EQ(starResult, UnboundCourseStarReadResult::End);
+            struct StarPlanContext {
+              HalTintaReplayStore* store;
+              HalUnboundCourseReviewConversion* conversion;
+              LegacyTintaReplay* replay;
+              const UnboundCourseReviewReservation* reservation;
+            } planContext{working.get(), conversion.get(), replay.get(), &reviewReservation};
+            auto plan = makeUniqueNoThrow<LegacyTintaStarPlan>(
+                [](void* raw, bool previous, uint32_t uid, tinta::core::ItemState& item, bool& found) {
+                  auto& state = *static_cast<StarPlanContext*>(raw);
+                  uint32_t key = 0;
+                  return state.store->nextKey(HalTintaReplayStore::Kind::Item, previous, uid, key, found) &&
+                         (!found || state.store->item(key, item));
+                },
+                [](void* raw) {
+                  auto& state = *static_cast<StarPlanContext*>(raw);
+                  return state.conversion->completed(*state.reservation) &&
+                         state.replay->complete(*state.reservation) &&
+                         state.store->matchesCourse(
+                             state.reservation->intent.request.original.manifest.logicalIdentity);
+                },
+                &planContext);
+            ASSERT_TRUE(plan);
+            const auto beforePlan = hal.files;
+            ASSERT_TRUE(plan->begin(intent.request.original.manifest.logicalIdentity,
+                                    std::span(membership).first(memberCount)));
+            TintaBody body;
+            if (fault == 0) {
+              ASSERT_EQ(plan->next(body), LegacyTintaStarPlanResult::Record);
+              EXPECT_EQ(body.kind, EventKind::Star);
+              EXPECT_EQ(body.uid, reviewUid);
+              EXPECT_TRUE(body.enabled);
+            }
+            EXPECT_EQ(plan->next(body), LegacyTintaStarPlanResult::End);
+            EXPECT_TRUE(plan->completed());
+            EXPECT_EQ(hal.files, beforePlan);
+            EXPECT_TRUE(stars->closeReaders());
+          }
           EXPECT_TRUE(conversion->closeReaders());
           EXPECT_TRUE(working->close());
           std::array<char, COURSE_STATE_PATH_SIZE> temporary{};
