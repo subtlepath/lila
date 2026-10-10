@@ -4056,3 +4056,18 @@ adapter probe has no emitted frame above 224 bytes; the identity implementation
 source probe has none above 240 bytes. Re-run `ctest --test-dir
 .cache/companion-verification/host --output-on-failure` for the host suite.
 Physical SD/NVS acceptance and migration runtime activation remain unfinished.
+
+Native reservation verification now has a scoped frozen-stream count inspector.
+It computes record and expanded event totals only after the review reader's
+successful final hash check, checks the combined inspection's record count,
+and closes the stream before exposing its report. Review/undo count once and
+flags count twice. A copied intent scopes the report, and parent revocation,
+permission loss, reentry or cancellation refuses it. The owner adds no heap
+allocation and reuses the shared workspace. Exclusive epoch ownership,
+reservation sealing composition, replay agreement and runtime migration
+publication remain separate outstanding requirements.
+Validation: all 2,009 host tests pass, including expanded review/undo/flag
+counts, absent streams, wrong-intent retrieval, permission revocation, reentry,
+cancellation and changed frozen bytes. The ESP32-C3 count/report probe passes
+with no emitted frame above 160 bytes. Re-run `ctest --test-dir
+.cache/companion-verification/host --output-on-failure` for the host suite.

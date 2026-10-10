@@ -81,6 +81,7 @@
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
 #include "lib/hal/HalUnboundCourseProfileInspection.h"
+#include "lib/hal/HalUnboundCourseReviewCountInspection.h"
 #include "lib/hal/HalUnboundCourseReviewInspection.h"
 #include "lib/hal/HalUnboundCourseReviewReader.h"
 #include "lib/hal/HalUnboundCourseReviewReservationStore.h"
@@ -9438,6 +9439,60 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
         EXPECT_EQ(reviewEntry.index, 123u);
         ASSERT_TRUE(stream->closeReaders());
+        struct CountPermission {
+          bool allowed = true, checking = false, closeNext = false;
+          unsigned probes = 0;
+          HalUnboundCourseReviewCountInspection* owner = nullptr;
+          const UnboundCourseMigrationIntent* intent = nullptr;
+        } countPermission;
+        auto counts = makeUniqueNoThrow<HalUnboundCourseReviewCountInspection>(
+            *migration, *stream, scratch,
+            [](void* raw) {
+              auto& state = *static_cast<CountPermission*>(raw);
+              if (state.checking) {
+                ++state.probes;
+                EXPECT_FALSE(state.owner->inspect(*state.intent));
+                EXPECT_EQ(state.owner->report(*state.intent), nullptr);
+              }
+              if (state.closeNext) {
+                state.closeNext = false;
+                state.owner->closeReaders();
+              }
+              return state.allowed;
+            },
+            &countPermission);
+        ASSERT_TRUE(counts);
+        countPermission.owner = counts.get();
+        countPermission.intent = &intent;
+        countPermission.checking = true;
+        ASSERT_TRUE(counts->inspect(intent));
+        EXPECT_GT(countPermission.probes, 0u);
+        ASSERT_NE(counts->report(intent), nullptr);
+        EXPECT_EQ(counts->report(intent)->records, fault == 9 ? 3u : 0u);
+        EXPECT_EQ(counts->report(intent)->events, fault == 9 ? 4u : 0u);
+        EXPECT_EQ(counts->report(foreign), nullptr);
+        ASSERT_NE(counts->report(intent), nullptr);
+        countPermission.allowed = false;
+        EXPECT_EQ(counts->report(intent), nullptr);
+        countPermission.allowed = true;
+        EXPECT_EQ(counts->report(intent), nullptr);
+        ASSERT_TRUE(counts->inspect(intent));
+        countPermission.closeNext = true;
+        EXPECT_EQ(counts->report(intent), nullptr);
+        countPermission.closeNext = true;
+        EXPECT_FALSE(counts->inspect(intent));
+        ASSERT_TRUE(counts->inspect(intent));
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
+        if (fault == 9) {
+          std::string frozenLog;
+          for (const auto& [path, file] : hal.files)
+            if (path.find("course-review-state-") != std::string::npos && file.size() == 39) frozenLog = path;
+          ASSERT_FALSE(frozenLog.empty());
+          hal.files[frozenLog][4] ^= 1;
+          EXPECT_FALSE(counts->inspect(intent));
+          EXPECT_EQ(counts->report(intent), nullptr);
+          hal.files[frozenLog][4] ^= 1;
+        }
 
         EXPECT_FALSE(parser->isOpen());
         EXPECT_FALSE(installedParser->isOpen());

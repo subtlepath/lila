@@ -1360,3 +1360,15 @@ All owners are retained off stack with the existing shared workspace and no
 internal allocation. Identity inspection never provisions a new epoch. The
 adapter is not yet exposed through command routing or startup migration
 recovery; those paths must add reservation recovery/gating before activation.
+
+`HalUnboundCourseReviewCountInspection` computes reservation counts from the
+complete frozen review stream under one copied migration intent. Review and
+undo contribute one event each; flags contribute two, matching the portable
+legacy mutation mapper. The stream must finish its final roster-bound hash
+check and its count must equal the combined migration inspection report before
+record/event totals become available. The exact intent retrieves a revocable
+report; reentry, cancellation, permission loss or revoked parent evidence
+refuse a report. The stream closes before publication. Counts use no internal
+allocation and reuse the shared workspace; the intent owner is retained off
+stack. Native sealing must compare these totals with the proposed reservation
+and separately prove exclusive epoch ownership and replay correspondence.
