@@ -17,6 +17,7 @@ class Storage final : public TransferStorage {
   std::map<std::string, std::vector<uint8_t>> files;
   unsigned mutations = 0, fail = 0, verifications = 0;
   bool after = false, allowed = true, statError = false, readError = false;
+  bool allowStageRemoval = false;
   bool revokeWrite = false, revokeRename = false, revokeRead = false;
   void (*onStat)(void*) = nullptr;
   void* statContext = nullptr;
@@ -62,9 +63,15 @@ class Storage final : public TransferStorage {
     ADD_FAILURE();
     return false;
   }
-  bool remove(const char*) override {
-    ADD_FAILURE();
-    return false;
+  bool remove(const char* path) override {
+    if (!allowStageRemoval || !std::string_view(path).ends_with(".tmp")) {
+      ADD_FAILURE();
+      return false;
+    }
+    const bool failed = ++mutations == fail;
+    if (failed && !after) return false;
+    if (!files.erase(path)) return false;
+    return !failed;
   }
   bool verify(const char*, uint64_t, const Digest&, std::span<uint8_t>) override {
     ++verifications;
@@ -487,6 +494,7 @@ struct PublicationFixture {
   unsigned rejectVerification = 0;
   bool recoveredPreparation = false;
   PublicationFixture() {
+    base.storage.allowStageRemoval = true;
     record.reader.fill(7);
     record.request = base.request;
   }
@@ -657,9 +665,145 @@ TEST(CompanionCourseBaselinePublicationStore, RefusesOrphanForeignTornAndDuplica
   }
 }
 
-TEST(CompanionCourseBaselinePublicationStore, EveryTruncatedPhaseRecordPreservesEvidenceWithoutPublication) {
+TEST(CompanionCourseBaselinePublicationStore, EveryMatchingTornStageRecoversOnlyAfterNativeVerification) {
   for (const auto phase : {CourseBaselinePublicationPhase::Prepared, CourseBaselinePublicationPhase::Published}) {
-    for (const bool staged : {false, true}) {
+    for (size_t length = 0; length < COURSE_BASELINE_PUBLICATION_SIZE; ++length) {
+      for (const bool verified : {false, true}) {
+        SCOPED_TRACE(::testing::Message() << unsigned(phase) << " length=" << length << " verified=" << verified);
+        PublicationFixture f;
+        std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+        auto record = f.record;
+        if (phase == CourseBaselinePublicationPhase::Published) {
+          ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+          f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+          f.archive = true;
+        }
+        record.phase = phase;
+        ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+        const auto path = (phase == CourseBaselinePublicationPhase::Prepared ? f.prepared() : f.published()) + ".tmp";
+        f.base.storage.files[path] = {bytes.begin(), bytes.begin() + length};
+        const auto files = f.base.storage.files;
+        f.copiesValid = verified;
+        auto store = f.store();
+        if (verified) {
+          ASSERT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+          ASSERT_NE(store.published(), nullptr);
+          EXPECT_FALSE(f.base.storage.files.contains(path));
+          EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+          EXPECT_TRUE(f.base.storage.files.contains(f.published()));
+          EXPECT_EQ(f.recoveredPreparation, phase == CourseBaselinePublicationPhase::Published);
+        } else {
+          EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::VerificationFailed);
+          EXPECT_EQ(store.published(), nullptr);
+          EXPECT_EQ(f.base.storage.files, files);
+          EXPECT_EQ(f.base.storage.mutations, 0u);
+          EXPECT_EQ(f.publicationCalls, 0u);
+        }
+      }
+    }
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, MismatchedTornBytesArePreservedBeforeAnyNativeCallback) {
+  for (size_t length = 1; length < COURSE_BASELINE_PUBLICATION_SIZE; ++length) {
+    PublicationFixture f;
+    std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+    ASSERT_TRUE(encodeCourseBaselinePublicationRecord(f.record, bytes));
+    bytes[length - 1] ^= 1;
+    f.base.storage.files[f.prepared() + ".tmp"] = {bytes.begin(), bytes.begin() + length};
+    const auto files = f.base.storage.files;
+    auto store = f.store();
+    EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Corrupt);
+    EXPECT_EQ(f.base.storage.files, files);
+    EXPECT_EQ(f.base.storage.mutations, 0u);
+    EXPECT_EQ(f.preparationCalls, 0u);
+    EXPECT_EQ(f.publicationCalls, 0u);
+    EXPECT_EQ(f.verificationCalls, 0u);
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, TornRemovalPowerCutsCanRetryWithoutLosingCanonicalEvidence) {
+  for (const auto phase : {CourseBaselinePublicationPhase::Prepared, CourseBaselinePublicationPhase::Published}) {
+    for (const bool after : {false, true}) {
+      PublicationFixture f;
+      std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+      auto record = f.record;
+      if (phase == CourseBaselinePublicationPhase::Published) {
+        ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+        f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+        f.archive = true;
+      }
+      record.phase = phase;
+      ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+      const auto path = (phase == CourseBaselinePublicationPhase::Prepared ? f.prepared() : f.published()) + ".tmp";
+      f.base.storage.files[path] = {bytes.begin(), bytes.begin() + 100};
+      f.base.storage.fail = 1;
+      f.base.storage.after = after;
+      auto store = f.store();
+      EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::IoError);
+      EXPECT_EQ(store.published(), nullptr);
+      EXPECT_EQ(f.base.storage.files.contains(path), !after);
+      if (phase == CourseBaselinePublicationPhase::Published) {
+        EXPECT_TRUE(f.base.storage.files.contains(f.prepared()));
+      }
+      f.base.storage.fail = 0;
+      auto restored = f.store();
+      ASSERT_EQ(restored.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Ok);
+      EXPECT_NE(restored.published(), nullptr);
+    }
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, TornStageIsRecheckedAfterVerificationBeforeAnyRemoval) {
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    PublicationFixture f;
+    std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+    ASSERT_TRUE(encodeCourseBaselinePublicationRecord(f.record, bytes));
+    const auto path = f.prepared() + ".tmp";
+    f.base.storage.files[path] = {bytes.begin(), bytes.begin() + 100};
+    struct Context {
+      PublicationFixture* fixture;
+      unsigned fault;
+    } context{&f, fault};
+    auto hooks = f.hooks();
+    hooks.context = &context;
+    hooks.verifyPrepared = [](void* raw, const CourseBaselinePublicationRecord& record, bool) {
+      auto& c = *static_cast<Context*>(raw);
+      auto& fixture = *c.fixture;
+      const auto staged = fixture.prepared() + ".tmp";
+      if (c.fault == 0) fixture.base.storage.allowed = false;
+      if (c.fault == 1) fixture.base.storage.files.at(staged)[99] ^= 1;
+      if (c.fault == 2) fixture.base.storage.files.erase(staged);
+      if (c.fault == 3) fixture.base.storage.readError = true;
+      if (c.fault == 4) fixture.base.storage.statError = true;
+      if (c.fault == 5 || c.fault == 6) {
+        std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> full{};
+        EXPECT_TRUE(encodeCourseBaselinePublicationRecord(record, full));
+        fixture.base.storage.files.at(staged).assign(full.begin(), full.end());
+        if (c.fault == 6) fixture.base.storage.files.at(staged).push_back(0);
+      }
+      return true;
+    };
+    hooks.publishArchive = [](void*, const CourseBaselinePublicationRecord&) {
+      ADD_FAILURE() << "Archive must not be published after changed stage evidence";
+      return false;
+    };
+    hooks.verifyPublished = [](void*, const CourseBaselinePublicationRecord&) {
+      ADD_FAILURE() << "Completion must not be verified after changed stage evidence";
+      return false;
+    };
+    auto store = f.store();
+    EXPECT_NE(store.publish(f.record, hooks), CourseBaselinePublicationResult::Ok);
+    EXPECT_EQ(store.published(), nullptr);
+    EXPECT_EQ(f.base.storage.mutations, 0u);
+    EXPECT_FALSE(f.base.storage.files.contains(f.prepared()));
+    EXPECT_FALSE(f.base.storage.files.contains(f.published()));
+  }
+}
+
+TEST(CompanionCourseBaselinePublicationStore, EveryTruncatedCanonicalRecordPreservesEvidenceWithoutPublication) {
+  for (const auto phase : {CourseBaselinePublicationPhase::Prepared, CourseBaselinePublicationPhase::Published}) {
+    for (const bool staged : {false}) {
       for (size_t length = 0; length < COURSE_BASELINE_PUBLICATION_SIZE; ++length) {
         SCOPED_TRACE(::testing::Message()
                      << "phase=" << unsigned(phase) << " staged=" << staged << " length=" << length);

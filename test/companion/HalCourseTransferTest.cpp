@@ -5819,10 +5819,11 @@ TEST_F(HalCourseTransferTest, NativeBaselinePublicationRecoversCheckedCloseAndRe
       store = makeUniqueNoThrow<HalCourseBaselinePublicationStore>(
           record.reader, generation, declaration.state.owner, scratch, NativePublicationArtifacts::allowed, &artifacts);
       ASSERT_TRUE(store);
-      if (fault < 4) {
-        if (phase == 1) artifacts.fresh = false;
+      if (fault < 5) {
+        if (phase == 1 && fault < 4) artifacts.fresh = false;
         ASSERT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Ok);
         ASSERT_NE(store->published(), nullptr);
+        for (const auto& [name, data] : initial.files) EXPECT_EQ(hal.files.at(name), data);
       } else {
         const auto torn = hal.files;
         EXPECT_EQ(store->publish(record, artifacts.hooks()), CourseBaselinePublicationResult::Corrupt);

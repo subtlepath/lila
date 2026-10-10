@@ -12,7 +12,8 @@ enum class CourseBaselinePublicationResult {
   Conflict,
   Corrupt,
   IoError,
-  VerificationFailed
+  VerificationFailed,
+  TornStage
 };
 struct CourseBaselinePublicationHooks {
   void* context = nullptr;
@@ -57,6 +58,14 @@ class CourseBaselinePublicationStore final {
     if (!available(published)) return finish(published);
     const auto publishedStage = read(CourseBaselinePublicationPhase::Published, true);
     if (!available(publishedStage)) return finish(publishedStage);
+    if ((preparedStage == CourseBaselinePublicationResult::TornStage &&
+         (prepared != CourseBaselinePublicationResult::Missing ||
+          published != CourseBaselinePublicationResult::Missing ||
+          publishedStage != CourseBaselinePublicationResult::Missing)) ||
+        (publishedStage == CourseBaselinePublicationResult::TornStage &&
+         (prepared != CourseBaselinePublicationResult::Ok ||
+          preparedStage != CourseBaselinePublicationResult::Missing)))
+      return finish(CourseBaselinePublicationResult::Conflict);
     if ((prepared == CourseBaselinePublicationResult::Ok &&
          preparedStage != CourseBaselinePublicationResult::Missing) ||
         (published == CourseBaselinePublicationResult::Ok &&
@@ -77,6 +86,14 @@ class CourseBaselinePublicationStore final {
     }
     if (!guard() || !active.verifyPrepared(active.context, expected, prepared == CourseBaselinePublicationResult::Ok))
       return finish(CourseBaselinePublicationResult::VerificationFailed);
+    if (preparedStage == CourseBaselinePublicationResult::TornStage) {
+      const auto discarded = discardTorn(CourseBaselinePublicationPhase::Prepared);
+      if (discarded != CourseBaselinePublicationResult::Ok) return finish(discarded);
+    }
+    if (publishedStage == CourseBaselinePublicationResult::TornStage) {
+      const auto discarded = discardTorn(CourseBaselinePublicationPhase::Published);
+      if (discarded != CourseBaselinePublicationResult::Ok) return finish(discarded);
+    }
     auto result = save(CourseBaselinePublicationPhase::Prepared);
     if (result != CourseBaselinePublicationResult::Ok) return finish(result);
     if (!guard() || !active.publishArchive(active.context, expected))
@@ -107,7 +124,8 @@ class CourseBaselinePublicationStore final {
   mutable bool ready = false;
   bool guard() const { return permitted && permitted(context); }
   static bool available(CourseBaselinePublicationResult result) {
-    return result == CourseBaselinePublicationResult::Ok || result == CourseBaselinePublicationResult::Missing;
+    return result == CourseBaselinePublicationResult::Ok || result == CourseBaselinePublicationResult::Missing ||
+           result == CourseBaselinePublicationResult::TornStage;
   }
   const char* path(CourseBaselinePublicationPhase phase, bool staged) const {
     if (phase == CourseBaselinePublicationPhase::Prepared) return staged ? preparedStage.data() : prepared.data();
@@ -140,6 +158,7 @@ class CourseBaselinePublicationStore final {
     if (!guard()) return CourseBaselinePublicationResult::Busy;
     if (status == FileStatus::Missing) return CourseBaselinePublicationResult::Missing;
     if (status == FileStatus::Error) return CourseBaselinePublicationResult::IoError;
+    if (size < COURSE_BASELINE_PUBLICATION_SIZE && staged) return inspectTorn(phase, size);
     if (size != COURSE_BASELINE_PUBLICATION_SIZE) return CourseBaselinePublicationResult::Corrupt;
     const auto bytes = scratch.first(COURSE_BASELINE_PUBLICATION_SIZE);
     if (!storage.read(path(phase, staged), 0, bytes)) return CourseBaselinePublicationResult::IoError;
@@ -148,6 +167,37 @@ class CourseBaselinePublicationStore final {
     return observed.phase == phase && observed.reader == expected.reader && observed.request == expected.request
                ? CourseBaselinePublicationResult::Ok
                : CourseBaselinePublicationResult::Conflict;
+  }
+  CourseBaselinePublicationResult inspectTorn(CourseBaselinePublicationPhase phase, size_t length) {
+    if (scratch.size() <= COURSE_BASELINE_PUBLICATION_SIZE) return CourseBaselinePublicationResult::Invalid;
+    observed = expected;
+    observed.phase = phase;
+    const auto encoded = scratch.first(COURSE_BASELINE_PUBLICATION_SIZE);
+    if (!encodeCourseBaselinePublicationRecord(observed, encoded)) return CourseBaselinePublicationResult::Invalid;
+    const auto buffer = scratch.subspan(COURSE_BASELINE_PUBLICATION_SIZE);
+    for (size_t offset = 0; offset < length;) {
+      const auto count = std::min(buffer.size(), length - offset);
+      if (!guard()) return CourseBaselinePublicationResult::Busy;
+      if (!storage.read(path(phase, true), offset, buffer.first(count)))
+        return CourseBaselinePublicationResult::IoError;
+      if (!guard()) return CourseBaselinePublicationResult::Busy;
+      if (!std::equal(buffer.begin(), buffer.begin() + count, encoded.begin() + offset))
+        return CourseBaselinePublicationResult::Corrupt;
+      offset += count;
+    }
+    return guard() ? CourseBaselinePublicationResult::TornStage : CourseBaselinePublicationResult::Busy;
+  }
+  CourseBaselinePublicationResult discardTorn(CourseBaselinePublicationPhase phase) {
+    const auto inspected = read(phase, true);
+    if (inspected != CourseBaselinePublicationResult::TornStage)
+      return inspected == CourseBaselinePublicationResult::Ok || inspected == CourseBaselinePublicationResult::Missing
+                 ? CourseBaselinePublicationResult::Conflict
+                 : inspected;
+    if (!guard()) return CourseBaselinePublicationResult::Busy;
+    if (!storage.remove(path(phase, true))) return CourseBaselinePublicationResult::IoError;
+    const auto remaining = read(phase, true);
+    return remaining == CourseBaselinePublicationResult::Missing ? CourseBaselinePublicationResult::Ok
+                                                                 : CourseBaselinePublicationResult::IoError;
   }
   CourseBaselinePublicationResult save(CourseBaselinePublicationPhase phase) {
     auto result = read(phase, false);
