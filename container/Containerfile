@@ -1,0 +1,93 @@
+# Bookworm, not trixie: pioarduino's cppcheck links libpcre.so.3, which trixie dropped.
+FROM node:lts-bookworm
+
+# System packages
+#   build-essential cmake ninja-build  host unit tests (test/, test/tinta/run.sh)
+#                                      and the freeink-sdk simulator daemon
+#   zlib1g-dev                         simulator daemon/emulator link -lz
+#   libpcre3                           `pio check` (pioarduino cppcheck)
+#   libcairo2                          cairosvg (scripts/convert_icon.py)
+#   zip imagemagick                    freeink-sdk book host tests' fixtures
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git bash curl ca-certificates openssh-client less ripgrep jq gosu neovim wget \
+    build-essential cmake ninja-build pkg-config zlib1g-dev \
+    libpcre3 libcairo2 zip unzip imagemagick \
+  && rm -rf /var/lib/apt/lists/*
+
+# Coding agents
+RUN npm install -g @anthropic-ai/claude-code @openai/codex@latest @mariozechner/pi-coding-agent @oh-my-pi/pi-coding-agent
+
+# The freeink-sdk submodule is fetched over SSH (git@github.com:subtlepath/freeink-sdk.git).
+# GitHub's published host keys (https://api.github.com/meta), so the first fetch does not prompt.
+RUN printf '%s\n' \
+    'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' \
+    'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' \
+    >> /etc/ssh/ssh_known_hosts
+
+# Non-root user matching the host's UID/GID for bind-mount permissions.
+# Defaults are the macOS values used by sandbox.sh; podman.sh overrides them
+# with the invoking Linux user's ids so bind-mounted files stay writable.
+ARG AGENT_UID=501
+ARG AGENT_GID=20
+# node:lts ships a `node` user at 1000:1000, which collides with the usual
+# Linux host uid, so evict whoever already holds the target uid.
+# Evict first: userdel also drops the user's primary group, so checking for
+# the group before this would pass and then leave nothing behind.
+RUN set -eux; \
+    existing="$(getent passwd ${AGENT_UID} | cut -d: -f1 || true)"; \
+    if [ -n "$existing" ] && [ "$existing" != agent ]; then \
+      userdel -r "$existing" 2>/dev/null || userdel "$existing"; \
+    fi; \
+    getent group ${AGENT_GID} >/dev/null || groupadd -g ${AGENT_GID} agent; \
+    id -u agent >/dev/null 2>&1 || useradd -m -u ${AGENT_UID} -g ${AGENT_GID} -s /bin/bash agent
+
+# Python toolchain, matching .github/workflows/ci.yml: uv, Python 3.13,
+# pioarduino's PlatformIO Core, and the repo's requirements.txt (staged into the
+# build context by sandbox.sh/podman.sh). Built as agent so the venv stays
+# writable without a chown layer duplicating it.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+ARG PIOARDUINO_VERSION=6.1.19
+ENV PIOARDUINO_VERSION=${PIOARDUINO_VERSION} \
+    UV_PYTHON_INSTALL_DIR=/opt/lila/python \
+    UV_LINK_MODE=copy \
+    VIRTUAL_ENV=/opt/lila/venv \
+    PATH=/opt/lila/venv/bin:$PATH
+RUN mkdir -p /opt/lila && chown ${AGENT_UID}:${AGENT_GID} /opt/lila
+USER ${AGENT_UID}:${AGENT_GID}
+RUN set -eux; \
+    uv venv --python 3.13 "$VIRTUAL_ENV"; \
+    uv pip install --no-cache \
+      "https://github.com/pioarduino/platformio-core/archive/refs/tags/v${PIOARDUINO_VERSION}.zip" \
+      "littlefs-python>=0.16.0" "fatfs-ng>=0.1.14" "pyyaml>=6.0.2" \
+      "rich-click>=1.8.6" "zopfli>=0.2.2" "intelhex>=2.3.0" "rich>=14.0.0" "urllib3<2" \
+      "cryptography>=45.0.3" "certifi>=2025.8.3" "ecdsa>=0.19.1" "bitstring>=4.3.1" \
+      "reedsolo>=1.5.3,<1.8" "esp-idf-size>=2.0.0" "esp-coredump>=1.14.0"
+COPY requirements.tar /tmp/
+RUN mkdir /tmp/requirements && tar -C /tmp/requirements -xf /tmp/requirements.tar \
+ && uv pip install --no-cache -r /tmp/requirements/requirements.txt \
+ && rm -rf /tmp/requirements /tmp/requirements.tar
+USER root
+
+# bin/clang-format-fix requires clang-format 21; Debian bookworm ships 14.
+RUN UV_TOOL_DIR=/opt/uv-tools UV_TOOL_BIN_DIR=/usr/local/bin \
+    uv tool install --no-cache "clang-format>=21,<22"
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY lila-setup.sh /usr/local/bin/lila-setup
+COPY lila-sim.sh /usr/local/bin/lila-sim
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/lila-setup /usr/local/bin/lila-sim
+
+# yolo / yolox aliases
+RUN printf '#!/bin/bash\nexec claude --model=opus --dangerously-skip-permissions "$@"\n' > /usr/local/bin/yolo \
+ && printf '#!/bin/bash\nexec codex --no-alt-screen --dangerously-bypass-approvals-and-sandbox "$@"\n' > /usr/local/bin/yolox \
+ && chmod +x /usr/local/bin/yolo /usr/local/bin/yolox
+RUN echo export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=true >> /home/agent/.bashrc
+RUN echo 'export PATH=~/.local/bin:$PATH' >> /home/agent/.bashrc
+# Login shells reset PATH from /etc/profile, dropping the ENV above.
+RUN echo 'export PATH=/opt/lila/venv/bin:$PATH' > /etc/profile.d/lila.sh
+
+# Raise file descriptor limits (container default of 1024 is too low)
+RUN echo "ulimit -n 65536 2>/dev/null || ulimit -n $(ulimit -Hn) 2>/dev/null || true" >> /home/agent/.bashrc
+
+WORKDIR /workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
