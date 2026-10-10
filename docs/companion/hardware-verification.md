@@ -448,6 +448,22 @@ firmware/image identity alongside the results.
 
 ### Archived return-to-course acceptance
 
+- [ ] Interrupt an explicitly approved baseline transfer while Installing, then
+      reboot with its original card and known paired installation. Confirm native
+      startup recovery completes before Home and preserves immutable reviewed
+      copies. After completion, add newer progress and retry/reboot; confirm it is
+      preserved. A changed reviewed cohort before publication must refuse safely.
+      Repeat through Connect recovery with radios initially off; check the owner
+      is released before inventory/BLE work.
+- [ ] Repeat with a replaced card marker, forgotten installation, corrupt pairing
+      store, incomplete journal directory, or invalid canonical journal. Confirm
+      recovery blocks and retains the source, consent, publication records, and
+      learner evidence. An incomplete directory must not gain new journal headers.
+- [ ] Measure free/largest internal heap and stack watermarks during journal audit
+      and baseline publication, then after inventory/BLE activation. Require over
+      50 KiB free heap and no accumulating loss. Exercise physical power cuts;
+      host interruption fixtures do not establish hardware acceptance.
+
 - [ ] Switch from course A to B and back to a compatible version of A. Confirm
       both scopes keep their learner files and all outgoing versions retain
       verified archives before active-pack replacement.

@@ -31,6 +31,11 @@ class HalCompanionBluetooth {
   bool send(std::span<const uint8_t> frame, uint64_t session);
   bool peer(uint64_t session, companion::PairingPeer& output) const;
   uint64_t authenticatedSession() const;
+  // Serialized consumer must finish/copy all frame loans before acquiring.
+  // Release before encoding a reply or changing the radio lifecycle.
+  bool acquireWorkspace(uint64_t session);
+  bool workspaceOwned(uint64_t session) const;
+  bool releaseWorkspace(uint64_t session);
   // Caller serializes radio lifecycle and separately authorizes the installation.
   bool generateWifiHandoffSecrets(uint64_t session, companion::Identity& identity, companion::Digest& key);
   bool generateWifiHotspotPassword(uint64_t session, companion::WifiHotspotPassword& password);

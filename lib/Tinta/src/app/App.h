@@ -229,7 +229,7 @@ class App {
   void clearTapFlash() { ui_->clearTapFlash(); }
 
  private:
-  static constexpr uint8_t kMaxDepth = 8;
+  static constexpr uint8_t kMaxDepth = kSessionStackCapacity;
 
   static void buildFrame(UiScreen& screen, void* self);
   void compose(UiScreen& screen);

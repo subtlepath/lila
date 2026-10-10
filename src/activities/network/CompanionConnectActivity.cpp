@@ -27,6 +27,7 @@
 #include "SdCardFontSystem.h"
 #include "network/FirmwareFlasher.h"
 #if LILA_TINTA
+#include <HalCourseBaselineRecovery.h>
 #include <HalCourseRemovalPreparation.h>
 #include <HalRemovedCourseBaseline.h>
 #include <HalTintaJournalMergeCommitContext.h>
@@ -137,12 +138,6 @@ void CompanionConnectActivity::onEnter() {
     recoveryBlocked = true;
     return;
   }
-  const auto recovered = transfer->recover(identity.storageGeneration);
-  if (recovered != companion::TransferResult::Ok) {
-    recoveryBlocked = true;
-    LOG_ERR("COMPANION", "Transfer recovery failed: %u", static_cast<unsigned>(recovered));
-    return;
-  }
   {
     // Publication records and retained lookup handles exceed the task stack budget.
     auto journalRecovery = makeUniqueNoThrow<companion::HalJournalMergeStartupRecovery>();
@@ -151,6 +146,30 @@ void CompanionConnectActivity::onEnter() {
       recoveryBlocked = true;
       return;
     }
+  }
+#if LILA_TINTA
+  bool baselineWorkspaceOwned = true;
+  std::unique_ptr<companion::HalCourseBaselineImportSession> baselineSession;
+  auto baselinePermission = [](void* context) { return *static_cast<bool*>(context) && Storage.ready(); };
+  if (!companion::attachHalCourseBaselineRecovery(
+          *transfer, transferStorage, identityStorage, identity, pairings,
+          {workspace.get(), companion::SESSION_WORKSPACE_SIZE},
+          std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE).subspan(companion::TRANSFER_OFFSET),
+          baselineSession, baselinePermission, &baselineWorkspaceOwned)) {
+    recoveryBlocked = true;
+    return;
+  }
+#endif
+  const auto recovered = transfer->recover(identity.storageGeneration);
+#if LILA_TINTA
+  baselineWorkspaceOwned = false;
+  transferStorage.setCourseBaselineInstaller(nullptr);
+  baselineSession.reset();
+#endif
+  if (recovered != companion::TransferResult::Ok) {
+    recoveryBlocked = true;
+    LOG_ERR("COMPANION", "Transfer recovery failed: %u", static_cast<unsigned>(recovered));
+    return;
   }
 #if LILA_TINTA
   {

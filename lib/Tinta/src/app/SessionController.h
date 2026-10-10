@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 
+#include "app/PersistedSessionLimits.h"
 #include "core/srs/DayQueue.h"
 #include "core/stats/Streak.h"
 #include "core/usage/UsageLog.h"
@@ -46,7 +47,7 @@ class SessionController {
  public:
   // Items in one session at most, whatever the Session length setting says
   // (6 bytes each, and 5 in session.bin).
-  static constexpr uint16_t kCapacity = 200;
+  static constexpr uint16_t kCapacity = kSessionQueueCapacity;
   // The session's part of session.bin, at most.
   static constexpr uint32_t kBlobCap = 20 + core::DayQueue::blobSize(kCapacity);
 

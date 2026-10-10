@@ -53,6 +53,7 @@ class FrameAssembler {
   }
 
   FrameError lastError() const { return error; }
+  bool idle() const { return used == 0 && !terminal; }
 
  private:
   Result reject(FrameError reason) {

@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include "CompanionCommandQueue.h"
+#include "CompanionControlWorkspaceLease.h"
 #include "CompanionFrameAssembler.h"
 #include "CompanionSession.h"
 
@@ -45,7 +46,7 @@ struct HalCompanionBluetooth::Impl {
       bool rejected;
       {
         Guard lock(owner.mutex);
-        rejected = !owner.session.connect();
+        rejected = owner.workspaceLease.active() || !owner.session.connect();
         if (!rejected) {
           owner.connection = info.getConnHandle();
           owner.status = {State::Connected, 0, false};
@@ -101,19 +102,23 @@ struct HalCompanionBluetooth::Impl {
         if (!owner.running || owner.connection != info.getConnHandle() || owner.status.state != State::Authenticated ||
             !info.isEncrypted() || !info.isAuthenticated())
           return;
-        companion::FrameView frame;
-        const auto result =
-            owner.assembler.append({characteristic->getValueData(), characteristic->getLength()}, true, frame);
-        if (result == companion::FrameAssembler::Result::Ready) {
-          const size_t count = companion::FRAME_HEADER_SIZE + frame.payload.size();
-          rejected =
-              owner.queue.push(owner.receiveBuffer.first(count), true) != companion::CommandQueue::PushResult::Accepted;
-          owner.assembler.reset();
-        } else if (result == companion::FrameAssembler::Result::Rejected)
+        if (owner.workspaceLease.active()) {
           rejected = true;
+        } else {
+          companion::FrameView frame;
+          const auto result =
+              owner.assembler.append({characteristic->getValueData(), characteristic->getLength()}, true, frame);
+          if (result == companion::FrameAssembler::Result::Ready) {
+            const size_t count = companion::FRAME_HEADER_SIZE + frame.payload.size();
+            rejected = owner.queue.push(owner.receiveBuffer.first(count), true) !=
+                       companion::CommandQueue::PushResult::Accepted;
+            owner.assembler.reset();
+          } else if (result == companion::FrameAssembler::Result::Rejected)
+            rejected = true;
+        }
       }
       if (rejected) {
-        LOG_ERR("COMPANION", "Invalid BLE frame or command queue full");
+        LOG_ERR("COMPANION", "BLE control input rejected");
         NimBLEDevice::getServer()->disconnect(info.getConnHandle());
       }
     }
@@ -129,6 +134,7 @@ struct HalCompanionBluetooth::Impl {
   uint16_t connection = NO_CONNECTION;
   Snapshot status;
   companion::Session session;
+  companion::ControlWorkspaceLease workspaceLease;
   bool running = false;
 
   explicit Impl(std::span<uint8_t> workspace)
@@ -237,6 +243,7 @@ HalCompanionBluetooth::Snapshot HalCompanionBluetooth::snapshot() const {
 size_t HalCompanionBluetooth::receive(std::span<uint8_t> destination, uint64_t& session) {
   if (!impl) return 0;
   Impl::Guard lock(impl->mutex);
+  if (impl->workspaceLease.active()) return 0;
   companion::FrameView frame;
   if (!impl->queue.peek(frame)) return 0;
   const size_t size = companion::encodeFrame(frame, destination);
@@ -249,7 +256,7 @@ size_t HalCompanionBluetooth::receive(std::span<uint8_t> destination, uint64_t& 
 bool HalCompanionBluetooth::send(std::span<const uint8_t> frame, uint64_t session) {
   if (!impl) return false;
   Impl::Guard lock(impl->mutex);
-  if (!impl->session.accepts(session)) return false;
+  if (impl->workspaceLease.active() || !impl->session.accepts(session)) return false;
   const uint16_t connection = impl->connection;
   const uint16_t mtu = impl->server->getPeerMTU(connection);
   if (mtu <= 3) return false;
@@ -258,6 +265,25 @@ bool HalCompanionBluetooth::send(std::span<const uint8_t> frame, uint64_t sessio
     if (!impl->output->notify(frame.data(), count, connection)) return false;
     frame = frame.subspan(count);
   }
+  return true;
+}
+bool HalCompanionBluetooth::acquireWorkspace(uint64_t session) {
+  if (!impl) return false;
+  Impl::Guard lock(impl->mutex);
+  return impl->workspaceLease.acquire(session, impl->session.accepts(session), impl->queue.size(),
+                                      impl->assembler.idle());
+}
+bool HalCompanionBluetooth::workspaceOwned(uint64_t session) const {
+  if (!impl) return false;
+  Impl::Guard lock(impl->mutex);
+  return impl->workspaceLease.valid(session, impl->session.accepts(session));
+}
+bool HalCompanionBluetooth::releaseWorkspace(uint64_t session) {
+  if (!impl) return false;
+  Impl::Guard lock(impl->mutex);
+  if (!impl->workspaceLease.release(session)) return false;
+  impl->queue.clear();
+  impl->assembler.reset();
   return true;
 }
 bool HalCompanionBluetooth::peer(uint64_t session, companion::PairingPeer& output) const {
@@ -357,4 +383,7 @@ bool HalCompanionBluetooth::generateWifiHotspotPassword(uint64_t, companion::Wif
   return false;
 }
 bool HalCompanionBluetooth::unpairConnected(uint64_t) { return false; }
+bool HalCompanionBluetooth::acquireWorkspace(uint64_t) { return false; }
+bool HalCompanionBluetooth::workspaceOwned(uint64_t) const { return false; }
+bool HalCompanionBluetooth::releaseWorkspace(uint64_t) { return false; }
 #endif

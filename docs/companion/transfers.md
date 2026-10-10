@@ -1,5 +1,29 @@
 # Reader transfer persistence
 
+BLE exposes a mutex-protected exclusive control-workspace lease for operations
+that need more than the ordinary 940-byte transfer partition. Acquisition requires
+the current authenticated transport token, an empty command queue, and an idle
+fragment assembler. The consumer must copy its command and finish borrowed frame
+views first. This lease does not authorize an Apple installation or fresh consent.
+
+While leased, incoming authenticated writes are rejected before touching workspace
+bytes and the peer is disconnected. Receive/send and new connections cannot reuse
+the buffer. Disconnect revokes the permission check but leaves storage protected
+until the original consumer releases it; a different or stale token cannot release
+another consumer's lease. Release resets queue/assembler metadata for subsequent
+frames. `HalCompanionControlWorkspaceLease` supplies scoped cleanup, including
+early returns; Bluetooth and its workspace must outlive it, and it must be released
+before reply encoding or radio lifecycle changes. No buffer or heap allocation is
+introduced by the lease.
+
+All 1,915 host tests pass, including queued/partial-frame preservation, disconnect
+and token changes, and scratch reuse followed by fresh frame assembly. Enabled C3
+compilation passes the 256-byte frame limit: ingress uses 96 bytes and lease methods
+48 bytes. The disabled HAL branch also compiles with host stubs. These are software
+checks; physical BLE concurrency, Wi-Fi leasing, and live baseline command
+integration remain unfinished. Final affected firmware builds must include the
+lease source changes before accepting this checkpoint.
+
 `CompanionTransfer` implements a durable transaction controller with a
 `HalTransferStorage` adapter. Connect & Sync provisions identity
 and runs recovery before starting BLE. Failed recovery blocks ordinary navigation.

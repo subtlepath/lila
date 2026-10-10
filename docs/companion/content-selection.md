@@ -2494,3 +2494,59 @@ fixture now uses the actual 940-byte parent partition for interrupted recovery;
 revoking permission leaves the queued area unchanged. This is a workspace
 contract, not yet a transport lease implementation or Startup/Connect wiring.
 Both bridge methods compile with 32-byte C3 frames.
+
+### Boot and Connect baseline recovery
+
+`HalCompanionRecovery` and `CompanionConnectActivity::onEnter` now inspect the
+pending transfer before normal recovery and attach a native baseline session
+only for the dedicated baseline destination. The helper rechecks native hardware,
+card marker, and storage-generation binding without reserving another epoch. It
+reloads the durable pairing registry and requires the recorded installation owner
+to remain known. Native installer callbacks still require exact persisted consent
+and verified immutable evidence before publication; recognition does not authorize
+new consent or transfer commands.
+
+Canonical journal publication/abort recovery precedes this attachment. Journal
+readiness first proves absence or requires an existing events file and at least
+one header, so an empty or incomplete directory cannot create new authority.
+For an existing journal it invokes the native recovery and causal/undo audit;
+only uncommitted trailing bytes may be truncated by that recovery. This audits
+current canonical journal readiness, not correspondence between reviewed journal
+backups, candidate subjects, and saved-session snapshots.
+
+The full 8 KiB workspace is lent only before BLE starts and while frame/queue
+loans are inactive. Both callers revoke that permission, detach the installer,
+and release the import owner immediately after normal transfer recovery, before
+inventory work or transport activation. Live baseline review/transfer commands
+still need a separate exclusive transport lease and are not enabled by this
+change. The startup recovery gate remains closed on identity, pairing, audit,
+consent, or publication failures; retained evidence is not silently discarded.
+
+Persisted screen IDs and the native depth/queue capacities now share
+`app/PersistedSessionLimits.h`; the enum values are unchanged. The native helper
+uses these limits rather than test literals. Forced C3 compilation passes all
+256-byte frame checks: journal readiness uses 80 bytes, attachment 256 bytes,
+boot recovery 144 bytes, and Connect entry 160 bytes. Presence (548 bytes),
+metadata (1,072 bytes), and audit (4,200 bytes) owners are admitted off stack and
+released sequentially before admitting the 31,136-byte import session. These
+figures exclude SDK handles, allocator overhead, and parent-session objects.
+
+All 1,912 host tests pass. Native integration covers interrupted publication
+through the actual attachment helper, read-only identity/pairing proofs,
+exclusive-workspace refusal, missing/incomplete journal evidence, and native
+uncommitted-tail recovery. The final default build containing these production
+callers passes the repository image validator for x4/chip 5: 6,546,128 bytes,
+SHA-256 `78fadb84672908adc13fbc8a8206f2bd4ff233eea0522b0ea6cb106333b113ce`.
+The 6,553,600-byte OTA partition has 7,472 bytes of headroom. Other affected
+firmware targets and physical boot/Connect acceptance remain pending; protocol
+and Apple review commands, torn consent/publication-stage recovery, reviewed
+authority correspondence, and full transport leasing remain unfinished.
+
+The subsequent board batch built and image-validated sticky (5,789,600 bytes,
+764,000 bytes of OTA headroom), x4c (6,550,272 bytes, 3,328 bytes of headroom), and
+papermono (5,904,080 bytes, 649,520 bytes of headroom). X4pro failed during framework
+package copying with system error 23 (`Too many open files`), before compilation.
+The SDK speech components also emitted their existing discarded-const warnings
+on sticky. This batch is not final acceptance of the later BLE workspace-lease
+changes: a final five-target run is pending, including the x4pro retry. Physical
+acceptance and the remaining baseline protocol/authority work are still required.

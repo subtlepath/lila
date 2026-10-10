@@ -46,6 +46,7 @@
 #include "lib/hal/HalCourseBaselineLearnerInspection.h"
 #include "lib/hal/HalCourseBaselineNativeInstaller.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
+#include "lib/hal/HalCourseBaselineRecovery.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
 #include "lib/hal/HalCourseBaselineReviewStore.h"
@@ -65,6 +66,72 @@ namespace tinta::platform {
 void log(const char*, ...) {}
 }  // namespace tinta::platform
 using namespace companion;
+
+namespace {
+struct BaselineRecoveryIdentities final : IdentityStorage {
+  Identity device{}, card{}, marker{};
+  std::array<uint8_t, IDENTITY_RECORD_SIZE> binding{};
+  unsigned writes = 0;
+  bool fail = false;
+  BaselineRecoveryIdentities(const Identity& reader, const Identity& generation) : device(reader) {
+    card[0] = 71;
+    marker[0] = 72;
+    std::memcpy(binding.data(), "LCI\1", 4);
+    std::copy(device.begin(), device.end(), binding.begin() + 4);
+    std::copy(card.begin(), card.end(), binding.begin() + 20);
+    std::copy(marker.begin(), marker.end(), binding.begin() + 36);
+    std::copy(generation.begin(), generation.end(), binding.begin() + 52);
+    binary_record::putU32(binding.data() + 68, 1);
+    binary_record::putU32(binding.data() + 76, binary_record::crc32(binding.data(), 76));
+  }
+  bool hardwareIdentity(Identity& output) override {
+    output = device;
+    return !fail;
+  }
+  bool cardIdentity(Identity& output) override {
+    output = card;
+    return !fail;
+  }
+  IdentityRead readBinding(std::span<uint8_t> output) override {
+    if (fail) return IdentityRead::Error;
+    std::copy(binding.begin(), binding.end(), output.begin());
+    return IdentityRead::Present;
+  }
+  IdentityRead readMarker(Identity& output) override {
+    output = marker;
+    return fail ? IdentityRead::Error : IdentityRead::Present;
+  }
+  bool writeBinding(std::span<const uint8_t>) override {
+    ++writes;
+    return false;
+  }
+  bool createMarker(const Identity&) override {
+    ++writes;
+    return false;
+  }
+  bool randomIdentity(Identity&) override {
+    ++writes;
+    return false;
+  }
+};
+struct BaselineRecoveryPairings final : PairingsStorage {
+  std::array<uint8_t, PAIRINGS_RECORD_SIZE> data{};
+  bool exists = false, fail = false;
+  unsigned writes = 0;
+  PairingsRead read(std::span<uint8_t> output) override {
+    if (fail) return PairingsRead::Error;
+    if (!exists) return PairingsRead::Missing;
+    std::copy(data.begin(), data.end(), output.begin());
+    return PairingsRead::Present;
+  }
+  bool write(std::span<const uint8_t> input) override {
+    ++writes;
+    std::copy(input.begin(), input.end(), data.begin());
+    exists = true;
+    return true;
+  }
+};
+}  // namespace
 
 class HalCourseTransferTest : public testing::Test {
  protected:
@@ -6515,10 +6582,22 @@ TEST_F(HalCourseTransferTest, BaselineTransferPublishesWithNativeLearnerCompatib
   EXPECT_EQ(recovered.destination(), COURSE_BASELINE_DESTINATION);
   EXPECT_EQ(hal.files, interrupted);
   EXPECT_EQ(recovered.commit(request.transaction, request.owner), TransferResult::NoTransaction);
-  session = createHalCourseBaselineImportSession(reader, generation, recovered.current()->owner, scratch, {8, 40, 200},
-                                                 permission, &exclusiveWorkspace, parentWorkspace);
+  BaselineRecoveryIdentities identities(reader, generation);
+  BaselineRecoveryPairings pairingStorage;
+  Pairings pairings(pairingStorage);
+  ASSERT_EQ(pairings.load(scratch), PairingResult::Ok);
+  PairingSecret secret{};
+  secret[0] = 12;
+  PairingPeer peer{};
+  peer[0] = 13;
+  ASSERT_EQ(pairings.add(request.owner, secret, peer, scratch), PairingResult::Ok);
+  IdentityState identity{reader, generation, 1};
+  ASSERT_TRUE(attachHalCourseBaselineRecovery(recovered, storage, identities, identity, pairings, scratch,
+                                              parentWorkspace, session, permission, &exclusiveWorkspace));
   ASSERT_TRUE(session);
-  storage.setCourseBaselineInstaller(session->installer());
+  EXPECT_EQ(hal.files, interrupted);
+  EXPECT_EQ(identities.writes, 0U);
+  EXPECT_EQ(pairingStorage.writes, 1U);
   ASSERT_EQ(recovered.recover(generation), TransferResult::Ok);
   ASSERT_NE(recovered.current(), nullptr);
   EXPECT_EQ(recovered.current()->phase, TransferPhase::Committed);
@@ -6610,4 +6689,103 @@ TEST_F(HalCourseTransferTest, BaselineImportSessionRequiresParentWorkspaceInside
   EXPECT_FALSE(
       session->installer()->metadata(COURSE_BASELINE_DESTINATION, declaration.manifest, declaration.state, foreign));
   EXPECT_EQ(inventory_hal_test::state.files, files);
+}
+
+TEST_F(HalCourseTransferTest,
+       BaselineJournalReadinessProvesAbsenceAndRefusesIncompleteEvidenceWithoutCreatingAuthority) {
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+  auto permitted = [](void*) { return true; };
+  auto& hal = inventory_hal_test::state;
+  const auto absent = hal.files;
+  ASSERT_TRUE(prepareHalCourseBaselineJournal(permitted, nullptr));
+  EXPECT_EQ(hal.files, absent);
+  EXPECT_FALSE(hal.directories.contains(TINTA_JOURNAL_DIRECTORY));
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TINTA_JOURNAL_DIRECTORY));
+  const auto empty = hal.files;
+  EXPECT_FALSE(prepareHalCourseBaselineJournal(permitted, nullptr));
+  EXPECT_EQ(hal.files, empty);
+  EXPECT_FALSE(hal.files.contains(TINTA_JOURNAL_EVENTS));
+  hal.files[TINTA_JOURNAL_EVENTS] = {};
+  const auto headerless = hal.files;
+  EXPECT_FALSE(prepareHalCourseBaselineJournal(permitted, nullptr));
+  EXPECT_EQ(hal.files, headerless);
+  EXPECT_FALSE(hal.files.contains(TINTA_JOURNAL_HEADER_A));
+  hal.files[TINTA_JOURNAL_HEADER_A] = {1};
+  const auto corrupt = hal.files;
+  EXPECT_FALSE(prepareHalCourseBaselineJournal(permitted, nullptr));
+  EXPECT_EQ(hal.files, corrupt);
+}
+
+TEST_F(HalCourseTransferTest, BaselineJournalReadinessAuditsExistingAuthorityAndRecoversOnlyUncommittedTail) {
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+  {
+    HalTintaJournalStorage native;
+    TintaJournal journal(native, std::span(scratch).first(TintaJournal::EXTENDED_RECORD_SIZE));
+    ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+    ASSERT_TRUE(native.close());
+  }
+  auto& hal = inventory_hal_test::state;
+  const char* headerPath = hal.files.contains(TINTA_JOURNAL_HEADER_A) ? TINTA_JOURNAL_HEADER_A : TINTA_JOURNAL_HEADER_B;
+  const char* otherHeader = headerPath == TINTA_JOURNAL_HEADER_A ? TINTA_JOURNAL_HEADER_B : TINTA_JOURNAL_HEADER_A;
+  ASSERT_TRUE(hal.files.contains(headerPath));
+  const auto header = hal.files.at(headerPath);
+  hal.files[TINTA_JOURNAL_EVENTS] = {99};
+  auto permitted = [](void*) { return true; };
+  ASSERT_TRUE(prepareHalCourseBaselineJournal(permitted, nullptr));
+  EXPECT_TRUE(hal.files.at(TINTA_JOURNAL_EVENTS).empty());
+  EXPECT_EQ(hal.files.at(headerPath), header);
+  EXPECT_FALSE(hal.files.contains(otherHeader));
+  const auto recovered = hal.files;
+  EXPECT_FALSE(prepareHalCourseBaselineJournal([](void*) { return false; }, nullptr));
+  EXPECT_EQ(hal.files, recovered);
+}
+
+TEST_F(HalCourseTransferTest, BaselineRecoveryRequiresNativeIdentityKnownOwnerAndExclusiveWorkspace) {
+  CourseBaselineImportRequest request;
+  Identity reader{};
+  std::string consentPath;
+  prepareBaselineApproval(request, reader, consentPath);
+  ASSERT_FALSE(HasFatalFailure());
+  Transfer transfer(storage, scratch);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  ASSERT_EQ(transfer.begin(declaration, COURSE_BASELINE_DESTINATION), TransferResult::Ok);
+  BaselineRecoveryIdentities identities(reader, generation);
+  BaselineRecoveryPairings pairingStorage;
+  Pairings pairings(pairingStorage);
+  IdentityState identity{reader, generation, 1};
+  bool exclusive = true;
+  auto permitted = [](void* context) { return *static_cast<bool*>(context); };
+  std::unique_ptr<HalCourseBaselineImportSession> session;
+  const auto files = inventory_hal_test::state.files;
+  EXPECT_FALSE(attachHalCourseBaselineRecovery(transfer, storage, identities, identity, pairings, scratch, scratch,
+                                               session, permitted, &exclusive));
+  EXPECT_FALSE(session);
+  ASSERT_EQ(pairings.load(scratch), PairingResult::Ok);
+  PairingSecret secret{};
+  secret[0] = 12;
+  PairingPeer peer{};
+  peer[0] = 13;
+  ASSERT_EQ(pairings.add(request.owner, secret, peer, scratch), PairingResult::Ok);
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    SCOPED_TRACE(fault);
+    identities.fail = fault == 0;
+    pairingStorage.fail = fault == 1;
+    exclusive = fault != 2;
+    auto supplied = identity;
+    if (fault == 3) supplied.device[0] ^= 0x80;
+    EXPECT_FALSE(attachHalCourseBaselineRecovery(transfer, storage, identities, supplied, pairings, scratch, scratch,
+                                                 session, permitted, &exclusive));
+    EXPECT_FALSE(session);
+    EXPECT_EQ(inventory_hal_test::state.files, files);
+    EXPECT_EQ(identities.writes, 0U);
+  }
+  identities.fail = pairingStorage.fail = false;
+  exclusive = true;
+  EXPECT_TRUE(attachHalCourseBaselineRecovery(transfer, storage, identities, identity, pairings, scratch, scratch,
+                                              session, permitted, &exclusive));
+  ASSERT_TRUE(session);
+  EXPECT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::NoTransaction);
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+  EXPECT_EQ(identities.writes, 0U);
+  storage.setCourseBaselineInstaller(nullptr);
 }

@@ -14,6 +14,10 @@
 #include "HalInventoryRecovery.h"
 #include "HalJournalStartupRecovery.h"
 #include "HalTransferStorage.h"
+#if LILA_TINTA
+#include "HalCourseBaselineRecovery.h"
+#include "HalPairingsStorage.h"
+#endif
 
 namespace companion {
 namespace {
@@ -35,7 +39,19 @@ struct Recovery {
   HalTransferStorage storage;
   Transfer transfer{storage, workspace};
   std::unique_ptr<HalDictionaryTransferInstaller> dictionaryInstaller;
-  ~Recovery() { storage.setDictionaryInstaller(nullptr); }
+#if LILA_TINTA
+  HalPairingsStorage pairingsStorage;
+  Pairings pairings{pairingsStorage};
+  std::unique_ptr<HalCourseBaselineImportSession> baselineSession;
+  bool baselineWorkspaceOwned = false;
+  static bool baselinePermission(void* context) {
+    return static_cast<Recovery*>(context)->baselineWorkspaceOwned && Storage.ready();
+  }
+#endif
+  ~Recovery() {
+    storage.setDictionaryInstaller(nullptr);
+    storage.setCourseBaselineInstaller(nullptr);
+  }
   FirmwareInstallAuthorization firmwareAuthorization;
   Digest runningFirmwareHash{};
 };
@@ -136,7 +152,19 @@ bool recoverAtStartup(bool (*firmwareValidator)(const char*),
   }
   recovery->storage.setDictionaryInstaller(recovery->dictionaryInstaller.get());
   recovery->storage.setFirmwareValidator(firmwareValidator);
+#if LILA_TINTA
+  recovery->baselineWorkspaceOwned = true;
+  if (!attachHalCourseBaselineRecovery(recovery->transfer, recovery->storage, recovery->identityStorage,
+                                       recovery->identity, recovery->pairings, recovery->workspace, recovery->workspace,
+                                       recovery->baselineSession, Recovery::baselinePermission, recovery.get()))
+    return false;
+#endif
   const auto result = recovery->transfer.recover(recovery->identity.storageGeneration);
+#if LILA_TINTA
+  recovery->baselineWorkspaceOwned = false;
+  recovery->storage.setCourseBaselineInstaller(nullptr);
+  recovery->baselineSession.reset();
+#endif
   if (result != TransferResult::Ok) {
     LOG_ERR("COMPANION", "Startup recovery failed: %u", static_cast<unsigned>(result));
     return false;
