@@ -3802,3 +3802,17 @@ emitted frame remains within 256 and no allocation is added. Verify with the HAL
 companion host suite. Runtime firmware is unchanged. Full-cohort composition,
 installed-pack lesson/session mapping, authoritative replay agreement and native
 migration recovery remain unfinished.
+
+Combined unbound learner inspection now verifies the full stored cohort before
+and after all seven learner-file checks, retaining internally generated dependent
+item/review reports. No partial report is exposed; failure, close or permission/
+heap admission loss revokes the result, and permission restoration requires a
+fresh inspection. The operation guard covers the final permission check and
+refuses callback reentry. All 1,990 host tests pass after the final callback test
+fix, covering damaged backups, malformed profiles/items, revocation, reentry and
+live profile changes while frozen evidence remains valid. The C3 entry frame is
+80 bytes and every emitted frame is within 256 (largest 240); the owner stays off
+stack and adds no internal allocation. Verify with the HAL companion host suite.
+Runtime firmware is unchanged. Original-payload/source proof, live cohort and
+installed-pack correspondence, authoritative replay and native migration recovery
+remain required before binding or moving learner state.

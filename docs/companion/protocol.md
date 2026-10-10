@@ -1155,3 +1155,15 @@ journal requires a rebuild decision, and a snapshot does not establish provenanc
 or permission to restore the queue. Missing files remain explicit absence.
 Inspection leaves copied bytes unchanged, withholds output on failure and closes
 the file loan. Migration still needs installed-pack mapping and replay agreement.
+
+Combined frozen learner inspection verifies the complete unbound backup cohort
+before and after inspecting items, reviews, profile, stars, readings, days and
+saved session. Item/review reports are produced internally in dependency order;
+no partial report is exposed. The inspection owner stays off stack and borrows
+the existing workspace, validated original pack/source and exclusive backup/file
+owners. Its report loan is revoked on failure, close or permission/heap admission
+loss; permission restoration requires a new inspection. Live learner files may
+have moved during owned migration, so historical inspection uses frozen copies.
+Original-payload validation/confirmation, live cohort correspondence, installed
+pack mapping, replay provenance and native recovery remain separate authority
+requirements. Diagnostic copies are verified as backup evidence, not merged.
