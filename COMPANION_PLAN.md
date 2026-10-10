@@ -4,6 +4,8 @@
 
 Build native SwiftUI apps for iPhone/iPad and Mac, alongside the firmware support they require.
 
+This early alpha targets one current protocol and state format. All relevant devices can be reflashed, and existing alpha data may be reset. Backward compatibility and migration of older alpha state are out of scope. Future compatible course updates within the new format still preserve learning history.
+
 The agreed experience:
 
 - Pair readers over Bluetooth.
@@ -54,7 +56,7 @@ The current journal has local review/undo records without distributed identities
 - Journal mutations before updating derived state, with recovery for interrupted writes. Include reviews, suspension changes, lesson completion, stars, and completed readings.
 - Merge and deduplicate events on the Apple apps. Reuse the portable C++ scheduling/replay code through a narrow bridge, preserving per-origin and causal ordering. Resolve concurrent ordering deterministically using study day, trustworthy time when available, and event identity.
 - Recompute schedules and study totals from merged history; install consistent derived state as one recoverable transaction. Rebuild pending study sessions after reconciliation.
-- Migrate legacy histories with backups. Deduplicate confirmed shared history; present ambiguous legacy overlap as an import conflict. Preserve diagnostic usage logs per device rather than merging them into learner state.
+- Start with fresh learner state when upgrading older alpha installations. Preserve diagnostic usage logs per device rather than merging them into learner state.
 
 **Content and firmware**
 
@@ -65,14 +67,14 @@ The current journal has local review/undo records without distributed identities
 - Add a release manifest containing asset hashes, board compatibility, protocol requirements, and pack-format compatibility.
 - Default to stable lila releases and support manually imported firmware files. Download on the Apple device, stage on SD, then reuse the existing validator/flasher ([FirmwareFlasher.h:50](src/network/FirmwareFlasher.h#L50)).
 - Require at least 30% reported battery before flashing. Validate chip, board, partition size, and image integrity; release radio resources before writing flash. Report success only after reconnecting and verifying the expected running build.
-- Block companion-driven downgrades incompatible with migrated state. Older firmware receives instructions for the initial upgrade using existing OTA/SD facilities.
+- Require the supported alpha firmware, protocol, and state format on every participating reader. Reflash and reset older alpha installations as needed; no legacy migration or downgrade compatibility is required.
 
 ## Validation and delivery
 
 - **Protocol tests:** malformed frames, authorization, bounded queues, duplicate commands, reconnects, transport handoff, offset recovery, insufficient storage, and interrupted commits.
-- **Sync tests:** two readers changing offline; reversed arrival order; duplicate delivery through iPhone/Mac/iCloud; inaccurate clocks; undo after concurrent reviews; legacy migration; bookmark deletion; preference conflicts; and repeated sync producing no further changes.
+- **Sync tests:** two readers changing offline; reversed arrival order; duplicate delivery through iPhone/Mac/iCloud; inaccurate clocks; undo after concurrent reviews; clean alpha initialization; bookmark deletion; preference conflicts; and repeated sync producing no further changes.
 - **Content/update tests:** renamed identical EPUBs, different editions, Tinta pack import and transfer, compatible course updates preserving progress, explicit course switches with isolated learner state, incompatible packs, interrupted pack/dictionary installation, wrong-board/corrupt firmware, and reboot verification.
 - **Build checks:** Apple unit/UI tests and iOS simulator/native Mac builds; affected C++/Tinta host tests; repository formatting wrapper; one final build per affected firmware target.
 - **Hardware acceptance:** test with two readers, including a C3 and S3, plus a physical iPhone and Mac. Exercise BLE and Wi-Fi recovery, firmware updates, and reading resumption. Monitor free/largest heap and stack watermarks; require over 50 KiB free heap and no accumulating loss across repeated sessions.
-- Implement in dependency order: transport/resource validation, safe persistence and migration, synchronization, then complete app/cloud/update flows. Preserve existing local work.
+- Implement in dependency order: transport/resource validation, safe persistence, synchronization, then complete app/cloud/update flows. Preserve existing local work.
 - Deliver source, tests, signing/CloudKit setup instructions, and a hardware verification checklist. Assume one person's devices and Apple account. Store submission, publishing, and remote Git operations remain separate actions.

@@ -93,6 +93,7 @@
 #include "lib/hal/HalUnboundCourseReviewReservationStore.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "lib/hal/HalUnboundCourseSessionInspection.h"
+#include "lib/hal/HalUnboundCourseStarConversion.h"
 #include "lib/hal/HalUnboundCourseStarPlanInspection.h"
 #include "lib/hal/HalUnboundCourseStarReader.h"
 #include "lib/hal/HalUnboundCourseStarReservationStore.h"
@@ -10055,6 +10056,103 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
                 EXPECT_GT(freshContext.probes, 0u);
                 ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
                 EXPECT_EQ(identities.writes, failure == 5 ? 2u : 1u);
+                if (failure == 4) {
+                  const auto reservation = *fresh->reservation(reviewReservation);
+                  struct StarConversionContext {
+                    bool allowed = true, checking = false, closeNext = false;
+                    unsigned probes = 0;
+                    HalUnboundCourseFreshStarReservation* allocation;
+                    HalUnboundCourseStarConversion* conversion = nullptr;
+                    const UnboundCourseStarReservation* reservation;
+                  } starContext{true, false, false, 0, fresh.get(), nullptr, &reservation};
+                  auto starConversion = makeUniqueNoThrow<HalUnboundCourseStarConversion>(
+                      *nativePlan, *stars, *conversion, *replay, *working,
+                      [](void* raw) {
+                        auto& state = *static_cast<StarConversionContext*>(raw);
+                        if (state.checking) {
+                          ++state.probes;
+                          EXPECT_FALSE(state.conversion->open(*state.reservation));
+                          EXPECT_EQ(state.conversion->next(*state.reservation), LegacyTintaStarPlanResult::Unavailable);
+                          EXPECT_EQ(state.conversion->event(*state.reservation), nullptr);
+                        }
+                        if (state.closeNext) {
+                          state.closeNext = false;
+                          EXPECT_TRUE(state.conversion->closeReaders());
+                        }
+                        return state.allowed;
+                      },
+                      [](void* raw, const UnboundCourseStarReservation& value) {
+                        auto& state = *static_cast<StarConversionContext*>(raw);
+                        const auto* owned = state.allocation->reservation(value.reviews);
+                        return owned && *owned == value;
+                      },
+                      &starContext);
+                  ASSERT_TRUE(starConversion);
+                  starContext.conversion = starConversion.get();
+                  starContext.checking = true;
+                  ASSERT_TRUE(starConversion->open(reservation));
+                  auto foreign = reservation;
+                  ++foreign.epoch;
+                  EXPECT_EQ(starConversion->next(foreign), LegacyTintaStarPlanResult::Unavailable);
+                  EXPECT_EQ(starConversion->event(foreign), nullptr);
+                  EXPECT_FALSE(starConversion->completed(reservation));
+                  if (reservation.events) {
+                    ASSERT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Record);
+                    const auto* event = starConversion->event(reservation);
+                    ASSERT_NE(event, nullptr);
+                    EXPECT_EQ(event->identity, reservation.first());
+                    EXPECT_EQ(event->ancestorCount, fault == 17 ? 1 : 0);
+                    if (fault == 17) {
+                      EXPECT_EQ(event->ancestors[0], reservation.reviewTail());
+                    }
+                    EXPECT_EQ(event->clockQuality, ClockQuality::Unknown);
+                    EXPECT_TRUE(starConversion->matches(reservation, *event, starConversion->body(reservation)));
+                    TintaBody decoded;
+                    ASSERT_TRUE(decodeTintaBody(starConversion->body(reservation), decoded));
+                    EXPECT_EQ(decoded.uid, reviewUid);
+                    EXPECT_EQ(decoded.enabled, fault == 0);
+                    EXPECT_FALSE(starConversion->completed(reservation));
+                  }
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::End);
+                  EXPECT_TRUE(starConversion->completed(reservation));
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::End);
+                  EXPECT_GT(starContext.probes, 0u);
+                  if (fault == 17) {
+                    ASSERT_TRUE(starConversion->open(reservation));
+                    tinta::core::ItemState original;
+                    ASSERT_TRUE(working->item(reviewUid, original));
+                    const auto projectionFiles = hal.files;
+                    auto changed = original;
+                    changed.flags &= ~tinta::core::item_flag::kStarred;
+                    ASSERT_TRUE(working->putItem(changed));
+                    EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::IoError);
+                    EXPECT_FALSE(starConversion->completed(reservation));
+                    EXPECT_EQ(starConversion->event(reservation), nullptr);
+                    ASSERT_TRUE(working->putItem(original));
+                    EXPECT_EQ(hal.files, projectionFiles);
+                    EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Unavailable);
+                  }
+                  ASSERT_TRUE(starConversion->open(reservation));
+                  starContext.allowed = false;
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Unavailable);
+                  EXPECT_EQ(starConversion->event(reservation), nullptr);
+                  starContext.allowed = true;
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Unavailable);
+                  ASSERT_TRUE(starConversion->open(reservation));
+                  starContext.closeNext = true;
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Unavailable);
+                  EXPECT_EQ(starConversion->event(reservation), nullptr);
+                  EXPECT_FALSE(starConversion->completed(reservation));
+                  ASSERT_TRUE(starConversion->open(reservation));
+                  freshContext.reviewOwned = false;
+                  EXPECT_EQ(starConversion->next(reservation), LegacyTintaStarPlanResult::Unavailable);
+                  freshContext.reviewOwned = true;
+                  EXPECT_FALSE(starConversion->open(reservation));
+                  ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
+                  ASSERT_TRUE(starConversion->open(reservation));
+                  EXPECT_TRUE(starConversion->closeReaders());
+                  EXPECT_EQ(snapshotReader->borrowed(), nullptr);
+                }
                 auto restarted = makeUniqueNoThrow<HalUnboundCourseFreshStarReservation>(
                     identities, intent.reader, generation, intent.request.original.owner, *starStore, *nativePlan,
                     scratch, [](void*) { return true; }, verifyReviews, &freshContext);
