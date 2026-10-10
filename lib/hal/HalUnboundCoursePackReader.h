@@ -67,7 +67,17 @@ class HalUnboundCoursePackReader final {
     operating = true;
     if (!guard() || source.failed || !parser.isOpen()) ready = false;
     operating = false;
-    return ready ? UnboundPackLoan{&parser, &source} : UnboundPackLoan{};
+    return ready && selected == intent && selectedRole == role ? UnboundPackLoan{&parser, &source} : UnboundPackLoan{};
+  }
+  bool recheck(const UnboundCourseMigrationIntent& intent, UnboundPackRole role) {
+    if (operating || !ready || selected != intent || selectedRole != role) return false;
+    operating = true;
+    const bool valid = guard() && hash() && !cancelled && !source.failed && parser.isOpen() &&
+                       source.length == manifest().length && selected == intent && selectedRole == role;
+    if (!valid) closeReaders();
+    ready = valid;
+    operating = false;
+    return ready || failure();
   }
   bool closeReaders() {
     if (operating) cancelled = true;

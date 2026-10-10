@@ -3906,3 +3906,14 @@ the source and checks the complete reader/validator path; every emitted frame is
 within 256 (largest 224), with no new allocation. Verify with the HAL companion
 Tinta host suite. Runtime firmware remains unchanged. Native learner mapping,
 replay agreement and recoverable migration composition remain unfinished.
+
+Retained pack loans now support final intent/role-scoped SHA rechecks, closing and
+revoking evidence on payload damage or close during verification. Restoring bytes
+requires a fresh open. Borrowing also checks its context after permission callbacks
+so a mutated caller intent receives no loan. All 1,996 host tests pass after the
+final edits, including correct/wrong-context rechecks, post-open payload damage,
+repair without revival, close-during-recheck and callback intent mutation. The C3
+recheck wrapper is 32 bytes and every emitted frame remains within 256 (largest
+224), with no allocation. Verify with the HAL companion Tinta host suite. Runtime
+firmware is unchanged. Learner mapping/replay composition, explicit legacy
+confirmation and recoverable native migration publication remain unfinished.

@@ -1234,3 +1234,11 @@ replace the intent/role while any pack operation is active. Closing during an
 open cancels the result, even if permission remains available; only a fresh open
 can produce a new loan. Successful opening also requires the parser and expected
 source extent to remain available at the final admission check.
+
+Retained pack readers support intent/role-scoped final hash rechecks without
+reopening the parser. A damaged payload, permission/read failure, changed intent
+or close during recheck closes/revokes the loan; repairing bytes cannot revive it
+without a fresh open. Wrong-context requests do not invalidate a valid original
+loan. Borrowing checks intent/role again after permission callbacks, withholding
+access if the caller's intent changes during admission. Native migration must
+compose these payload checks with its learner/replay and publication evidence.
