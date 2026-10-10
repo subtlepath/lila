@@ -138,4 +138,10 @@ bool Pairings::authenticate(const Identity& installation, const PairingSecret& s
   }
   return accepted != 0;
 }
+bool Pairings::recognizes(const Identity& installation) const {
+  if (!available || !nonzero(installation)) return false;
+  for (const auto& entry : entries)
+    if (entry.used && entry.installation == installation) return true;
+  return false;
+}
 }  // namespace companion

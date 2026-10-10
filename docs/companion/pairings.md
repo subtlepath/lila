@@ -25,6 +25,15 @@ to it and avoids redundant writes when none remain. Any uncertain commit blocks
 all authentication and mutations until a successful durable reload. Corrupt
 records fail closed and must not be silently replaced.
 
+`recognizes(installation)` provides a read-only lookup for offline recovery of
+already consented transactions. It succeeds only after a valid durable load and
+only for a currently stored nonzero identity. Failed reloads and successful
+forgetting revoke recognition. It does not authenticate a connection, authorize
+new commands, or replace exact baseline consent and native reader/card checks.
+Host tests cover restart, missing/foreign identities, read errors, corruption,
+forgetting, and recognition without NVS writes. Production baseline recovery
+does not yet invoke this lookup.
+
 The registry and HAL adapter are host-tested. Connect & Sync now handles BLE
 RegisterInstallation (12) and AuthenticateInstallation (13), both with exactly
 48 payload bytes: installation identity followed by its 32-byte secret. Success

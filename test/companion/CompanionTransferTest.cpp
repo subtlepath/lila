@@ -1219,3 +1219,80 @@ TEST_F(CompanionTransferTest, DictionaryRecoveryVerifiesRetainedArchiveAfterStag
             TransferResult::HashMismatch);
   EXPECT_TRUE(reboot.destination().empty());
 }
+
+TEST_F(CompanionTransferTest, JournalInspectionExposesContextWithoutEnablingMutationOrInstallation) {
+  for (unsigned phase = 0; phase < 3; ++phase) {
+    SCOPED_TRACE(phase);
+    storage = FakeStorage{};
+    TransferDeclaration declaration;
+    declaration.state = initial;
+    declaration.manifest.contentHash = initial.contentHash;
+    declaration.manifest.length = initial.length;
+    declaration.manifest.kind = ContentKind::Course;
+    declaration.manifest.formatVersion = 1;
+    declaration.manifest.logicalIdentity[0] = 8;
+    Transfer transfer(storage, workspace);
+    ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+    ASSERT_EQ(transfer.begin(declaration, "/course.pack"), TransferResult::Ok);
+    ASSERT_EQ(transfer.append(initial.transaction, initial.owner, 0, storage.expected), TransferResult::Ok);
+    if (phase) {
+      storage.rejectMetadata = phase == 1;
+      ASSERT_EQ(transfer.commit(initial.transaction, initial.owner),
+                phase == 1 ? TransferResult::IoError : TransferResult::Ok);
+      storage.rejectMetadata = false;
+    }
+    const auto files = storage.files;
+    const auto mutations = storage.mutations;
+    const auto metadata = storage.metadataCalls;
+    Transfer reboot(storage, workspace);
+    ASSERT_EQ(reboot.recover(generation, TransferRecoveryMode::InspectJournal), TransferResult::Ok);
+    ASSERT_NE(reboot.current(), nullptr);
+    EXPECT_EQ(reboot.current()->owner, initial.owner);
+    EXPECT_EQ(reboot.current()->phase, phase == 0   ? TransferPhase::Receiving
+                                       : phase == 1 ? TransferPhase::Installing
+                                                    : TransferPhase::Committed);
+    ASSERT_NE(reboot.contentManifest(), nullptr);
+    EXPECT_EQ(*reboot.contentManifest(), declaration.manifest);
+    EXPECT_EQ(reboot.destination(), "/course.pack");
+    EXPECT_EQ(reboot.begin(declaration, "/course.pack"), TransferResult::Invalid);
+    EXPECT_EQ(reboot.append(initial.transaction, initial.owner, initial.length, {}), TransferResult::NoTransaction);
+    EXPECT_EQ(reboot.commit(initial.transaction, initial.owner), TransferResult::NoTransaction);
+    EXPECT_EQ(reboot.abort(initial.transaction, initial.owner), TransferResult::NoTransaction);
+    EXPECT_EQ(storage.files, files);
+    EXPECT_EQ(storage.mutations, mutations);
+    EXPECT_EQ(storage.metadataCalls, metadata);
+    ASSERT_EQ(reboot.recover(generation), TransferResult::Ok);
+    EXPECT_EQ(reboot.commit(initial.transaction, initial.owner), TransferResult::Ok);
+  }
+}
+
+TEST_F(CompanionTransferTest, JournalInspectionDoesNotProveCandidateIntegrity) {
+  Transfer transfer(storage, workspace);
+  receive(transfer);
+  storage.files.at(TRANSFER_STAGE)[0] ^= 1;
+  const auto files = storage.files;
+  Transfer reboot(storage, workspace);
+  ASSERT_EQ(reboot.recover(generation, TransferRecoveryMode::InspectJournal), TransferResult::Ok);
+  EXPECT_EQ(storage.files, files);
+  EXPECT_EQ(reboot.commit(initial.transaction, initial.owner), TransferResult::NoTransaction);
+  ASSERT_EQ(reboot.recover(generation), TransferResult::Ok);
+  EXPECT_EQ(reboot.commit(initial.transaction, initial.owner), TransferResult::HashMismatch);
+}
+
+TEST_F(CompanionTransferTest, FailedJournalInspectionRevokesDestinationAndMutationReadiness) {
+  Transfer transfer(storage, workspace);
+  receive(transfer);
+  ASSERT_EQ(transfer.recover(generation, TransferRecoveryMode::InspectJournal), TransferResult::Ok);
+  ASSERT_FALSE(transfer.destination().empty());
+  auto other = generation;
+  other[0] ^= 0x80;
+  EXPECT_EQ(transfer.recover(other, TransferRecoveryMode::InspectJournal), TransferResult::WrongStorage);
+  EXPECT_TRUE(transfer.destination().empty());
+  EXPECT_EQ(transfer.commit(initial.transaction, initial.owner), TransferResult::NoTransaction);
+  storage.failRead = true;
+  EXPECT_EQ(transfer.recover(generation, TransferRecoveryMode::InspectJournal), TransferResult::IoError);
+  EXPECT_TRUE(transfer.destination().empty());
+  storage.failRead = false;
+  EXPECT_EQ(transfer.recover(generation), TransferResult::Ok);
+  EXPECT_EQ(transfer.commit(initial.transaction, initial.owner), TransferResult::Ok);
+}

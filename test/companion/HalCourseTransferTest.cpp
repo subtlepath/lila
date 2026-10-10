@@ -42,6 +42,7 @@
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportConsentStore.h"
 #include "lib/hal/HalCourseBaselineImportPreparation.h"
+#include "lib/hal/HalCourseBaselineImportSession.h"
 #include "lib/hal/HalCourseBaselineLearnerInspection.h"
 #include "lib/hal/HalCourseBaselineNativeInstaller.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
@@ -6460,28 +6461,27 @@ TEST_F(HalCourseTransferTest, BaselineTransferPublishesWithNativeLearnerCompatib
   std::string consentPath;
   prepareBaselineApproval(request, reader, consentPath, items);
   ASSERT_FALSE(HasFatalFailure());
-  auto permission = [](void*) { return true; };
+  bool exclusiveWorkspace = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
   auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(reader, generation, request.owner, scratch,
-                                                                        permission, nullptr);
+                                                                        permission, &exclusiveWorkspace);
   ASSERT_TRUE(consent);
   const auto approve = [](void* context, const CourseBaselineImportRequest& request,
                           const TransferDeclaration& upload) {
     return static_cast<HalCourseBaselineImportConsentStore*>(context)->approve(request, upload) ==
            CourseBaselineConsentResult::Ok;
   };
-  Transfer transfer(storage, scratch);
+  auto parentWorkspace = std::span(scratch).subspan(TRANSFER_OFFSET);
+  ASSERT_EQ(parentWorkspace.size(), TRANSFER_SCRATCH_SIZE);
+  Transfer transfer(storage, parentWorkspace);
   ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
   ASSERT_EQ(beginCourseBaselineTransfer(transfer, request, generation, request.owner, approve, consent.get()),
             TransferResult::Ok);
   consent.reset();
-  auto inspector = createHalCourseBaselineLearnerInspection(reader, generation, request.owner, scratch, *parser,
-                                                            {8, 40, 200}, permission, nullptr);
-  ASSERT_TRUE(inspector);
-  auto installer =
-      createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission, nullptr,
-                                             HalCourseBaselineLearnerInspection::compatible, inspector.get());
-  ASSERT_TRUE(installer);
-  storage.setCourseBaselineInstaller(installer.get());
+  auto session = createHalCourseBaselineImportSession(reader, generation, request.owner, scratch, {8, 40, 200},
+                                                      permission, &exclusiveWorkspace, parentWorkspace);
+  ASSERT_TRUE(session);
+  storage.setCourseBaselineInstaller(session->installer());
   for (size_t at = 0; at < bytes.size();) {
     const auto count = std::min<size_t>(1000, bytes.size() - at);
     ASSERT_EQ(transfer.append(request.transaction, request.owner, at, std::span(bytes).subspan(at, count)),
@@ -6491,13 +6491,41 @@ TEST_F(HalCourseTransferTest, BaselineTransferPublishesWithNativeLearnerCompatib
   std::array<char, COURSE_STATE_PATH_SIZE> current{};
   ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", current));
   auto& hal = inventory_hal_test::state;
-  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  const auto beforeRefusal = hal.files;
+  const std::vector<uint8_t> queuedArea(scratch.begin(), scratch.begin() + TRANSFER_OFFSET);
+  exclusiveWorkspace = false;
+  EXPECT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Invalid);
+  EXPECT_EQ(hal.files, beforeRefusal);
+  EXPECT_TRUE(std::equal(queuedArea.begin(), queuedArea.end(), scratch.begin()));
+  exclusiveWorkspace = true;
+  hal.failRename = hal.renames + 1;
+  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::IoError);
   ASSERT_NE(transfer.current(), nullptr);
-  EXPECT_EQ(transfer.current()->phase, TransferPhase::Committed);
+  ASSERT_EQ(transfer.current()->phase, TransferPhase::Installing);
+  hal.failRename = 0;
+  storage.setCourseBaselineInstaller(nullptr);
+  session.reset();
+  const auto interrupted = hal.files;
+  Transfer recovered(storage, parentWorkspace);
+  ASSERT_EQ(recovered.recover(generation, TransferRecoveryMode::InspectJournal), TransferResult::Ok);
+  ASSERT_NE(recovered.current(), nullptr);
+  ASSERT_NE(recovered.contentManifest(), nullptr);
+  EXPECT_EQ(recovered.current()->owner, request.owner);
+  EXPECT_EQ(*recovered.contentManifest(), request.manifest);
+  EXPECT_EQ(recovered.destination(), COURSE_BASELINE_DESTINATION);
+  EXPECT_EQ(hal.files, interrupted);
+  EXPECT_EQ(recovered.commit(request.transaction, request.owner), TransferResult::NoTransaction);
+  session = createHalCourseBaselineImportSession(reader, generation, recovered.current()->owner, scratch, {8, 40, 200},
+                                                 permission, &exclusiveWorkspace, parentWorkspace);
+  ASSERT_TRUE(session);
+  storage.setCourseBaselineInstaller(session->installer());
+  ASSERT_EQ(recovered.recover(generation), TransferResult::Ok);
+  ASSERT_NE(recovered.current(), nullptr);
+  EXPECT_EQ(recovered.current()->phase, TransferPhase::Committed);
   EXPECT_EQ(hal.files.at(current.data()), items);
   hal.files[current.data()] = {97};
   const auto after = hal.files;
-  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  ASSERT_EQ(recovered.commit(request.transaction, request.owner), TransferResult::Ok);
   EXPECT_EQ(hal.files, after);
   storage.setCourseBaselineInstaller(nullptr);
 }
@@ -6531,4 +6559,55 @@ TEST_F(HalCourseTransferTest, NativeLearnerInspectionAdmissionPreservesHeapReser
   EXPECT_TRUE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
                                                        {8, 40, 200}, permission, &permitted));
   EXPECT_EQ(inventory_hal_test::state.files, evidence);
+}
+
+TEST_F(HalCourseTransferTest, BaselineImportSessionAdmissionIncludesTemporaryArchiveReader) {
+  Identity reader{};
+  reader[0] = 51;
+  bool permitted = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  const auto memory = companion_memory_test::internal;
+  const auto files = inventory_hal_test::state.files;
+  constexpr size_t peak = sizeof(HalCourseBaselineImportSession) + sizeof(HalHistoricalCourseHistory);
+  companion_memory_test::internal.freeBytes = 50 * 1024 + peak;
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permission, &permitted));
+  companion_memory_test::internal = memory;
+  companion_memory_test::internal.largestBlockBytes = sizeof(HalCourseBaselineImportSession) - 1;
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permission, &permitted));
+  companion_memory_test::internal = memory;
+  permitted = false;
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permission, &permitted));
+  permitted = true;
+  EXPECT_FALSE(createHalCourseBaselineImportSession({}, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permission, &permitted));
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 0},
+                                                    permission, &permitted));
+  EXPECT_TRUE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                   permission, &permitted));
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+}
+
+TEST_F(HalCourseTransferTest, BaselineImportSessionRequiresParentWorkspaceInsideExclusiveLoan) {
+  Identity reader{};
+  reader[0] = 51;
+  auto permitted = [](void*) { return true; };
+  std::array<uint8_t, TRANSFER_JOURNAL_SIZE> foreign{};
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permitted, nullptr, foreign));
+  EXPECT_FALSE(createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch, {8, 40, 200},
+                                                    permitted, nullptr,
+                                                    std::span(scratch).last(TRANSFER_JOURNAL_SIZE - 1)));
+  auto parent = std::span(scratch).subspan(TRANSFER_OFFSET);
+  auto session = createHalCourseBaselineImportSession(reader, generation, declaration.state.owner, scratch,
+                                                      {8, 40, 200}, permitted, nullptr, parent);
+  ASSERT_TRUE(session);
+  const auto files = inventory_hal_test::state.files;
+  EXPECT_FALSE(session->installer()->prepare(COURSE_BASELINE_DESTINATION, TRANSFER_STAGE, declaration.manifest,
+                                             declaration.state, scratch));
+  EXPECT_FALSE(
+      session->installer()->metadata(COURSE_BASELINE_DESTINATION, declaration.manifest, declaration.state, foreign));
+  EXPECT_EQ(inventory_hal_test::state.files, files);
 }

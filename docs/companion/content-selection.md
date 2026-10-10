@@ -2443,3 +2443,54 @@ installer. Full immutable-cohort composition, snapshot/replay correspondence,
 usage-file inspection, native session ownership, command/Apple integration, and
 physical acceptance remain incomplete; the prior default firmware image is
 unchanged by these new unwired headers and host tests.
+
+### Native baseline inspection ownership
+
+`HalCourseBaselineLearnerInspection` now composes exact persisted consent,
+hash-verified immutable review backups, complete candidate-pack validation, and
+read-only native items, reviews, profile, marks, session, and day-log inspection.
+It reuses the borrowed workspace and reloads the reviewed manifest before each
+file, so scratch reuse does not overwrite the next entry. Current learner files
+are never substituted for reviewed backups. Missing item references require
+retained candidate identity history; ambiguous reading references and unknown
+learner filenames refuse publication without changing evidence. Diagnostic
+`usage.seq` and numbered usage logs are preserved by their verified hashes;
+their contents do not define learner progress, and torn diagnostic chunks do not
+invalidate otherwise compatible learner state.
+
+`HalCourseBaselineImportSession` owns the inspector, its parser, and the native
+installer in one checked allocation, with destruction ordered to release the
+callback user before its target. Callers must retain the borrowed workspace and
+permission context, exclude writers, prove native journal readiness, and detach
+the installer from transfer storage before releasing the owner. This composition
+does not establish authoritative journal replay or saved-snapshot correspondence.
+
+The forced C3 compile measures a 31,136-byte session and a 4,496-byte temporary
+archive history reader. Admission accounts for both (35,632 bytes), requires a
+contiguous session block, and retains over 50 KiB free internal heap. Workspace,
+allocator overhead, SDK allocations, and parent-session objects are additional;
+these compile-time sizes are not measured device peak heap. No per-file heap
+allocation is introduced by learner inspection. All emitted frames pass the
+256-byte compiler limit.
+
+All 1,903 host tests pass, including full baseline transfer publication through
+the native compatibility callback, immutable-backup inspection despite newer live
+state, semantic rejection of hash-valid malformed evidence, and combined-owner
+heap admission. Startup/Connect wiring, protocol and Apple review commands,
+recoverable torn consent/publication stages, and physical acceptance remain
+unfinished. These headers are not yet instantiated by firmware recovery. Device
+verification must exercise interrupted installation and repeated sessions, check
+free/largest heap and stack watermarks, and confirm retained progress and newer
+live state survive retries.
+
+Connect's ordinary transfer partition is only 940 bytes: four queued command
+slots and three frame buffers occupy the other 7,252 bytes of the 8 KiB workspace.
+Baseline parsing therefore needs an exclusive loan of the full workspace while
+transport queues and frame loans are inactive. The import session now bridges
+the exact parent partition to that full loan without allocating another buffer.
+Its permission callback must prove this exclusion throughout every operation.
+Foreign, short, or out-of-loan parent spans are rejected. The native transfer
+fixture now uses the actual 940-byte parent partition for interrupted recovery;
+revoking permission leaves the queued area unchanged. This is a workspace
+contract, not yet a transport lease implementation or Startup/Connect wiring.
+Both bridge methods compile with 32-byte C3 frames.

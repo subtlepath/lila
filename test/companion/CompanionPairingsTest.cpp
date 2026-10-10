@@ -122,3 +122,47 @@ TEST(CompanionPairings, InvalidInputsAndUnavailableStorageDoNotWrite) {
   EXPECT_EQ(registry.load(scratch), PairingResult::IoError);
   EXPECT_EQ(registry.add(id(1), secret(1), peer(1), scratch), PairingResult::Unavailable);
 }
+
+TEST(CompanionPairings, OfflineRecoveryRecognizesOnlyDurableKnownInstallations) {
+  Store storage;
+  Pairings registry(storage);
+  std::array<uint8_t, PAIRINGS_RECORD_SIZE> scratch{};
+  EXPECT_FALSE(registry.recognizes(id(1)));
+  ASSERT_EQ(registry.load(scratch), PairingResult::Ok);
+  EXPECT_FALSE(registry.recognizes(id(1)));
+  ASSERT_EQ(registry.add(id(1), secret(2), peer(3), scratch), PairingResult::Ok);
+  EXPECT_TRUE(registry.recognizes(id(1)));
+  EXPECT_FALSE(registry.recognizes(id(2)));
+  EXPECT_FALSE(registry.recognizes({}));
+  EXPECT_FALSE(registry.authenticate(id(1), secret(9)));
+  Pairings restarted(storage);
+  ASSERT_EQ(restarted.load(scratch), PairingResult::Ok);
+  EXPECT_TRUE(restarted.recognizes(id(1)));
+  const auto writes = storage.writes;
+  EXPECT_TRUE(restarted.recognizes(id(1)));
+  EXPECT_EQ(storage.writes, writes);
+  ASSERT_EQ(restarted.forget(peer(3), scratch), PairingResult::Ok);
+  EXPECT_FALSE(restarted.recognizes(id(1)));
+  Pairings forgotten(storage);
+  ASSERT_EQ(forgotten.load(scratch), PairingResult::Ok);
+  EXPECT_FALSE(forgotten.recognizes(id(1)));
+}
+
+TEST(CompanionPairings, FailedReloadRevokesOfflineRecoveryRecognition) {
+  Store storage;
+  Pairings registry(storage);
+  std::array<uint8_t, PAIRINGS_RECORD_SIZE> scratch{};
+  ASSERT_EQ(registry.load(scratch), PairingResult::Ok);
+  ASSERT_EQ(registry.add(id(1), secret(2), peer(3), scratch), PairingResult::Ok);
+  storage.fail = true;
+  ASSERT_EQ(registry.load(scratch), PairingResult::IoError);
+  EXPECT_FALSE(registry.recognizes(id(1)));
+  storage.fail = false;
+  ASSERT_EQ(registry.load(scratch), PairingResult::Ok);
+  EXPECT_TRUE(registry.recognizes(id(1)));
+  storage.data.back() ^= 1;
+  ASSERT_EQ(registry.load(scratch), PairingResult::Corrupt);
+  EXPECT_FALSE(registry.recognizes(id(1)));
+  EXPECT_FALSE(registry.authenticate(id(1), secret(2)));
+  EXPECT_FALSE(registry.boundTo(id(1), peer(3)));
+}

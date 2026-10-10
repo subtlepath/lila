@@ -30,6 +30,8 @@ class Pairings {
   // belong in the Apple installation's Keychain, never in synchronized records.
   bool boundTo(const Identity& installation, const PairingPeer& peer) const;
   bool authenticate(const Identity& installation, const PairingSecret& secret) const;
+  // Offline recovery of already consented work only; not command authorization.
+  bool recognizes(const Identity& installation) const;
 
  private:
   struct Entry {

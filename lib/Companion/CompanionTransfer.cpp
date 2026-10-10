@@ -87,7 +87,8 @@ bool Transfer::persist(const TransferState& next) {
 
 TransferResult Transfer::recover(const Identity& storageGeneration, TransferRecoveryMode mode) {
   const auto result = recoverImpl(storageGeneration, mode);
-  recovered = result == TransferResult::Ok;
+  inspected = result == TransferResult::Ok && mode == TransferRecoveryMode::InspectJournal;
+  recovered = result == TransferResult::Ok && !inspected;
   return result;
 }
 
@@ -95,9 +96,11 @@ TransferResult Transfer::recoverImpl(const Identity& storageGeneration, Transfer
   loaded = false;
   hasManifest = false;
   recovered = false;
+  inspected = false;
   activeSlot = -1;
   journalSequence = 0;
-  if (mode != TransferRecoveryMode::CompleteInstallation && mode != TransferRecoveryMode::DeferDictionaryInstallation)
+  if (mode != TransferRecoveryMode::CompleteInstallation && mode != TransferRecoveryMode::DeferDictionaryInstallation &&
+      mode != TransferRecoveryMode::InspectJournal)
     return TransferResult::Invalid;
   if (workspace.size() < TRANSFER_JOURNAL_SIZE || !nonzero(storageGeneration)) return TransferResult::Invalid;
   if (!storage.prepare()) return TransferResult::IoError;
@@ -152,6 +155,7 @@ TransferResult Transfer::recoverImpl(const Identity& storageGeneration, Transfer
     return TransferResult::Ok;
   }
   if (state.storageGeneration != generation) return TransferResult::WrongStorage;
+  if (mode == TransferRecoveryMode::InspectJournal) return TransferResult::Ok;
   struct RecoveryScope {
     bool& active;
     explicit RecoveryScope(bool& active) : active(active) { active = true; }

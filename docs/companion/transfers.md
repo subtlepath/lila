@@ -12,6 +12,27 @@ binding. Fonts now install through the same native recoverable transaction with
 registry-compatible destination checks and full parser validation. Dictionary
 activation and physical end-to-end validation remain pending.
 
+`TransferRecoveryMode::InspectJournal` is a read-only bootstrap step for attaching
+context-dependent installers. It parses the existing checksummed journal and
+manifest, selects the current sequence, and checks the storage generation before
+exposing `current()`, `contentManifest()`, and `destination()`. It does not prove
+candidate integrity, validate installed metadata, resume installation, truncate
+incoming data, or remove files. Begin, append, commit, and abort remain disabled
+until normal recovery succeeds. Callers must establish the native reader/card
+context, known persisted owner, exact consent, writer exclusion, and journal
+readiness before attaching a baseline installer and invoking normal recovery.
+This mode is not yet used by Startup or Connect; those production paths remain
+to be wired.
+
+The 1,908-test host run covers inspection in Receiving, Installing, and Committed
+phases, mutation refusal, failed reloads, and candidate corruption requiring
+subsequent normal verification. The native baseline fixture interrupts a rename,
+releases the original import owner, inspects the journal without file changes,
+creates a replacement owner, and completes normal recovery. A later duplicate
+commit preserves newer live learner bytes. Forced C3 compilation passes the
+256-byte frame limit (`recoverImpl`: 32 bytes, `recover`: 16 bytes). Physical
+power-cut acceptance and boot/Connect lifecycle integration remain pending.
+
 Dictionary commits use a separate member-publication storage hook. They never
 enter the single-file rename/backup path: the installer must publish the member
 set and its metadata before the controller writes a committed checkpoint.

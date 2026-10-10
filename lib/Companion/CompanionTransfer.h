@@ -6,7 +6,7 @@
 #include "CompanionTransferDeclaration.h"
 
 namespace companion {
-enum class TransferRecoveryMode { CompleteInstallation, DeferDictionaryInstallation };
+enum class TransferRecoveryMode { CompleteInstallation, DeferDictionaryInstallation, InspectJournal };
 
 inline constexpr char TRANSFER_DIRECTORY[] = "/.crosspoint/companion";
 inline constexpr char TRANSFER_STAGE[] = "/.crosspoint/companion/incoming";
@@ -89,6 +89,8 @@ class Transfer {
   Transfer(TransferStorage& storage, std::span<uint8_t> workspace) : storage(storage), workspace(workspace) {}
   TransferResult recover(const Identity& storageGeneration,
                          TransferRecoveryMode mode = TransferRecoveryMode::CompleteInstallation);
+  // InspectJournal validates journal context only. It performs no installation
+  // or cleanup and leaves mutations disabled until normal recovery succeeds.
   TransferResult begin(const TransferState& state, std::string_view destination);
   TransferResult begin(const TransferDeclaration& declaration, std::string_view destination);
   const ContentManifest* contentManifest() const { return loaded && hasManifest ? &manifest : nullptr; }
@@ -100,7 +102,7 @@ class Transfer {
   // Borrowed until the next mutation/recovery; also visible to installation
   // callbacks during validated recovery. Unavailable after ambiguous I/O.
   std::string_view destination() const {
-    return loaded && (recovered || recoveringInstallation) ? std::string_view(target) : std::string_view{};
+    return loaded && (recovered || inspected || recoveringInstallation) ? std::string_view(target) : std::string_view{};
   }
 
  private:
@@ -126,6 +128,7 @@ class Transfer {
   bool hadOriginal = false;
   bool loaded = false;
   bool recovered = false;
+  bool inspected = false;
   bool recoveringInstallation = false;
 };
 
