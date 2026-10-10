@@ -9,6 +9,7 @@ public enum Command: UInt8, CaseIterable, Sendable {
     case transferStatus, commit, abort, wifiHandoff, installFirmware, error
     case registerInstallation, authenticateInstallation, journalFormats, removeContent, readContent, contentMetadata, prepareContentHandoff, courseContext
     case courseBaselineReview
+    case beginCourseBaseline
 }
 
 public struct ControlFrame: Equatable, Sendable {

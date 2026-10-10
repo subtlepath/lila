@@ -6,16 +6,11 @@
 namespace companion {
 inline constexpr char COURSE_BASELINE_DESTINATION[] = "/tinta/course-baseline.pack";
 using CourseBaselineApproval = bool (*)(void*, const CourseBaselineImportRequest&, const TransferDeclaration&);
-// Native callback saves/re-verifies exact consent with activities closed and all
-// other writers excluded. It may reuse session scratch, but borrows inputs only.
-// Separate native installation/recovery must validate and archive this payload.
-[[gnu::noinline]] inline TransferResult beginCourseBaselineTransfer(
-    [[maybe_unused]] Transfer& transfer, [[maybe_unused]] const CourseBaselineImportRequest& request,
-    [[maybe_unused]] const Identity& generation, [[maybe_unused]] const Identity& owner,
-    [[maybe_unused]] CourseBaselineApproval approve, [[maybe_unused]] void* context) {
-#if !LILA_TINTA
-  return TransferResult::Invalid;
-#else
+namespace course_baseline_detail {
+[[gnu::noinline]] inline TransferResult beginContext(const Transfer& transfer,
+                                                     const CourseBaselineImportRequest& request,
+                                                     const Identity& generation, const Identity& owner,
+                                                     CourseBaselineApproval approve) {
   if (!validCourseBaselineImportRequest(request)) return TransferResult::Invalid;
   if (owner == Identity{} || request.owner != owner) return TransferResult::Unauthorized;
   if (generation == Identity{} || request.generation != generation) return TransferResult::WrongStorage;
@@ -32,6 +27,21 @@ using CourseBaselineApproval = bool (*)(void*, const CourseBaselineImportRequest
       return TransferResult::Busy;
     }
   }
+  return TransferResult::Ok;
+}
+}  // namespace course_baseline_detail
+// Native callback saves/re-verifies exact consent with activities closed and all
+// other writers excluded. It may reuse session scratch, but borrows inputs only.
+// Separate native installation/recovery must validate and archive this payload.
+[[gnu::noinline]] inline TransferResult beginCourseBaselineTransfer(
+    [[maybe_unused]] Transfer& transfer, [[maybe_unused]] const CourseBaselineImportRequest& request,
+    [[maybe_unused]] const Identity& generation, [[maybe_unused]] const Identity& owner,
+    [[maybe_unused]] CourseBaselineApproval approve, [[maybe_unused]] void* context) {
+#if !LILA_TINTA
+  return TransferResult::Invalid;
+#else
+  const auto admitted = course_baseline_detail::beginContext(transfer, request, generation, owner, approve);
+  if (admitted != TransferResult::Ok) return admitted;
   // Freeze the declaration before approval performs any scratch-backed I/O.
   TransferDeclaration declaration;
   declaration.manifest = request.manifest;

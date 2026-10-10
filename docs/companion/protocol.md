@@ -957,3 +957,51 @@ retries without touching preserved content. The installed-SdFat suite checks
 explicit switched baseline verification and rejects a mismatched previous hash.
 Course-context/removal capabilities remain unadvertised while the complete
 course flow and hardware acceptance are being checked.
+
+## Frozen learner review and original-pack archive upload
+
+Command 20, `CourseBaselineReview`, is authenticated BLE control. Tinta readers
+advertise review capability bit 16. Its 74-byte `TCBQ` version-1 request carries
+native storage generation (offset 6), selected course (22), frozen review SHA-256
+(38), little-endian offset u16 (70) and limit u16 (72). A zero digest requests
+capture and is valid only at offset zero. Later pages select the same nonzero
+frozen digest. Limits are 1–976 bytes; reviews are bounded to 4,416 bytes.
+
+Success returns a `TCBP` version-1 page: total u16 at 6, offset u16 at 8, count u16
+at 10, whole-review digest at 12, bytes at 44, then CRC32. Page CRC checks do not
+replace full review SHA-256 and reader/card/course checks after assembly. Error
+frames have one byte: 1 invalid request, 2 unauthorized, 3 busy, 4 wrong card,
+5 unavailable, 6 unsupported. Wi-Fi review control is not implemented.
+
+Command 21, `BeginCourseBaseline`, accepts the exact 155-byte `TCBI` original-pack
+confirmation body defined by `CourseBaselineImportRequest-v1.fixture`. It is BLE
+control bound to the authenticated Apple installation. The native handler checks
+journal readiness, preserves/rechecks the reviewed files, and saves durable consent
+before beginning upload to `/tinta/course-baseline.pack`. This is an archive
+transaction; it does not replace the active course or apply merged learner state.
+Success returns the ordinary result byte plus `TransferState`; failures use the
+ordinary `TransferResult` byte. Shared framed bytes are in
+`CourseBaselineBeginFrame-v1.fixture` (request ID `0x12345678`).
+
+Chunks, status, abort and commit retain ordinary transaction IDs and durable
+transfer offsets. After BLE approval, large uploads can use the existing encrypted
+Wi-Fi handoff. Commit routes the archive destination through native baseline
+validation/publication using the full workspace lease on either transport.
+Original-pack consent is not a substitute for complete staged pack validation,
+reviewed UID/history checks, or startup recovery after interrupted publication.
+
+The Wi-Fi lease can be obtained only during authenticated dispatch with the exact
+handoff session identity. Callers copy request fields out first. Permission ends
+immediately on teardown/expiry, but leased bytes remain until release. Request
+buffers are unavailable during processing; dispatch returning with an unreleased
+loan ends the session before encoding a reply. Session owners must outlive their
+serialized dispatch. This reuses the existing 8 KiB workspace without allocating
+another buffer.
+
+The Apple transfer runner has a dedicated baseline path requiring import
+capability bit 17, saved original-pack consent and a retained declaration. It
+queries status before initial approval or resume, and prepared Wi-Fi handoffs
+cannot issue new approval. Ordinary course transfer entry points refuse baseline
+jobs. Firmware advertisement of bit 17 and app confirmation/routing integration
+remain pending. Discovery must not infer archive installation support from review
+capability bit 16 alone.

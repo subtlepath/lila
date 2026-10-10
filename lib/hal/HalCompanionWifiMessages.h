@@ -48,6 +48,11 @@ class HalCompanionWifiMessages final {
   void end();
   bool pollDeadline();
   bool finishing() const { return finishRequested; }
+  // Serialized dispatch only. Copy request fields out before taking this loan.
+  // end() revokes permission immediately but preserves bytes until release.
+  bool acquireWorkspace(const Identity& session);
+  bool workspaceOwned(const Identity& session) const;
+  bool releaseWorkspace(const Identity& session);
   // Fill at most MAX_MESSAGE_SIZE bytes; process() consumes exactly length.
   std::span<uint8_t> requestBuffer();
   // Reply borrows workspace until the next request or end(). A failure ends the session except Busy.
@@ -68,5 +73,6 @@ class HalCompanionWifiMessages final {
   uint64_t lastActivity = 0, lifetimeMilliseconds = 0;
   bool active = false, activated = false, processing = false;
   bool finishRequested = false;
+  bool dispatching = false, workspaceLeased = false, cleanupPending = false;
 };
 }  // namespace companion

@@ -8,6 +8,11 @@ namespace companion {
 HalCompanionWifiMessages::~HalCompanionWifiMessages() { end(); }
 void HalCompanionWifiMessages::end() {
   active = false;
+  if (workspaceLeased) {
+    cleanupPending = true;
+    return;
+  }
+  cleanupPending = false;
   activated = false;
   finishRequested = false;
   cipher.end();
@@ -59,7 +64,24 @@ bool HalCompanionWifiMessages::pollDeadline() {
   return false;
 }
 std::span<uint8_t> HalCompanionWifiMessages::requestBuffer() {
-  return active ? workspace.first(MAX_MESSAGE_SIZE) : std::span<uint8_t>{};
+  return active && !processing ? workspace.first(MAX_MESSAGE_SIZE) : std::span<uint8_t>{};
+}
+bool HalCompanionWifiMessages::acquireWorkspace(const Identity& selected) {
+  if (!active || !processing || !dispatching || workspaceLeased || selected != session ||
+      !validAt(clock.milliseconds(clock.context)))
+    return false;
+  workspaceLeased = true;
+  return true;
+}
+bool HalCompanionWifiMessages::workspaceOwned(const Identity& selected) const {
+  return active && processing && dispatching && workspaceLeased && selected == session &&
+         validAt(clock.milliseconds(clock.context));
+}
+bool HalCompanionWifiMessages::releaseWorkspace(const Identity& selected) {
+  if (!workspaceLeased || selected != session) return false;
+  workspaceLeased = false;
+  if (cleanupPending) end();
+  return true;
 }
 bool HalCompanionWifiMessages::validAt(uint64_t now) const {
   const uint64_t budget = activated ? 30000 : lifetimeMilliseconds;
@@ -101,8 +123,15 @@ WifiMessageReply HalCompanionWifiMessages::process(size_t length, WifiMessageDis
   if (!validAt(clock.milliseconds(clock.context))) return fail(WifiMessageResult::Expired);
   auto payload = workspace.subspan(PAYLOAD_OFFSET, MAX_CONTROL_PAYLOAD);
   if (ending) payload[0] = 0;
+  dispatching = !ending;
   const auto reply =
       ending ? WifiDispatchReply{Command::WifiHandoff, 1} : dispatch.execute(dispatch.context, request, owner, payload);
+  dispatching = false;
+  if (workspaceLeased) {
+    LOG_ERR("CWIFI", "Dispatch returned with workspace leased");
+    workspaceLeased = false;
+    return fail(WifiMessageResult::DispatchError);
+  }
   if (!active) return fail(WifiMessageResult::Inactive);
   if (!validAt(clock.milliseconds(clock.context))) return fail(WifiMessageResult::Expired);
   if (reply.length > payload.size() || (reply.command != request.command && reply.command != Command::Error))

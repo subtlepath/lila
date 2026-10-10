@@ -27,6 +27,8 @@
 #include "SdCardFontSystem.h"
 #include "network/FirmwareFlasher.h"
 #if LILA_TINTA
+#include <HalCourseBaselineImportBegin.h>
+#include <HalCourseBaselineImportCommit.h>
 #include <HalCourseBaselineRecovery.h>
 #include <HalCourseBaselineReviewRequest.h>
 #include <HalCourseRemovalPreparation.h>
@@ -76,23 +78,28 @@ constexpr size_t OUTPUT_START = companion::REQUEST_OFFSET;
 static_assert(OUTPUT_START + 2 * FRAME_SIZE <= companion::SESSION_WORKSPACE_SIZE);
 
 #if LILA_TINTA
-class ScopedReviewWorkspace final {
+class ScopedCompanionWorkspace final {
  public:
-  ScopedReviewWorkspace(HalCompanionBluetooth& bluetooth, uint64_t session, bool& active)
+  ScopedCompanionWorkspace(HalCompanionBluetooth& bluetooth, uint64_t session, bool& active,
+                           companion::HalCompanionWifiSession* wifi = nullptr,
+                           const companion::Identity* wifiToken = nullptr)
       : bluetooth(bluetooth),
         session(session),
         active(active),
-        acquired(!active && bluetooth.acquireWorkspace(session)) {
+        wifi(wifi),
+        wifiToken(wifiToken),
+        acquired(!active &&
+                 (wifi ? wifiToken && wifi->acquireWorkspace(*wifiToken) : bluetooth.acquireWorkspace(session))) {
     if (acquired) active = true;
   }
-  ~ScopedReviewWorkspace() { release(); }
+  ~ScopedCompanionWorkspace() { release(); }
   bool owns() const { return acquired; }
   bool release() {
     if (!acquired) return true;
-    const bool released = bluetooth.releaseWorkspace(session);
+    const bool released = wifi ? wifi->releaseWorkspace(*wifiToken) : bluetooth.releaseWorkspace(session);
     acquired = false;
     active = false;
-    if (!released) LOG_ERR("COMPANION", "Baseline review workspace release failed");
+    if (!released) LOG_ERR("COMPANION", "Companion workspace release failed");
     return released;
   }
 
@@ -100,6 +107,8 @@ class ScopedReviewWorkspace final {
   HalCompanionBluetooth& bluetooth;
   uint64_t session;
   bool& active;
+  companion::HalCompanionWifiSession* wifi;
+  const companion::Identity* wifiToken;
   bool acquired;
 };
 #endif
@@ -327,7 +336,7 @@ size_t CompanionConnectActivity::courseBaselineReviewReply(bool authorized, uint
   output[0] = 4;
   if (parsed.generation != identity.storageGeneration) return 1;
   output[0] = 3;
-  if (!contentReadPermitted() || wifiPhase != WifiPhase::None || baselineReviewActive) return 1;
+  if (!contentReadPermitted() || wifiPhase != WifiPhase::None || baselineWorkspaceActive) return 1;
   uint64_t size = 0;
   for (const auto* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
     const auto status = transferStorage.stat(path, size);
@@ -342,15 +351,16 @@ size_t CompanionConnectActivity::courseBaselineReviewReply(bool authorized, uint
     return 1;
   removalOwner.reset();
   dictionaryRemovalOwner.reset();
-  ScopedReviewWorkspace lease(bluetooth, session, baselineReviewActive);
+  ScopedCompanionWorkspace lease(bluetooth, session, baselineWorkspaceActive);
   if (!lease.owns()) {
     output[0] = 3;
     return 1;
   }
   auto permitted = [](void* context) {
     auto& activity = *static_cast<CompanionConnectActivity*>(context);
-    return activity.baselineReviewActive && activity.contentReadPermitted() && activity.wifiPhase == WifiPhase::None &&
-           activity.bluetooth.workspaceOwned(activity.installationSession) && companion::admitCompanionHeap();
+    return activity.baselineWorkspaceActive && activity.contentReadPermitted() &&
+           activity.wifiPhase == WifiPhase::None && activity.bluetooth.workspaceOwned(activity.installationSession) &&
+           companion::admitCompanionHeap();
   };
   if (!baselineReviewStore) {
     constexpr size_t PEAK =
@@ -383,6 +393,94 @@ size_t CompanionConnectActivity::courseBaselineReviewReply(bool authorized, uint
 #endif
   return 1;
 }
+
+size_t CompanionConnectActivity::courseBaselineBeginReply(bool authorized, std::span<const uint8_t> input,
+                                                          std::span<uint8_t> output) {
+  if (output.size() < 1 + companion::TRANSFER_STATE_SIZE) return 0;
+  output[0] = static_cast<uint8_t>(companion::TransferResult::Unauthorized);
+  if (!authorized) return 1;
+  output[0] = static_cast<uint8_t>(companion::TransferResult::Invalid);
+#if LILA_TINTA
+  companion::CourseBaselineImportRequest parsed;
+  if (!companion::decodeCourseBaselineImportRequest(input, parsed)) return 1;
+  const auto result = runBaselineTransfer(&parsed, nullptr);
+  output[0] = static_cast<uint8_t>(result);
+  if (result == companion::TransferResult::Ok && transfer->current())
+    return 1 + companion::encodeRecord(*transfer->current(), output.subspan(1));
+#else
+  (void)input;
+#endif
+  return 1;
+}
+#if LILA_TINTA
+bool CompanionConnectActivity::baselineTransferPermitted() const {
+  if (!baselineWorkspaceActive || !workspace || recoveryBlocked || firmwareInstallPending || inventoryPending ||
+      journalReceive || legacyBackup || journalExportReady || !transfer || !companion::admitCompanionHeap())
+    return false;
+  if (wifiPhase == WifiPhase::None) return ready && bluetooth.workspaceOwned(installationSession);
+  return wifiPhase == WifiPhase::Serving && wifiEndpoint.workspaceOwned(wifiMaterial.offer.session);
+}
+[[gnu::noinline]] companion::TransferResult CompanionConnectActivity::runBaselineTransfer(
+    const companion::CourseBaselineImportRequest* request, const companion::Identity* transaction) {
+  using companion::TransferResult;
+  if ((!ready && wifiPhase != WifiPhase::Serving) || !workspace || !transfer || recoveryBlocked ||
+      firmwareInstallPending || inventoryPending || journalReceive || legacyBackup || journalExportReady ||
+      baselineWorkspaceActive || (wifiPhase != WifiPhase::None && wifiPhase != WifiPhase::Serving) ||
+      (wifiPhase == WifiPhase::Serving && (!wifiEndpoint.isActive() || request)))
+    return TransferResult::Busy;
+  uint64_t size = 0;
+  for (const auto* path : {companion::FIRMWARE_INSTALL_INTENT_PATH, companion::FIRMWARE_INSTALL_INTENT_STAGE}) {
+    const auto status = transferStorage.stat(path, size);
+    if (status != companion::FileStatus::Missing)
+      return status == companion::FileStatus::Error ? TransferResult::IoError : TransferResult::Busy;
+  }
+  if (!closeContentReaders() || !releaseCourseRemovalOwner() || (removalOwner && !removalOwner->closeReaders()) ||
+      (dictionaryRemovalOwner && !dictionaryRemovalOwner->closeReaders()))
+    return TransferResult::IoError;
+  removalOwner.reset();
+  dictionaryRemovalOwner.reset();
+  baselineReviewStore.reset();
+  ScopedCompanionWorkspace lease(bluetooth, installationSession, baselineWorkspaceActive,
+                                 wifiPhase == WifiPhase::Serving ? &wifiEndpoint : nullptr,
+                                 &wifiMaterial.offer.session);
+  if (!lease.owns()) return TransferResult::Busy;
+  auto permitted = [](void* context) {
+    return static_cast<CompanionConnectActivity*>(context)->baselineTransferPermitted();
+  };
+  const auto full = std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE);
+  const bool wasCommitted = transfer->current() && transfer->current()->phase == companion::TransferPhase::Committed;
+  const auto result =
+      request       ? companion::beginHalCourseBaselineImport(*transfer, identity.device, identity.storageGeneration,
+                                                              installation, *request, full, permitted, this)
+      : transaction ? companion::commitHalCourseBaselineImport(
+                          *transfer, transferStorage, identity.device, identity.storageGeneration, installation,
+                          *transaction, full, full.subspan(companion::TRANSFER_OFFSET),
+                          {tinta::app::kSessionStackCapacity, static_cast<uint8_t>(tinta::app::ScreenId::Count),
+                           tinta::app::kSessionQueueCapacity},
+                          permitted, this)
+                    : TransferResult::Invalid;
+  const bool released = lease.release();
+  const auto* current = transfer->current();
+  if (!released || result == TransferResult::Corrupt ||
+      (result != TransferResult::Ok && current && current->phase == companion::TransferPhase::Installing) ||
+      (result == TransferResult::IoError && !current))
+    recoveryBlocked = true;
+  if (!wasCommitted && current && current->phase == companion::TransferPhase::Committed && inventory)
+    inventory->invalidate();
+  return released ? result : TransferResult::IoError;
+}
+size_t CompanionConnectActivity::baselineCommitReply(std::span<const uint8_t> input, std::span<uint8_t> output) {
+  if (output.size() < 1 + companion::TRANSFER_STATE_SIZE) return 0;
+  companion::Identity transaction{};
+  output[0] = static_cast<uint8_t>(companion::TransferResult::Invalid);
+  if (!companion::decodeTransaction(input, transaction)) return 1;
+  const auto result = runBaselineTransfer(nullptr, &transaction);
+  output[0] = static_cast<uint8_t>(result);
+  if (result == companion::TransferResult::Ok && transfer->current())
+    return 1 + companion::encodeRecord(*transfer->current(), output.subspan(1));
+  return 1;
+}
+#endif
 
 size_t CompanionConnectActivity::courseContextReply(bool authorized, std::span<const uint8_t> input,
                                                     std::span<uint8_t> output) {
@@ -970,7 +1068,7 @@ void CompanionConnectActivity::onExit() {
 #if LILA_TINTA
   baselineReviewStore.reset();
 #endif
-  baselineReviewActive = false;
+  baselineWorkspaceActive = false;
   bluetooth.stop();
   resetJournalSessions();
   journalExport.reset();
@@ -1466,6 +1564,11 @@ size_t CompanionConnectActivity::dispatchTransfer(const companion::FrameView& re
     response[0] = static_cast<uint8_t>(companion::TransferResult::IoError);
     return 1;
   }
+#if LILA_TINTA
+  if (request.command == companion::Command::Commit &&
+      transfer->destination() == companion::COURSE_BASELINE_DESTINATION)
+    return owner == installation ? baselineCommitReply(request.payload, response) : 0;
+#endif
   const auto outcome = companion::dispatchTransfer(*transfer, identity.storageGeneration, request.command,
                                                    request.payload, owner, response);
   if (outcome.inventoryChanged) sdFontSystem.markRegistryDirty();
@@ -1615,6 +1718,11 @@ void CompanionConnectActivity::processFrame() {
       payload[0] = 1;
       length = 1;
     }
+  } else if (request.command == companion::Command::BeginCourseBaseline) {
+    companion::PairingPeer peer;
+    const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&
+                            pairings.boundTo(installation, peer);
+    length = courseBaselineBeginReply(authorized, request.payload, payload);
   } else if (request.command == companion::Command::CourseBaselineReview) {
     companion::PairingPeer peer;
     const bool authorized = installationSession == session && bluetooth.peer(session, peer) && pairingsAvailable &&

@@ -2803,6 +2803,7 @@ public actor LibraryStore {
         try database.execute("BEGIN IMMEDIATE")
         var committed = false
         defer { if !committed { try? database.execute("ROLLBACK") } }
+        guard try courseBaselineConfirmation(id) == nil else { throw StoreError.invalidTransition }
         guard let job = try job(id) else { throw StoreError.missingJob }
         guard let content = try content(job.content), try !isLibraryContentDeleted(job.content) else {
             throw StoreError.missingContent
@@ -2847,6 +2848,37 @@ public actor LibraryStore {
         } else {
             guard job.durableOffset == 0, job.phase == .queued || job.phase == .paused,
                   try !hasTransferAbort(id) else { throw StoreError.invalidTransition }
+            try database.execute("INSERT INTO job_transfer_declarations(job,payload) VALUES(?,?)",
+                                 [.text(id.uuidString), .blob(declaration.encoded)])
+        }
+        try database.execute("COMMIT"); committed = true
+        return declaration
+    }
+    public func prepareCourseBaselineDeclaration(_ id: UUID, verifiedLength: UInt64) throws -> TransferDeclaration {
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        guard let job = try job(id), let consent = try courseBaselineConfirmation(id),
+              let content = try content(job.content), content.kind == .course,
+              try !isLibraryContentDeleted(job.content), job.phase != .aborted,
+              try !hasTransferAbort(id) else { throw StoreError.invalidTransition }
+        guard content.length == verifiedLength, consent.manifest.length == verifiedLength else {
+            throw VaultError.integrity
+        }
+        let transaction = withUnsafeBytes(of: job.id.uuid) { Data($0) }
+        let state = try TransferState(transaction: transaction, owner: job.installation,
+            storageGeneration: job.storageGeneration, contentHash: job.content.digest, length: verifiedLength)
+        let declaration = try TransferDeclaration(manifest: courseManifest(job.content), state: state)
+        guard consent.matches(generation: job.storageGeneration, owner: job.installation,
+                              reviewed: consent.reviewHash, transfer: declaration) else {
+            throw StoreError.conflictingJob
+        }
+        if let retained = try retainedTransferDeclaration(id) {
+            guard retained == declaration else { throw StoreError.conflictingJob }
+        } else {
+            guard job.durableOffset == 0, job.phase == .queued || job.phase == .paused else {
+                throw StoreError.invalidTransition
+            }
             try database.execute("INSERT INTO job_transfer_declarations(job,payload) VALUES(?,?)",
                                  [.text(id.uuidString), .blob(declaration.encoded)])
         }

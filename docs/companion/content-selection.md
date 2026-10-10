@@ -3265,3 +3265,177 @@ frames are 224/208 bytes. Those probes precede the final home-gesture guard; the
 default firmware build includes that guard. The other four firmware targets are
 still building at this checkpoint. Physical heap, task-stack and reader behavior
 remain unverified; portable Swift tests do not establish Apple SDK/UI acceptance.
+
+The course association screen now offers **Review connected reader’s learning
+files** for a validated, identity-associated pack and a reader advertising review
+support. The app reserves its existing transfer lock during collection, checks
+connection/card/course bindings again before displaying the result, and hides a
+roster when the connected reader/card differs. The screen shows the frozen review
+hash and each file’s presence, length and digest, supports a fresh capture, and
+cancels collection when leaving the screen. It does not record original-pack
+consent or queue installation. Its strings are in the app string catalog.
+
+The new in-flight cancellation test holds the first response while checking that
+another collection is refused, then cancels and delivers that response. No next
+page is requested; a subsequent fresh collection succeeds. All 539 portable Swift
+tests pass (15.857 seconds). Swift frontend parsing of the app source and catalog
+JSON validation pass; an Apple SDK build and rendered UI are still required.
+Default and sticky retained firmware images have been independently revalidated
+against their hashes and board/chip metadata; the other three targets are running.
+
+On an Apple host, build both app schemes and open an associated Tinta course with
+an authenticated reader in Connect & Sync mode. Open the reader review, verify
+the displayed files/hash, leave during collection and retry, then disconnect or
+replace the card and confirm the old roster is hidden. Monitor reader free/largest
+heap and task watermarks across repeats; the existing physical acceptance gates
+still apply.
+
+The live-review firmware batch is complete. Independent validation of each
+retained image confirms its recorded SHA-256, board/chip metadata, checksum and
+OTA size; all 22 recorded live/import-path fingerprints still match. Sizes and
+OTA headroom are: default 6,482,816 / 70,784 bytes; sticky 5,703,712 / 849,888;
+x4pro 6,514,160 / 39,440; x4c 6,483,392 / 70,208; papermono 5,816,832 / 736,768.
+These images cover the live review dispatcher, not the subsequent unwired native
+approval-begin composition or its portable context-validation refactor.
+
+`beginHalCourseBaselineImport` now composes the authenticated original-pack
+request with journal readiness, checked native consent preservation and transfer
+begin. Caller-owned request/identities/transfer must stay outside the leased
+8 KiB workspace. Wrong owner/card, incompatible transaction or malformed request
+are rejected before approval; readiness finishes before allocating the consent
+store. Peak admission includes the consent store and the three simultaneously
+retained preparation owners, with a largest-block check. Those metadata/path
+owners exceed the local stack budget and are allocated with checked NoThrow
+owners. No extra session buffer is allocated.
+
+Native tests preserve all original reviewed files, persist consent before starting
+the archive upload, retry the exact receiving transaction without changed files,
+and reject wrong owner/card, short workspace, low heap and incomplete journal
+without consent or upload. The composition leaves installation to the existing
+native installer and may leave durable orphan consent after a failed transfer
+begin; startup orphan recovery remains mandatory. Live approval/commit dispatch
+and the explicit original-pack confirmation UI are still required.
+
+The C3 composition probe reports 112 bytes for native begin, 48 for its approval
+callback, 80 for context validation and 224 for portable transfer begin, with no
+compiled frame above 256. Splitting validation from declaration construction
+removed the prior 272-byte portable begin frame without adding heap allocation.
+This is compiler-frame evidence, not a physical task watermark or heap result.
+
+After the context-validation refactor, the final host rebuild and all 1,951
+tests pass (10.72 seconds). Repository formatting and diff checks pass.
+
+`commitHalCourseBaselineImport` supplies the native commit lifecycle for an
+already-approved archive transaction. It checks owner, card, transaction and
+baseline destination before journal I/O, refuses incomplete receiving uploads,
+and requires the exact normal transfer tail within a full 8 KiB workspace.
+Request identities, transfer and storage objects must remain outside the loan.
+An already-attached baseline installer returns Busy without replacing its owner.
+After journal readiness, the checked import-session factory admits parser,
+inspection and replay peak memory. The installer is attached only for commit,
+then detached before destroying the session, including failed commits. There is
+no additional session workspace allocation.
+
+The native compatibility/recovery test now uses the composed begin and commit
+operations, checks permission loss without writes, interrupts the first install
+rename, recovers through the native startup attachment, and repeats committed
+publication after the live learner file changes. The temporary commit session
+leaves no attached callback. Additional refusal tests cover an attached owner,
+wrong owner/card/transaction, incomplete upload, mismatched parent loan and low
+heap without starting installation. The final host rebuild passes all 1,952
+tests (11.25 seconds). The C3 commit probe passes with a 208-byte frame and no
+compiled frame above 256; formatting and diff checks pass.
+
+Live baseline approval and commit dispatch remain unfinished. BLE must decode
+owned request/transaction fields before obtaining its exclusive workspace lease.
+Wi-Fi dispatch also needs an explicit full-workspace loan: decrypted request and
+reply regions occupy that workspace, so a baseline operation must finish borrowing
+request fields before repurposing it, and session teardown must not clear leased
+bytes. The current Wi-Fi poll reentry guard alone does not expose that contract.
+The prior five-board results cover live review, not these unwired composition
+APIs or the new storage-owner accessor. Physical and Apple SDK acceptance remain
+outstanding.
+
+Wi-Fi now exposes a full-workspace lease through its message and session HALs.
+Acquisition is restricted to authenticated serialized dispatch and the exact
+handoff session. Teardown/expiry revokes permission immediately but defers clearing
+loaned bytes. Wrong/double acquisition or release is refused; a forgotten loan
+ends the session before response encoding. Request-buffer access is suppressed
+while processing. These fixed flags and token checks add no heap allocation.
+Host tests reuse every workspace byte and still decode the encrypted response,
+repeat real TCP connections, and end the session from inside a held loan without
+premature clearing. Both Wi-Fi translation units pass C3 frame probes; message
+processing uses 208 bytes, and no compiled frame exceeds 256.
+
+The activity now routes authenticated BLE command 21 through native original-pack
+consent and begin. Baseline commit is intercepted on both BLE and encrypted Wi-Fi
+before generic dispatch. Owned request/transaction fields remain outside the full
+workspace; other content/removal readers are closed and the review store released
+before admission. The same scoped lease blocks storage persistence and home
+navigation. Commit detaches its native installer before releasing the lease;
+ambiguous transaction state or an interrupted Installing phase blocks reading.
+New publication invalidates inventory. Initial approval remains BLE control;
+ordinary upload IDs/offsets and Wi-Fi handoff remain shared afterward.
+
+Enabled/disabled C3 activity probes pass with no frame above 256: enabled begin
+reply 224, commit reply 80, baseline operation 192 and frame dispatch 256 bytes.
+The final host rebuild passes all 1,957 tests (12.63 seconds), and all 540 portable
+Swift tests pass (22.487 seconds), including the shared 167-byte command-21 frame.
+Formatting/diff checks pass. The five-board batch has started against 30 recorded
+production fingerprints. The retained default image is independently validated
+at 6,491,424 bytes, leaving 62,176 OTA bytes; the other four targets are pending in the batch.
+This batch includes live baseline dispatch, unlike the preceding live-review
+batch. Import capability advertisement, explicit original-pack confirmation UI,
+transfer-runner resume integration and physical acceptance remain unfinished.
+
+The first sticky attempt terminated while creating `.pio/build/sticky/vfs` with
+“Too many open files in system”; no source compiler error was reported. The
+failed log is retained separately. The directory can now be created, and the
+batch resumes only unfinished targets with PlatformIO `-j 2`. The default image
+is retained and revalidated, and the original 30 source fingerprints are checked
+before resuming. This is a confirmed failed build retry, not a restart following
+an observation timeout. The remaining target results are still pending.
+
+The Apple store now has a dedicated `prepareCourseBaselineDeclaration` path.
+Within one SQLite transaction it requires saved original-pack consent, rechecks
+reader/card/owner/transaction and the current course manifest, checks verified
+length and deletion/abort state, then retains the exact declaration. Restarted
+and partially transferred jobs reuse that declaration; a changed declaration is
+refused. Ordinary declaration preparation rejects jobs carrying baseline consent
+inside its own transaction, so baseline archive intent cannot become an active
+course upload through that entry point. No schema migration is introduced.
+
+New tests cover missing consent, incorrect length, restart, partial-transfer
+resume, ordinary-path refusal and deleted/aborted jobs. All 542 portable Swift
+tests pass after the final edits (21.978 seconds); diff checks pass. The dedicated
+runner and explicit confirmation screen remain required before import capability
+advertisement or app-driven archive upload is enabled.
+
+The lower-concurrency firmware retry has validated sticky, x4pro and x4c. Their
+retained images and the default image were independently revalidated against
+recorded hashes, board/chip metadata and OTA sizes. Current results are default
+6,491,424 / 62,176 OTA headroom; sticky 5,703,632 / 849,968; x4pro 6,522,688 /
+30,912; x4c 6,492,272 / 61,328 bytes. All 30 production fingerprints still match.
+Papermono is the remaining running target; no earlier image is being substituted
+for this live baseline build.
+
+The resumed batch subsequently completed with exit zero. Papermono is
+independently validated at 5,816,768 bytes with 736,832 OTA
+headroom. All five final live-baseline images are retained and validated, and
+all 30 production fingerprints still match. Physical acceptance remains pending.
+
+
+The dedicated Apple baseline runner now uses saved consent and a retained
+baseline declaration, queries status before approval/resume, and shares durable
+chunk and commit handling. Prepared Wi-Fi sessions cannot create new consent.
+Tests cover lost chunk acknowledgements, restart, lost commit acknowledgements,
+and missing capability or unprepared handoffs. All 546 portable Swift tests pass
+(16.963 seconds). App confirmation/routing and firmware import capability
+advertisement remain pending; this is not Apple SDK or physical acceptance.
+
+Initial unbound legacy migration remains a separate gap. Review capture requires
+verified course isolation before scanning the selected scope
+(`lib/hal/HalCourseBaselineReviewCapture.h:68`). Existing native import fixtures
+exercise previously isolated learner state; they do not prove review or import
+of global unbound `/tinta` learner files. Course identity discovery and reviewed,
+recoverable isolation must be completed before enabling that workflow.

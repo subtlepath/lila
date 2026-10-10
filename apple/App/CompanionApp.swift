@@ -55,6 +55,7 @@ final class CompanionModel {
     private let inventories = InventoryCollector()
     private let journalExports = JournalExportCollector()
     private let learningBackups = LegacyBackupCollector()
+    private let baselineReviews = CourseBaselineReviewCollector()
     private let migrations = TintaMigrationRunner()
     private let journalSync = ReaderJournalSynchronizer()
     private let journalMerges = JournalMergeRunner()
@@ -1257,6 +1258,27 @@ final class CompanionModel {
         return try await library.bookmarks(content: content.digest)
     }
 
+    func canReviewCourseBaseline(_ content: ContentID) -> Bool {
+        guard !transferBusy, !inventoryBusy, !connectionBusy, let session = authenticated,
+              session.device.readerCapabilities.supportsCourseBaselineReview,
+              verifiedCourses.contains(content), courseIdentities[content] != nil else { return false }
+        return true
+    }
+
+    func reviewCourseBaseline(_ content: ContentID) async throws -> CourseBaselineReview {
+        guard canReviewCourseBaseline(content), let session = authenticated,
+              let course = courseIdentities[content] else { throw ReaderSessionError.busy }
+        let operation = connectionOperation
+        transferBusy = true
+        defer { if connectionOperation == operation { transferBusy = false } }
+        let review = try await baselineReviews.collect(session: session, course: course)
+        try Task.checkCancellation()
+        guard connectionOperation == operation, authenticated?.device.identity == review.reader,
+              authenticated?.device.storageGeneration == review.generation,
+              courseIdentities[content] == review.course else { throw ReaderSessionError.busy }
+        return review
+    }
+
     func switchInventory(_ content: ContentID) -> ReaderInventory? {
         guard !transferBusy, !inventoryBusy, !connectionBusy, let session = authenticated,
               session.device.readerCapabilities.supportsCourseSwitch, let inventory, inventory.complete,
@@ -2019,6 +2041,66 @@ private struct LibraryContentLabel: View {
     }
 }
 
+private struct CourseBaselineReviewView: View {
+    @Bindable var model: CompanionModel
+    let content: LibraryContent
+    @State private var review: CourseBaselineReview?
+    @State private var loading = false
+    @State private var failed = false
+    @State private var attempt = 0
+
+    var body: some View {
+        Form {
+            Section { LibraryContentLabel(content: content) }
+            if loading { ProgressView("Reading learning files…") }
+            if failed {
+                Section {
+                    Text("Learning files could not be reviewed. Reconnect the reader and try again.")
+                    Button("Retry") { attempt += 1 }
+                        .disabled(!model.canReviewCourseBaseline(content.id))
+                }
+            }
+            if let review, model.connected?.identity == review.reader,
+               model.connected?.storageGeneration == review.generation {
+                Section("Reader review") {
+                    LabeledContent("Reader identity", value: hex(review.reader))
+                    LabeledContent("Storage generation", value: hex(review.generation))
+                    LabeledContent("Course identity", value: hex(review.course))
+                    LabeledContent("Review hash", value: hex(review.hash))
+                    Text("This review records the reader’s files at one moment. Confirming the original pack and checking learning history are required before installation.")
+                }
+                Section("Learning files") {
+                    ForEach(review.files.indices, id: \.self) { index in
+                        let file = review.files[index]
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(file.name).font(.headline)
+                            if file.present { Text("Present") } else { Text("Missing") }
+                            if file.present {
+                                Text(ByteCountFormatter.string(fromByteCount: Int64(file.length), countStyle: .file))
+                                Text(hex(file.hash)).font(.caption.monospaced()).textSelection(.enabled)
+                            }
+                        }.accessibilityElement(children: .combine)
+                    }
+                }
+                Button("Refresh reader review") { attempt += 1 }
+                    .disabled(!model.canReviewCourseBaseline(content.id))
+            }
+        }
+        .navigationTitle("Reader learning review")
+        .task(id: attempt) {
+            review = nil; failed = false; loading = true
+            defer { loading = false }
+            do { review = try await model.reviewCourseBaseline(content.id) }
+            catch is CancellationError { }
+            catch { failed = true }
+        }
+    }
+
+    private func hex(_ bytes: Data) -> String {
+        bytes.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 private struct CourseAssociationView: View {
     @Bindable var model: CompanionModel
     let content: LibraryContent
@@ -2060,6 +2142,9 @@ private struct CourseAssociationView: View {
                     if switchQueued {
                         Text("Course switch queued. Use Transfer selected content to install it.")
                     }
+                    NavigationLink("Review connected reader’s learning files") {
+                        CourseBaselineReviewView(model: model, content: content)
+                    }.disabled(!model.canReviewCourseBaseline(content.id))
                     NavigationLink("Saved learning history") { TintaHistoryView(model: model, content: content) }
                     NavigationLink("Preserved learning backups") { TintaBackupListView(model: model, content: content) }
                 }

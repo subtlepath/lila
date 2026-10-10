@@ -126,6 +126,18 @@ TEST(CompanionCourseBaselineImport, SharedFixtureAndCorruptionsPreserveOutput) {
   EXPECT_EQ(decoded, f.request);
   ASSERT_TRUE(encodeCourseBaselineImportRequest(decoded, encoded));
   EXPECT_EQ(encoded, bytes);
+  const std::string requestPath = COURSE_BASELINE_IMPORT_FIXTURE;
+  std::ifstream framedInput(
+      requestPath.substr(0, requestPath.find_last_of('/') + 1) + "CourseBaselineBeginFrame-v1.fixture",
+      std::ios::binary);
+  ASSERT_TRUE(framedInput);
+  const std::vector<uint8_t> framed((std::istreambuf_iterator<char>(framedInput)), {});
+  FrameView frame;
+  EXPECT_EQ(decodeFrame(framed, false, frame), FrameError::Unauthorized);
+  ASSERT_EQ(decodeFrame(framed, true, frame), FrameError::None);
+  EXPECT_EQ(frame.command, Command::BeginCourseBaseline);
+  EXPECT_EQ(frame.requestId, 0x12345678u);
+  EXPECT_TRUE(std::equal(frame.payload.begin(), frame.payload.end(), bytes.begin(), bytes.end()));
   for (size_t at = 0; at < bytes.size(); ++at) {
     SCOPED_TRACE(at);
     auto corrupt = bytes;

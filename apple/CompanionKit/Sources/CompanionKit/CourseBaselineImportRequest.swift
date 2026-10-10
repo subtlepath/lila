@@ -23,6 +23,10 @@ public struct CourseBaselineImportRequest: Equatable, Sendable {
         self.manifest = manifest; self.reviewHash = reviewHash
     }
 
+    public func frame(requestID: UInt32) throws -> ControlFrame {
+        try ControlFrame(command: .beginCourseBaseline, requestID: requestID, payload: encoded)
+    }
+
     public var encoded: Data {
         var bytes = Self.prefix
         bytes.reserveCapacity(Self.encodedSize)

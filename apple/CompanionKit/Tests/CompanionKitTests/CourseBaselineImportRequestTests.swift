@@ -27,6 +27,19 @@ final class CourseBaselineImportRequestTests: XCTestCase {
         XCTAssertThrowsError(try CourseBaselineImportRequest(decoding: bytes + Data([0])))
     }
 
+    func testSharedBeginFrameRequiresAuthenticationAndKeepsExactConsentBody() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let bytes = try Data(contentsOf: root.appendingPathComponent("protocol/fixtures/CourseBaselineBeginFrame-v1.fixture"))
+        let request = try CourseBaselineImportRequest(decoding: fixture())
+        XCTAssertEqual(try request.frame(requestID: 0x12345678).encoded(), bytes)
+        XCTAssertThrowsError(try ControlFrame(decoding: bytes, authenticated: false))
+        let frame = try ControlFrame(decoding: bytes, authenticated: true)
+        XCTAssertEqual(frame.command.rawValue, 21)
+        XCTAssertFalse(frame.response)
+        XCTAssertEqual(try CourseBaselineImportRequest(decoding: frame.payload), request)
+    }
+
     func testResignedEmptyIdentityAndUnsupportedManifestCannotAuthorize() throws {
         let bytes = try fixture()
         for range in [8..<24, 24..<40, 40..<56, 58..<90, 103..<119, 119..<151] {

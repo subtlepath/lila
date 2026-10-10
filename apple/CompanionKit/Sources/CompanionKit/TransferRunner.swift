@@ -192,6 +192,46 @@ public actor TransferRunner {
         try await authorizeHandoff(id, session: session, handoff: handoff)
         return try await run(id, device: session.device, transport: handoff, requireSelection: true)
     }
+    public func runCourseBaseline(_ id: UUID, session: AuthenticatedReaderSession) async throws -> TransferJob {
+        guard let job = try await library.job(id) else { throw StoreError.missingJob }
+        guard job.installation == session.installation else { throw TransferRunnerError.wrongInstallation }
+        return try await runCourseBaseline(id, device: session.device, transport: session, requireSelection: true)
+    }
+    public func prepareCourseBaselineHandoff(_ id: UUID, session: AuthenticatedReaderSession) async throws -> TransferJob {
+        guard let job = try await library.job(id) else { throw StoreError.missingJob }
+        guard job.installation == session.installation else { throw TransferRunnerError.wrongInstallation }
+        return try await runCourseBaseline(id, device: session.device, transport: session,
+                                          requireSelection: true, prepareOnly: true)
+    }
+    public func runCourseBaseline(_ id: UUID, session: AuthenticatedReaderSession,
+                                  handoff: WifiHandoffTransport) async throws -> TransferJob {
+        try await authorizeHandoff(id, session: session, handoff: handoff)
+        guard try await library.retainedTransferDeclaration(id) != nil else { throw TransferRunnerError.wrongHandoff }
+        return try await runCourseBaseline(id, device: session.device, transport: handoff,
+                                          requireSelection: true, preparedTransport: true)
+    }
+    func runCourseBaseline(_ id: UUID, device: DeviceDescriptor, transport: any CompanionTransport,
+                           requireSelection: Bool = false, prepareOnly: Bool = false,
+                           preparedTransport: Bool = false) async throws -> TransferJob {
+        guard !running else { throw TransferRunnerError.busy }
+        running = true
+        defer { running = false }
+        guard device.readerCapabilities.supportsCourseBaselineImport,
+              try await library.courseBaselineConfirmation(id) != nil else {
+            throw TransferRunnerError.unsupportedContent
+        }
+        do {
+            return try await transfer(id, device: device, transport: transport, requireSelection: requireSelection,
+                                      prepareOnly: prepareOnly, baselineAdmitted: true,
+                                      preparedBaselineTransport: preparedTransport)
+        } catch {
+            if let current = try? await library.job(id), current.phase != .committing,
+               current.phase != .completed, current.phase != .aborted, current.phase != .failed {
+                try? await library.checkpoint(id, offset: current.durableOffset, phase: .paused)
+            }
+            throw error
+        }
+    }
     public func abort(_ id: UUID, session: AuthenticatedReaderSession, handoff: WifiHandoffTransport) async throws -> TransferJob {
         try await authorizeHandoff(id, session: session, handoff: handoff)
         return try await abort(id, device: session.device, transport: handoff)
@@ -208,8 +248,11 @@ public actor TransferRunner {
     public func prepareDeclaration(_ id: UUID, session: AuthenticatedReaderSession) async throws -> TransferDeclaration {
         try await prepareDeclaration(id, device: session.device, installation: session.installation)
     }
-    private func validateCourse(_ content: LibraryContent, job: UUID, url: URL, device: DeviceDescriptor) async throws {
-        guard try await library.courseBaselineConfirmation(job) == nil else {
+    private func validateCourse(_ content: LibraryContent, job: UUID, url: URL, device: DeviceDescriptor,
+                                baselineAdmitted: Bool = false) async throws {
+        let hasBaselineConsent = try await library.courseBaselineConfirmation(job) != nil
+        guard hasBaselineConsent == baselineAdmitted,
+              !baselineAdmitted || device.readerCapabilities.supportsCourseBaselineImport else {
             throw TransferRunnerError.unsupportedContent
         }
         let metadata = try CoursePackInspector.inspect(url)
@@ -300,7 +343,7 @@ public actor TransferRunner {
             throw error
         }
     }
-    private func transfer(_ id: UUID, device: DeviceDescriptor, transport: any CompanionTransport, requireSelection: Bool, prepareOnly: Bool, firmwareAdmitted: Bool = false) async throws -> TransferJob {
+    private func transfer(_ id: UUID, device: DeviceDescriptor, transport: any CompanionTransport, requireSelection: Bool, prepareOnly: Bool, firmwareAdmitted: Bool = false, baselineAdmitted: Bool = false, preparedBaselineTransport: Bool = false) async throws -> TransferJob {
         try Task.checkCancellation()
         guard let job = try await library.job(id), let content = try await library.content(job.content) else { throw StoreError.missingJob }
         guard job.reader == device.identity else { throw TransferRunnerError.wrongReader }
@@ -311,6 +354,8 @@ public actor TransferRunner {
               content.kind == .firmware && firmwareAdmitted else {
             throw TransferRunnerError.unsupportedContent
         }
+        let baselineConsent = try await library.courseBaselineConfirmation(id)
+        guard (baselineConsent != nil) == baselineAdmitted else { throw TransferRunnerError.unsupportedContent }
         if job.phase == .completed { return job }
         if prepareOnly {
             guard content.length > 1024 * 1024, job.phase != .committing else { throw TransferRunnerError.handoffUnavailable }
@@ -320,7 +365,7 @@ public actor TransferRunner {
         let checkSelection = requireSelection && job.phase != .committing
         if checkSelection { try await ensureSelected(job) }
         let object = try await vault.verifiedObject(job.content)
-        if content.kind == .course { try await validateCourse(content, job: job.id, url: object.url, device: device) }
+        if content.kind == .course { try await validateCourse(content, job: job.id, url: object.url, device: device, baselineAdmitted: baselineAdmitted) }
         if content.kind == .font {
             let plan = try FontTransferPlan(content: content)
             try plan.admit(device)
@@ -335,8 +380,16 @@ public actor TransferRunner {
         let transaction = withUnsafeBytes(of: job.id.uuid) { Data($0) }
         let expected = try TransferState(transaction: transaction, owner: job.installation,
                                          storageGeneration: job.storageGeneration, contentHash: job.content.digest, length: content.length)
-        let begin: ControlFrame
-        if content.kind == .font {
+        let begin: ControlFrame?
+        if let consent = baselineConsent {
+            let declaration = try await library.prepareCourseBaselineDeclaration(id, verifiedLength: object.length)
+            guard declaration.state == expected,
+                  consent.matches(generation: job.storageGeneration, owner: job.installation,
+                                  reviewed: consent.reviewHash, transfer: declaration) else {
+                throw StoreError.conflictingJob
+            }
+            begin = nil
+        } else if content.kind == .font {
             let declaration = try await library.prepareTransferDeclaration(id, verifiedLength: object.length)
             let plan = try await library.fontTransferPlan(id)
             guard declaration.state == expected, plan == (try FontTransferPlan(content: content)) else {
@@ -354,7 +407,28 @@ public actor TransferRunner {
         if switchConsent != nil && !device.readerCapabilities.supportsCourseSwitch {
             throw TransferRunnerError.unsupportedContent
         }
-        var state = try await send(begin, expected: expected, transport: transport)
+        var state: TransferState
+        if baselineConsent != nil {
+            do {
+                state = try await send(TransferCommands.transaction(.transferStatus, identity: transaction,
+                    requestID: nextRequestID()), expected: expected, transport: transport)
+            } catch TransferCommandError.remote(let result) {
+                guard !preparedBaselineTransport, job.durableOffset == 0,
+                      job.phase == .queued || job.phase == .paused,
+                      result == .noTransaction || result == .invalid || result == .unauthorized else {
+                    throw TransferCommandError.remote(result)
+                }
+                try Task.checkCancellation()
+                if checkSelection { try await ensureSelected(job) }
+                guard try await !library.hasTransferAbort(id), let consent = baselineConsent else {
+                    throw TransferRunnerError.abortPending
+                }
+                state = try await send(consent.frame(requestID: nextRequestID()), expected: expected, transport: transport)
+            }
+        } else {
+            guard let begin else { throw TransferRunnerError.unsupportedContent }
+            state = try await send(begin, expected: expected, transport: transport)
+        }
         if state.phase == .receiving, let consent = switchConsent {
             try Task.checkCancellation()
             if let handoff = transport as? WifiHandoffTransport {

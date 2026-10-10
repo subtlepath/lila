@@ -36,6 +36,7 @@ enum class Command : uint8_t {
   PrepareContentHandoff = 18,
   CourseContext = 19,
   CourseBaselineReview = 20,
+  BeginCourseBaseline = 21,
 };
 
 enum class FrameError : uint8_t { None, Truncated, Magic, Version, Command, Flags, Length, Unauthorized };
@@ -49,7 +50,7 @@ struct FrameView {
 
 inline bool validCommand(uint8_t command) {
   return command >= static_cast<uint8_t>(Command::Discover) &&
-         command <= static_cast<uint8_t>(Command::CourseBaselineReview);
+         command <= static_cast<uint8_t>(Command::BeginCourseBaseline);
 }
 
 // Authentication is supplied by the bonded BLE or authenticated HTTP transport.

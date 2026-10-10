@@ -29,6 +29,7 @@ struct Fixture {
   HalCompanionWifiCipher apple;
   uint64_t now = 0;
   unsigned calls = 0;
+  bool reuseWorkspace = false;
   Command expectedCommand = Command::TransferStatus;
   int client = -1;
   Fixture() {
@@ -51,6 +52,12 @@ struct Fixture {
     ++self.calls;
     EXPECT_EQ(owner, self.offer.installation);
     EXPECT_EQ(request.command, self.expectedCommand);
+    if (self.reuseWorkspace) {
+      EXPECT_TRUE(self.messages.acquireWorkspace(self.offer.session));
+      EXPECT_TRUE(self.messages.workspaceOwned(self.offer.session));
+      std::fill(self.workspace.begin(), self.workspace.end(), 85);
+      EXPECT_TRUE(self.messages.releaseWorkspace(self.offer.session));
+    }
     output[0] = 0;
     return {request.command, 1};
   }
@@ -243,4 +250,31 @@ TEST(HalCompanionWifiHttpTest, MaximumEncryptedChunkCrossesParserAndSocketReadBo
   ASSERT_EQ(decodeFrame(std::span(plain).first(length), true, response), FrameError::None);
   EXPECT_EQ(response.command, Command::TransferChunk);
   EXPECT_EQ(fixture.calls, 1u);
+}
+
+TEST(HalCompanionWifiHttpTest, FullWorkspaceCommitLoanSurvivesHttpFramingAndRepeatedEncryptedConnections) {
+  Fixture fixture;
+  ASSERT_TRUE(fixture.begin());
+  fixture.reuseWorkspace = true;
+  fixture.expectedCommand = Command::Commit;
+  for (unsigned attempt = 0; attempt < 2; ++attempt) {
+    fixture.connect();
+    fixture.write(fixture.request());
+    const auto reply = fixture.reply();
+    ASSERT_TRUE(reply.starts_with("HTTP/1.1 200 OK\r\n"));
+    const auto split = reply.find("\r\n\r\n");
+    ASSERT_NE(split, std::string::npos);
+    const auto body = std::span(reinterpret_cast<const uint8_t*>(reply.data() + split + 4), reply.size() - split - 4);
+    std::array<uint8_t, 128> plain{};
+    size_t length = 0;
+    ASSERT_EQ(fixture.apple.open(body, plain, length), WifiCipherResult::Ok);
+    FrameView response;
+    ASSERT_EQ(decodeFrame(std::span(plain).first(length), true, response), FrameError::None);
+    EXPECT_EQ(response.command, Command::Commit);
+    EXPECT_EQ(response.requestId, 17u);
+    ASSERT_EQ(response.payload.size(), 1u);
+    EXPECT_EQ(response.payload[0], 0u);
+    EXPECT_FALSE(fixture.messages.workspaceOwned(fixture.offer.session));
+  }
+  EXPECT_EQ(fixture.calls, 2u);
 }

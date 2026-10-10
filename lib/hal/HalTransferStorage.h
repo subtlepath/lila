@@ -22,6 +22,7 @@ class HalTransferStorage final : public TransferStorage {
   void setFirmwareValidator(bool (*validator)(const char*)) { firmwareValidator = validator; }
   void setDictionaryInstaller(HalDictionaryTransferInstaller* installer) { dictionaryInstaller = installer; }
   void setCourseBaselineInstaller(HalCourseBaselineTransferInstaller* installer) { baselineInstaller = installer; }
+  bool hasCourseBaselineInstaller() const { return baselineInstaller != nullptr; }
   bool installDictionaryMembers(const char*, const ContentManifest&, const TransferState&, std::span<uint8_t>) override;
   bool prepare() override;
   FileStatus stat(const char* path, uint64_t& size) override;

@@ -62,7 +62,7 @@ public enum TransferCommands {
     }
     public static func response(_ frame: ControlFrame, to request: ControlFrame, expected: TransferState) throws -> TransferState {
         guard frame.response, !request.response, frame.requestID == request.requestID,
-              [.beginTransfer, .transferChunk, .transferStatus, .commit, .abort].contains(request.command) else {
+              [.beginTransfer, .beginCourseBaseline, .transferChunk, .transferStatus, .commit, .abort].contains(request.command) else {
             throw TransferCommandError.unexpectedResponse
         }
         if frame.command == .error {

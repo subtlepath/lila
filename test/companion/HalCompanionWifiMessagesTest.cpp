@@ -43,11 +43,46 @@ struct Fixture {
     if (self.mode == 4) {
       const auto busy = self.reader.process(48, {context, dispatch});
       EXPECT_EQ(busy.result, WifiMessageResult::Busy);
-      EXPECT_FALSE(self.reader.requestBuffer().empty());
+      EXPECT_TRUE(self.reader.requestBuffer().empty());
     }
     if (self.mode == 5) {
       self.reader.end();
       return {request.command, 0};
+    }
+    if (self.mode >= 6) {
+      Identity wrong = self.offer.session;
+      wrong[0] ^= 1;
+      EXPECT_FALSE(self.reader.acquireWorkspace(wrong));
+      EXPECT_TRUE(self.reader.acquireWorkspace(self.offer.session));
+      EXPECT_TRUE(self.reader.workspaceOwned(self.offer.session));
+      EXPECT_FALSE(self.reader.workspaceOwned(wrong));
+      EXPECT_FALSE(self.reader.acquireWorkspace(self.offer.session));
+      EXPECT_FALSE(self.reader.releaseWorkspace(wrong));
+      EXPECT_TRUE(self.reader.requestBuffer().empty());
+      EXPECT_EQ(self.reader.process(48, {context, dispatch}).result, WifiMessageResult::Busy);
+      std::fill(self.workspace.begin(), self.workspace.end(), 85);
+      EXPECT_FALSE(self.reader.begin(self.offer, self.offer.reader, self.offer.storageGeneration,
+                                     self.offer.installation, self.offer.transaction, self.workspace, 0,
+                                     {context, clock}));
+      if (self.mode == 7) self.reader.end();
+      if (self.mode == 8) {
+        self.now += 30000;
+        EXPECT_FALSE(self.reader.workspaceOwned(self.offer.session));
+        EXPECT_FALSE(self.reader.pollDeadline());
+      }
+      if (self.mode == 7 || self.mode == 8) {
+        EXPECT_FALSE(self.reader.workspaceOwned(self.offer.session));
+        EXPECT_TRUE(std::all_of(self.workspace.begin(), self.workspace.end(), [](uint8_t b) { return b == 85; }));
+      }
+      if (self.mode == 9) return {request.command, 0};
+      EXPECT_TRUE(self.reader.releaseWorkspace(self.offer.session));
+      EXPECT_FALSE(self.reader.workspaceOwned(self.offer.session));
+      EXPECT_FALSE(self.reader.releaseWorkspace(self.offer.session));
+      if (self.mode == 7 || self.mode == 8) {
+        EXPECT_TRUE(std::all_of(self.workspace.begin(), self.workspace.begin() + TRANSFER_OFFSET,
+                                [](uint8_t b) { return b == 0; }));
+        return {request.command, 0};
+      }
     }
     payload[0] = 0;
     payload[1] = 8;
@@ -230,4 +265,60 @@ TEST(HalCompanionWifiMessagesTest, ReplayCannotDispatchAgainAndMaximumChunkFitsW
   EXPECT_EQ(fixture.process(length).result, WifiMessageResult::InvalidMessage);
   EXPECT_EQ(fixture.calls, 1u);
   fixture.checkCleared();
+}
+
+TEST(HalCompanionWifiMessagesTest, FullWorkspaceLeaseIsDispatchBoundAndRepliesSurviveReusingRequestBytes) {
+  Fixture fixture;
+  ASSERT_TRUE(fixture.begin());
+  EXPECT_FALSE(fixture.reader.acquireWorkspace(fixture.offer.session));
+  EXPECT_FALSE(fixture.reader.workspaceOwned(fixture.offer.session));
+  EXPECT_FALSE(fixture.reader.releaseWorkspace(fixture.offer.session));
+  fixture.mode = 6;
+  const auto reply = fixture.process(fixture.request());
+  ASSERT_EQ(reply.result, WifiMessageResult::Ok);
+  EXPECT_EQ(fixture.calls, 1u);
+  EXPECT_FALSE(fixture.reader.workspaceOwned(fixture.offer.session));
+  EXPECT_FALSE(fixture.reader.acquireWorkspace(fixture.offer.session));
+  std::array<uint8_t, HalCompanionWifiCipher::MAX_PAYLOAD> plain{};
+  size_t length = 0;
+  ASSERT_EQ(fixture.apple.open(reply.bytes, plain, length), WifiCipherResult::Ok);
+  FrameView response;
+  ASSERT_EQ(decodeFrame(std::span(plain).first(length), true, response), FrameError::None);
+  EXPECT_EQ(response.command, Command::TransferStatus);
+  EXPECT_EQ(response.requestId, 19u);
+  ASSERT_EQ(response.payload.size(), 2u);
+  EXPECT_EQ(response.payload[1], 8u);
+  EXPECT_TRUE(std::all_of(fixture.workspace.begin() + TRANSFER_OFFSET, fixture.workspace.end(),
+                          [](uint8_t b) { return b == 85; }));
+}
+
+TEST(HalCompanionWifiMessagesTest, TeardownAndExpiryRevokePermissionWithoutClearingLoanedBytes) {
+  for (const unsigned mode : {7u, 8u}) {
+    SCOPED_TRACE(mode);
+    Fixture fixture;
+    ASSERT_TRUE(fixture.begin());
+    fixture.mode = mode;
+    EXPECT_EQ(fixture.process(fixture.request()).result, WifiMessageResult::Inactive);
+    EXPECT_FALSE(fixture.reader.workspaceOwned(fixture.offer.session));
+    EXPECT_FALSE(fixture.reader.releaseWorkspace(fixture.offer.session));
+    EXPECT_TRUE(fixture.reader.requestBuffer().empty());
+    EXPECT_TRUE(std::all_of(fixture.workspace.begin(), fixture.workspace.begin() + TRANSFER_OFFSET,
+                            [](uint8_t b) { return b == 0; }));
+    EXPECT_TRUE(std::all_of(fixture.workspace.begin() + TRANSFER_OFFSET, fixture.workspace.end(),
+                            [](uint8_t b) { return b == 85; }));
+  }
+}
+
+TEST(HalCompanionWifiMessagesTest, AnUnreleasedDispatchLoanEndsTheSessionBeforeEncoding) {
+  Fixture fixture;
+  ASSERT_TRUE(fixture.begin());
+  fixture.mode = 9;
+  const auto reply = fixture.process(fixture.request());
+  EXPECT_EQ(reply.result, WifiMessageResult::DispatchError);
+  EXPECT_TRUE(reply.bytes.empty());
+  EXPECT_FALSE(fixture.reader.workspaceOwned(fixture.offer.session));
+  EXPECT_FALSE(fixture.reader.releaseWorkspace(fixture.offer.session));
+  EXPECT_TRUE(fixture.reader.requestBuffer().empty());
+  EXPECT_TRUE(std::all_of(fixture.workspace.begin(), fixture.workspace.begin() + TRANSFER_OFFSET,
+                          [](uint8_t b) { return b == 0; }));
 }

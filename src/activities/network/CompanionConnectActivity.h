@@ -12,6 +12,7 @@
 #include <HalContentReadNativeOwner.h>
 #include <HalDictionaryRemovalNativeOwner.h>
 #if LILA_TINTA
+#include <CompanionCourseBaselineImportRequest.h>
 #include <HalCourseBaselineReviewStore.h>
 #include <HalCourseRemovalNativeOwner.h>
 #endif
@@ -45,10 +46,10 @@ class CompanionConnectActivity final : public Activity {
     return firmwareInstallPending || ready || recoveryBlocked || inventoryPending || wifiPhase != WifiPhase::None;
   }
   bool requiresExclusiveStorageLoop() const override {
-    return firmwareInstallPending || recoveryBlocked || inventoryPending || removalActive || baselineReviewActive;
+    return firmwareInstallPending || recoveryBlocked || inventoryPending || removalActive || baselineWorkspaceActive;
   }
   bool handleHomeGesture() override {
-    return firmwareInstallPending || recoveryBlocked || inventoryPending || baselineReviewActive ||
+    return firmwareInstallPending || recoveryBlocked || inventoryPending || baselineWorkspaceActive ||
            wifiRadio.ownsResources();
   }
 
@@ -89,6 +90,13 @@ class CompanionConnectActivity final : public Activity {
   size_t contentReadReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t contentHandoffReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
   size_t courseContextReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+  size_t courseBaselineBeginReply(bool authorized, std::span<const uint8_t> request, std::span<uint8_t> reply);
+#if LILA_TINTA
+  companion::TransferResult runBaselineTransfer(const companion::CourseBaselineImportRequest* request,
+                                                const companion::Identity* transaction);
+  size_t baselineCommitReply(std::span<const uint8_t> request, std::span<uint8_t> reply);
+  bool baselineTransferPermitted() const;
+#endif
   size_t courseBaselineReviewReply(bool authorized, uint64_t session, std::span<const uint8_t> request,
                                    companion::Command& command, std::span<uint8_t> reply);
   bool closeContentReaders();
@@ -114,7 +122,7 @@ class CompanionConnectActivity final : public Activity {
   std::unique_ptr<companion::HalEpubRemovalNativeOwner> removalOwner;
   std::unique_ptr<companion::HalContentReadNativeOwner> contentReader;
   bool removalActive = false;
-  bool baselineReviewActive = false;
+  bool baselineWorkspaceActive = false;
   companion::HalIdentityStorage identityStorage;
   companion::IdentityState identity;
   companion::HalTransferStorage transferStorage;

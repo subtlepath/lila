@@ -4520,6 +4520,126 @@
           }
         }
       }
+    },
+    "Learning files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning files"
+          }
+        }
+      }
+    },
+    "Learning files could not be reviewed. Reconnect the reader and try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learning files could not be reviewed. Reconnect the reader and try again."
+          }
+        }
+      }
+    },
+    "Missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missing"
+          }
+        }
+      }
+    },
+    "Present": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Present"
+          }
+        }
+      }
+    },
+    "Reader learning review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader learning review"
+          }
+        }
+      }
+    },
+    "Reader review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reader review"
+          }
+        }
+      }
+    },
+    "Reading learning files…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading learning files…"
+          }
+        }
+      }
+    },
+    "Refresh reader review": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh reader review"
+          }
+        }
+      }
+    },
+    "Review connected reader’s learning files": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review connected reader’s learning files"
+          }
+        }
+      }
+    },
+    "Review hash": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review hash"
+          }
+        }
+      }
+    },
+    "Storage generation": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage generation"
+          }
+        }
+      }
+    },
+    "This review records the reader’s files at one moment. Confirming the original pack and checking learning history are required before installation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This review records the reader’s files at one moment. Confirming the original pack and checking learning history are required before installation."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

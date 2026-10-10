@@ -199,6 +199,58 @@ final class CourseBaselineConfirmationTests: XCTestCase, @unchecked Sendable {
         XCTAssertNotNil(saved)
     }
 
+    func testBaselineDeclarationRequiresConsentAndSurvivesRestartWithoutChangingRole() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let f = try await setup(root)
+        let object = try await f.vault.verifiedObject(f.job.content)
+        do {
+            _ = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length)
+            XCTFail("Expected missing consent refusal")
+        } catch StoreError.invalidTransition { }
+        let consent = try await f.library.confirmCourseBaselineImport(f.job.id, review: f.review)
+        do {
+            _ = try await f.library.prepareTransferDeclaration(f.job.id, verifiedLength: object.length)
+            XCTFail("Expected ordinary declaration refusal")
+        } catch StoreError.invalidTransition { }
+        do {
+            _ = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length + 1)
+            XCTFail("Expected length refusal")
+        } catch VaultError.integrity { }
+        let declaration = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length)
+        XCTAssertTrue(consent.matches(generation: f.job.storageGeneration, owner: f.job.installation,
+            reviewed: f.review.hash, transfer: declaration))
+        let reopened = try LibraryStore(url: f.database)
+        let retained = try await reopened.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length)
+        XCTAssertEqual(retained, declaration)
+        try await reopened.checkpoint(f.job.id, offset: 1, phase: .transferring)
+        try await reopened.checkpoint(f.job.id, offset: 1, phase: .paused)
+        let resumed = try await reopened.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length)
+        XCTAssertEqual(resumed, declaration)
+        do {
+            _ = try await reopened.prepareTransferDeclaration(f.job.id, verifiedLength: object.length)
+            XCTFail("Expected durable role refusal")
+        } catch StoreError.invalidTransition { }
+    }
+
+    func testDeletedOrAbortedBaselineCannotPrepareDeclaration() async throws {
+        for aborted in [false, true] {
+            let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let f = try await setup(root)
+            let object = try await f.vault.verifiedObject(f.job.content)
+            _ = try await f.library.confirmCourseBaselineImport(f.job.id, review: f.review)
+            if aborted { try await f.library.checkpoint(f.job.id, offset: 0, phase: .aborted) }
+            else { _ = try await f.library.deleteLibraryContent(f.job.content) }
+            do {
+                _ = try await f.library.prepareCourseBaselineDeclaration(f.job.id, verifiedLength: object.length)
+                XCTFail("Expected unusable job refusal")
+            } catch is StoreError { }
+            let declaration = try await f.library.retainedTransferDeclaration(f.job.id)
+            XCTAssertNil(declaration)
+        }
+    }
+
     func testOrdinaryRunnerCannotSendBaselineJobAsNormalCourseTransfer() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }

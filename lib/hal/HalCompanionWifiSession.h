@@ -19,6 +19,9 @@ class HalCompanionWifiSession final {
   bool poll();
   void end();
   bool isActive() const { return active; }
+  bool acquireWorkspace(const Identity& session) { return active && polling && messages.acquireWorkspace(session); }
+  bool workspaceOwned(const Identity& session) const { return active && polling && messages.workspaceOwned(session); }
+  bool releaseWorkspace(const Identity& session) { return messages.releaseWorkspace(session); }
 
  private:
   HalCompanionWifiMessages messages;

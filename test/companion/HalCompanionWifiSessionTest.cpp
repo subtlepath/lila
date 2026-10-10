@@ -27,6 +27,8 @@ struct Fixture {
   std::array<uint8_t, SESSION_WORKSPACE_SIZE> workspace;
   uint64_t now = 0;
   bool cancelOnClock = false, reenterOnClock = false;
+  bool endDuringLoan = false;
+  unsigned loanCalls = 0;
   HalCompanionWifiSession session;
   Fixture() {
     starts = stops = failure = wifiDiscoveryErrors = 0;
@@ -54,7 +56,21 @@ struct Fixture {
                             }
                             return fixture.now;
                           }},
-                         {nullptr, [](void*, const FrameView&, const Identity&, std::span<uint8_t>) {
+                         {this, [](void* context, const FrameView& request, const Identity&, std::span<uint8_t>) {
+                            auto& fixture = *static_cast<Fixture*>(context);
+                            if (fixture.endDuringLoan) {
+                              ++fixture.loanCalls;
+                              EXPECT_TRUE(fixture.session.acquireWorkspace(fixture.offer.session));
+                              EXPECT_TRUE(fixture.session.workspaceOwned(fixture.offer.session));
+                              fixture.workspace.fill(85);
+                              fixture.session.end();
+                              EXPECT_FALSE(fixture.session.workspaceOwned(fixture.offer.session));
+                              EXPECT_TRUE(std::all_of(fixture.workspace.begin(), fixture.workspace.end(),
+                                                      [](uint8_t b) { return b == 85; }));
+                              EXPECT_TRUE(fixture.session.releaseWorkspace(fixture.offer.session));
+                              EXPECT_FALSE(fixture.session.releaseWorkspace(fixture.offer.session));
+                              return WifiDispatchReply{request.command, 0};
+                            }
                             return WifiDispatchReply{Command::Error, 0};
                           }});
   }
@@ -188,5 +204,41 @@ TEST(HalCompanionWifiSessionTest, UnauthenticatedHttpMessageEndsWholeSession) {
   EXPECT_EQ(stops, 1u);
   EXPECT_TRUE(std::all_of(fixture.workspace.begin(), fixture.workspace.begin() + TRANSFER_OFFSET,
                           [](uint8_t byte) { return byte == 0; }));
+  ::close(client);
+}
+
+TEST(HalCompanionWifiSessionTest, EndDuringAuthenticatedDispatchDefersClearingUntilWorkspaceRelease) {
+  Fixture fixture;
+  fixture.endDuringLoan = true;
+  ASSERT_TRUE(fixture.begin());
+  EXPECT_FALSE(fixture.session.acquireWorkspace(fixture.offer.session));
+  HalCompanionWifiCipher apple;
+  ASSERT_TRUE(apple.begin(fixture.offer.key, fixture.offer.session, WifiMessageDirection::AppleToReader));
+  std::array<uint8_t, 128> plain{};
+  const auto frameLength = encodeFrame({Command::Commit, false, 19, fixture.offer.transaction}, plain);
+  std::array<uint8_t, HalCompanionWifiMessages::MAX_MESSAGE_SIZE> wire{};
+  size_t wireLength = 0;
+  ASSERT_EQ(apple.seal(std::span(plain).first(frameLength), wire, wireLength), WifiCipherResult::Ok);
+  const int client = ::socket(AF_INET, SOCK_STREAM, 0);
+  sockaddr_in address{};
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  address.sin_port = htons(fixture.offer.port);
+  ASSERT_EQ(::connect(client, reinterpret_cast<sockaddr*>(&address), sizeof(address)), 0);
+  auto request = std::string(
+                     "POST /companion/v1/messages HTTP/1.1\r\nHost: reader\r\nContent-Type: "
+                     "application/octet-stream\r\nContent-Length: ") +
+                 std::to_string(wireLength) + "\r\n\r\n";
+  request.append(reinterpret_cast<const char*>(wire.data()), wireLength);
+  ASSERT_EQ(::send(client, request.data(), request.size(), 0), static_cast<ssize_t>(request.size()));
+  for (unsigned attempt = 0; attempt < 10 && fixture.session.isActive(); ++attempt) fixture.session.poll();
+  EXPECT_EQ(fixture.loanCalls, 1u);
+  EXPECT_FALSE(fixture.session.isActive());
+  EXPECT_FALSE(fixture.session.workspaceOwned(fixture.offer.session));
+  EXPECT_TRUE(std::all_of(fixture.workspace.begin(), fixture.workspace.begin() + TRANSFER_OFFSET,
+                          [](uint8_t b) { return b == 0; }));
+  EXPECT_TRUE(std::all_of(fixture.workspace.begin() + TRANSFER_OFFSET, fixture.workspace.end(),
+                          [](uint8_t b) { return b == 85; }));
+  EXPECT_EQ(stops, 1u);
   ::close(client);
 }

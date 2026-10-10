@@ -37,6 +37,30 @@ private actor BaselineReviewWire: CompanionTransport {
     }
 }
 
+private actor SuspendedBaselineReviewWire: CompanionTransport {
+    let wire: BaselineReviewWire
+    private var pending: CheckedContinuation<ControlFrame, Never>?
+    private var response: ControlFrame?
+    private var observer: CheckedContinuation<Void, Never>?
+    init(_ review: CourseBaselineReview) { wire = BaselineReviewWire(review) }
+    func exchange(_ frame: ControlFrame) async throws -> ControlFrame {
+        response = try await wire.exchange(frame)
+        return await withCheckedContinuation { continuation in
+            pending = continuation
+            observer?.resume(); observer = nil
+        }
+    }
+    func waitForRequest() async {
+        if pending != nil { return }
+        await withCheckedContinuation { observer = $0 }
+    }
+    func deliver() {
+        guard let pending, let response else { return }
+        self.pending = nil; self.response = nil
+        pending.resume(returning: response)
+    }
+}
+
 final class CourseBaselineReviewCollectorTests: XCTestCase {
     private func review() throws -> CourseBaselineReview {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
@@ -78,6 +102,30 @@ final class CourseBaselineReviewCollectorTests: XCTestCase {
             XCTFail("Expected disconnection")
         } catch { XCTAssertEqual((error as? URLError)?.code, .networkConnectionLost) }
         let recovered = try await collector.collect(device: device(expected), transport: BaselineReviewWire(expected),
+                                                     course: expected.course)
+        XCTAssertEqual(recovered, expected)
+    }
+    func testCancellationOfInFlightPageReleasesCollectorWithoutIssuingNextPage() async throws {
+        let expected = try review(), descriptor = try device(expected)
+        let collector = CourseBaselineReviewCollector(), suspended = SuspendedBaselineReviewWire(expected)
+        let task = Task {
+            try await collector.collect(device: descriptor, transport: suspended, course: expected.course, pageLimit: 97)
+        }
+        await suspended.waitForRequest()
+        do {
+            _ = try await collector.collect(device: descriptor, transport: BaselineReviewWire(expected),
+                                            course: expected.course)
+            XCTFail("Expected active collection refusal")
+        } catch { XCTAssertEqual(error as? CourseBaselineReviewCollectionError, .busy) }
+        task.cancel()
+        await suspended.deliver()
+        do {
+            _ = try await task.value
+            XCTFail("Expected cancellation")
+        } catch { XCTAssertTrue(error is CancellationError) }
+        let requests = await suspended.wire.requests
+        XCTAssertEqual(requests.count, 1)
+        let recovered = try await collector.collect(device: descriptor, transport: BaselineReviewWire(expected),
                                                      course: expected.course)
         XCTAssertEqual(recovered, expected)
     }
