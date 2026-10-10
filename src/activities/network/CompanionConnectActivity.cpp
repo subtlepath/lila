@@ -222,6 +222,32 @@ void CompanionConnectActivity::onEnter() {
     }
     context.reset();
     if (present) {
+      uint64_t length = 0;
+      const auto active = transferStorage.stat(companion::ACTIVE_COURSE_PATH, length);
+      if (active == companion::FileStatus::Missing) {
+        // Retained proof/cache owners exceed the task stack; release before radios start.
+        if (!companion::admitCompanionHeap(sizeof(companion::HalRemovedCourseBaseline),
+                                           sizeof(companion::HalRemovedCourseBaseline))) {
+          LOG_ERR("COMPANION", "Removed course startup heap admission failed");
+          recoveryBlocked = true;
+          return;
+        }
+        auto removed = makeUniqueNoThrow<companion::HalRemovedCourseBaseline>(
+            identity.storageGeneration, std::span(workspace.get(), companion::SESSION_WORKSPACE_SIZE),
+            [](void*) { return Storage.ready() && companion::admitCompanionHeap(); }, nullptr);
+        if (!removed || !removed->verifyCurrentRemovedCourse(course)) {
+          LOG_ERR("COMPANION", "Removed course startup proof unavailable");
+          recoveryBlocked = true;
+          return;
+        }
+        present = false;
+      } else if (active != companion::FileStatus::Present) {
+        LOG_ERR("COMPANION", "Active course startup lookup failed");
+        recoveryBlocked = true;
+        return;
+      }
+    }
+    if (present) {
       if (!companion::recoverBoundTintaDerivedPublication(course)) {
         LOG_ERR("COMPANION", "Learner publication startup recovery failed");
         recoveryBlocked = true;
@@ -792,7 +818,7 @@ size_t CompanionConnectActivity::courseRemovalReply(const companion::Identity& o
         [](void* opaque) { return static_cast<CompanionConnectActivity*>(opaque)->removalPermitted(); },
         [](void* opaque) {
           auto& activity = *static_cast<CompanionConnectActivity*>(opaque);
-          if (!activity.courseRemovalOwner->closeReaders()) {
+          if (!activity.courseRemovalOwner->finishCompleted()) {
             activity.recoveryBlocked = true;
             return false;
           }
@@ -1661,6 +1687,7 @@ void CompanionConnectActivity::processFrame() {
 #if LILA_TINTA
     descriptor.capabilities |= companion::CAPABILITY_COURSE_TRANSFERS | companion::CAPABILITY_COURSE_SWITCHES;
     descriptor.capabilities |= companion::CAPABILITY_COURSE_BASELINE_REVIEWS;
+    descriptor.capabilities |= companion::CAPABILITY_COURSE_CONTEXTS | companion::CAPABILITY_COURSE_REMOVALS;
     if (journalExport) descriptor.capabilities |= companion::CAPABILITY_JOURNAL_MERGE_READINESS;
 #endif
     length = companion::encodeRecord(descriptor, payload);

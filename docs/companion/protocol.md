@@ -880,6 +880,16 @@ still pending for the capability-enabled implementation.
 
 ## Bound-course context
 
+Tinta-enabled readers advertise bound-course context with capability bit 15 and
+course removal with bit 18. Course removal also requires course-transfer support
+(bit 1). The app admits a course-removal job only with all three capabilities,
+an exact complete inventory entry, and nonzero course identity. Removal retains
+that course's scoped learner state, authoritative events, and the companion
+library copy. A verified completion receipt releases the removal journal before
+inventory refresh, allowing the retained context to be queried in the same
+connection. Startup verifies the removed pack cache, receipt, and state isolation
+before admitting a new connection without an installed active pack.
+
 Command 19 requires installation authentication on BLE or the current encrypted
 Wi-Fi lease. Its BLE request is exactly 20 bytes: `LCQ`, binary version 1, and
 nonzero card generation (16 bytes). Wi-Fi prefixes the same body with the lease's

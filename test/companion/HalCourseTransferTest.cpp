@@ -1131,14 +1131,77 @@ TEST_F(HalCourseTransferTest, CourseContextRequiresCompletedVerifiedRemovedSourc
   EXPECT_FALSE(owner.path());
   EXPECT_EQ(hal.files, corrupt);
 }
-TEST_F(HalCourseTransferTest, NativeCourseOwnerUsesRealPreparationAndCompletedRetrySkipsLiveInventory) {
+TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcrossRemovalAndRetry) {
   auto& hal = inventory_hal_test::state;
   hal.files[ACTIVE_COURSE_PATH] = bytes;
-  hal.files["/tinta/items.bin"] = {17};
   std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
   ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
   hal.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
   ASSERT_TRUE(storage.prepare());
+  class Snapshots final : public IdentityStorage {
+   public:
+    uint8_t next = 7;
+    bool hardwareIdentity(Identity&) override { return false; }
+    bool cardIdentity(Identity&) override { return false; }
+    IdentityRead readBinding(std::span<uint8_t>) override { return IdentityRead::Error; }
+    bool writeBinding(std::span<const uint8_t>) override { return false; }
+    IdentityRead readMarker(Identity&) override { return IdentityRead::Error; }
+    bool createMarker(const Identity&) override { return false; }
+    bool randomIdentity(Identity& output) override {
+      output.fill(next++);
+      return true;
+    }
+  } snapshots;
+  {
+    HalTintaJournalMergeCommitContext baseline;
+    ASSERT_TRUE(baseline.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  }
+  uint32_t uid = 0;
+  {
+    HalInventoryIndexStorage packStorage;
+    ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
+    StoredCourseSource source(packStorage);
+    ASSERT_TRUE(source.attach());
+    tinta::core::pack::Pack pack;
+    ASSERT_EQ(validateCourseCandidate(pack, source, scratch), CourseValidationResult::Ok);
+    uid = pack.uidAt(0);
+    ASSERT_NE(uid, 0u);
+    pack.close();
+  }
+  {
+    HalTintaJournalStorage journalStorage;
+    std::array<uint8_t, TintaJournal::EXTENDED_RECORD_SIZE> journalScratch{};
+    TintaJournal journal(journalStorage, journalScratch);
+    ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+    TintaBody body;
+    body.kind = EventKind::Star;
+    body.course = declaration.manifest.logicalIdentity;
+    body.uid = uid;
+    body.enabled = true;
+    std::array<uint8_t, MAX_TINTA_BODY_SIZE> encoded{};
+    const auto length = encodeTintaBody(body, encoded);
+    SyncEvent event;
+    event.identity.origin.fill(5);
+    event.identity.epoch = event.identity.sequence = 1;
+    event.storageGeneration = generation;
+    event.resource = declaration.manifest.contentHash;
+    event.kind = body.kind;
+    ASSERT_TRUE(journalStorage.digest(std::span(encoded).first(length), event.bodyHash));
+    ASSERT_EQ(journal.append(event, std::span(encoded).first(length)), TintaJournalResult::Ok);
+  }
+  {
+    HalTintaJournalMergeCommitContext baseline;
+    ASSERT_TRUE(baseline.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  }
+  std::array<char, COURSE_STATE_DIRECTORY_SIZE> learnerDirectory{};
+  ASSERT_TRUE(courseStateDirectory(declaration.manifest.logicalIdentity, learnerDirectory));
+  std::map<std::string, std::vector<uint8_t>> authority;
+  for (const auto& [path, content] : hal.files) {
+    if (path.starts_with(learnerDirectory.data()) || path.starts_with(TINTA_JOURNAL_DIRECTORY))
+      authority.emplace(path, content);
+  }
+  ASSERT_FALSE(authority.empty());
+  ASSERT_TRUE(authority.contains(TINTA_JOURNAL_EVENTS));
   std::vector<uint8_t> paths(INVENTORY_INDEX_HEADER_SIZE + INVENTORY_PATH_MAX_RECORD);
   const auto pathSize = encodeInventoryPath(declaration.manifest, ACTIVE_COURSE_PATH,
                                             std::span(paths).subspan(INVENTORY_INDEX_HEADER_SIZE));
@@ -1209,14 +1272,52 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerUsesRealPreparationAndCompletedRe
   EXPECT_FALSE(hal.files.contains("/tinta/items.bin"));
   std::array<char, COURSE_STATE_PATH_SIZE> scoped{};
   ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", scoped));
-  EXPECT_EQ(hal.files.at(scoped.data()), std::vector<uint8_t>({17}));
+  ASSERT_TRUE(authority.contains(scoped.data()));
+  for (const auto& [path, content] : authority) {
+    ASSERT_TRUE(hal.files.contains(path)) << path;
+    EXPECT_EQ(hal.files.at(path), content) << path;
+  }
+  ASSERT_TRUE(owner.finishCompleted());
+  HalRemovedCourseBaseline removed(generation, scratch, Context::permitted, &context);
+  ContentManifest retained;
+  auto source = CourseContextSource::None;
+  ASSERT_EQ(removed.inspectCurrentCourse(retained, source), CourseContextResult::Ok);
+  EXPECT_EQ(retained, declaration.manifest);
+  EXPECT_EQ(source, CourseContextSource::Removed);
+  ASSERT_TRUE(removed.verifyCurrentRemovedCourse(declaration.manifest.logicalIdentity));
+  auto foreignCourse = declaration.manifest.logicalIdentity;
+  foreignCourse[0] ^= 1;
+  EXPECT_FALSE(removed.verifyCurrentRemovedCourse(foreignCourse));
+  const auto retainedFiles = hal.files;
+  ASSERT_TRUE(removed.verifyCurrentRemovedCourse(declaration.manifest.logicalIdentity));
+  EXPECT_EQ(hal.files, retainedFiles);
   context.inventoryReady = false;
   hal.files.at(InventoryPublication::PATHS)[0] ^= 1;
   const auto completed = hal.files;
   EXPECT_EQ(owner.handle(true, request.owner, command, reply), reply.size());
   EXPECT_EQ(reply[0], static_cast<uint8_t>(ContentRemovalResult::Ok));
+  ASSERT_TRUE(owner.finishCompleted());
   EXPECT_EQ(context.preparations, 1u);
   EXPECT_EQ(hal.files, completed);
+  ASSERT_TRUE(owner.closeReaders());
+  ASSERT_TRUE(removed.closeReaders());
+  hal.files.at(InventoryPublication::PATHS)[0] ^= 1;
+  Transfer reinstall(storage, scratch);
+  receive(reinstall);
+  ASSERT_FALSE(HasFatalFailure());
+  ASSERT_EQ(reinstall.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  EXPECT_EQ(hal.files.at(ACTIVE_COURSE_PATH), bytes);
+  EXPECT_FALSE(hal.files.contains(COURSE_REMOVAL_PROOF_PATH));
+  for (const auto& [path, content] : authority) {
+    ASSERT_TRUE(hal.files.contains(path)) << path;
+    EXPECT_EQ(hal.files.at(path), content) << path;
+  }
+  ASSERT_EQ(removed.inspectCurrentCourse(retained, source), CourseContextResult::Ok);
+  EXPECT_EQ(source, CourseContextSource::Live);
+  ASSERT_TRUE(removed.closeReaders());
+  HalTintaJournalMergeCommitContext restored;
+  ASSERT_TRUE(restored.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  for (const auto& [path, content] : authority) EXPECT_EQ(hal.files.at(path), content) << path;
 }
 TEST_F(HalCourseTransferTest, NativeRemovalPreparationValidatesPackBeforeIsolatingLegacyState) {
   auto& hal = inventory_hal_test::state;

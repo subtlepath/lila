@@ -126,3 +126,39 @@ TEST(ContentRemovalTransactions, ReceiptPersistenceAndReleaseFailuresRecoverWith
     EXPECT_EQ(session.participant.mutations, 6);
   }
 }
+
+TEST(ContentRemovalTransactions, CompletedSessionReleaseRetriesWithoutRepeatingParticipantOrLosingReceipt) {
+  for (const bool afterEffect : {false, true}) {
+    auto& state = inventory_hal_test::state;
+    state = {};
+    Session session;
+    const auto request = initial();
+    ASSERT_EQ(session.transactions.remove(request), ContentRemovalJournalResult::Ok);
+    const auto receipt = state.files.at(receiptPath(1));
+    session.participant.deny = true;
+    state.failRemove = !afterEffect;
+    state.failRemoveAfter = afterEffect;
+    EXPECT_EQ(session.transactions.finishCompleted(), ContentRemovalJournalResult::IoError);
+    state.failRemove = state.failRemoveAfter = false;
+    Session reopened;
+    ContentRemovalRecord completed;
+    ASSERT_EQ(reopened.transactions.lookup(request.request, completed), CompletedRemovalResult::Ok);
+    ASSERT_EQ(reopened.transactions.finishCompleted(), ContentRemovalJournalResult::Ok);
+    EXPECT_EQ(reopened.journal.recover(request.request.generation), ContentRemovalJournalResult::Missing);
+    EXPECT_EQ(state.files.at(receiptPath(1)), receipt);
+    EXPECT_EQ(reopened.participant.mutations, 0u);
+    EXPECT_EQ(reopened.transactions.finishCompleted(), ContentRemovalJournalResult::Ok);
+  }
+}
+TEST(ContentRemovalTransactions, CompletionReleaseRefusesAnotherPendingJournalOwner) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  Session session;
+  const auto a = initial(), b = initial(2);
+  ASSERT_EQ(session.transactions.remove(a), ContentRemovalJournalResult::Ok);
+  ASSERT_EQ(session.transactions.finishCompleted(), ContentRemovalJournalResult::Ok);
+  ASSERT_EQ(session.journal.begin(b), ContentRemovalJournalResult::Ok);
+  const auto before = state.files;
+  EXPECT_EQ(session.transactions.finishCompleted(), ContentRemovalJournalResult::Conflict);
+  EXPECT_EQ(state.files, before);
+}

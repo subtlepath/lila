@@ -53,6 +53,11 @@ class HalRemovedCourseBaseline final {
     ready = true;
     return true;
   }
+  bool verifyCurrentRemovedCourse(const Identity& course) {
+    auto source = CourseContextSource::None;
+    return inspectCurrentCourse(binding, source) == CourseContextResult::Ok && source == CourseContextSource::Removed &&
+           binding.logicalIdentity == course;
+  }
   CourseContextResult inspectCurrentCourse(ContentManifest& output, CourseContextSource& source) {
     ready = false;
     if (!closeReaders() || !guard() || generation == Identity{} || io.size() < COURSE_BINDING_SIZE)

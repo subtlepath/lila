@@ -8,19 +8,22 @@ Run only capabilities advertised by the tested firmware; source presence does
 not establish availability on every board. Do not mark unsupported flows passed.
 
 The descriptor in src/activities/network/CompanionConnectActivity.cpp advertises
-dictionary transfers when its concrete installer is attached and EPUB removal.
+dictionary transfers when its concrete installer is attached, supported content
+removals, and bound-course context/removal when Tinta is enabled.
 Native Apple and physical acceptance remain part of full-plan completion. Declared Begin dispatch now admits bitmap fonts through
 the same destination validator used during installation, restricts vector fonts to
 PSRAM boards, and admits format-1 dictionaries only at their hash-scoped destination.
 Command-handler regressions cover valid requests and invalid paths without mutation;
 these host checks do not establish physical transfer acceptance.
-The Sticky profile excludes Tinta because it lacks layouts (platformio.ini:291), so its successful build does not validate course
-installation/switching or learner-state integration. These gaps must be resolved
-and verified, rather than treated as hardware passes or waived requirements.
+The Sticky profile excludes Tinta because it lacks layouts (platformio.ini:291),
+so its build does not validate course installation/switching or learner state.
+Use a Tinta-enabled X4 Pro or X4 Classic for the S3 learning-history checks
+(platformio.ini:343 onward). Run the remaining advertised companion flows on
+Sticky separately; unsupported Tinta flows are not hardware passes.
 
 ## Equipment and evidence
 
-Use an X4/C3 without PSRAM and a Sticky/S3, a physical iPhone/iPad running iOS 18
+Use an X4/C3 without PSRAM and a Tinta-enabled X4 Pro or X4 Classic/S3, a physical iPhone/iPad running iOS 18
 or later, and a Mac running macOS 15 or later. Use one person's Apple account.
 Keep a spare SD card, copies of original books/course progress, a known-good
 firmware image, and deliberately corrupt/wrong-board images.
@@ -161,6 +164,13 @@ and retained history before and after each attempt.
 - [ ] Apply allowed typography/dictionary/Tinta preferences after installing their
       dependent content. Controls, orientation, refresh, lighting, clocks, and
       credentials remain device-specific.
+- [ ] Replace the selected StarDict bundle through HTTP and WebSocket uploads,
+      then leave the web server. Confirm all writers and Wi-Fi stop before the
+      bundle is validated and its changed hash is journaled once. Repeat the same
+      bundle and confirm no duplicate event. An incomplete bundle or failed SD
+      write/sync/close must not publish a new dictionary identity. Check the
+      `WEBACT` heap log after network teardown and verify a zero-byte WebSocket
+      upload releases the upload slot. Physical results remain pending.
 - [ ] Review the same course offline on both readers, including suspension,
       lesson completion, stars, completed readings, and undo of an exact review.
       Merge reversed arrival orders and duplicates through iPhone, Mac, and
@@ -301,8 +311,8 @@ and S3; command tests and source parsing do not satisfy this acceptance section.
 
 ## Current portable software evidence
 
-The full CompanionKit Linux suite passes 506 tests. The complete configured CTest
-suite passes 1,748 entries. These cover the selected portable implementations,
+The full CompanionKit Linux suite passes 556 tests on Swift 6.0.3. The complete
+configured CTest suite passes 2,040 entries. These cover the selected portable implementations,
 including inventory, persistence, migration, synchronization, transfers, removal,
 export codecs and shared fixtures, source verification, encrypted imports,
 restart/fallback, in-flight deletion, immutable filenames, cancellation, and
@@ -310,8 +320,9 @@ bounded terminal staging cleanup. Native-only Apple SDK branches, SwiftUI
 interaction, CloudKit execution, and physical devices are outside these checks.
 
 Reproduce the Swift checks with `swift test --package-path apple/CompanionKit`.
-Configure/build `test/companion` with CMake and run its CTest suite; the verification
-run uses `/tmp/lila-companion-tests`. Native UI targets and Xcode commands are
+Configure/build the root `test` project with CMake and run its CTest suite:
+`cmake -S test -B build/host`, `cmake --build build/host -j 2`, and
+`ctest --test-dir build/host --output-on-failure -j 2`. Native UI targets and Xcode commands are
 listed in `apple/App/README.md`. Swift source syntax parsing and the localization
 catalog check pass on Linux, but native compilation and UI execution remain
 unverified.
@@ -399,10 +410,10 @@ been recorded.
 - [ ] Record free/largest internal heap, stack watermarks and repeated-session
       memory during font removal, including refused low/fragmented-heap admission.
 
-### Removed-course switch acceptance (pending capability enablement)
+### Removed-course switch acceptance (physical acceptance pending)
 
 These steps remain pending on both C3 and S3, with the iPhone and native Mac app.
-Run them after the course-context/removal capabilities are enabled for acceptance.
+Run them on firmware advertising course-context and course-removal capabilities.
 
 - [ ] Preserve a learning backup, then remove the bound course. Installed content
       omits the pack; authenticated context reports the original identity/hash as

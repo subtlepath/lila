@@ -4740,6 +4740,16 @@
           }
         }
       }
+    },
+    "The companion library copy and this course's learning history are retained. An interrupted removal will resume when you synchronize this reader.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The companion library copy and this course's learning history are retained. An interrupted removal will resume when you synchronize this reader."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

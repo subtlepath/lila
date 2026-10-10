@@ -21,7 +21,20 @@ class HalContentRemovalTransactions final {
   CompletedRemovalResult lookup(const ContentRemovalRequest& request, ContentRemovalRecord& output) {
     if (!validContentRemovalRequest(request)) return CompletedRemovalResult::Invalid;
     if (request.generation != generation) return CompletedRemovalResult::Conflict;
+    expected.request = request;
     return completions.load(request, output);
+  }
+  // Call after successful removal/retry while the session still excludes writers.
+  ContentRemovalJournalResult finishCompleted() {
+    if (!validContentRemovalRequest(expected.request)) return ContentRemovalJournalResult::Invalid;
+    const auto completed = completions.load(expected.request, receipt);
+    if (completed != CompletedRemovalResult::Ok) return map(completed);
+    const auto recovered = journal.recover(generation);
+    if (recovered == ContentRemovalJournalResult::Missing) return ContentRemovalJournalResult::Ok;
+    if (recovered != ContentRemovalJournalResult::Ok) return recovered;
+    if (!journal.current() || journal.current()->request != expected.request)
+      return ContentRemovalJournalResult::Conflict;
+    return map(release.release());
   }
   // Release only a verified completed previous owner before live plan admission.
   ContentRemovalJournalResult prepare(const ContentRemovalRequest& request) {

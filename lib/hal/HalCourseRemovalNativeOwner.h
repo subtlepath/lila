@@ -43,6 +43,7 @@ class HalCourseRemovalNativeOwner final {
     const bool metadataClosed = metadata.closeReaders();
     return sessionClosed && pathsClosed && metadataClosed;
   }
+  bool finishCompleted() { return allowed() && closeReaders() && session.finishCompleted() && allowed(); }
   size_t handle(bool authorized, const Identity& owner, std::span<const uint8_t> request, std::span<uint8_t> reply) {
     return session.handle(authorized, owner, request, reply);
   }

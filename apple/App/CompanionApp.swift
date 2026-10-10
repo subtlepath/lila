@@ -660,7 +660,8 @@ final class CompanionModel {
             }
             do {
                 var currentInventory = inventory
-                if session.device.readerCapabilities.supportsEpubRemoval || session.device.readerCapabilities.supportsFontRemoval {
+                if session.device.readerCapabilities.supportsEpubRemoval || session.device.readerCapabilities.supportsFontRemoval ||
+                    session.device.readerCapabilities.supportsDictionaryRemoval || session.device.readerCapabilities.supportsCourseRemoval {
                     let removals = try await library.pendingRemovalJobs().filter {
                         $0.reader == session.device.identity && $0.request.owner == session.installation &&
                             $0.request.generation == session.device.storageGeneration &&
@@ -2065,7 +2066,9 @@ private struct DevicesView: View {
                     }
                     Button("Cancel", role: .cancel) { removalChoice = nil }
                 } message: {
-                    if removalChoice?.kind == .font {
+                    if removalChoice?.kind == .course {
+                        Text("The companion library copy and this course's learning history are retained. An interrupted removal will resume when you synchronize this reader.")
+                    } else if removalChoice?.kind == .font {
                         Text("The companion library copy is retained. If this font is in use, the reader switches to a built-in font. An interrupted removal will resume when you synchronize this reader.")
                     } else {
                         Text("The companion library copy is retained. An interrupted removal will resume when you synchronize this reader.")

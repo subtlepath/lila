@@ -46,6 +46,14 @@ class HalCourseRemovalSession final {
     const bool planClosed = plans.closeReaders();
     return participantClosed && referenceClosed && planClosed;
   }
+  bool finishCompleted() {
+    if (!prepared || !permitted || !permitted(context) || !closeReaders() ||
+        transactions.finishCompleted() != ContentRemovalJournalResult::Ok || !permitted(context)) {
+      LOG_ERR("COMPANION", "Course removal completion release failed");
+      return false;
+    }
+    return true;
+  }
   size_t handle(bool authorized, const Identity& owner, std::span<const uint8_t> request, std::span<uint8_t> reply) {
     return prepared ? handler.handle(authorized, owner, generation, request, reply) : 0;
   }

@@ -19,6 +19,7 @@ public struct ReaderCapabilities: OptionSet, Equatable, Sendable {
     public static let epubRemovals = ReaderCapabilities(rawValue: 1 << 8)
     public static let fontRemovals = ReaderCapabilities(rawValue: 1 << 13)
     public static let dictionaryRemovals = ReaderCapabilities(rawValue: 1 << 14)
+    public static let courseRemovals = ReaderCapabilities(rawValue: 1 << 18)
     public static let contentReads = ReaderCapabilities(rawValue: 1 << 10)
     public static let contentMetadata = ReaderCapabilities(rawValue: 1 << 11)
     public var supportsContentMetadata: Bool { contains([.contentReads, .contentMetadata]) }
@@ -28,11 +29,13 @@ public struct ReaderCapabilities: OptionSet, Equatable, Sendable {
     public var supportsEpubRemoval: Bool { contains(.epubRemovals) }
     public var supportsFontRemoval: Bool { contains(.fontRemovals) }
     public var supportsDictionaryRemoval: Bool { contains(.dictionaryRemovals) }
+    public var supportsCourseRemoval: Bool { contains([.courseTransfers, .courseContexts, .courseRemovals]) }
     public func supportsRemoval(of kind: ContentKind) -> Bool {
         switch kind {
         case .epub: return supportsEpubRemoval
         case .font: return supportsFontRemoval
         case .dictionary: return supportsDictionaryRemoval
+        case .course: return supportsCourseRemoval
         default: return false
         }
     }

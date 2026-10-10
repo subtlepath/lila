@@ -1,5 +1,10 @@
 import Foundation
 import XCTest
+#if canImport(CryptoKit)
+import CryptoKit
+#else
+import Crypto
+#endif
 @testable import CompanionKit
 
 private enum RemovalFixtureError: Error { case disconnected }
@@ -76,8 +81,8 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
         let bodies = await transport.bodies()
         XCTAssertEqual(bodies, [job.request.encoded, job.request.encoded, job.request.encoded])
     }
-    func testFontAndDictionaryRemovalRequireTheirOwnCapabilityAndRetainDurableJobs() async throws {
-        for (kind, format): (ContentKind, UInt32) in [(.font, 1), (.font, 4), (.dictionary, 1)] {
+    func testContentRemovalRequiresItsOwnCapabilityAndRetainsDurableJobs() async throws {
+        for (kind, format): (ContentKind, UInt32) in [(.font, 1), (.font, 4), (.dictionary, 1), (.course, 1)] {
             let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
             defer { try? FileManager.default.removeItem(at: root) }
             let libraryURL = root.appendingPathComponent("library.sqlite")
@@ -89,10 +94,19 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
             let oldDevice = try DeviceDescriptor(decoding: bytes)
             let owner = Data(repeating: 4, count: 16)
             let manifest = try ContentManifest(content: ContentID(String(repeating: "b", count: 64)), kind: kind,
-                length: 123, formatVersion: format, logicalIdentity: Data(count: 16))
+                length: 123, formatVersion: format, logicalIdentity: kind == .course ? Data(repeating: 9, count: 16) : Data(count: 16))
             let content = LibraryContent(id: manifest.content, kind: kind, length: 123, title: "Family",
                 originalFilename: format == 4 ? "Family_14.cpfont" : "Family.ttf")
             try await library.put(content)
+            let learning: JournalMutation?
+            if kind == .course {
+                let body = try TintaBody(subject: TintaSubject(course: manifest.logicalIdentity, uid: 1), value: .star(true))
+                let event = try SyncEvent(identity: EventIdentity(origin: owner, epoch: 1, sequence: 1),
+                    storageGeneration: oldDevice.storageGeneration, kind: .star,
+                    resource: manifest.content.digest, bodyHash: Data(SHA256.hash(data: body.encoded)))
+                learning = try JournalMutation(event: event, body: body.encoded)
+                _ = try await library.importEvents([learning!])
+            } else { learning = nil }
             let inventory = try ReaderInventory(reader: oldDevice.identity, generation: oldDevice.storageGeneration,
                 contents: [manifest], complete: true)
             let job = try await library.queueRemoval(manifest: manifest, inventory: inventory, installation: owner)
@@ -106,9 +120,31 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
             } catch { XCTAssertEqual(error as? TransferRunnerError, .unsupportedContent) }
             let unsent = await transport.bodies(); XCTAssertTrue(unsent.isEmpty)
             let queued = try await library.removalJob(job.id); XCTAssertEqual(queued, job)
+            if kind == .course {
+                let incomplete: [ReaderCapabilities] = [
+                    [.courseRemovals], [.courseTransfers, .courseRemovals],
+                    [.courseContexts, .courseRemovals], [.courseTransfers, .courseContexts]
+                ]
+                for capabilities in incomplete {
+                    var descriptor = bytes
+                    for offset in 0..<4 { descriptor[35 + offset] = UInt8(truncatingIfNeeded: capabilities.rawValue >> (8 * offset)) }
+                    do {
+                        _ = try await runner.removeContent(job.id, device: DeviceDescriptor(decoding: descriptor),
+                            installation: owner, transport: transport)
+                        XCTFail("Incomplete course capability admitted removal")
+                    } catch { XCTAssertEqual(error as? TransferRunnerError, .unsupportedContent) }
+                }
+                let requests = await transport.bodies()
+                XCTAssertTrue(requests.isEmpty)
+            }
             let reopened = try LibraryStore(url: libraryURL)
             let resumed = TransferRunner(library: reopened, vault: vault)
-            let capability = (kind == .dictionary ? ReaderCapabilities.dictionaryRemovals : ReaderCapabilities.fontRemovals).rawValue
+            let capability: UInt32
+            switch kind {
+            case .course: capability = ReaderCapabilities([.courseTransfers, .courseContexts, .courseRemovals]).rawValue
+            case .dictionary: capability = ReaderCapabilities.dictionaryRemovals.rawValue
+            default: capability = ReaderCapabilities.fontRemovals.rawValue
+            }
             for offset in 0..<4 { bytes[35 + offset] = UInt8(truncatingIfNeeded: capability >> (8 * offset)) }
             let compatible = try DeviceDescriptor(decoding: bytes)
             do {
@@ -121,6 +157,12 @@ final class ContentRemovalRunnerTests: XCTestCase, @unchecked Sendable {
             let retained = try await reopened.content(content.id); XCTAssertEqual(retained, content)
             let selected = try await reopened.isReaderContentSelected(reader: oldDevice.identity, content: content.id)
             XCTAssertFalse(selected)
+            let globallyDeleted = try await reopened.isLibraryContentDeleted(content.id)
+            XCTAssertFalse(globallyDeleted)
+            if let learning {
+                let retainedLearning = try await reopened.storedEvent(learning.event.identity)
+                XCTAssertEqual(retainedLearning, learning)
+            }
         }
     }
 
