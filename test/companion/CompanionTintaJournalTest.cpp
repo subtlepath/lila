@@ -5096,3 +5096,39 @@ TEST(CompanionTintaJournal, ReservedReviewEpochScanPreservesOutputOnCorruptionIo
     }
   }
 }
+
+TEST(CompanionTintaJournal, ReservedEpochBodyVerifierRejectsMismatchAndSkipsOtherOrigins) {
+  Fixture f;
+  const auto reservation = journalEpochReservation(f);
+  ASSERT_EQ(f.journal.open(), TintaJournalResult::Ok);
+  ASSERT_EQ(f.journal.append(f.event, f.body()), TintaJournalResult::Ok);
+  auto foreign = f.event;
+  foreign.identity.origin.fill(9);
+  ASSERT_EQ(f.journal.append(foreign, f.body()), TintaJournalResult::Ok);
+  struct Context {
+    Fixture* fixture;
+    unsigned calls = 0;
+    bool accept = false;
+  } context{&f};
+  auto verify = [](void* raw, const SyncEvent& event, std::span<const uint8_t> body) {
+    auto& state = *static_cast<Context*>(raw);
+    ++state.calls;
+    EXPECT_EQ(event.identity, state.fixture->event.identity);
+    EXPECT_TRUE(std::equal(body.begin(), body.end(), state.fixture->body().begin(), state.fixture->body().end()));
+    return state.accept;
+  };
+  auto permitted = [](void*) { return true; };
+  UnboundCourseReviewEpochUse report;
+  report.matchedEvents = 123;
+  const auto sentinel = report;
+  const auto writes = f.storage.writes;
+  EXPECT_FALSE(inspectUnboundCourseReviewEpochUse(f.journal, reservation, report, permitted, &context, verify));
+  EXPECT_EQ(report, sentinel);
+  EXPECT_EQ(context.calls, 1u);
+  context.accept = true;
+  context.calls = 0;
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, reservation, report, permitted, &context, verify));
+  EXPECT_EQ(context.calls, 1u);
+  EXPECT_EQ(report.matchedEvents, 1u);
+  EXPECT_EQ(f.storage.writes, writes);
+}
