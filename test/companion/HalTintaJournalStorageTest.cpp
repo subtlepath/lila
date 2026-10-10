@@ -45,6 +45,7 @@
 #include "HalTintaReplayItemExport.h"
 #include "HalTintaReplaySession.h"
 #include "HalTintaReplayStore.h"
+#include "HalUnboundCourseReviewJournalInspection.h"
 #include "lib/Tinta/src/core/srs/Bytes.h"
 
 using namespace companion;
@@ -4027,5 +4028,171 @@ TEST(HalTintaJournalStorageTest, ReadOnlyInspectionPreservesCompletePartialAndMi
       EXPECT_EQ(state.files, files);
       EXPECT_EQ(state.directories.size(), directoryCount);
     }
+  }
+}
+
+namespace {
+class ReviewJournalInspectionIdentities final : public IdentityStorage {
+ public:
+  std::array<uint8_t, IDENTITY_RECORD_SIZE> binding{};
+  Identity marker{};
+  bool hasBinding = false;
+  unsigned writes = 0;
+  uint8_t nextRandom = 3;
+  bool hardwareIdentity(Identity& output) override {
+    output.fill(1);
+    return true;
+  }
+  bool cardIdentity(Identity& output) override {
+    output.fill(2);
+    return true;
+  }
+  IdentityRead readBinding(std::span<uint8_t> output) override {
+    if (!hasBinding) return IdentityRead::Missing;
+    std::copy(binding.begin(), binding.end(), output.begin());
+    return IdentityRead::Present;
+  }
+  bool writeBinding(std::span<const uint8_t> input) override {
+    ++writes;
+    std::copy(input.begin(), input.end(), binding.begin());
+    hasBinding = true;
+    return true;
+  }
+  IdentityRead readMarker(Identity& output) override {
+    if (marker == Identity{}) return IdentityRead::Missing;
+    output = marker;
+    return IdentityRead::Present;
+  }
+  bool createMarker(const Identity& input) override {
+    ++writes;
+    marker = input;
+    return true;
+  }
+  bool randomIdentity(Identity& output) override {
+    ++writes;
+    output.fill(nextRandom++);
+    return true;
+  }
+};
+UnboundCourseReviewReservation reviewJournalReservation(const IdentityState& native) {
+  UnboundCourseReviewReservation value;
+  value.intent.reader = native.device;
+  value.intent.request.original.generation = native.storageGeneration;
+  value.intent.request.original.owner.fill(3);
+  value.intent.request.original.transaction.fill(4);
+  value.intent.request.original.reviewHash.fill(5);
+  auto& pack = value.intent.request.original.manifest;
+  pack.kind = ContentKind::Course;
+  pack.formatVersion = 1;
+  pack.length = 100;
+  pack.logicalIdentity.fill(7);
+  pack.contentHash.fill(8);
+  value.intent.activePack = pack;
+  value.epoch = native.eventEpoch;
+  value.records = value.events = 1;
+  return value;
+}
+}  // namespace
+TEST(HalTintaJournalStorageTest, ReservedEpochInspectionRequiresEveryRetainedNamespaceAndNativeContext) {
+  auto& state = inventory_hal_test::state;
+  for (unsigned fault = 0; fault < 12; ++fault) {
+    state = {};
+    state.enumerateFileMap = true;
+    companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+    ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+    ReviewJournalInspectionIdentities identities;
+    IdentityState native;
+    ASSERT_EQ(provisionIdentity(identities, native), IdentityResult::Ok);
+    const auto reservation = reviewJournalReservation(native);
+    std::array<uint8_t, 8192> scratch{};
+    TintaBody body;
+    body.kind = EventKind::Star;
+    body.course.fill(7);
+    body.uid = 1;
+    std::array<uint8_t, MAX_TINTA_BODY_SIZE> bytes{};
+    const auto length = encodeTintaBody(body, bytes);
+    SyncEvent event;
+    event.identity = reservation.first();
+    event.storageGeneration = native.storageGeneration;
+    event.resource.fill(3);
+    event.kind = EventKind::Star;
+    for (const auto location : HalUnboundCourseReviewJournalInspection::LOCATIONS) {
+      if (fault == 1 && location == TintaJournalLocation::Backup) continue;
+      HalTintaJournalStorage writable(location);
+      TintaJournal journal(writable, scratch);
+      ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+      event.storageGeneration = native.storageGeneration;
+      if (fault == 11 && location == TintaJournalLocation::MergeBackup) event.storageGeneration.fill(8);
+      ASSERT_TRUE(writable.digest(std::span(bytes).first(length), event.bodyHash));
+      ASSERT_EQ(journal.append(event, std::span(bytes).first(length)), TintaJournalResult::Ok);
+    }
+    if (fault == 2) state.files[MERGE_BACKUP_TINTA_JOURNAL_PATHS.events].push_back(42);
+    if (fault == 3) state.files[BACKUP_TINTA_JOURNAL_PATHS.events][30] ^= 1;
+    if (fault == 4) identities.marker[0] ^= 1;
+    bool permitted = fault != 5;
+    struct Context {
+      HalUnboundCourseReviewJournalInspection* owner = nullptr;
+      const UnboundCourseReviewReservation* reservation;
+      unsigned fault, calls = 0, permissionCalls = 0;
+      bool* permitted;
+    } context{nullptr, &reservation, fault, 0, 0, &permitted};
+    auto verify = [](void* raw, const SyncEvent& found, std::span<const uint8_t> body) {
+      auto& ctx = *static_cast<Context*>(raw);
+      ++ctx.calls;
+      EXPECT_EQ(found.identity, ctx.reservation->first());
+      TintaBody decoded;
+      EXPECT_TRUE(decodeTintaBody(body, decoded));
+      EXPECT_EQ(decoded.kind, EventKind::Star);
+      EXPECT_EQ(decoded.uid, 1u);
+      EXPECT_FALSE(ctx.owner->inspect(
+          *ctx.reservation, [](void*, const SyncEvent&, std::span<const uint8_t>) { return true; }, nullptr));
+      EXPECT_EQ(ctx.owner->report(*ctx.reservation), nullptr);
+      if (ctx.fault == 6) {
+        EXPECT_TRUE(ctx.owner->closeReaders());
+      }
+      return ctx.fault != 7;
+    };
+    HalUnboundCourseReviewJournalInspection inspector(
+        identities, native.device, native.storageGeneration, scratch,
+        [](void* raw) {
+          auto& ctx = *static_cast<Context*>(raw);
+          ++ctx.permissionCalls;
+          if (ctx.fault == 10 && ctx.permissionCalls == 3) {
+            EXPECT_TRUE(ctx.owner->closeReaders());
+          }
+          return *ctx.permitted;
+        },
+        &context);
+    context.owner = &inspector;
+    auto input = reservation;
+    if (fault == 8) ++input.epoch;
+    if (fault == 9) input.records = input.events = 0;
+    const auto files = state.files;
+    const auto writes = identities.writes;
+    const bool valid = inspector.inspect(input, verify, &context);
+    if (fault <= 1) {
+      ASSERT_TRUE(valid);
+      const auto* report = inspector.report(input);
+      ASSERT_NE(report, nullptr);
+      EXPECT_EQ(report->present, fault == 1 ? 27u : 31u);
+      EXPECT_EQ(context.calls, fault == 1 ? 4u : 5u);
+      for (size_t at = 0; at < report->journals.size(); ++at) {
+        EXPECT_EQ(report->journals[at].matchedEvents, fault == 1 && at == 2 ? 0u : 1u);
+      }
+      auto foreign = input;
+      foreign.intent.request.original.transaction[0] ^= 1;
+      EXPECT_EQ(inspector.report(foreign), nullptr);
+      EXPECT_NE(inspector.report(input), nullptr);
+      permitted = false;
+      EXPECT_EQ(inspector.report(input), nullptr);
+      permitted = true;
+      EXPECT_EQ(inspector.report(input), nullptr);
+    } else {
+      EXPECT_FALSE(valid);
+      EXPECT_EQ(inspector.report(input), nullptr);
+    }
+    EXPECT_TRUE(inspector.closeReaders());
+    EXPECT_EQ(state.files, files);
+    EXPECT_EQ(identities.writes, writes);
   }
 }

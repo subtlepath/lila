@@ -4091,3 +4091,18 @@ The final ESP32-C3 probe includes construction/guarded-identity virtual calls
 and emits no frame above 224 bytes; the separately checked identity source
 remains at or below 240 bytes. Re-run `ctest --test-dir
 .cache/companion-verification/host --output-on-failure` for the host suite.
+
+Native review epoch inspection now scans the active, migration candidate,
+migration backup, merge candidate and merge backup journals read-only under a
+single reservation and Native hardware/card context. Every matching event must
+pass the caller's frozen-event verifier. The scoped report retains per-namespace
+counts rather than treating retained copies as additional learner events. A
+foreign generation, sequence beyond the reserved range, corrupt journal,
+uncommitted tail, callback rejection or cancellation withholds the entire report.
+Permission loss revokes it until a fresh inspection. No epoch or learner state is
+written. The owner borrows the session workspace and adds no internal allocation.
+
+This is evidence for the five journal namespaces. Recovery still requires archived
+baseline coverage, deterministic conversion/provenance verification, frozen
+counts and replay agreement before any reservation can authorize publication.
+The new inspection is not wired to a runtime migration command.
