@@ -6,10 +6,26 @@
 
 #include "CompanionCourseMigrationProof.h"
 #include "CompanionLegacyCourseStateMigration.h"
+#include "CompanionUnboundCourseMigrationPaths.h"
 #include "HalTransferStorage.h"
 
 namespace companion {
 bool selectActiveCourseState(HalTransferStorage& storage, std::span<uint8_t> scratch, Identity& course, bool& bound) {
+  // Unbound authorization needs coordinator verification before any learner mutation.
+  for (const auto* path : UNBOUND_COURSE_INTENT_PATHS) {
+    uint64_t size = 0;
+    if (storage.stat(path, size) != FileStatus::Missing) {
+      LOG_ERR("COMPANION", "Unresolved unbound course intent");
+      return false;
+    }
+  }
+  for (const auto* path : UNBOUND_COURSE_INTENT_STAGES) {
+    uint64_t size = 0;
+    if (storage.stat(path, size) != FileStatus::Missing) {
+      LOG_ERR("COMPANION", "Unresolved unbound course intent stage");
+      return false;
+    }
+  }
   ContentManifest manifest;
   bool present = false;
   if (readCourseBinding(storage, COURSE_BINDING_PATH, scratch, manifest, present) != CourseBindingResult::Ok) {

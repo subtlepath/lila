@@ -4,6 +4,7 @@
 
 #include "CompanionCourseBaselineReview.h"
 #include "CompanionTintaJournalPaths.h"
+#include "CompanionUnboundCourseMigrationPaths.h"
 #include "HalCoursePackArchive.h"
 #include "HalCourseRemovalMetadata.h"
 #include "HalCourseStateIsolation.h"
@@ -150,6 +151,10 @@ class HalCourseBaselineReviewCapture final {
                                             COURSE_MARK_MIGRATION_PATHS.done,
                                             COURSE_MARK_MIGRATION_PATHS.doneStage};
     uint64_t size = 0;
+    for (const auto* candidate : UNBOUND_COURSE_INTENT_PATHS)
+      if (!guard() || metadata.stat(candidate, size) != FileStatus::Missing || !guard()) return false;
+    for (const auto* candidate : UNBOUND_COURSE_INTENT_STAGES)
+      if (!guard() || metadata.stat(candidate, size) != FileStatus::Missing || !guard()) return false;
     for (const auto* candidate : PATHS)
       if (!guard() || metadata.stat(candidate, size) != FileStatus::Missing || !guard()) return false;
     return true;

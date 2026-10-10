@@ -3586,3 +3586,158 @@ namespace assignment or migration action is enabled. The final portable runs
 pass all 1,964 host tests (12.66 seconds) and 556 Swift tests (17.806 seconds),
 including cross-purpose rejection, truncation and corruption checks. Apple SDK
 builds and physical verification remain outstanding.
+
+The reader-local `TCUI` intent codec retains native reader identity, the complete
+unbound consent, the installed pack manifest and a prepared/bound/isolated phase.
+Original and installed pack hashes may differ while course identity must match.
+Decode validates immutable bytes before changing its output, using separate
+request and manifest validators to avoid a large local record copy. It adds no
+heap allocation. The C3 record payload is 248 bytes; codec stack frames are at
+most 224 bytes (intent decoder 96, request validator 192, pack validator 112).
+All 1,965 host tests pass, including every truncated/corrupt envelope and
+CRC-correct foreign-course, missing-reader and unknown-phase rejection. Verify
+with the companion host CMake/CTest suite and the shared
+`UnboundCourseMigrationIntent-v1.fixture`; live SD power-cut verification awaits
+disk publication and startup recovery integration. This codec is not included
+in runtime firmware yet, so it does not change the five verified reader images.
+
+The portable unbound intent store now persists immutable phase records through
+owned stages and readback, retaining the same reader/consent/active-pack family.
+It refuses phase gaps, foreign records, duplicate stages and torn evidence;
+complete staged records resume their interrupted phase. Completed phase retries
+perform no writes. Its 528-byte C3 owner allocates nothing internally and must
+be retained outside local frames. C3 persistence uses 96 stack bytes and loading
+48; all emitted frames remain within 256. All 1,968 host tests pass (10.42
+seconds), including before/after cuts at each write and rename, restart/retry,
+permission loss and SD read/stat errors. The initial retry test incorrectly
+replayed the first phase with a later staged record; it now resumes the exact
+interrupted phase. Verify using the host CTest suite; physical SD power cuts,
+native HAL admission, verified torn-stage recovery and startup gating remain
+outstanding. No firmware mutation command or migration capability is enabled.
+
+Torn intent stages now recover only after matching the expected byte prefix and
+fresh native phase verification. The store rechecks the complete phase chain,
+prefix and length after the callback before removing its owned stage. It refuses
+changed or foreign evidence and reentry; permission loss prevents publication.
+Comparison uses the caller's workspace after the 246-byte encoded record, with
+no new allocation. All 1,971 host tests pass, covering every truncated length in
+all three phases with accepted/refused verification, callback-time evidence
+changes, and cuts before/after stage removal, rewrite and rename. C3 recovery
+persistence uses 64 stack bytes, phase inspection 80 and prefix checking 64;
+all emitted codec/store frames remain within 256. Native HAL integration and
+startup coordination remain required before this can move learner files.
+
+`HalUnboundCourseMigrationIntentStore` now supplies restricted HAL storage for
+the portable intent engine. Only its three canonical paths and their stages are
+accepted. Persistence binds native reader/card identities and authenticated owner;
+loading checks native reader/card identity without requiring the original Apple
+installation to be online for future startup recovery. Stage writes check sync
+and close, publication refuses overwrite, and torn-stage deletion refuses full
+records. The adapter closes its readers before exposing a successful load and
+uses the same workspace with checked runtime heap guards. Its C3 owner is 1,976
+bytes, intended for admitted off-stack ownership; persistence uses 64 stack bytes
+and loading 80, with all emitted frames within 256. No internal allocation is
+added. All 1,973 host tests pass after the final edits (10.83 seconds), including
+reader/card/owner mismatch and sync/close/rename recovery. The first wrong-card
+fixture accidentally made its generation zero; it was corrected to a different
+nonzero generation before final verification. Verify with the HAL companion host
+tests; physical SD cuts and startup coordinator integration remain outstanding.
+This adapter is not yet called by runtime firmware and does not enable migration.
+
+Native course-state selection now checks all unbound intent/stage paths before
+reading a binding or moving any learner files. Fresh unbound review capture also
+requires those paths to be absent. Valid, damaged and partial records all remain
+unresolved until coordinator verification; even an isolated intent does not by
+itself authorize reopening learner state. A shared constexpr path header keeps
+the store and native guards consistent. Tests cover all six paths with intact
+and damaged records, preserving learner bytes and the directory roster, followed
+by normal unbound selection/capture once the evidence is absent.
+
+All 1,974 host tests pass (11.17 seconds). The directory-roster assertion was
+corrected because the HAL test entry type has no equality operator. Native C3
+frame checking exposed an existing oversized legacy-migration frame; binding
+verification now has a separate non-inlined 144-byte frame, leaving file
+migration at 256 and startup selection at 224. All emitted frames in migration
+and the connect activity remain within 256. No new allocation is introduced.
+The initial firmware batch was stopped for that required source correction; its
+replacement is running across all five targets with 38 frozen fingerprints.
+Final image validation and physical acceptance remain pending. Coordinator
+recovery and initial binding/migration are still required to enable the flow.
+
+The portable unbound migration coordinator now composes phase persistence with
+native verification and idempotent binding/isolation hooks. It inspects every
+canonical/staged record before invoking native work, publishes prepared intent
+before binding and bound intent before isolation, and verifies completion after
+publication. It rechecks phase evidence after callbacks before mutation or a
+completion loan. Recovery skips already completed phases and verifies isolated
+state without replaying mutations; permission loss permanently revokes the loan
+until a new verified run. Torn records resume only their matching phase.
+
+All 1,978 host tests pass (12.21 seconds), including cuts before/after all six
+publication operations, verification failure in each phase, callback-time foreign
+evidence, and every truncated stage length across all three phases. The coordinator
+has no internal allocation; its 1,072-byte C3 owner requires admitted off-stack
+ownership. C3 run and inspection frames are 64 and 112 bytes, with every emitted
+frame within 256. Verify with the companion host suite. Native pack/review/backup
+verification hooks, startup composition and physical power-cut acceptance remain
+unfinished; this engine is not yet included in runtime firmware. The five-target
+startup-guard batch continues with unchanged production fingerprints.
+
+Native pack-pair verification now independently hashes and completely validates
+the original payload and installed pack, compares locales and checks item
+identity continuity. Missing item history requires identical legacy sections;
+an update that adds compatible identity history can have a different hash.
+Both packs are hashed again after comparison. It is read-only and releases its
+parser and HAL handles; this is pack evidence, not learner-state or migration
+authorization. Native learner references, backup/journal provenance and phase
+composition remain unfinished.
+
+All 1,981 host tests pass, covering identical packs, a compatible update with a
+different hash, locale mismatch, hash mismatch, revoked permission and a malformed
+original whose supplied SHA still matches its bytes. C3 frames remain within 256;
+verification uses 160 stack bytes. The 1,912-byte verifier owner and caller-owned
+parser belong outside the stack; no new workspace or internal allocation is
+introduced. Verify with the HAL companion tests, then physical power cuts once
+native phase integration is implemented. The reader default build is retained
+and independently revalidated at 6,493,152 bytes (60,448 bytes OTA headroom).
+The same live driver is building the remaining targets; no migration capability
+or command has been enabled by these additions.
+
+`HalUnboundCourseReviewedFile` now lends a recognized learner copy after checking
+the frozen unbound review, native reader/card/course context, per-file length/hash
+and absence of a pending copy stage. The entry is retained before hashing reuses
+the workspace. Missing roster names remain distinct from unavailable evidence;
+diagnostic usage files cannot become learner-state loans. Permission loss revokes
+the loan, including after permission returns; fresh verification is required.
+Historical copies remain readable after mutable source loss. This does not grant
+authorization or replace complete-cohort backup/provenance verification.
+
+All 1,983 host tests pass (11.03 seconds), covering historical copies, hash damage,
+foreign reader/card context, pending copy stages, diagnostic exclusion and loan
+revocation. The reader has no internal allocation; its 3,184-byte C3 owner is
+intended for admitted off-stack ownership and reuses the session workspace.
+Opening uses 160 stack bytes, with all emitted frames within 256. Verify with the
+HAL companion tests; full learner/journal inspection and native coordinator
+composition remain unfinished. Default, sticky, x4pro and x4c retained images
+independently revalidate; x4pro is 6,523,856 bytes (29,744 bytes OTA headroom).
+The same driver is still building papermono with all 38 source fingerprints
+unchanged. Physical acceptance and migration enablement remain outstanding.
+
+Unbound item inspection now validates the copied store against the confirmed
+original pack, checks active/retired UID coverage and retains its committed
+review count for subsequent review/session checks. Failure leaves its report
+unchanged and closes the loan. All 1,984 host tests pass (11.32 seconds), including
+native copied item acceptance and rejection of a UID outside the original history.
+The standalone C3 build caught a missing direct include and a 272-byte complete
+frame; separate non-inlined catalog/history calls reduce inspection to 160 bytes
+and reference iteration to 192, with every emitted frame within 256. No allocation
+is added. Reviews, profiles, marks, days, sessions, provenance and native coordinator
+composition still require work; this check is not complete migration admission.
+
+The source-frozen firmware driver completed all five targets. Independent release
+validation rechecked every retained image, and all 38 production fingerprints
+still match. Sizes/headroom are default 6,493,152/60,448 bytes, sticky
+5,703,632/849,968, x4pro 6,523,856/29,744, x4c 6,493,664/59,936 and papermono
+5,816,768/736,832. Verify software with the host suite and release-image validator;
+Apple SDK and physical acceptance remain outstanding. No migration action or
+capability advertisement has been enabled.

@@ -29,6 +29,14 @@ inline constexpr const char* COURSE_STATE_MIGRATION_FILES[] = {
     "profile.bin.tmp", "days.bin",      "days.bin.tmp", "session.bin",     "session.bin.tmp"};
 inline constexpr const char* COURSE_MARK_MIGRATION_FILES[] = {"starred.bin", "starred.bin.tmp", "read.bin",
                                                               "read.bin.tmp"};
+[[gnu::noinline]] inline bool verifyLegacyCourseMigrationBinding(TransferStorage& storage, const Identity& course,
+                                                                 std::span<uint8_t> scratch) {
+  ContentManifest binding;
+  bool bound = false;
+  return readCourseBinding(storage, COURSE_BINDING_PATH, scratch, binding, bound) == CourseBindingResult::Ok && bound &&
+         binding.logicalIdentity == course &&
+         storage.verify(ACTIVE_COURSE_PATH, binding.length, binding.contentHash, scratch);
+}
 // Caller creates the course directory and excludes all state writers throughout this operation.
 inline CourseStateMigrationResult migrateLegacyCourseFiles(TransferStorage& storage, const Identity& course,
                                                            std::span<uint8_t> scratch,
@@ -36,12 +44,7 @@ inline CourseStateMigrationResult migrateLegacyCourseFiles(TransferStorage& stor
                                                            const CourseMigrationPaths& paths) {
   if (scratch.size() < 512) return CourseStateMigrationResult::IoError;
   if (files.empty() || files.size() > 15) return CourseStateMigrationResult::InvalidBinding;
-  ContentManifest binding;
-  bool bound = false;
-  if (readCourseBinding(storage, COURSE_BINDING_PATH, scratch, binding, bound) != CourseBindingResult::Ok || !bound ||
-      binding.logicalIdentity != course ||
-      !storage.verify(ACTIVE_COURSE_PATH, binding.length, binding.contentHash, scratch))
-    return CourseStateMigrationResult::InvalidBinding;
+  if (!verifyLegacyCourseMigrationBinding(storage, course, scratch)) return CourseStateMigrationResult::InvalidBinding;
   uint64_t size = 0;
   uint16_t expectedFiles = 0;
   const auto intent = storage.stat(paths.intent, size);

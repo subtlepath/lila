@@ -70,6 +70,10 @@
 #include "lib/hal/HalTintaReplayItemCorrespondence.h"
 #include "lib/hal/HalTintaReplayItemExport.h"
 #include "lib/hal/HalTransferStorage.h"
+#include "lib/hal/HalUnboundCourseItemInspection.h"
+#include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
+#include "lib/hal/HalUnboundCoursePackVerification.h"
+#include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
 void log(const char*, ...) {}
@@ -4661,6 +4665,56 @@ TEST_F(HalCourseTransferTest, UnboundReviewRefusesPendingBindingMigrationAndUnkn
   EXPECT_EQ(hal.files, before);
 }
 
+TEST_F(HalCourseTransferTest, UnboundIntentEvidencePreventsReadingOrFreshReviewBeforeRecovery) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  hal.files["/tinta/items.bin"] = {17};
+  Identity nativeReader{};
+  nativeReader.fill(51);
+  Identity selected{};
+  selected.fill(63);
+  bool bound = false;
+  auto review = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(review);
+  for (const auto paths : {std::span(UNBOUND_COURSE_INTENT_PATHS), std::span(UNBOUND_COURSE_INTENT_STAGES)}) {
+    for (const auto* path : paths) {
+      for (const bool valid : {false, true}) {
+        hal.files[path] = {1};
+        if (valid) {
+          UnboundCourseMigrationIntent intent;
+          intent.reader = nativeReader;
+          intent.request.original = {generation, declaration.state.owner, declaration.state.transaction,
+                                     declaration.manifest, declaration.manifest.contentHash};
+          intent.activePack = declaration.manifest;
+          std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> encoded{};
+          ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, encoded));
+          hal.files[path] = {encoded.begin(), encoded.end()};
+        }
+        const auto before = hal.files;
+        const auto directories = hal.directories;
+        EXPECT_FALSE(selectActiveCourseState(storage, scratch, selected, bound));
+        EXPECT_FALSE(bound);
+        EXPECT_EQ(selected[0], 63);
+        EXPECT_NE(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+                  CourseBaselineReviewResult::Ok);
+        EXPECT_EQ(hal.files, before);
+        EXPECT_EQ(hal.directories.size(), directories.size());
+        for (const auto& [directory, entries] : directories) {
+          ASSERT_TRUE(hal.directories.contains(directory));
+          EXPECT_EQ(hal.directories.at(directory).size(), entries.size());
+        }
+        hal.files.erase(path);
+      }
+    }
+  }
+  ASSERT_TRUE(selectActiveCourseState(storage, scratch, selected, bound));
+  EXPECT_FALSE(bound);
+  EXPECT_EQ(selected, Identity{});
+  ASSERT_EQ(review->capture(nativeReader, generation, declaration.manifest.logicalIdentity),
+            CourseBaselineReviewResult::Ok);
+}
+
 TEST_F(HalCourseTransferTest, BaselineReviewCapturesFullIsolatedStateAndGlobalAuthorityWithoutWrites) {
   auto& hal = inventory_hal_test::state;
   hal.files["/tinta/items.bin"] = {17};
@@ -8233,4 +8287,344 @@ TEST_F(HalCourseTransferTest, NativeBaselineCommitRefusesContextAndHeapBeforeIns
   EXPECT_EQ(inventory_hal_test::state.files, uploaded);
   ASSERT_NE(transfer.current(), nullptr);
   EXPECT_EQ(transfer.current()->phase, TransferPhase::Receiving);
+}
+
+TEST_F(HalCourseTransferTest, UnboundIntentNativeStorageBindsIdentitiesAndClosesEachPhase) {
+  Identity reader{};
+  reader.fill(17);
+  UnboundCourseMigrationIntent intent;
+  intent.reader = reader;
+  intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                             declaration.manifest.contentHash};
+  intent.activePack = declaration.manifest;
+  bool permitted = true;
+  auto permission = [](void* raw) { return *static_cast<bool*>(raw); };
+  std::array<uint8_t, SESSION_WORKSPACE_SIZE> workspace{};
+  HalUnboundCourseMigrationIntentStore store(reader, generation, workspace, permission, &permitted);
+  inventory_hal_test::state.directories[TRANSFER_DIRECTORY] = {};
+  inventory_hal_test::state.directories["/tinta"] = {};
+  inventory_hal_test::state.files[ACTIVE_COURSE_PATH] = bytes;
+  UnboundCourseMigrationIntent loaded;
+  EXPECT_EQ(store.load(loaded), UnboundCourseIntentResult::Missing);
+  for (unsigned phase = 1; phase <= 3; ++phase) {
+    intent.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+    ASSERT_EQ(store.persist(intent, declaration.state.owner), UnboundCourseIntentResult::Ok);
+    ASSERT_TRUE(store.closeReaders());
+    ASSERT_EQ(store.load(loaded), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(loaded, intent);
+  }
+  const auto files = inventory_hal_test::state.files;
+  const auto renames = inventory_hal_test::state.renames;
+  ASSERT_EQ(store.persist(intent, declaration.state.owner), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+  EXPECT_EQ(inventory_hal_test::state.renames, renames);
+  EXPECT_EQ(inventory_hal_test::state.files.at(ACTIVE_COURSE_PATH), bytes);
+  auto foreign = reader;
+  foreign[0] ^= 1;
+  HalUnboundCourseMigrationIntentStore other(foreign, generation, workspace, permission, &permitted);
+  loaded = {};
+  EXPECT_EQ(other.load(loaded), UnboundCourseIntentResult::Conflict);
+  EXPECT_EQ(loaded, UnboundCourseMigrationIntent{});
+  EXPECT_EQ(other.persist(intent, declaration.state.owner), UnboundCourseIntentResult::Invalid);
+  auto foreignGeneration = generation;
+  foreignGeneration[0] ^= 2;
+  HalUnboundCourseMigrationIntentStore otherCard(reader, foreignGeneration, workspace, permission, &permitted);
+  EXPECT_EQ(otherCard.load(loaded), UnboundCourseIntentResult::Conflict);
+  EXPECT_EQ(otherCard.persist(intent, declaration.state.owner), UnboundCourseIntentResult::Invalid);
+  EXPECT_EQ(loaded, UnboundCourseMigrationIntent{});
+  auto foreignOwner = declaration.state.owner;
+  foreignOwner[0] ^= 1;
+  EXPECT_EQ(store.persist(intent, foreignOwner), UnboundCourseIntentResult::Invalid);
+  permitted = false;
+  EXPECT_EQ(store.load(loaded), UnboundCourseIntentResult::Busy);
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+}
+
+TEST_F(HalCourseTransferTest, UnboundIntentNativeStorageRecoversSyncCloseAndRenameCuts) {
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    inventory_hal_test::state.directories[TRANSFER_DIRECTORY] = {};
+    Identity reader{};
+    reader.fill(17);
+    UnboundCourseMigrationIntent intent;
+    intent.reader = reader;
+    intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                               declaration.manifest.contentHash};
+    intent.activePack = declaration.manifest;
+    auto permission = [](void*) { return true; };
+    std::array<uint8_t, SESSION_WORKSPACE_SIZE> workspace{};
+    const auto* staged = UnboundCourseMigrationIntentStore::STAGES[0];
+    if (fault == 0) inventory_hal_test::state.failSyncPath = staged;
+    if (fault == 1) inventory_hal_test::state.failClosePath = staged;
+    if (fault == 2) inventory_hal_test::state.failRename = 1;
+    if (fault == 3) inventory_hal_test::state.failRenameAfter = 1;
+    {
+      HalUnboundCourseMigrationIntentStore store(reader, generation, workspace, permission, nullptr);
+      EXPECT_EQ(store.persist(intent, declaration.state.owner), UnboundCourseIntentResult::IoError);
+    }
+    inventory_hal_test::state.failSyncPath.clear();
+    inventory_hal_test::state.failClosePath.clear();
+    inventory_hal_test::state.failRename = 0;
+    inventory_hal_test::state.failRenameAfter = 0;
+    HalUnboundCourseMigrationIntentStore restored(reader, generation, workspace, permission, nullptr);
+    ASSERT_EQ(restored.persist(intent, declaration.state.owner), UnboundCourseIntentResult::Ok);
+    UnboundCourseMigrationIntent loaded;
+    ASSERT_EQ(restored.load(loaded), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(loaded, intent);
+    EXPECT_FALSE(inventory_hal_test::state.files.contains(staged));
+  }
+}
+
+TEST_F(HalCourseTransferTest, UnboundPackPairVerificationChecksBytesAndLeavesGlobalStateUntouched) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  const std::string originalPath = std::string(TRANSFER_DIRECTORY) + "/unbound-original.part";
+  hal.files[originalPath] = bytes;
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  hal.files["/tinta/items.bin"] = {17};
+  UnboundCourseMigrationIntent intent;
+  intent.reader.fill(17);
+  intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                             declaration.manifest.contentHash};
+  intent.activePack = declaration.manifest;
+  bool permitted = true;
+  auto permission = [](void* raw) { return *static_cast<bool*>(raw); };
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto verifier = makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, permission, &permitted);
+  ASSERT_TRUE(verifier);
+  const auto files = hal.files;
+  ASSERT_TRUE(verifier->verify(intent, originalPath));
+  EXPECT_TRUE(verifier->verified());
+  EXPECT_FALSE(parser->isOpen());
+  EXPECT_EQ(hal.files, files);
+  auto corrupt = intent;
+  corrupt.activePack.contentHash[0] ^= 1;
+  EXPECT_FALSE(verifier->verify(corrupt, originalPath));
+  EXPECT_FALSE(verifier->verified());
+  EXPECT_EQ(hal.files, files);
+  permitted = false;
+  EXPECT_FALSE(verifier->verify(intent, originalPath));
+  EXPECT_FALSE(verifier->verified());
+  EXPECT_EQ(hal.files, files);
+}
+
+TEST_F(HalCourseTransferTest, UnboundPackPairVerificationRejectsMalformedOriginalEvenWithMatchingHash) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  const std::string originalPath = std::string(TRANSFER_DIRECTORY) + "/unbound-original.part";
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  auto damaged = bytes;
+  damaged[0] ^= 1;
+  hal.files[originalPath] = damaged;
+  UnboundCourseMigrationIntent intent;
+  intent.reader.fill(17);
+  intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                             declaration.manifest.contentHash};
+  SHA256(damaged.data(), damaged.size(), intent.request.original.manifest.contentHash.data());
+  intent.activePack = declaration.manifest;
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto verifier =
+      makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(verifier);
+  const auto files = hal.files;
+  EXPECT_FALSE(verifier->verify(intent, originalPath));
+  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(parser->isOpen());
+  EXPECT_EQ(hal.files, files);
+}
+
+TEST_F(HalCourseTransferTest, UnboundPackPairAcceptsCompatibleUpdatedBytesAndRejectsAnotherLocale) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories["/tinta"] = {};
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  const std::string originalPath = std::string(TRANSFER_DIRECTORY) + "/unbound-original.part";
+  hal.files[originalPath] = bytes;
+  UnboundCourseMigrationIntent intent;
+  intent.reader.fill(17);
+  intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                             declaration.manifest.contentHash};
+  addIdentityHistory();
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  intent.activePack = declaration.manifest;
+  ASSERT_NE(intent.activePack.contentHash, intent.request.original.manifest.contentHash);
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  auto verifier =
+      makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(verifier);
+  const auto files = hal.files;
+  ASSERT_TRUE(verifier->verify(intent, originalPath));
+  EXPECT_EQ(hal.files, files);
+  std::fill_n(bytes.begin() + offsetof(tinta::core::pack::Header, locale), 8, 0);
+  bytes[offsetof(tinta::core::pack::Header, locale)] = 'f';
+  bytes[offsetof(tinta::core::pack::Header, locale) + 1] = 'r';
+  sealPack();
+  hal.files[ACTIVE_COURSE_PATH] = bytes;
+  intent.activePack = declaration.manifest;
+  const auto different = hal.files;
+  EXPECT_FALSE(verifier->verify(intent, originalPath));
+  EXPECT_EQ(hal.files, different);
+  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(parser->isOpen());
+}
+
+TEST_F(HalCourseTransferTest, UnboundReviewedFileLoansOnlyHashVerifiedLearnerCopies) {
+  Digest hash{};
+  Identity reader{};
+  const auto prefix = prepareUnboundBackupReview(hash, reader);
+  ASSERT_FALSE(prefix.empty());
+  auto permission = [](void* raw) { return *static_cast<bool*>(raw); };
+  bool permitted = true;
+  {
+    auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, permission, &permitted);
+    ASSERT_TRUE(backups);
+    ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+    ASSERT_TRUE(backups->closeReaders());
+  }
+  UnboundCourseMigrationRequest request;
+  request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+  auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(reader, generation, scratch, permission, &permitted);
+  ASSERT_TRUE(reviewed);
+  const auto files = inventory_hal_test::state.files;
+  ASSERT_EQ(reviewed->open(request, "items.bin"), UnboundReviewedFileResult::Present);
+  auto* file = reviewed->borrowed();
+  ASSERT_NE(file, nullptr);
+  uint8_t byte = 0;
+  ASSERT_EQ(file->read(&byte, 1), 1);
+  EXPECT_EQ(byte, 17);
+  EXPECT_EQ(file->fileSize64(), 12000u);
+  permitted = false;
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  permitted = true;
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  EXPECT_EQ(reviewed->open(request, "usage.bin"), UnboundReviewedFileResult::Invalid);
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  EXPECT_EQ(reviewed->open(request, "session.bin"), UnboundReviewedFileResult::Missing);
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+  // Historical evidence survives disappearance of mutable global sources.
+  inventory_hal_test::state.files.erase("/tinta/ITEMS.BIN");
+  ASSERT_EQ(reviewed->open(request, "items.bin"), UnboundReviewedFileResult::Present);
+  ASSERT_NE(reviewed->borrowed(), nullptr);
+  ASSERT_TRUE(reviewed->closeReaders());
+  inventory_hal_test::state.files.at(prefix + "-00")[999] ^= 1;
+  const auto damaged = inventory_hal_test::state.files;
+  EXPECT_EQ(reviewed->open(request, "items.bin"), UnboundReviewedFileResult::Unavailable);
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  EXPECT_EQ(inventory_hal_test::state.files, damaged);
+}
+
+TEST_F(HalCourseTransferTest, UnboundReviewedFileRefusesForeignContextAndPendingCopy) {
+  Digest hash{};
+  Identity reader{};
+  const auto prefix = prepareUnboundBackupReview(hash, reader);
+  ASSERT_FALSE(prefix.empty());
+  {
+    auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(backups);
+    ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+    ASSERT_TRUE(backups->closeReaders());
+  }
+  UnboundCourseMigrationRequest request;
+  request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+  auto wrong = reader;
+  wrong[0] ^= 2;
+  auto foreign =
+      makeUniqueNoThrow<HalUnboundCourseReviewedFile>(wrong, generation, scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(foreign);
+  EXPECT_EQ(foreign->open(request, "items.bin"), UnboundReviewedFileResult::Unavailable);
+  EXPECT_EQ(foreign->borrowed(), nullptr);
+  foreign.reset();
+  auto reviewed =
+      makeUniqueNoThrow<HalUnboundCourseReviewedFile>(reader, generation, scratch, [](void*) { return true; }, nullptr);
+  ASSERT_TRUE(reviewed);
+  auto changed = request;
+  changed.original.generation[0] ^= 2;
+  EXPECT_EQ(reviewed->open(changed, "items.bin"), UnboundReviewedFileResult::Invalid);
+  inventory_hal_test::state.files[prefix + "-00.tmp"] = {1};
+  const auto files = inventory_hal_test::state.files;
+  EXPECT_EQ(reviewed->open(request, "items.bin"), UnboundReviewedFileResult::Unavailable);
+  EXPECT_EQ(reviewed->borrowed(), nullptr);
+  EXPECT_EQ(inventory_hal_test::state.files, files);
+}
+
+TEST_F(HalCourseTransferTest, UnboundItemInspectionValidatesCopiedUidsAndPreservesFailureOutput) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  const auto uid = parser->uidAt(0);
+  parser->close();
+  for (const bool known : {true, false}) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    auto& hal = inventory_hal_test::state;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    auto& items = hal.files["/tinta/items.bin"];
+    items.resize(1040, 0);
+    for (unsigned slot = 0; slot < 2; ++slot) {
+      auto* header = items.data() + slot * 512;
+      std::memcpy(header, "TIS1", 4);
+      binary_record::putU16(header + 4, 1);
+      binary_record::putU16(header + 6, 80);
+      binary_record::putU32(header + 8, slot + 1);
+      binary_record::putU32(header + 12, 1);
+      binary_record::putU32(header + 16, 9);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    tinta::core::ItemState::fresh(known ? uid : UINT32_MAX - 1).encode(items.data() + 1024);
+    Identity reader{};
+    reader.fill(51);
+    Digest hash{};
+    {
+      auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(capture);
+      ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+                CourseBaselineReviewResult::Ok);
+      hash = *capture->hash();
+      const std::vector<uint8_t> encoded(capture->bytes().begin(), capture->bytes().end());
+      capture.reset();
+      auto roster = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+          std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(roster);
+      ASSERT_EQ(roster->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    }
+    {
+      auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(backups);
+      ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+      ASSERT_TRUE(backups->closeReaders());
+    }
+    UnboundCourseMigrationRequest request;
+    request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+    auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+        reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+    HalInventoryIndexStorage packStorage;
+    ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
+    StoredCourseSource original(packStorage);
+    ASSERT_TRUE(original.attach());
+    UnboundCourseItemReport report;
+    report.committedRecords = 123;
+    const auto files = hal.files;
+    EXPECT_EQ(inspectUnboundCourseItems(
+                  *reviewed, request, original, scratch, report, [](void*) { return true; }, nullptr),
+              known);
+    if (known) {
+      EXPECT_TRUE(report.present);
+      EXPECT_EQ(report.catalog.mapped, 1u);
+      EXPECT_EQ(report.committedRecords, 9u);
+    } else {
+      EXPECT_FALSE(report.present);
+      EXPECT_EQ(report.committedRecords, 123u);
+    }
+    EXPECT_EQ(reviewed->borrowed(), nullptr);
+    EXPECT_EQ(hal.files, files);
+  }
 }

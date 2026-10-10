@@ -12,6 +12,9 @@
 #include "lib/Companion/CompanionCourseBaselinePublicationStore.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
 #include "lib/Companion/CompanionCourseBaselineReviewPage.h"
+#include "lib/Companion/CompanionUnboundCourseMigrationCoordinator.h"
+#include "lib/Companion/CompanionUnboundCourseMigrationIntent.h"
+#include "lib/Companion/CompanionUnboundCourseMigrationIntentStore.h"
 #include "lib/Companion/CompanionUnboundCourseMigrationRequest.h"
 
 using namespace companion;
@@ -565,6 +568,421 @@ TEST(CompanionCourseBaselineImport, RefusesReentryAndInsufficientScratchBeforeMu
   EXPECT_EQ(f.storage.mutations, mutations);
 }
 
+namespace {
+struct MigrationFixture : Fixture {
+  UnboundCourseMigrationIntent intent;
+  bool bound = false, isolated = false;
+  unsigned boundMutations = 0, isolationMutations = 0, verifications = 0, rejectPhase = 0;
+  MigrationFixture() {
+    intent.reader.fill(7);
+    intent.request.original = request;
+    intent.activePack = request.manifest;
+    storage.allowStageRemoval = true;
+  }
+  UnboundCourseMigrationHooks hooks() {
+    return {this,
+            [](void* raw, const UnboundCourseMigrationIntent& record, bool) {
+              auto& f = *static_cast<MigrationFixture*>(raw);
+              ++f.verifications;
+              const auto phase = static_cast<unsigned>(record.phase);
+              return phase != f.rejectPhase && (phase == 1 || (phase == 2 && f.bound) || (phase == 3 && f.isolated));
+            },
+            [](void* raw, const UnboundCourseMigrationIntent&) {
+              auto& f = *static_cast<MigrationFixture*>(raw);
+              EXPECT_TRUE(f.storage.files.contains(UNBOUND_COURSE_INTENT_PATHS[0]));
+              if (!f.bound) ++f.boundMutations;
+              f.bound = true;
+              return true;
+            },
+            [](void* raw, const UnboundCourseMigrationIntent&) {
+              auto& f = *static_cast<MigrationFixture*>(raw);
+              EXPECT_TRUE(f.storage.files.contains(UNBOUND_COURSE_INTENT_PATHS[1]));
+              EXPECT_TRUE(f.bound);
+              if (!f.isolated) ++f.isolationMutations;
+              f.isolated = true;
+              return true;
+            }};
+  }
+};
+}  // namespace
+
+TEST(UnboundCourseMigrationCoordinator, EveryPublicationCutResumesWithoutRepeatingCompletedMutations) {
+  for (unsigned cut = 1; cut <= 6; ++cut) {
+    for (const bool after : {false, true}) {
+      MigrationFixture f;
+      f.storage.fail = cut;
+      f.storage.after = after;
+      UnboundCourseMigrationCoordinator coordinator(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      EXPECT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::IoError);
+      EXPECT_EQ(coordinator.completed(), nullptr);
+      f.storage.fail = 0;
+      UnboundCourseMigrationCoordinator restored(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(restored.run(f.intent, f.hooks()), UnboundCourseIntentResult::Ok);
+      ASSERT_NE(restored.completed(), nullptr);
+      EXPECT_EQ(restored.completed()->phase, UnboundCourseMigrationPhase::Isolated);
+      EXPECT_EQ(f.boundMutations, 1u);
+      EXPECT_EQ(f.isolationMutations, 1u);
+      const auto files = f.storage.files;
+      const auto writes = f.storage.mutations;
+      ASSERT_EQ(restored.run(f.intent, f.hooks()), UnboundCourseIntentResult::Ok);
+      EXPECT_EQ(f.storage.files, files);
+      EXPECT_EQ(f.storage.mutations, writes);
+      EXPECT_EQ(f.boundMutations, 1u);
+      EXPECT_EQ(f.isolationMutations, 1u);
+      f.storage.allowed = false;
+      EXPECT_EQ(restored.completed(), nullptr);
+      f.storage.allowed = true;
+      EXPECT_EQ(restored.completed(), nullptr);
+    }
+  }
+}
+
+TEST(UnboundCourseMigrationCoordinator, NativeVerificationFailureWithholdsCompletionAndRetryPreservesPhase) {
+  for (unsigned phase = 1; phase <= 3; ++phase) {
+    MigrationFixture f;
+    f.rejectPhase = phase;
+    UnboundCourseMigrationCoordinator coordinator(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    EXPECT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::VerificationFailed);
+    EXPECT_EQ(coordinator.completed(), nullptr);
+    if (phase == 1) EXPECT_EQ(f.storage.mutations, 0u);
+    if (phase == 2) EXPECT_EQ(f.isolationMutations, 0u);
+    f.rejectPhase = 0;
+    ASSERT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(f.boundMutations, 1u);
+    EXPECT_EQ(f.isolationMutations, 1u);
+  }
+}
+
+TEST(UnboundCourseMigrationCoordinator, EveryTornPhaseResumesItsNativeStateAndRetainedPredecessors) {
+  for (unsigned phase = 1; phase <= 3; ++phase) {
+    for (size_t length = 0; length < UNBOUND_COURSE_MIGRATION_INTENT_SIZE; ++length) {
+      MigrationFixture f;
+      UnboundCourseMigrationIntentStore intents(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      auto record = f.intent;
+      for (unsigned prior = 1; prior < phase; ++prior) {
+        record.phase = static_cast<UnboundCourseMigrationPhase>(prior);
+        ASSERT_EQ(intents.persist(record), UnboundCourseIntentResult::Ok);
+      }
+      f.bound = phase >= 2;
+      f.boundMutations = f.bound ? 1 : 0;
+      f.isolated = phase == 3;
+      f.isolationMutations = f.isolated ? 1 : 0;
+      record.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+      std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> bytes{};
+      ASSERT_TRUE(encodeUnboundCourseMigrationIntent(record, bytes));
+      f.storage.files[UNBOUND_COURSE_INTENT_STAGES[phase - 1]] = {bytes.begin(), bytes.begin() + length};
+      UnboundCourseMigrationCoordinator coordinator(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::Ok);
+      ASSERT_NE(coordinator.completed(), nullptr);
+      EXPECT_EQ(f.boundMutations, 1u);
+      EXPECT_EQ(f.isolationMutations, 1u);
+      for (const auto* stage : UNBOUND_COURSE_INTENT_STAGES) EXPECT_FALSE(f.storage.files.contains(stage));
+      for (const auto* path : UNBOUND_COURSE_INTENT_PATHS) EXPECT_TRUE(f.storage.files.contains(path));
+    }
+  }
+}
+
+TEST(UnboundCourseMigrationCoordinator, ForeignEvidenceAndCallbackChangesCannotStartBinding) {
+  for (const bool duringVerification : {false, true}) {
+    MigrationFixture f;
+    UnboundCourseMigrationIntentStore intents(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    ASSERT_EQ(intents.persist(f.intent), UnboundCourseIntentResult::Ok);
+    auto hooks = f.hooks();
+    if (duringVerification) {
+      hooks.verify = [](void* raw, const UnboundCourseMigrationIntent&, bool) {
+        auto& f = *static_cast<MigrationFixture*>(raw);
+        f.storage.files.at(UNBOUND_COURSE_INTENT_PATHS[0])[8] ^= 1;
+        return true;
+      };
+    } else
+      f.storage.files.at(UNBOUND_COURSE_INTENT_PATHS[0])[8] ^= 1;
+    UnboundCourseMigrationCoordinator coordinator(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    EXPECT_NE(coordinator.run(f.intent, hooks), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(f.boundMutations, 0u);
+    EXPECT_EQ(f.isolationMutations, 0u);
+    EXPECT_EQ(coordinator.completed(), nullptr);
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, EveryMatchingTornPhaseRequiresFreshVerificationBeforeRecovery) {
+  for (unsigned phase = 1; phase <= 3; ++phase) {
+    for (size_t length = 0; length < UNBOUND_COURSE_MIGRATION_INTENT_SIZE; ++length) {
+      for (const bool verified : {false, true}) {
+        Fixture f;
+        UnboundCourseMigrationIntent intent;
+        intent.reader.fill(7);
+        intent.request.original = f.request;
+        intent.activePack = f.request.manifest;
+        UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+        for (unsigned previous = 1; previous < phase; ++previous) {
+          intent.phase = static_cast<UnboundCourseMigrationPhase>(previous);
+          ASSERT_EQ(store.persist(intent), UnboundCourseIntentResult::Ok);
+        }
+        intent.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+        std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> bytes{};
+        ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, bytes));
+        const auto* staged = UnboundCourseMigrationIntentStore::STAGES[phase - 1];
+        f.storage.files[staged] = {bytes.begin(), bytes.begin() + length};
+        const auto files = f.storage.files;
+        const auto mutations = f.storage.mutations;
+        EXPECT_EQ(store.persist(intent), UnboundCourseIntentResult::Corrupt);
+        struct Context {
+          bool verified;
+          unsigned calls = 0;
+        } context{verified};
+        auto verify = [](void* raw, const UnboundCourseMigrationIntent&) {
+          auto& context = *static_cast<Context*>(raw);
+          ++context.calls;
+          return context.verified;
+        };
+        f.storage.allowStageRemoval = true;
+        const auto result = store.persist(intent, verify, &context);
+        EXPECT_EQ(context.calls, 1u);
+        if (verified) {
+          ASSERT_EQ(result, UnboundCourseIntentResult::Ok);
+          EXPECT_FALSE(f.storage.files.contains(staged));
+          UnboundCourseMigrationIntent output;
+          ASSERT_EQ(store.load(output), UnboundCourseIntentResult::Ok);
+          EXPECT_EQ(output, intent);
+        } else {
+          EXPECT_EQ(result, UnboundCourseIntentResult::VerificationFailed);
+          EXPECT_EQ(f.storage.files, files);
+          EXPECT_EQ(f.storage.mutations, mutations);
+        }
+      }
+    }
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, TornRecoveryPowerCutsRetainPredecessorsAndRetrySafely) {
+  for (unsigned cut = 1; cut <= 3; ++cut) {
+    for (const bool after : {false, true}) {
+      Fixture f;
+      UnboundCourseMigrationIntent intent;
+      intent.reader.fill(7);
+      intent.request.original = f.request;
+      intent.activePack = f.request.manifest;
+      UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(store.persist(intent), UnboundCourseIntentResult::Ok);
+      const auto predecessor = f.storage.files.at(UnboundCourseMigrationIntentStore::PATHS[0]);
+      intent.phase = UnboundCourseMigrationPhase::Bound;
+      std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> bytes{};
+      ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, bytes));
+      f.storage.files[UnboundCourseMigrationIntentStore::STAGES[1]] = {bytes.begin(), bytes.begin() + 99};
+      f.storage.allowStageRemoval = true;
+      f.storage.fail = f.storage.mutations + cut;
+      f.storage.after = after;
+      auto verified = [](void*, const UnboundCourseMigrationIntent&) { return true; };
+      EXPECT_EQ(store.persist(intent, verified), UnboundCourseIntentResult::IoError);
+      EXPECT_EQ(f.storage.files.at(UnboundCourseMigrationIntentStore::PATHS[0]), predecessor);
+      f.storage.fail = 0;
+      UnboundCourseMigrationIntentStore restored(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(restored.persist(intent, verified), UnboundCourseIntentResult::Ok);
+      UnboundCourseMigrationIntent output;
+      ASSERT_EQ(restored.load(output), UnboundCourseIntentResult::Ok);
+      EXPECT_EQ(output, intent);
+      EXPECT_EQ(f.storage.files.at(UnboundCourseMigrationIntentStore::PATHS[0]), predecessor);
+    }
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, NativeVerificationCannotEraseChangedPrefixOrPhaseEvidence) {
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    Fixture f;
+    UnboundCourseMigrationIntent intent;
+    intent.reader.fill(7);
+    intent.request.original = f.request;
+    intent.activePack = f.request.manifest;
+    UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> bytes{};
+    ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, bytes));
+    const auto* path = UnboundCourseMigrationIntentStore::STAGES[0];
+    f.storage.files[path] = {bytes.begin(), bytes.begin() + 99};
+    struct Context {
+      Fixture* f;
+      unsigned fault;
+      UnboundCourseMigrationIntentStore* store;
+    } context{&f, fault, &store};
+    const auto mutations = f.storage.mutations;
+    f.storage.allowStageRemoval = true;
+    auto verify = [](void* raw, const UnboundCourseMigrationIntent& expected) {
+      auto& c = *static_cast<Context*>(raw);
+      auto& storage = c.f->storage;
+      EXPECT_EQ(c.store->persist(expected), UnboundCourseIntentResult::Busy);
+      const auto* path = UnboundCourseMigrationIntentStore::STAGES[0];
+      if (c.fault == 0) storage.files.at(path)[98] ^= 1;
+      if (c.fault == 1) storage.files.at(path).pop_back();
+      if (c.fault == 2) storage.allowed = false;
+      if (c.fault == 3) storage.files.erase(path);
+      if (c.fault == 4) storage.files[UnboundCourseMigrationIntentStore::PATHS[0]] = {1};
+      if (c.fault == 5) storage.files[UnboundCourseMigrationIntentStore::STAGES[1]] = {1};
+      return true;
+    };
+    EXPECT_NE(store.persist(intent, verify, &context), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(f.storage.mutations, mutations);
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, ImmutablePhasesSurvivePublicationPowerCutsAndRepeatWithoutWrites) {
+  for (unsigned cut = 1; cut <= 6; ++cut) {
+    for (const bool after : {false, true}) {
+      Fixture f;
+      UnboundCourseMigrationIntent intent;
+      intent.reader.fill(7);
+      intent.request.original = f.request;
+      intent.activePack = f.request.manifest;
+      intent.activePack.contentHash[0] ^= 1;
+      UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      f.storage.fail = cut;
+      f.storage.after = after;
+      bool interrupted = false;
+      for (unsigned phase = 1; phase <= 3; ++phase) {
+        intent.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+        const auto result = store.persist(intent);
+        if (result != UnboundCourseIntentResult::Ok) {
+          EXPECT_EQ(result, UnboundCourseIntentResult::IoError);
+          interrupted = true;
+          break;
+        }
+      }
+      EXPECT_TRUE(interrupted);
+      f.storage.fail = 0;
+      UnboundCourseMigrationIntentStore restored(f.storage, f.scratch, Fixture::permitted, &f.storage);
+      const auto resumePhase = static_cast<unsigned>(intent.phase);
+      for (unsigned phase = resumePhase; phase <= 3; ++phase) {
+        intent.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+        ASSERT_EQ(restored.persist(intent), UnboundCourseIntentResult::Ok);
+      }
+      const auto files = f.storage.files;
+      const auto mutations = f.storage.mutations;
+      UnboundCourseMigrationIntent output;
+      ASSERT_EQ(restored.load(output), UnboundCourseIntentResult::Ok);
+      EXPECT_EQ(output, intent);
+      for (unsigned phase = 1; phase <= 3; ++phase) {
+        intent.phase = static_cast<UnboundCourseMigrationPhase>(phase);
+        ASSERT_EQ(restored.persist(intent), UnboundCourseIntentResult::Ok);
+      }
+      EXPECT_EQ(f.storage.mutations, mutations);
+      EXPECT_EQ(f.storage.files, files);
+      EXPECT_EQ(f.storage.files.at(ACTIVE_COURSE_PATH), std::vector<uint8_t>({9}));
+    }
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, PhaseGapsAndForeignOrTornEvidenceCannotAuthorizePublication) {
+  for (unsigned fault = 0; fault < 7; ++fault) {
+    Fixture f;
+    UnboundCourseMigrationIntent intent;
+    intent.reader.fill(7);
+    intent.request.original = f.request;
+    intent.activePack = f.request.manifest;
+    UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> bytes{};
+    if (fault == 0) intent.phase = UnboundCourseMigrationPhase::Bound;
+    if (fault == 1) {
+      auto orphan = intent;
+      orphan.phase = UnboundCourseMigrationPhase::Isolated;
+      ASSERT_TRUE(encodeUnboundCourseMigrationIntent(orphan, bytes));
+      f.storage.files[UnboundCourseMigrationIntentStore::PATHS[2]] = {bytes.begin(), bytes.end()};
+    }
+    if (fault >= 2) {
+      auto foreign = intent;
+      if (fault == 2) foreign.reader[0] ^= 1;
+      if (fault == 3) foreign.request.original.owner[0] ^= 1;
+      if (fault == 4) foreign.activePack.contentHash[0] ^= 1;
+      ASSERT_TRUE(encodeUnboundCourseMigrationIntent(foreign, bytes));
+      f.storage.files[UnboundCourseMigrationIntentStore::STAGES[0]] = {bytes.begin(), bytes.end()};
+      if (fault == 5) f.storage.files.at(UnboundCourseMigrationIntentStore::STAGES[0]).resize(99);
+      if (fault == 6) {
+        f.storage.files[UnboundCourseMigrationIntentStore::PATHS[0]] = {bytes.begin(), bytes.end()};
+      }
+    }
+    const auto files = f.storage.files;
+    EXPECT_NE(store.persist(intent), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(f.storage.files, files);
+    EXPECT_EQ(f.storage.mutations, 0u);
+    auto output = intent;
+    EXPECT_NE(store.load(output), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(output, intent);
+  }
+}
+
+TEST(UnboundCourseMigrationIntentStore, PermissionLossAndReadErrorsPreserveRecordsWithoutFurtherMutation) {
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    Fixture f;
+    UnboundCourseMigrationIntent intent;
+    intent.reader.fill(7);
+    intent.request.original = f.request;
+    intent.activePack = f.request.manifest;
+    UnboundCourseMigrationIntentStore store(f.storage, f.scratch, Fixture::permitted, &f.storage);
+    ASSERT_EQ(store.persist(intent), UnboundCourseIntentResult::Ok);
+    intent.phase = UnboundCourseMigrationPhase::Bound;
+    if (fault == 0) f.storage.allowed = false;
+    if (fault == 1) f.storage.readError = true;
+    if (fault == 2) f.storage.statError = true;
+    if (fault == 3) f.storage.revokeRead = true;
+    const auto files = f.storage.files;
+    const auto mutations = f.storage.mutations;
+    EXPECT_NE(store.persist(intent), UnboundCourseIntentResult::Ok);
+    auto output = intent;
+    EXPECT_NE(store.load(output), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(output, intent);
+    EXPECT_EQ(f.storage.files, files);
+    EXPECT_EQ(f.storage.mutations, mutations);
+  }
+}
+
+TEST(UnboundCourseMigrationIntent, RecoveryRetainsOriginalAndUpdatedActivePackIdentities) {
+  const std::string path = COURSE_BASELINE_IMPORT_FIXTURE;
+  std::ifstream input(path.substr(0, path.find_last_of('/') + 1) + "UnboundCourseMigrationIntent-v1.fixture",
+                      std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+  UnboundCourseMigrationIntent intent;
+  ASSERT_TRUE(decodeUnboundCourseMigrationIntent(bytes, intent));
+  EXPECT_NE(intent.activePack.contentHash, intent.request.original.manifest.contentHash);
+  EXPECT_EQ(intent.activePack.logicalIdentity, intent.request.original.manifest.logicalIdentity);
+  std::array<uint8_t, UNBOUND_COURSE_MIGRATION_INTENT_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, encoded));
+  EXPECT_TRUE(std::equal(encoded.begin(), encoded.end(), bytes.begin(), bytes.end()));
+  for (const auto phase : {UnboundCourseMigrationPhase::Prepared, UnboundCourseMigrationPhase::Bound,
+                           UnboundCourseMigrationPhase::Isolated}) {
+    intent.phase = phase;
+    ASSERT_TRUE(encodeUnboundCourseMigrationIntent(intent, encoded));
+    UnboundCourseMigrationIntent restored;
+    ASSERT_TRUE(decodeUnboundCourseMigrationIntent(encoded, restored));
+    EXPECT_EQ(restored, intent);
+  }
+  const auto unchanged = intent;
+  for (size_t size = 0; size < bytes.size(); ++size) {
+    EXPECT_FALSE(decodeUnboundCourseMigrationIntent(std::span(bytes).first(size), intent));
+    EXPECT_EQ(intent, unchanged);
+  }
+  for (size_t index = 0; index < bytes.size(); ++index) {
+    auto corrupt = bytes;
+    corrupt[index] ^= 1;
+    EXPECT_FALSE(decodeUnboundCourseMigrationIntent(corrupt, intent));
+    EXPECT_EQ(intent, unchanged);
+  }
+  // Correct envelope CRC cannot authorize a foreign course, reader or unknown phase.
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    auto invalid = bytes;
+    if (fault == 0) invalid[226] ^= 1;
+    if (fault == 1) std::fill(invalid.begin() + 8, invalid.begin() + 24, 0);
+    if (fault == 2) invalid[5] = 4;
+    if (fault == 3) invalid[6] = 1;
+    if (fault == 4) std::fill(invalid.begin() + 181, invalid.begin() + 213, 0);
+    if (fault == 5) invalid[222] = 2;
+    course_review_detail::number(invalid, 242, binary_record::crc32(invalid.data(), 242), 4);
+    EXPECT_FALSE(decodeUnboundCourseMigrationIntent(invalid, intent));
+    EXPECT_EQ(intent, unchanged);
+  }
+  auto foreign = unchanged;
+  foreign.activePack.logicalIdentity[0] ^= 1;
+  encoded.fill(99);
+  EXPECT_FALSE(encodeUnboundCourseMigrationIntent(foreign, encoded));
+  EXPECT_TRUE(std::all_of(encoded.begin(), encoded.end(), [](uint8_t byte) { return byte == 99; }));
+}
+
 TEST(UnboundCourseMigrationRequest, SharedConsentBindsReviewAndTransferWithoutBecomingArchiveConsent) {
   const std::string path = COURSE_BASELINE_IMPORT_FIXTURE;
   const auto directory = path.substr(0, path.find_last_of('/') + 1);
@@ -579,7 +997,8 @@ TEST(UnboundCourseMigrationRequest, SharedConsentBindsReviewAndTransferWithoutBe
   EXPECT_FALSE(decodeCourseBaselineImportRequest(bytes, archive));
   std::ifstream roster(directory + "CourseBaselineReview-unbound-v2.fixture", std::ios::binary);
   const std::vector<uint8_t> review{std::istreambuf_iterator<char>(roster), std::istreambuf_iterator<char>()};
-  Identity reader{}; reader.fill(1);
+  Identity reader{};
+  reader.fill(1);
   TransferDeclaration transfer;
   transfer.manifest = request.original.manifest;
   transfer.state.transaction = request.original.transaction;
@@ -589,10 +1008,12 @@ TEST(UnboundCourseMigrationRequest, SharedConsentBindsReviewAndTransferWithoutBe
   transfer.state.length = request.original.manifest.length;
   ASSERT_TRUE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, reader,
                                                    request.original.generation, request.original.owner, transfer));
-  auto foreign = reader; foreign[0] ^= 1;
+  auto foreign = reader;
+  foreign[0] ^= 1;
   EXPECT_FALSE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, foreign,
                                                     request.original.generation, request.original.owner, transfer));
-  auto changed = transfer; changed.state.transaction[0] ^= 1;
+  auto changed = transfer;
+  changed.state.transaction[0] ^= 1;
   EXPECT_FALSE(matchesUnboundCourseMigrationRequest(request, review, request.original.reviewHash, reader,
                                                     request.original.generation, request.original.owner, changed));
   std::ifstream isolated(directory + "CourseBaselineReview-v1.fixture", std::ios::binary);
@@ -602,7 +1023,8 @@ TEST(UnboundCourseMigrationRequest, SharedConsentBindsReviewAndTransferWithoutBe
   for (size_t size = 0; size < bytes.size(); ++size)
     EXPECT_FALSE(decodeUnboundCourseMigrationRequest(std::span(bytes).first(size), request));
   for (size_t index = 0; index < bytes.size(); ++index) {
-    auto corrupt = bytes; corrupt[index] ^= 1;
+    auto corrupt = bytes;
+    corrupt[index] ^= 1;
     EXPECT_FALSE(decodeUnboundCourseMigrationRequest(corrupt, request));
   }
 }

@@ -1046,3 +1046,66 @@ installation, transaction and proposed course identity. It cannot replace
 native identities; pack validation, backup verification, durable authorization
 and recoverable namespace migration remain separate obligations. No command or
 capability currently exposes this record as an executable migration request.
+
+`TCUI` is a reader-local migration-intent envelope, 246 bytes: magic at 0,
+version 1 at 4, phase at 5 (1 prepared, 2 bound, 3 isolated), reserved zeros at
+6–7, native reader identity at 8, complete `TCUM` consent at 24, active-pack
+manifest at 179, and CRC32 at 242. Both pack manifests must identify the same
+course, but their content hashes can differ for a compatible update. Prepared
+must be persisted before namespace mutation; later phases require native
+verification of their corresponding state. Decoding this envelope does not
+grant authority. The portable store publishes immutable prepared, bound and
+isolated records at `/.crosspoint/companion/course-unbound.{prepared,bound,isolated}`
+through matching `.tmp` stages, with readback before and after rename. Publication
+requires contiguous predecessors with identical reader, consent and active pack.
+Repeated completed phases do not write again. A complete matching stage resumes
+only its own phase. Torn-stage recovery requires a prefix matching the expected
+record and a successful native phase-verification callback. The phase chain,
+prefix bytes and prefix length are rechecked after verification, before removal;
+foreign bytes, complete corrupt records and conflicting evidence remain intact.
+The shared workspace supplies the comparison buffer; no allocation is added.
+The HAL adapter restricts access to those six paths, binds persistence to native
+reader/card identities and the authenticated Apple owner, synchronizes and closes
+stage writes, and checks file cleanup before exposing a loaded record. Loading
+does not authorize mutation. Startup must treat pending or invalid evidence as
+unresolved. Course-state selection now refuses any retained unbound intent or
+stage before reading a binding or moving legacy files; fresh unbound capture also
+refuses these records. This gate preserves evidence until the coordinator can
+verify or recover it. Startup recovery coordination and mutation integration
+remain unfinished, including verification before accepting an isolated intent.
+
+The portable migration coordinator composes those phase records with native
+verification and idempotent binding/isolation hooks. It checks all canonical and
+staged evidence before invoking hooks, publishes prepared intent before binding,
+publishes bound intent before isolation, and verifies isolated state before and
+after recording completion. Recovery recognizes only the exact retained
+reader/consent/active-pack family. It rechecks phase evidence after verification
+before mutation; completed recovery verifies state without repeating writes or
+learner mutations. Native verification must check both original and current pack
+compatibility, frozen review/backups and owned partial migration. Completed
+verification must preserve newer learner state. This portable coordinator is not
+yet connected to native startup or exposed as a protocol mutation command.
+
+The native read-only pack-pair verifier checks the original payload and installed
+pack against their separate lengths and SHA-256 values, validates each complete
+pack, requires equal locales and compares item identity history. When history is
+missing, only byte-identical legacy sections may bridge it. It hashes both packs
+again after comparison and releases all handles/parser state. This establishes
+pack evidence only: learner references, frozen backups, reviewed journal and
+native authorization still require separate verification before migration.
+
+The unbound reviewed-file reader lends only recognized learner files from a
+hash-verified frozen v2 review bound to native reader/card/course identities.
+Each copied file must have the recorded length and SHA-256 and no pending copy
+stage. A missing name in the frozen roster returns missing; unreadable or
+conflicting evidence refuses the loan. Diagnostic usage and pack bytes are not
+learner files. Copies remain historical evidence after mutable source loss.
+Callers must separately verify the complete backup cohort and pass permission
+checks to the learner validators; opening a copy does not authorize migration.
+
+Unbound item inspection now feeds the verified copy to the existing native item
+catalog validator, checks all live and retired UIDs against the confirmed original
+pack and retained identity history, and reports the committed review count for
+later journal/session checks. Missing items remain distinct from malformed data.
+Failure preserves the caller's report and releases the file loan. Other learner
+files and distributed journal provenance remain separate migration obligations.
