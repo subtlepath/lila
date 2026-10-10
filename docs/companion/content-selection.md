@@ -4234,3 +4234,13 @@ cover removals, unreviewed additions, snapshot ownership, cancellation and sourc
 failure, and verify that applying the planned star bodies preserves schedules,
 other flags and review counters. Failed scans withhold completion and require a
 fresh begin. These checks do not yet provide runtime migration publication.
+
+The star reservation format now binds the exact planned body digest/count to the
+complete review reservation and a separate later epoch. Canonical star conversion
+links its first event to the converted review tail, then chains subsequent star
+events. Original course/hash/generation remain bound, with unknown clock quality
+and no inferred historical mark timestamps. Counts and a caller-computed digest
+of the complete emitted body sequence must match before conversion is complete.
+Codec integrity and conversion are not durable identity ownership: Native epoch
+allocation/sealing, full plan hashing, retained-epoch recovery, provenance and
+runtime publication remain required and are not wired by these helpers.

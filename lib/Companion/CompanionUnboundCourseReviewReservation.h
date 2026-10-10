@@ -42,11 +42,8 @@ inline bool encodeUnboundCourseReviewReservation(const UnboundCourseReviewReserv
   course_review_detail::number(output, 270, binary_record::crc32(output.data(), 270), 4);
   return true;
 }
-// Input is immutable for both validation and extraction; output is preserved on failure.
-inline bool decodeUnboundCourseReviewReservation(std::span<const uint8_t> input,
-                                                 UnboundCourseReviewReservation& output) {
+inline bool validEncodedUnboundCourseReviewReservation(std::span<const uint8_t> input) {
   if (input.size() != UNBOUND_COURSE_REVIEW_RESERVATION_SIZE ||
-      course_baseline_detail::overlaps(input.data(), input.size(), &output, sizeof(output)) ||
       !std::equal(unbound_course_detail::REVIEW_RESERVATION_PREFIX.begin(),
                   unbound_course_detail::REVIEW_RESERVATION_PREFIX.end(), input.begin()) ||
       course_review_detail::number(input, 270, 4) != binary_record::crc32(input.data(), 270) ||
@@ -56,11 +53,18 @@ inline bool decodeUnboundCourseReviewReservation(std::span<const uint8_t> input,
   const auto epoch = course_review_detail::number(input, 254, 8);
   const auto records = static_cast<uint32_t>(course_review_detail::number(input, 262, 4));
   const auto events = static_cast<uint32_t>(course_review_detail::number(input, 266, 4));
-  if (!epoch || !unbound_course_detail::validReviewReservationCounts(records, events)) return false;
+  return epoch && unbound_course_detail::validReviewReservationCounts(records, events);
+}
+// Input is immutable for both validation and extraction; output is preserved on failure.
+inline bool decodeUnboundCourseReviewReservation(std::span<const uint8_t> input,
+                                                 UnboundCourseReviewReservation& output) {
+  if (course_baseline_detail::overlaps(input.data(), input.size(), &output, sizeof(output)) ||
+      !validEncodedUnboundCourseReviewReservation(input))
+    return false;
   decodeUnboundCourseMigrationIntent(input.subspan(8, UNBOUND_COURSE_MIGRATION_INTENT_SIZE), output.intent);
-  output.epoch = epoch;
-  output.records = records;
-  output.events = events;
+  output.epoch = course_review_detail::number(input, 254, 8);
+  output.records = static_cast<uint32_t>(course_review_detail::number(input, 262, 4));
+  output.events = static_cast<uint32_t>(course_review_detail::number(input, 266, 4));
   return true;
 }
 }  // namespace companion

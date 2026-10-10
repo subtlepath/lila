@@ -18,6 +18,7 @@
 #include "lib/Companion/CompanionUnboundCourseMigrationRequest.h"
 #include "lib/Companion/CompanionUnboundCourseReviewReservation.h"
 #include "lib/Companion/CompanionUnboundCourseReviewReservationStore.h"
+#include "lib/Companion/CompanionUnboundCourseStarReservation.h"
 
 using namespace companion;
 namespace {
@@ -646,8 +647,12 @@ TEST(UnboundCourseMigrationCoordinator, NativeVerificationFailureWithholdsComple
     UnboundCourseMigrationCoordinator coordinator(f.storage, f.scratch, Fixture::permitted, &f.storage);
     EXPECT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::VerificationFailed);
     EXPECT_EQ(coordinator.completed(), nullptr);
-    if (phase == 1) EXPECT_EQ(f.storage.mutations, 0u);
-    if (phase == 2) EXPECT_EQ(f.isolationMutations, 0u);
+    if (phase == 1) {
+      EXPECT_EQ(f.storage.mutations, 0u);
+    }
+    if (phase == 2) {
+      EXPECT_EQ(f.isolationMutations, 0u);
+    }
     f.rejectPhase = 0;
     ASSERT_EQ(coordinator.run(f.intent, f.hooks()), UnboundCourseIntentResult::Ok);
     EXPECT_EQ(f.boundMutations, 1u);
@@ -2029,4 +2034,73 @@ TEST(UnboundCourseReviewReservationStore, TornStageRemoveWriteAndRenameFailuresR
       EXPECT_FALSE(f.storage.files.contains(UnboundCourseReviewReservationStore::STAGE));
     }
   }
+}
+
+TEST(UnboundCourseStarReservation, FixtureRoundTripsAndRejectsEveryTruncationAndDamagedByte) {
+  const std::string path = COURSE_BASELINE_IMPORT_FIXTURE;
+  std::ifstream input(path.substr(0, path.find_last_of('/') + 1) + "UnboundCourseStarReservation-v1.fixture",
+                      std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  ASSERT_EQ(bytes.size(), UNBOUND_COURSE_STAR_RESERVATION_SIZE);
+  UnboundCourseStarReservation value;
+  ASSERT_TRUE(decodeUnboundCourseStarReservation(bytes, value));
+  EXPECT_EQ(value.epoch, value.reviews.epoch + 1);
+  EXPECT_EQ(value.events, 2u);
+  EXPECT_EQ(value.first().origin, value.reviews.intent.reader);
+  EXPECT_EQ(value.first().sequence, 1u);
+  EXPECT_EQ(value.reviewTail().epoch, value.reviews.epoch);
+  EXPECT_EQ(value.reviewTail().sequence, value.reviews.events);
+  const auto original = value;
+  std::array<uint8_t, UNBOUND_COURSE_STAR_RESERVATION_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseStarReservation(value, encoded));
+  EXPECT_TRUE(std::equal(bytes.begin(), bytes.end(), encoded.begin()));
+  for (size_t size = 0; size < bytes.size(); ++size) {
+    EXPECT_FALSE(decodeUnboundCourseStarReservation(std::span(bytes).first(size), value));
+    EXPECT_EQ(value, original);
+  }
+  for (size_t at = 0; at < bytes.size(); ++at) {
+    auto damaged = bytes;
+    damaged[at] ^= 1;
+    EXPECT_FALSE(decodeUnboundCourseStarReservation(damaged, value));
+    EXPECT_EQ(value, original);
+  }
+}
+
+TEST(UnboundCourseStarReservation, ChecksumsCannotAuthorizeReusedEpochExcessCountsOrMissingPlanBinding) {
+  Fixture fixture;
+  UnboundCourseStarReservation value;
+  value.reviews.intent.reader.fill(17);
+  value.reviews.intent.request.original = fixture.request;
+  value.reviews.intent.activePack = fixture.request.manifest;
+  value.reviews.epoch = 19;
+  value.reviews.records = 3;
+  value.reviews.events = 4;
+  value.epoch = 20;
+  value.events = 2;
+  value.planHash.fill(3);
+  std::array<uint8_t, UNBOUND_COURSE_STAR_RESERVATION_SIZE> encoded{};
+  ASSERT_TRUE(encodeUnboundCourseStarReservation(value, encoded));
+  const auto original = value;
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    auto damaged = encoded;
+    if (fault == 0) course_review_detail::number(damaged, 282, 19, 8);
+    if (fault == 1) course_review_detail::number(damaged, 282, 0, 8);
+    if (fault == 2) course_review_detail::number(damaged, 290, 100, 4);
+    if (fault == 3) std::fill_n(damaged.begin() + 294, 32, 0);
+    if (fault == 4) damaged[278] ^= 1;
+    if (fault == 5) damaged[5] = 1;
+    course_review_detail::number(damaged, 326, binary_record::crc32(damaged.data(), 326), 4);
+    EXPECT_FALSE(decodeUnboundCourseStarReservation(damaged, value));
+    EXPECT_EQ(value, original);
+  }
+  value.epoch = value.reviews.epoch;
+  encoded.fill(77);
+  EXPECT_FALSE(encodeUnboundCourseStarReservation(value, encoded));
+  EXPECT_TRUE(std::all_of(encoded.begin(), encoded.end(), [](uint8_t byte) { return byte == 77; }));
+  value = original;
+  value.reviews.records = value.reviews.events = 0;
+  value.events = 1;
+  ASSERT_TRUE(encodeUnboundCourseStarReservation(value, encoded));
+  ASSERT_TRUE(decodeUnboundCourseStarReservation(encoded, value));
+  EXPECT_EQ(value.events, 1u);
 }

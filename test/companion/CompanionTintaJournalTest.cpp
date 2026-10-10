@@ -8,6 +8,7 @@
 
 #include "../../lib/Companion/CompanionBookmarkIdentityCursor.h"
 #include "../../lib/Companion/CompanionBookmarkResolution.h"
+#include "../../lib/Companion/CompanionLegacyTintaStarConversion.h"
 #include "../../lib/Companion/CompanionLegacyTintaStarPlan.h"
 #include "../../lib/Companion/CompanionPortablePreferenceResolution.h"
 #include "../../lib/Companion/CompanionReaderPreferenceApplication.h"
@@ -5555,4 +5556,140 @@ TEST(CompanionTintaJournal, LegacyStarPlanRejectsInvalidMembershipAndPoisonsInte
     ASSERT_TRUE(plan.begin(course, {}));
     EXPECT_EQ(plan.next(output), LegacyTintaStarPlanResult::End);
   }
+}
+
+TEST(CompanionTintaJournal, LegacyStarConversionChainsAfterReviewTailAndRequiresWholePlanDigest) {
+  Fixture fixture;
+  UnboundCourseStarReservation reservation;
+  reservation.reviews = journalEpochReservation(fixture);
+  reservation.epoch = reservation.reviews.epoch + 1;
+  reservation.events = 2;
+  std::array<TintaBody, 2> bodies;
+  std::array<uint8_t, 46> fullPlan{};
+  for (unsigned index = 0; index < bodies.size(); ++index) {
+    bodies[index].course = reservation.reviews.intent.request.original.manifest.logicalIdentity;
+    bodies[index].kind = EventKind::Star;
+    bodies[index].uid = index + 1;
+    bodies[index].enabled = index != 0;
+    ASSERT_EQ(encodeTintaBody(bodies[index], std::span(fullPlan).subspan(index * 23, 23)), 23u);
+  }
+  ASSERT_TRUE(fixture.storage.digest(fullPlan, reservation.planHash));
+  LegacyTintaStarConversion conversion([](void* raw, std::span<const uint8_t> bytes,
+                                          Digest& digest) { return static_cast<Storage*>(raw)->digest(bytes, digest); },
+                                       [](void*) { return true; }, &fixture.storage);
+  ASSERT_TRUE(conversion.begin(reservation));
+  EXPECT_FALSE(conversion.complete(reservation.planHash));
+  EXPECT_FALSE(conversion.next(1, bodies[0]));
+  for (unsigned index = 0; index < bodies.size(); ++index) {
+    ASSERT_TRUE(conversion.next(index, bodies[index]));
+    const auto* event = conversion.event();
+    ASSERT_NE(event, nullptr);
+    EXPECT_EQ(event->identity.origin, reservation.reviews.intent.reader);
+    EXPECT_EQ(event->identity.epoch, reservation.epoch);
+    EXPECT_EQ(event->identity.sequence, index + 1u);
+    EXPECT_EQ(event->ancestorCount, 1);
+    const EventIdentity previous{reservation.reviews.intent.reader, reservation.epoch, index};
+    EXPECT_EQ(event->ancestors[0], index ? previous : reservation.reviewTail());
+    EXPECT_EQ(event->clockQuality, ClockQuality::Unknown);
+    EXPECT_EQ(event->timestamp, 0u);
+    EXPECT_EQ(event->studyDay, 0u);
+    EXPECT_EQ(event->storageGeneration, reservation.reviews.intent.request.original.generation);
+    EXPECT_EQ(event->resource, reservation.reviews.intent.request.original.manifest.contentHash);
+    EXPECT_EQ(event->schedulerVersion, 0);
+    EXPECT_EQ(event->schedulerConfiguration, Digest{});
+    EXPECT_TRUE(conversion.matches(*event, conversion.body()));
+    EXPECT_TRUE(std::equal(conversion.body().begin(), conversion.body().end(), fullPlan.begin() + index * 23));
+  }
+  EXPECT_TRUE(conversion.complete(reservation.planHash));
+  auto wrong = reservation.planHash;
+  wrong[0] ^= 1;
+  EXPECT_FALSE(conversion.complete(wrong));
+  EXPECT_FALSE(conversion.next(2, bodies[0]));
+  EXPECT_EQ(conversion.event(), nullptr);
+  reservation.reviews.records = reservation.reviews.events = 0;
+  reservation.events = 1;
+  ASSERT_TRUE(conversion.begin(reservation));
+  ASSERT_TRUE(conversion.next(0, bodies[0]));
+  ASSERT_NE(conversion.event(), nullptr);
+  EXPECT_EQ(conversion.event()->ancestorCount, 0);
+}
+
+TEST(CompanionTintaJournal, LegacyStarConversionSharedFixtureBindsCanonicalBodies) {
+  const std::string path = JOURNAL_EXPORT_PAGE_FIXTURE;
+  std::ifstream input(path.substr(0, path.find_last_of('/') + 1) + "UnboundCourseStarReservation-v1.fixture",
+                      std::ios::binary);
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  UnboundCourseStarReservation reservation;
+  ASSERT_TRUE(decodeUnboundCourseStarReservation(bytes, reservation));
+  std::array<uint8_t, 46> canonical{};
+  for (unsigned index = 0; index < 2; ++index) {
+    TintaBody body;
+    body.course = reservation.reviews.intent.request.original.manifest.logicalIdentity;
+    body.kind = EventKind::Star;
+    body.uid = index + 1;
+    body.enabled = index != 0;
+    ASSERT_EQ(encodeTintaBody(body, std::span(canonical).subspan(index * 23, 23)), 23u);
+  }
+  Digest digest;
+  ASSERT_NE(SHA256(canonical.data(), canonical.size(), digest.data()), nullptr);
+  EXPECT_EQ(digest, reservation.planHash);
+}
+
+TEST(CompanionTintaJournal, LegacyStarConversionHashFailureAndCallbackCancellationNeverConsumeIdentity) {
+  Fixture fixture;
+  UnboundCourseStarReservation reservation;
+  reservation.reviews = journalEpochReservation(fixture);
+  reservation.epoch = reservation.reviews.epoch + 1;
+  reservation.events = 1;
+  reservation.planHash.fill(3);
+  struct Context {
+    bool allowed = true, failHash = true, closeNext = false;
+    LegacyTintaStarConversion* owner = nullptr;
+    const UnboundCourseStarReservation* reservation;
+    unsigned probes = 0;
+  } context{true, true, false, nullptr, &reservation};
+  auto hash = [](void* raw, std::span<const uint8_t> bytes, Digest& output) {
+    auto& state = *static_cast<Context*>(raw);
+    ++state.probes;
+    EXPECT_FALSE(state.owner->begin(*state.reservation));
+    EXPECT_EQ(state.owner->event(), nullptr);
+    if (state.closeNext) {
+      state.closeNext = false;
+      state.owner->close();
+    }
+    return !state.failHash && SHA256(bytes.data(), bytes.size(), output.data()) != nullptr;
+  };
+  LegacyTintaStarConversion conversion(hash, [](void* raw) { return static_cast<Context*>(raw)->allowed; }, &context);
+  context.owner = &conversion;
+  TintaBody body;
+  body.course = reservation.reviews.intent.request.original.manifest.logicalIdentity;
+  body.kind = EventKind::Star;
+  body.uid = 1;
+  body.enabled = true;
+  ASSERT_TRUE(conversion.begin(reservation));
+  EXPECT_FALSE(conversion.next(0, body));
+  EXPECT_EQ(conversion.event(), nullptr);
+  EXPECT_FALSE(conversion.complete(reservation.planHash));
+  context.failHash = false;
+  ASSERT_TRUE(conversion.next(0, body));
+  ASSERT_NE(conversion.event(), nullptr);
+  EXPECT_EQ(conversion.event()->identity, reservation.first());
+  EXPECT_GT(context.probes, 0u);
+  ASSERT_TRUE(conversion.begin(reservation));
+  context.closeNext = true;
+  EXPECT_FALSE(conversion.next(0, body));
+  EXPECT_EQ(conversion.event(), nullptr);
+  EXPECT_FALSE(conversion.next(0, body));
+  ASSERT_TRUE(conversion.begin(reservation));
+  context.allowed = false;
+  EXPECT_FALSE(conversion.next(0, body));
+  EXPECT_EQ(conversion.event(), nullptr);
+  context.allowed = true;
+  ASSERT_TRUE(conversion.next(0, body));
+  EXPECT_EQ(conversion.event()->identity, reservation.first());
+  auto foreign = body;
+  foreign.course[0] ^= 1;
+  ASSERT_TRUE(conversion.begin(reservation));
+  EXPECT_FALSE(conversion.next(0, foreign));
+  EXPECT_EQ(conversion.event(), nullptr);
 }

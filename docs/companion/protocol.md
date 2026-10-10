@@ -1393,3 +1393,37 @@ reservation loan. No internal allocation is added; owners and record copies
 are retained off stack and the workspace is shared. Recovery of prior epochs,
 legacy replay/provenance agreement and journal publication remain separate,
 and the owner is not yet wired to runtime commands or startup recovery.
+
+`TCSR` v1 reserves identities for frozen star reconciliation separately from
+the legacy review stream. Its exact 330-byte encoding is the eight-byte `TCSR`
+prefix (version 1, three zero reserved bytes), a complete 274-byte `TCRR` at
+offset 8, a little-endian star epoch at offset 282, a four-byte event count at
+290, a 32-byte plan digest at 294 and CRC32 of bytes 0–325 at 326. The plan
+digest is SHA-256 of the ordered concatenation of canonical 23-byte `Star`
+bodies. A zero-event plan uses the digest of empty input, not a zero digest.
+The nested reservation and all checksums must validate before any decoded
+output changes. The star epoch must be later than the review epoch. The star
+event count cannot exceed the number of legacy review records plus the native
+96-mark capacity: at most one obsolete-star removal per projected item,
+followed by at most 96 retained membership additions.
+
+`protocol/fixtures/UnboundCourseStarReservation-v1.fixture` binds a canonical
+two-body plan (UID 1 disabled, UID 2 enabled) to the original course in the
+nested review fixture. Encoding/decoding establish binding and integrity only;
+Native allocation, exclusive epoch ownership, durable sealing, frozen-plan
+verification and recovery are still required before publication. This format
+has no runtime command or startup-recovery owner yet.
+
+`LegacyTintaStarConversion` produces canonical packets at consecutive sequences
+starting at one in the separately reserved epoch. When converted reviews exist,
+the first star references their exact reserved tail identity; subsequent stars
+reference the preceding star. Without reviews, the first star has no ancestor.
+These links assert local migration order and do not infer shared legacy history.
+Packets bind the original course, content hash and storage generation, use
+unknown clock quality with timestamp and study day zero, and have no scheduler
+configuration. Legacy marks provide no historical day or UTC time. Failed body
+hashing exposes no packet and consumes no identity. Completion requires the
+exact reserved count and a caller-computed digest of all emitted canonical
+bodies matching the sealed plan digest. The converter itself does not compute
+that whole-plan digest or supply publication authority. It retains fixed fields
+off stack and performs no internal allocation.
