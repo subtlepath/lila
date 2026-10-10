@@ -39,6 +39,7 @@
 #include "lib/Companion/CompanionLegacyBackupRequest.h"
 #include "lib/Companion/CompanionLegacyTintaBackupManifest.h"
 #include "lib/Companion/CompanionLegacyTintaBackupPaths.h"
+#include "lib/Companion/CompanionLegacyTintaEventConversion.h"
 #include "lib/Companion/CompanionLegacyTintaEventCursor.h"
 #include "lib/Companion/CompanionLegacyTintaJournal.h"
 #include "lib/Companion/CompanionLegacyTintaMutation.h"
@@ -5131,4 +5132,134 @@ TEST(CompanionTintaJournal, ReservedEpochBodyVerifierRejectsMismatchAndSkipsOthe
   EXPECT_EQ(context.calls, 1u);
   EXPECT_EQ(report.matchedEvents, 1u);
   EXPECT_EQ(f.storage.writes, writes);
+}
+
+TEST(CompanionTintaJournal, LegacyConversionProducesCanonicalReviewUndoAndAtomicFlagPair) {
+  Fixture f;
+  auto reservation = journalEpochReservation(f);
+  reservation.records = 3;
+  reservation.events = 4;
+  auto hash = [](void* raw, std::span<const uint8_t> bytes, Digest& output) {
+    return static_cast<Storage*>(raw)->digest(bytes, output);
+  };
+  LegacyTintaEventConversion conversion(hash, [](void*) { return true; }, &f.storage);
+  const TintaSchedulerConfiguration configuration{8700, 730};
+  ASSERT_TRUE(conversion.begin(reservation, configuration));
+  ASSERT_EQ(f.journal.open(), TintaJournalResult::Ok);
+  LegacyTintaEntry entry;
+  entry.uid = 1;
+  entry.grade = 4;
+  entry.format = 9;
+  entry.responseQuarterSeconds = 255;
+  entry.studyDay = 123;
+  entry.timestamp = UINT32_MAX;
+  auto before = tinta::core::ItemState::fresh(1);
+  ASSERT_TRUE(conversion.next(0, entry, before));
+  ASSERT_NE(conversion.event(0), nullptr);
+  EXPECT_EQ(conversion.event(0)->identity, reservation.first());
+  EXPECT_EQ(conversion.event(0)->studyDay, 123u);
+  EXPECT_EQ(conversion.event(0)->timestamp, 0u);
+  EXPECT_EQ(conversion.event(0)->clockQuality, ClockQuality::Unknown);
+  EXPECT_EQ(conversion.event(0)->ancestorCount, 0u);
+  EXPECT_EQ(conversion.event(0)->resource, reservation.intent.request.original.manifest.contentHash);
+  TintaBody decoded;
+  ASSERT_TRUE(decodeTintaBody(conversion.body(0), decoded));
+  EXPECT_EQ(decoded.responseMilliseconds, 63750u);
+  EXPECT_EQ(decoded.configuration, configuration);
+  EXPECT_EQ(decoded.course, reservation.intent.request.original.manifest.logicalIdentity);
+  const auto review = *conversion.event(0);
+  const std::vector<uint8_t> reviewBytes(conversion.body(0).begin(), conversion.body(0).end());
+  ASSERT_EQ(f.journal.append(*conversion.event(0), conversion.body(0)), TintaJournalResult::Ok);
+  ASSERT_EQ(f.journal.read(0), TintaJournalResult::Ok);
+  EXPECT_TRUE(conversion.matches(0, f.journal.event(), f.journal.body()));
+  auto changed = f.journal.event();
+  changed.timestamp = 1;
+  EXPECT_FALSE(conversion.matches(0, changed, f.journal.body()));
+  EXPECT_FALSE(conversion.complete());
+  entry.operation = LegacyTintaOperation::Undo;
+  entry.undoRecord = 0;
+  ASSERT_TRUE(conversion.next(1, entry, before));
+  EXPECT_EQ(conversion.event(0)->identity.sequence, 2u);
+  EXPECT_EQ(conversion.event(0)->ancestorCount, 1u);
+  EXPECT_EQ(conversion.event(0)->ancestors[0], review.identity);
+  ASSERT_TRUE(decodeTintaBody(conversion.body(0), decoded));
+  EXPECT_EQ(decoded.undoTarget, review.identity);
+  ASSERT_EQ(f.journal.append(*conversion.event(0), conversion.body(0)), TintaJournalResult::Ok);
+  entry.operation = LegacyTintaOperation::Flags;
+  entry.flags = tinta::core::item_flag::kSuspended | tinta::core::item_flag::kStarred;
+  ASSERT_TRUE(conversion.next(2, entry, before));
+  ASSERT_NE(conversion.event(1), nullptr);
+  EXPECT_EQ(conversion.event(0)->identity.sequence, 3u);
+  EXPECT_EQ(conversion.event(1)->identity.sequence, 4u);
+  EXPECT_EQ(conversion.event(0)->kind, EventKind::Suspension);
+  EXPECT_EQ(conversion.event(1)->kind, EventKind::Star);
+  const std::array<std::span<const uint8_t>, 2> bodies{conversion.body(0), conversion.body(1)};
+  ASSERT_EQ(f.journal.appendPair(std::span<const SyncEvent, 2>(conversion.event(0), 2), bodies),
+            TintaJournalResult::Ok);
+  EXPECT_TRUE(conversion.complete());
+  EXPECT_EQ(conversion.count(), 4u);
+  EXPECT_EQ(conversion.records(), 3u);
+  ASSERT_TRUE(conversion.begin(reservation, configuration));
+  entry.operation = LegacyTintaOperation::Review;
+  ASSERT_TRUE(conversion.next(0, entry, before));
+  EXPECT_EQ(*conversion.event(0), review);
+  EXPECT_TRUE(std::equal(conversion.body(0).begin(), conversion.body(0).end(), reviewBytes.begin(), reviewBytes.end()));
+}
+
+TEST(CompanionTintaJournal, LegacyConversionFailuresNeverConsumeReservedIdentitiesOrExposePartialPackets) {
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    Fixture f;
+    auto reservation = journalEpochReservation(f);
+    reservation.records = 1;
+    reservation.events = 2;
+    struct Context {
+      Storage* storage;
+      LegacyTintaEventConversion* owner = nullptr;
+      unsigned fault, calls = 0;
+      bool active = true;
+    } context{&f.storage, nullptr, fault};
+    auto hash = [](void* raw, std::span<const uint8_t> bytes, Digest& output) {
+      auto& ctx = *static_cast<Context*>(raw);
+      ++ctx.calls;
+      EXPECT_EQ(ctx.owner->event(0), nullptr);
+      EXPECT_TRUE(ctx.owner->body(0).empty());
+      if (ctx.active && ctx.fault == 2) ctx.owner->close();
+      if (ctx.active && ctx.fault == 1 && ctx.calls == 2) return false;
+      return ctx.storage->digest(bytes, output);
+    };
+    auto permitted = [](void* raw) {
+      auto& ctx = *static_cast<Context*>(raw);
+      return !ctx.active || ctx.fault != 3;
+    };
+    LegacyTintaEventConversion conversion(hash, permitted, &context);
+    context.owner = &conversion;
+    context.active = false;
+    ASSERT_TRUE(conversion.begin(reservation, {}));
+    context.active = true;
+    LegacyTintaEntry entry;
+    entry.uid = 1;
+    entry.operation = LegacyTintaOperation::Flags;
+    entry.flags = tinta::core::item_flag::kStarred;
+    auto before = tinta::core::ItemState::fresh(1);
+    if (fault == 0) entry.flags |= tinta::core::item_flag::kLeech;
+    if (fault == 4) before.uid = 2;
+    if (fault == 5) entry.flags = 8;
+    EXPECT_FALSE(conversion.next(0, entry, before));
+    EXPECT_EQ(conversion.event(0), nullptr);
+    EXPECT_EQ(conversion.event(1), nullptr);
+    EXPECT_EQ(conversion.count(), 0u);
+    context.active = false;
+    if (fault == 2) {
+      ASSERT_TRUE(conversion.begin(reservation, {}));
+    }
+    entry.flags = tinta::core::item_flag::kStarred;
+    before.uid = 1;
+    ASSERT_TRUE(conversion.next(0, entry, before));
+    EXPECT_EQ(conversion.event(0)->identity.sequence, 1u);
+    EXPECT_EQ(conversion.event(1)->identity.sequence, 2u);
+    EXPECT_TRUE(conversion.complete());
+    conversion.close();
+    EXPECT_EQ(conversion.event(0), nullptr);
+    EXPECT_FALSE(conversion.complete());
+  }
 }

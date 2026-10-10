@@ -4106,3 +4106,18 @@ This is evidence for the five journal namespaces. Recovery still requires archiv
 baseline coverage, deterministic conversion/provenance verification, frozen
 counts and replay agreement before any reservation can authorize publication.
 The new inspection is not wired to a runtime migration command.
+
+Reserved legacy review conversion now composes the deterministic identity cursor
+with the existing mutation mapper. It emits canonical event/body pairs for
+reviews, exact-target undo and ordered suspension/star flag pairs. Body and
+scheduler digests must succeed before the cursor advances; failed conversion
+exposes no partial packet, and retry uses the same reserved identities. The
+converter keeps reusable envelopes/bodies off stack and adds no heap allocation.
+
+The isolated conversion preserves legacy study-day values and quantized response
+times, uses the original pack hash as resource identity, and emits unknown clock
+quality with zero UTC timestamp. Original local timestamps remain in the frozen
+backup; no UTC offset or trustworthy time is inferred. The caller must supply
+frozen scheduler configuration and replayed prior item state, verify the complete
+source stream and prove replay agreement. Matching the generated packet is
+conversion evidence, not permission to publish it or deduplicate shared history.
