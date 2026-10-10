@@ -1,8 +1,25 @@
 # Portable reader Tinta journal
 
 `CompanionTintaJournal.h` implements an append-only distributed-event journal core.
-The activity binds live mutations after canonical startup recovery. Legacy migration
-and physical recovery acceptance remain incomplete; keep the history capability disabled.
+The activity binds live mutations after canonical startup recovery. A bound course
+without a receipt now initializes an empty canonical baseline when its authoritative
+journal contains no course events. Older alpha caches may be reset; migration of
+older alpha state is outside the current scope. Existing journaled course history
+cannot be reset through this initializer. Tinta builds advertise journal export
+and merge readiness; each exchange still checks the actual course baseline.
+Physical recovery acceptance remains unverified.
+
+Both learner startup and Connect & Sync startup initialize a bound fresh course
+before journaled mutations or radios are enabled; opening the learner first is
+not required for merge readiness. Initialization audits the journal, exports an empty learner snapshot, and publishes
+it with the existing journal proof, authority checkpoint, and recoverable SD
+transaction. Normal incremental recovery and native preparation then produce the
+session snapshot required for live mutation binding. Replay/export owners retain
+fixed buffers and file handles off stack and are released before publication.
+Verify on a reflashed reader with a newly installed course: open Tinta, make a
+review and star change, reopen it, and check the canonical receipt plus journal
+events and unchanged progress. Repeat with an interrupted publication and monitor
+free/largest heap; this host implementation does not establish hardware durability.
 
 `ProgressStore::setMutationJournal` provides the live mutation boundary for reviews,
 undo and item flags. Its borrowed context/function-pointer callback receives the

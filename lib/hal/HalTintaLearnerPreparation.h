@@ -3,7 +3,6 @@
 #if LILA_TINTA
 #include "HalTintaDerivedStartupRecovery.h"
 #include "HalTintaIncrementalRecovery.h"
-#include "HalTintaLegacyAdmission.h"
 #include "HalTintaNativeDerivedPreparation.h"
 #include "HalTintaPreferenceApplication.h"
 
@@ -20,9 +19,8 @@ class HalTintaLearnerPreparation final {
   bool run(tinta::core::StateStore& store, tinta::core::Profile& profile, const tinta::core::pack::Pack& appPack) {
     snapshotReady = false;
     const auto loaded = reader.load(TintaDerivedRecord::Receipt, receipt);
-    // Legacy startup remains separate from canonical authority recovery.
-    if (loaded == TintaDerivedRecordLoad::Missing) return allowLegacyTintaWithoutReceipt(course);
-    if (loaded != TintaDerivedRecordLoad::Loaded) return failure("baseline receipt");
+    if (loaded != TintaDerivedRecordLoad::Loaded && loaded != TintaDerivedRecordLoad::Missing)
+      return failure("baseline receipt");
     bool present = false;
     if (readCourseBinding(transfer, COURSE_BINDING_PATH, scratch, installed, present) != CourseBindingResult::Ok ||
         !present || installed.logicalIdentity != course ||
@@ -35,6 +33,9 @@ class HalTintaLearnerPreparation final {
     {
       auto recovery = makeUniqueNoThrow<HalTintaIncrementalRecovery>(course);
       if (!recovery) return failure("OOM: incremental recovery owner");
+      if (loaded == TintaDerivedRecordLoad::Missing &&
+          !recovery->initialize(identity.storageGeneration, installed.contentHash, catalog, snapshot))
+        return failure("initial alpha baseline");
       const auto result = recovery->run(identity.storageGeneration, installed.contentHash, catalog, 0, snapshot);
       if ((result != TintaIncrementalRecoveryResult::Unchanged && result != TintaIncrementalRecoveryResult::Rebuilt) ||
           !recovery->journalFrontier())

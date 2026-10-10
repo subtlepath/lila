@@ -2560,6 +2560,71 @@ TEST(HalTintaJournalStorageTest, ApplicationAcknowledgementRequiresAuthorityAndN
   EXPECT_EQ(recoveredUndo, firstMatch);
 }
 
+TEST(HalTintaJournalStorageTest, FreshAlphaBaselineEnablesCanonicalRecoveryAndRefusesExistingAuthority) {
+  auto& state = inventory_hal_test::state;
+  state = {};
+  state.enumerateFileMap = true;
+  Identity course{}, generation{}, snapshot{};
+  Digest pack{};
+  course.fill(4);
+  generation.fill(5);
+  snapshot.fill(6);
+  pack.fill(7);
+  class Catalog final : public TintaSubjectCatalog {
+    TintaSubjectMembership contains(EventKind, uint32_t uid) override {
+      return uid == 1 ? TintaSubjectMembership::Present : TintaSubjectMembership::Missing;
+    }
+  } catalog;
+  HalTintaIncrementalRecovery recovery(course);
+  auto invalid = generation;
+  invalid.fill(0);
+  EXPECT_FALSE(recovery.initialize(invalid, pack, catalog, snapshot));
+  EXPECT_TRUE(state.files.empty());
+  std::array<char, COURSE_STATE_DIRECTORY_SIZE> directory{};
+  ASSERT_TRUE(courseStateDirectory(course, directory));
+  ASSERT_TRUE(Storage.ensureDirectoryExists(directory.data()));
+  std::array<char, COURSE_STATE_PATH_SIZE> oldItems{};
+  ASSERT_TRUE(tintaDerivedFilePath(course, TintaDerivedFile::Items, TintaDerivedRole::Active, oldItems));
+  state.files[oldItems.data()] = {0xAA, 0xBB};
+  ASSERT_TRUE(recovery.initialize(generation, pack, catalog, snapshot));
+  EXPECT_GT(state.files[oldItems.data()].size(), 2u);
+  ASSERT_NE(recovery.journalFrontier(), nullptr);
+  ASSERT_EQ(recovery.run(generation, pack, catalog, 0, snapshot), TintaIncrementalRecoveryResult::Unchanged);
+  const auto initialized = state.files;
+  EXPECT_FALSE(recovery.initialize(generation, pack, catalog, snapshot));
+  EXPECT_EQ(state.files, initialized);
+
+  // A missing receipt cannot silently reset already journaled learner history.
+  state = {};
+  state.enumerateFileMap = true;
+  ASSERT_TRUE(Storage.ensureDirectoryExists(directory.data()));
+  HalTintaJournalStorage storage;
+  std::array<uint8_t, 1024> journalScratch{};
+  TintaJournal journal(storage, journalScratch);
+  ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+  TintaBody body;
+  body.kind = EventKind::Star;
+  body.course = course;
+  body.uid = 1;
+  body.enabled = true;
+  SyncEvent event;
+  event.identity.origin.fill(1);
+  event.identity.epoch = 1;
+  event.identity.sequence = 1;
+  event.storageGeneration = generation;
+  event.resource = pack;
+  event.kind = EventKind::Star;
+  std::array<uint8_t, MAX_TINTA_BODY_SIZE> bytes{};
+  const auto length = encodeTintaBody(body, bytes);
+  ASSERT_TRUE(storage.digest(std::span(bytes).first(length), event.bodyHash));
+  ASSERT_EQ(journal.append(event, std::span(bytes).first(length)), TintaJournalResult::Ok);
+  ASSERT_TRUE(storage.close());
+  std::array<char, COURSE_STATE_PATH_SIZE> receipt{};
+  ASSERT_TRUE(tintaDerivedRecordPath(course, TintaDerivedRecord::Receipt, receipt));
+  EXPECT_FALSE(recovery.initialize(generation, pack, catalog, snapshot));
+  EXPECT_EQ(state.files.count(receipt.data()), 0u);
+}
+
 TEST(HalTintaJournalStorageTest, IncrementalRecoveryReplaysAuthorityAndPublishesBeforeNativePreparation) {
   auto& state = inventory_hal_test::state;
   state = {};

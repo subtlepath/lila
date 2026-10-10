@@ -1659,6 +1659,63 @@ TEST_F(HalCourseTransferTest, StartupPublicationSkipsAbsentIntentAndRejectsMalfo
   EXPECT_EQ(identities.calls, 0u);
 }
 
+TEST_F(HalCourseTransferTest, ConnectStartupInitializesFreshCourseBeforeLearnerOpen) {
+  class Identities final : public IdentityStorage {
+   public:
+    unsigned snapshots = 0;
+    bool hardwareIdentity(Identity&) override { return false; }
+    bool cardIdentity(Identity&) override { return false; }
+    IdentityRead readBinding(std::span<uint8_t>) override { return IdentityRead::Error; }
+    bool writeBinding(std::span<const uint8_t>) override { return false; }
+    IdentityRead readMarker(Identity&) override { return IdentityRead::Error; }
+    bool createMarker(const Identity&) override { return false; }
+    bool randomIdentity(Identity& output) override {
+      output.fill(static_cast<uint8_t>(6 + snapshots++));
+      return true;
+    }
+  } identities;
+  auto& state = inventory_hal_test::state;
+  state.enumerateFileMap = true;
+  const auto course = declaration.manifest.logicalIdentity;
+  state.files[ACTIVE_COURSE_PATH] = bytes;
+  std::array<uint8_t, COURSE_BINDING_SIZE> binding{};
+  ASSERT_EQ(encodeCourseBinding(declaration.manifest, binding), binding.size());
+  state.files[COURSE_BINDING_PATH] = {binding.begin(), binding.end()};
+  HalTintaJournalMergeCommitContext context;
+  auto foreign = course;
+  foreign[0] ^= 1;
+  const auto untouched = state.files;
+  EXPECT_FALSE(context.reconcileLocalHistory(foreign, generation, identities));
+  EXPECT_EQ(state.files, untouched);
+  state.files[ACTIVE_COURSE_PATH].back() ^= 1;
+  const auto corruptPack = state.files;
+  EXPECT_FALSE(context.reconcileLocalHistory(course, generation, identities));
+  EXPECT_EQ(state.files, corruptPack);
+  state.files[ACTIVE_COURSE_PATH] = bytes;
+  ASSERT_TRUE(context.reconcileLocalHistory(course, generation, identities));
+  std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> receipt{};
+  HalTintaDerivedRecordReader records(course, scratch);
+  ASSERT_EQ(records.load(TintaDerivedRecord::Receipt, receipt), TintaDerivedRecordLoad::Loaded);
+  TintaDerivedManifestView manifest;
+  ASSERT_TRUE(manifest.decode(receipt));
+  EXPECT_EQ(manifest.revision(), 1u);
+  const auto initialized = state.files;
+  ASSERT_TRUE(context.reconcileLocalHistory(course, generation, identities));
+  EXPECT_EQ(state.files, initialized);
+  HalJournalCausalAuditSession audit;
+  Digest frontier{};
+  ASSERT_TRUE(audit.run(&frontier));
+  std::array<uint8_t, JOURNAL_MERGE_READINESS_REQUEST_SIZE> request{};
+  std::copy_n("JRD\1", 4, request.begin());
+  std::copy(generation.begin(), generation.end(), request.begin() + 4);
+  tinta_body_detail::write(request, 20, audit.recordCount(), 4);
+  tinta_body_detail::write(request, 24, audit.recordSize(), 2);
+  std::copy(frontier.begin(), frontier.end(), request.begin() + 28);
+  std::array<uint8_t, JOURNAL_MERGE_READINESS_REPLY_SIZE> reply{};
+  ASSERT_EQ(context.readinessReply(request, generation, reply), reply.size());
+  EXPECT_EQ(reply[4], static_cast<uint8_t>(JournalMergeReadiness::Ready));
+}
+
 TEST_F(HalCourseTransferTest, StartupRecoversProvenSnapshotAfterPartialInstallAndRejectsChangedCard) {
   class Identities final : public IdentityStorage {
    public:

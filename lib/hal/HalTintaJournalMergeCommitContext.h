@@ -3,11 +3,11 @@
 #if LILA_TINTA
 #include "CompanionJournalMergeIntent.h"
 #include "CompanionJournalMergeReadiness.h"
+#include "HalCourseStateMigration.h"
 #include "HalLegacyTintaBackupSession.h"
 #include "HalTintaDerivedFileVerification.h"
 #include "HalTintaDerivedStartupRecovery.h"
 #include "HalTintaIncrementalRecovery.h"
-#include "HalTintaLegacyAdmission.h"
 #include "HalTintaMigrationAdmissions.h"
 
 namespace companion {
@@ -155,18 +155,29 @@ class HalTintaJournalMergeCommitContext {
     bool present = false;
     if (!installedCourse(installed.logicalIdentity, present) || !present || installed.logicalIdentity != course)
       return failure("local history course");
+    if (!transfer.verify(ACTIVE_COURSE_PATH, installed.length, installed.contentHash, scratch) ||
+        !packStorage.open(ACTIVE_COURSE_PATH) || !source.attach() ||
+        validateCourseCandidate(pack, source, scratch) != CourseValidationResult::Ok || !subjects.prepare(scratch) ||
+        !courseStateDirectory(course, path) || !Storage.ensureDirectoryExists("/tinta/courses") ||
+        !Storage.ensureDirectoryExists(path.data()))
+      return failure("local history pack/state directory");
     reader.emplace(course, scratch);
     const auto loaded = reader->load(TintaDerivedRecord::Receipt, baselineBytes);
-    if (loaded == TintaDerivedRecordLoad::Missing) return allowLegacyTintaWithoutReceipt(course);
-    if (loaded != TintaDerivedRecordLoad::Loaded ||
-        !transfer.verify(ACTIVE_COURSE_PATH, installed.length, installed.contentHash, scratch) ||
-        !packStorage.open(ACTIVE_COURSE_PATH) || !source.attach() ||
-        validateCourseCandidate(pack, source, scratch) != CourseValidationResult::Ok || !subjects.prepare(scratch))
-      return failure("local history pack/baseline");
+    if (loaded != TintaDerivedRecordLoad::Loaded && loaded != TintaDerivedRecordLoad::Missing)
+      return failure("local history baseline");
+    if (loaded == TintaDerivedRecordLoad::Missing) {
+      Identity selected{};
+      bool bound = false;
+      if (!selectActiveCourseState(transfer, scratch, selected, bound) || !bound || selected != course)
+        return failure("initial course state namespace");
+    }
     Identity snapshot{};
     if (!identities.randomIdentity(snapshot)) return failure("local history snapshot identity");
     auto recovery = makeUniqueNoThrow<HalTintaIncrementalRecovery>(course);
     if (!recovery) return failure("OOM: local history recovery");
+    if (loaded == TintaDerivedRecordLoad::Missing &&
+        !recovery->initialize(generation, installed.contentHash, subjects, snapshot))
+      return failure("initial alpha baseline");
     const auto result = recovery->run(generation, installed.contentHash, subjects, 0, snapshot);
     return result == TintaIncrementalRecoveryResult::Unchanged || result == TintaIncrementalRecoveryResult::Rebuilt ||
            failure("local history reconciliation");

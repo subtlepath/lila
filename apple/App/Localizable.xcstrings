@@ -4151,12 +4151,12 @@
         }
       }
     },
-    "Preserve and review this reader’s learning backup before syncing history.": {
+    "Reopen Connect & Sync to initialize fresh learning state before syncing history. Older alpha state may need a reset.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preserve and review this reader’s learning backup before syncing history."
+            "value": "Reopen Connect & Sync to initialize fresh learning state before syncing history. Older alpha state may need a reset."
           }
         }
       }

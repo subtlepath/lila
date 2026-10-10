@@ -976,7 +976,7 @@ final class CompanionModel {
         case .installationPending:
             historySyncNotice = String(localized: "Finish or cancel the pending learning installation before syncing history.")
         case .blocked(.migrationRequired):
-            historySyncNotice = String(localized: "Preserve and review this reader’s learning backup before syncing history.")
+            historySyncNotice = String(localized: "Reopen Connect & Sync to initialize fresh learning state before syncing history. Older alpha state may need a reset.")
         case .blocked(.unavailable):
             historySyncNotice = String(localized: "The reader’s learning state needs recovery before history can be uploaded. Reopen Connect & Sync and retry.")
         case .blocked(.noCourse):

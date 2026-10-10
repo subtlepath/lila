@@ -66,10 +66,45 @@ class HalTintaIncrementalRecovery final {
     ready = true;
     return TintaIncrementalRecoveryResult::Rebuilt;
   }
+  // First alpha baseline: old native caches may be replaced, but existing
+  // authoritative course history requires its own recovery path.
+  bool initialize(const Identity& generation, const Digest& pack, TintaSubjectCatalog& catalog,
+                  const Identity& snapshot) {
+    ready = false;
+    if (!tinta_body_detail::nonzero(course) || !tinta_body_detail::nonzero(generation) ||
+        !tinta_body_detail::nonzero(pack) || !tinta_body_detail::nonzero(snapshot) ||
+        reader.load(TintaDerivedRecord::Intent, nextBytes) != TintaDerivedRecordLoad::Missing ||
+        reader.load(TintaDerivedRecord::Receipt, previousBytes) != TintaDerivedRecordLoad::Missing)
+      return initializationFailure("arguments or existing publication");
+    {
+      auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>();
+      if (!audit) return initializationFailure("OOM: audit workspace");
+      bool found = false;
+      if (!audit->run(&frontier, &course, &catalog) || !audit->containsTintaCourse(course, found) || found)
+        return initializationFailure("existing course authority");
+    }
+    auto replay = makeUniqueNoThrow<HalTintaReplaySession>();
+    auto output = makeUniqueNoThrow<HalTintaReplayExport>();
+    if (!replay || !output) return initializationFailure("OOM: replay/export workspace");
+    if (!replay->run(course, catalog) || !replay->journalFrontier() || *replay->journalFrontier() != frontier ||
+        !output->run(*replay->workingStore(), course, 0, scratch) ||
+        !output->manifest(generation, pack, frontier, snapshot, 1, nextBytes) || !replay->workingStore()->close())
+      return initializationFailure("initial replay/export");
+    output.reset();
+    replay.reset();
+    if (publishProvenTintaDerived(course, generation, pack, catalog, nextBytes, scratch) != TintaPublicationResult::Ok)
+      return initializationFailure("initial publication");
+    ready = true;
+    return true;
+  }
   // Audited frontier only: caller must still run native derived preparation.
   const Digest* journalFrontier() const { return ready ? &frontier : nullptr; }
 
  private:
+  static bool initializationFailure(const char* reason) {
+    failure(reason);
+    return false;
+  }
   static bool rememberDay(void* context, uint32_t, const SyncEvent& event, std::span<const uint8_t> bytes, bool) {
     auto& owner = *static_cast<HalTintaIncrementalRecovery*>(context);
     if (event.kind < EventKind::Review) return true;
