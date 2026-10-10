@@ -3790,3 +3790,15 @@ entry/file frames are 96 bytes and aggregation is 112 bytes; all emitted frames
 remain within 256. Verify with the HAL companion host suite. Runtime firmware is
 unchanged. Saved sessions, authoritative replay correspondence and native
 migration composition remain unfinished.
+
+Frozen saved-session inspection now applies native persisted screen/depth/queue
+limits, validates practice targets and checks queued UIDs against active/retained
+original-pack identity evidence. Journal-change and saved-snapshot flags remain
+explicit evidence without restoring a queue. All 1,989 host tests pass; captured
+and backed-up sessions cover checksum damage, unknown UIDs, invalid screens,
+changed journal counts, valid queues and absence, preserving copied bytes. The
+C3 entry frame is 112 bytes and session helpers are at most 144 bytes; every
+emitted frame remains within 256 and no allocation is added. Verify with the HAL
+companion host suite. Runtime firmware is unchanged. Full-cohort composition,
+installed-pack lesson/session mapping, authoritative replay agreement and native
+migration recovery remain unfinished.

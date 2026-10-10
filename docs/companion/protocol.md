@@ -1145,3 +1145,13 @@ per-day rescans avoid a heap table and yield periodically. Missing files remain
 explicit absence; malformed or inconsistent files preserve the output and copied
 bytes and close the loan. These totals are evidence only: migration must still
 prove their correspondence to authoritative replay, including legacy rounding.
+
+Frozen saved-session inspection uses the native persisted screen/depth/queue
+limits and validates the envelope, queue checksums and practice target against
+the confirmed original pack. Queued UIDs require active or retained original-pack
+identity evidence. Item and review reports must come from the same frozen cohort;
+the session report retains journal-change and saved-snapshot flags. A changed
+journal requires a rebuild decision, and a snapshot does not establish provenance
+or permission to restore the queue. Missing files remain explicit absence.
+Inspection leaves copied bytes unchanged, withholds output on failure and closes
+the file loan. Migration still needs installed-pack mapping and replay agreement.
