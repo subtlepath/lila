@@ -59,6 +59,7 @@
 #include "lib/Companion/CompanionTintaReplayReducer.h"
 #include "lib/Companion/CompanionTintaTimestamp.h"
 #include "lib/Companion/CompanionTintaWriter.h"
+#include "lib/Companion/CompanionUnboundCourseReviewEpochUse.h"
 
 using namespace companion;
 
@@ -162,7 +163,7 @@ class Storage final : public TintaJournalStorage {
   bool refuseTruncate = false;
   int failedHeader = -1;
   size_t writes = 0;
-  size_t reads = 0;
+  size_t reads = 0, failedReadAt = SIZE_MAX;
   Storage() {
     data.reserve(4096);
     for (auto& header : headers) header.reserve(64);
@@ -173,6 +174,7 @@ class Storage final : public TintaJournalStorage {
   }
   bool read(uint32_t offset, std::span<uint8_t> bytes) override {
     ++reads;
+    if (reads == failedReadAt) return false;
     if (offset > data.size() || bytes.size() > data.size() - offset) return false;
     std::copy_n(data.begin() + offset, bytes.size(), bytes.begin());
     return true;
@@ -4980,4 +4982,117 @@ TEST(CompanionTintaJournal, LegacyIdentityCursorRejectsBrokenOrderAndUndoWithout
   ASSERT_TRUE(cursor.begin(first, 0));
   EXPECT_TRUE(cursor.complete());
   EXPECT_EQ(cursor.events(), 0u);
+}
+
+namespace {
+UnboundCourseReviewReservation journalEpochReservation(const Fixture& f) {
+  UnboundCourseReviewReservation value;
+  value.intent.reader = f.event.identity.origin;
+  value.intent.request.original.generation = f.event.storageGeneration;
+  value.intent.request.original.owner.fill(3);
+  value.intent.request.original.transaction.fill(4);
+  value.intent.request.original.reviewHash.fill(5);
+  auto& pack = value.intent.request.original.manifest;
+  pack.kind = ContentKind::Course;
+  pack.formatVersion = 1;
+  pack.length = 100;
+  pack.logicalIdentity.fill(7);
+  pack.contentHash.fill(8);
+  value.intent.activePack = pack;
+  value.epoch = f.event.identity.epoch;
+  value.records = 2;
+  value.events = 3;
+  return value;
+}
+}  // namespace
+
+TEST(CompanionTintaJournal, ReservedReviewEpochScanCountsAllKindsAndAncestorReferencesWithoutWriting) {
+  Fixture f;
+  const auto reservation = journalEpochReservation(f);
+  ASSERT_EQ(f.journal.open(), TintaJournalResult::Ok);
+  auto permitted = [](void*) { return true; };
+  UnboundCourseReviewEpochUse report;
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, reservation, report, permitted, nullptr));
+  EXPECT_EQ(report.matchedEvents, 0u);
+  ASSERT_EQ(f.journal.append(f.event, f.body()), TintaJournalResult::Ok);
+  auto descendant = f.event;
+  descendant.identity.origin.fill(9);
+  descendant.ancestorCount = 1;
+  descendant.ancestors[0] = f.event.identity;
+  ASSERT_EQ(f.journal.append(descendant, f.body()), TintaJournalResult::Ok);
+  TintaBody star;
+  star.course.fill(7);
+  star.uid = 1;
+  star.kind = EventKind::Star;
+  std::array<uint8_t, 23> body{};
+  ASSERT_EQ(encodeTintaBody(star, body), body.size());
+  auto event = f.event;
+  event.identity.sequence = 2;
+  event.kind = EventKind::Star;
+  event.schedulerVersion = 0;
+  event.schedulerConfiguration = {};
+  ASSERT_TRUE(f.storage.digest(body, event.bodyHash));
+  ASSERT_EQ(f.journal.append(event, body), TintaJournalResult::Ok);
+  const auto writes = f.storage.writes;
+  const auto data = f.storage.data;
+  const auto headers = f.storage.headers;
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, reservation, report, permitted, nullptr));
+  EXPECT_EQ(report.matchedEvents, 2u);
+  EXPECT_EQ(report.ancestorReferences, 1u);
+  EXPECT_EQ(report.greatestSequence, 2u);
+  EXPECT_FALSE(report.foreignGeneration);
+  EXPECT_FALSE(report.outsideReviewRange);
+  EXPECT_EQ(f.storage.writes, writes);
+  EXPECT_EQ(f.storage.data, data);
+  EXPECT_EQ(f.storage.headers, headers);
+  auto foreign = reservation;
+  foreign.epoch += 1;
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, foreign, report, permitted, nullptr));
+  EXPECT_EQ(report, UnboundCourseReviewEpochUse{});
+  foreign = reservation;
+  foreign.intent.reader.fill(10);
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, foreign, report, permitted, nullptr));
+  EXPECT_EQ(report, UnboundCourseReviewEpochUse{});
+  foreign = reservation;
+  foreign.intent.request.original.generation.fill(11);
+  foreign.records = foreign.events = 0;
+  ASSERT_TRUE(inspectUnboundCourseReviewEpochUse(f.journal, foreign, report, permitted, nullptr));
+  EXPECT_EQ(report.matchedEvents, 2u);
+  EXPECT_TRUE(report.foreignGeneration);
+  EXPECT_TRUE(report.outsideReviewRange);
+}
+
+TEST(CompanionTintaJournal, ReservedReviewEpochScanPreservesOutputOnCorruptionIoCancellationAndChangedCount) {
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    Fixture f;
+    const auto reservation = journalEpochReservation(f);
+    ASSERT_EQ(f.journal.open(), TintaJournalResult::Ok);
+    ASSERT_EQ(f.journal.append(f.event, f.body()), TintaJournalResult::Ok);
+    UnboundCourseReviewEpochUse report;
+    report.matchedEvents = 123;
+    const auto sentinel = report;
+    if (fault == 0) f.storage.data[30] ^= 1;
+    if (fault == 1) f.storage.failedReadAt = f.storage.reads + 1;
+    struct Context {
+      Fixture* fixture;
+      unsigned calls = 0, fault;
+    } context{&f, 0, fault};
+    auto permitted = [](void* raw) {
+      auto& state = *static_cast<Context*>(raw);
+      ++state.calls;
+      if (state.fault == 2 && state.calls == 3) return false;
+      if (state.fault == 3 && state.calls == 3) {
+        auto other = state.fixture->event;
+        other.identity.origin.fill(9);
+        EXPECT_EQ(state.fixture->journal.append(other, state.fixture->body()), TintaJournalResult::Ok);
+      }
+      return true;
+    };
+    const auto writes = f.storage.writes;
+    EXPECT_FALSE(inspectUnboundCourseReviewEpochUse(f.journal, reservation, report, permitted, &context));
+    EXPECT_EQ(report, sentinel);
+    if (fault != 3) {
+      EXPECT_EQ(f.storage.writes, writes);
+    }
+  }
 }
