@@ -71,6 +71,7 @@
 #include "lib/hal/HalTintaReplayItemExport.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "lib/hal/HalUnboundCourseBoundLessonMapping.h"
+#include "lib/hal/HalUnboundCourseBoundReadingMapping.h"
 #include "lib/hal/HalUnboundCourseDayInspection.h"
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseLearnerInspection.h"
@@ -9069,6 +9070,18 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     auto& encoded = hal.files["/tinta/profile.bin"];
     encoded.resize(tinta::core::Profile::kEncodedSize);
     profile.encode(encoded.data());
+    if (fault == 0) {
+      tinta::core::pack::Story story;
+      ASSERT_TRUE(parser->story(0, story));
+      uint32_t key = 0;
+      ASSERT_TRUE(tintaLegacyStoryKey(*parser, story, key));
+      auto& marks = hal.files["/tinta/read.bin"];
+      marks.resize(12, 0);
+      std::memcpy(marks.data(), "TMK1", 4);
+      binary_record::putU32(marks.data() + 4, key);
+      marks[8] = 1;
+      binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
+    }
     if (fault == 2) encoded.back() ^= 1;
     if (fault == 3) hal.files["/tinta/items.bin"] = {1};
     Identity reader{};
@@ -9188,13 +9201,30 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(mapUnboundCourseBoundLessons(
             *inspection, *oldReader, *newReader, intent, scratch, mapped, [](void*) { return true; }, nullptr));
         EXPECT_EQ(mapped.currentLesson, 0);
+        UnboundCourseReadingMappingReport readings;
+        ASSERT_TRUE(mapUnboundCourseBoundReadings(
+            *inspection, *reviewed, *oldReader, *newReader, intent, scratch, readings, [](void*) { return true; },
+            nullptr));
+        EXPECT_TRUE(readings.present);
+        EXPECT_EQ(readings.mapped, 1);
+        EXPECT_EQ(readings.installedMissing, 0);
+        EXPECT_EQ(readings.originalMissing, 0);
         mapped.currentLesson = 123;
         auto foreign = intent;
         foreign.request.original.transaction[0] ^= 1;
         EXPECT_FALSE(mapUnboundCourseBoundLessons(
             *inspection, *oldReader, *newReader, foreign, scratch, mapped, [](void*) { return true; }, nullptr));
         EXPECT_EQ(mapped.currentLesson, 123);
+        readings.mapped = 123;
+        EXPECT_FALSE(mapUnboundCourseBoundReadings(
+            *inspection, *reviewed, *oldReader, *newReader, foreign, scratch, readings, [](void*) { return true; },
+            nullptr));
+        EXPECT_EQ(readings.mapped, 123);
         hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
+        EXPECT_FALSE(mapUnboundCourseBoundReadings(
+            *inspection, *reviewed, *oldReader, *newReader, intent, scratch, readings, [](void*) { return true; },
+            nullptr));
+        EXPECT_EQ(readings.mapped, 123);
         EXPECT_FALSE(mapUnboundCourseBoundLessons(
             *inspection, *oldReader, *newReader, intent, scratch, mapped, [](void*) { return true; }, nullptr));
         EXPECT_EQ(mapped.currentLesson, 123);

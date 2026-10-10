@@ -1252,3 +1252,15 @@ the session workspace; no allocation is added. The native parent must keep the
 intent immutable and hold the migration operation lease/exclude writers through
 this operation. Pack-pair continuity, retired-history decisions, authoritative
 replay agreement and recoverable publication remain separate requirements.
+
+Intent-bound completed-reading mapping reads the hash-verified frozen mark copy
+and compares its reconstructed membership count with the inspected learner
+cohort. Each key maps through the original story identity to the installed pack;
+mapped entries, installed-missing identities and unknown original keys are
+reported separately. Ambiguity or I/O failure withholds output. Missing files
+remain distinct from empty logs. Pack hashes are rechecked before and after the
+scan, the frozen learner loan is checked again, and the reviewed file loan is
+closed. The shared workspace holds mark membership only until scanning ends;
+subsequent hashes may reuse it. No history is discarded or event written. Native
+parents must freeze intent/owners and exclude writers; unresolved identities and
+replay/publication policy remain separate migration requirements.

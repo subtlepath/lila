@@ -3928,3 +3928,15 @@ within 256 (largest 144), with no allocation. Verify with the HAL companion host
 suite. The parent must freeze its intent and hold the native operation lease.
 Pack-pair continuity, retired-history policy, replay agreement and recoverable
 migration publication remain unfinished; runtime firmware is unchanged.
+
+Intent-bound completed-reading mapping now combines frozen cohort/mark evidence
+with guarded original/installed pack loans and payload rechecks around scanning.
+It keeps mapped, installed-missing and unknown-original entries separate, refuses
+ambiguous/I/O outcomes, closes the reviewed loan and exposes no partial report.
+All 1,996 host tests pass; the actual captured/backed-up cohort includes a reading
+mark, maps it successfully and refuses wrong intent or post-open payload damage
+while preserving output. The C3 entry is 128 bytes and scan 176; all emitted
+frames remain within 256, with no allocation. Verify with the HAL companion host
+suite. Native parents must freeze intent/owners and hold the operation lease.
+Retired/unresolved identity policy, replay agreement and recoverable native
+migration publication remain unfinished; runtime firmware is unchanged.
