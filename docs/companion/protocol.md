@@ -1264,3 +1264,17 @@ closed. The shared workspace holds mark membership only until scanning ends;
 subsequent hashes may reuse it. No history is discarded or event written. Native
 parents must freeze intent/owners and exclude writers; unresolved identities and
 replay/publication policy remain separate migration requirements.
+
+`HalUnboundCourseMigrationInspection` composes read-only Native migration
+inspection. Its parent supplies authenticated reader, storage generation and
+owner identities, lends exclusive verification/readers/learner/file owners and
+parsers, and excludes writers for the operation. The inspection copies the
+intent and original path before callbacks, verifies pack-pair compatibility,
+opens distinct original/installed pack loans, validates the frozen learner
+cohort from the original source, and maps lesson and reading evidence. It
+rechecks both payload hashes before closing every reader. Only then can the
+exact intent retrieve a combined report. Reentry is refused, permission loss
+revokes the report, and explicit close during a callback cancels the operation.
+Unknown/retired reading identities remain counted evidence. This report does
+not establish legacy event ancestry, replay agreement, retirement policy or
+publication authority, and does not enable a migration command.

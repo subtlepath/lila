@@ -3955,3 +3955,20 @@ and scoped result retrieval passes, with every emitted frame at or below 240
 bytes. No runtime command uses this verifier yet; hardware migration acceptance
 remains outstanding. Re-run the host suite with `ctest --test-dir
 .cache/companion-verification/host --output-on-failure`.
+
+Native migration inspection now has one off-stack owner combining exact
+reader/generation/owner-scoped intent selection, full pack-pair compatibility,
+frozen learner cohort inspection, and lesson/reading mapping. The retained
+original and installed loans must have distinct parsers. All reader handles
+are closed before the combined report is published; wrong-intent retrieval,
+permission revocation, callback reentry and explicit cancellation are refused.
+The owner allocates nothing internally and reuses the shared 8 KiB workspace.
+Native callers still must lend exclusive dependency owners and exclude writers.
+This is combined evidence for the future migration coordinator, not permission
+to publish derived state or discard unresolved history. Command routing, legacy
+event provenance, retirement policy and replay agreement remain outstanding.
+Validation: all 1,996 host tests pass after the final edit. The ESP32-C3
+compile probe emits a 144-byte inspection frame and no frame above 240 bytes.
+Re-run `ctest --test-dir .cache/companion-verification/host
+--output-on-failure` for the host suite. Runtime integration and physical
+migration acceptance are not yet complete.

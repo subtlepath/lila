@@ -76,6 +76,7 @@
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseLearnerInspection.h"
 #include "lib/hal/HalUnboundCourseMarkInspection.h"
+#include "lib/hal/HalUnboundCourseMigrationInspection.h"
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
 #include "lib/hal/HalUnboundCourseProfileInspection.h"
@@ -9275,6 +9276,86 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
             *inspection, *oldReader, *newReader, intent, scratch, mapped, [](void*) { return true; }, nullptr));
         EXPECT_EQ(mapped.currentLesson, 123);
         hal.files[ACTIVE_COURSE_PATH] = bytes;
+        auto pair =
+            makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, [](void*) { return true; }, nullptr);
+        ASSERT_TRUE(pair);
+        struct MigrationPermission {
+          bool permitted = true, checking = false, closeNext = false;
+          unsigned probes = 0;
+          HalUnboundCourseMigrationInspection* inspection = nullptr;
+          const UnboundCourseMigrationIntent* intent = nullptr;
+        } migrationPermission;
+        auto migration = makeUniqueNoThrow<HalUnboundCourseMigrationInspection>(
+            reader, generation, request.original.owner, *pair, *oldReader, *newReader, *inspection, *reviewed, scratch,
+            [](void* raw) {
+              auto& state = *static_cast<MigrationPermission*>(raw);
+              if (state.checking) {
+                ++state.probes;
+                EXPECT_FALSE(state.inspection->inspect(*state.intent, ACTIVE_COURSE_PATH));
+                EXPECT_EQ(state.inspection->report(*state.intent), nullptr);
+              }
+              if (state.closeNext) {
+                state.closeNext = false;
+                state.inspection->closeReaders();
+              }
+              return state.permitted;
+            },
+            &migrationPermission);
+        ASSERT_TRUE(migration);
+        migrationPermission.inspection = migration.get();
+        migrationPermission.intent = &intent;
+        migrationPermission.checking = true;
+        ASSERT_TRUE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        EXPECT_GT(migrationPermission.probes, 0u);
+        migrationPermission.checking = false;
+        const auto* report = migration->report(intent);
+        ASSERT_NE(report, nullptr);
+        EXPECT_EQ(report->lessons.currentLesson, 0);
+        EXPECT_EQ(report->readings.present, fault != 4);
+        EXPECT_EQ(report->readings.mapped, fault == 0 ? 1 : 0);
+        EXPECT_EQ(report->readings.originalMissing, fault == 8 ? 1 : 0);
+        EXPECT_TRUE(report->learner.profile.present);
+        EXPECT_FALSE(parser->isOpen());
+        EXPECT_FALSE(installedParser->isOpen());
+        EXPECT_EQ(reviewed->borrowed(), nullptr);
+        EXPECT_EQ(migration->report(foreign), nullptr);
+        ASSERT_NE(migration->report(intent), nullptr);
+        migrationPermission.permitted = false;
+        EXPECT_EQ(migration->report(intent), nullptr);
+        migrationPermission.permitted = true;
+        EXPECT_EQ(migration->report(intent), nullptr);
+        ASSERT_TRUE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        migrationPermission.closeNext = true;
+        EXPECT_EQ(migration->report(intent), nullptr);
+        migrationPermission.closeNext = true;
+        EXPECT_FALSE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        ASSERT_TRUE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        auto wrongOwner = intent;
+        wrongOwner.request.original.owner[0] ^= 1;
+        EXPECT_FALSE(migration->inspect(wrongOwner, ACTIVE_COURSE_PATH));
+        EXPECT_EQ(migration->report(intent), nullptr);
+        auto wrongReader = intent;
+        wrongReader.reader[0] ^= 1;
+        EXPECT_FALSE(migration->inspect(wrongReader, ACTIVE_COURSE_PATH));
+        auto wrongGeneration = intent;
+        wrongGeneration.request.original.generation[0] ^= 1;
+        EXPECT_FALSE(migration->inspect(wrongGeneration, ACTIVE_COURSE_PATH));
+        ASSERT_TRUE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
+        EXPECT_FALSE(migration->inspect(intent, ACTIVE_COURSE_PATH));
+        EXPECT_EQ(migration->report(intent), nullptr);
+        EXPECT_FALSE(parser->isOpen());
+        EXPECT_FALSE(installedParser->isOpen());
+        hal.files[ACTIVE_COURSE_PATH] = bytes;
+        auto aliasedReader =
+            makeUniqueNoThrow<HalUnboundCoursePackReader>(scratch, *parser, [](void*) { return true; }, nullptr);
+        ASSERT_TRUE(aliasedReader);
+        auto aliasedInspection = makeUniqueNoThrow<HalUnboundCourseMigrationInspection>(
+            reader, generation, request.original.owner, *pair, *oldReader, *aliasedReader, *inspection, *reviewed,
+            scratch, [](void*) { return true; }, nullptr);
+        ASSERT_TRUE(aliasedInspection);
+        EXPECT_FALSE(aliasedInspection->inspect(intent, ACTIVE_COURSE_PATH));
+        EXPECT_EQ(aliasedInspection->report(intent), nullptr);
       }
       permission.permitted = false;
       EXPECT_EQ(inspection->report(request), nullptr);
