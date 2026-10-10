@@ -77,6 +77,7 @@
 #include "lib/hal/HalUnboundCourseBoundReadingMapping.h"
 #include "lib/hal/HalUnboundCourseDayInspection.h"
 #include "lib/hal/HalUnboundCourseFreshReviewReservation.h"
+#include "lib/hal/HalUnboundCourseFreshStarReservation.h"
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseLearnerInspection.h"
 #include "lib/hal/HalUnboundCourseMarkInspection.h"
@@ -9975,6 +9976,112 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
             EXPECT_FALSE(otherPlan->inspect(reviewReservation));
             EXPECT_EQ(otherPlan->report(reviewReservation), nullptr);
             EXPECT_EQ(hal.files, beforePlan);
+            if (fault == 0 || fault == 7 || fault == 17) {
+              for (unsigned failure = 0; failure < 6; ++failure) {
+                BaselineRecoveryIdentities identities(intent.reader, generation);
+                identities.writable = true;
+                tinta_body_detail::write(identities.binding, 68, reviewReservation.epoch, 8);
+                binary_record::putU32(identities.binding.data() + 76,
+                                      binary_record::crc32(identities.binding.data(), 76));
+                struct FreshStarContext {
+                  bool allowed = true, reviewOwned = false, checking = false;
+                  unsigned cancelAfterWrites = 0, probes = 0;
+                  BaselineRecoveryIdentities* identities;
+                  HalUnboundCourseFreshStarReservation* owner = nullptr;
+                  const UnboundCourseReviewReservation* reviews;
+                } freshContext{true, false, false, 0, 0, &identities, nullptr, &reviewReservation};
+                auto starStore = makeUniqueNoThrow<HalUnboundCourseStarReservationStore>(
+                    identities, intent.reader, generation, scratch,
+                    [](void* raw) { return static_cast<FreshStarContext*>(raw)->allowed; }, &freshContext);
+                ASSERT_TRUE(starStore);
+                auto permitted = [](void* raw) {
+                  auto& state = *static_cast<FreshStarContext*>(raw);
+                  if (state.checking) {
+                    ++state.probes;
+                    EXPECT_EQ(state.owner->reserve(*state.reviews), UnboundCourseIntentResult::Busy);
+                    EXPECT_EQ(state.owner->reservation(*state.reviews), nullptr);
+                  }
+                  if (state.cancelAfterWrites && state.identities->writes >= state.cancelAfterWrites) {
+                    state.cancelAfterWrites = 0;
+                    EXPECT_TRUE(state.owner->closeReaders());
+                  }
+                  return state.allowed;
+                };
+                auto verifyReviews = [](void* raw, const UnboundCourseReviewReservation& value) {
+                  auto& state = *static_cast<FreshStarContext*>(raw);
+                  return state.reviewOwned && value == *state.reviews;
+                };
+                auto fresh = makeUniqueNoThrow<HalUnboundCourseFreshStarReservation>(
+                    identities, intent.reader, generation, intent.request.original.owner, *starStore, *nativePlan,
+                    scratch, permitted, verifyReviews, &freshContext);
+                ASSERT_TRUE(fresh);
+                freshContext.owner = fresh.get();
+                EXPECT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::VerificationFailed);
+                EXPECT_EQ(identities.writes, 0u);
+                EXPECT_EQ(hal.files, beforePlan);
+                freshContext.reviewOwned = freshContext.checking = true;
+                if (failure == 0) hal.failSyncPath = UnboundCourseStarReservationStore::STAGE;
+                if (failure == 1) hal.failClosePath = UnboundCourseStarReservationStore::STAGE;
+                if (failure == 2) hal.failRename = hal.renames + 1;
+                if (failure == 3) hal.failRenameAfter = hal.renames + 1;
+                if (failure == 5) freshContext.cancelAfterWrites = 1;
+                const auto first = fresh->reserve(reviewReservation);
+                EXPECT_EQ(first == UnboundCourseIntentResult::Ok, failure == 4);
+                EXPECT_EQ(identities.writes, 1u);
+                if (failure != 4) {
+                  EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                }
+                hal.failSyncPath.clear();
+                hal.failClosePath.clear();
+                hal.failRename = hal.failRenameAfter = 0;
+                if (failure < 4) {
+                  auto pending = makeUniqueNoThrow<HalUnboundCourseFreshStarReservation>(
+                      identities, intent.reader, generation, intent.request.original.owner, *starStore, *nativePlan,
+                      scratch, [](void*) { return true; }, verifyReviews, &freshContext);
+                  ASSERT_TRUE(pending);
+                  EXPECT_EQ(pending->reserve(reviewReservation), UnboundCourseIntentResult::Pending);
+                  EXPECT_EQ(pending->reservation(reviewReservation), nullptr);
+                  EXPECT_EQ(identities.writes, 1u);
+                }
+                ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
+                EXPECT_EQ(identities.writes, failure == 5 ? 2u : 1u);
+                freshContext.checking = false;
+                const auto* sealed = fresh->reservation(reviewReservation);
+                ASSERT_NE(sealed, nullptr);
+                EXPECT_EQ(sealed->reviews, reviewReservation);
+                EXPECT_EQ(sealed->epoch, reviewReservation.epoch + (failure == 5 ? 2u : 1u));
+                EXPECT_EQ(sealed->events, fault == 7 ? 0u : 1u);
+                EXPECT_EQ(sealed->planHash, expectedHash);
+                EXPECT_GT(freshContext.probes, 0u);
+                ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
+                EXPECT_EQ(identities.writes, failure == 5 ? 2u : 1u);
+                auto restarted = makeUniqueNoThrow<HalUnboundCourseFreshStarReservation>(
+                    identities, intent.reader, generation, intent.request.original.owner, *starStore, *nativePlan,
+                    scratch, [](void*) { return true; }, verifyReviews, &freshContext);
+                ASSERT_TRUE(restarted);
+                EXPECT_EQ(restarted->reserve(reviewReservation), UnboundCourseIntentResult::Pending);
+                EXPECT_EQ(restarted->reservation(reviewReservation), nullptr);
+                EXPECT_EQ(identities.writes, failure == 5 ? 2u : 1u);
+                freshContext.allowed = false;
+                EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                freshContext.allowed = true;
+                EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
+                freshContext.reviewOwned = false;
+                EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                freshContext.reviewOwned = true;
+                EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                ASSERT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Ok);
+                EXPECT_TRUE(fresh->closeReaders());
+                EXPECT_EQ(fresh->reserve(reviewReservation), UnboundCourseIntentResult::Pending);
+                EXPECT_EQ(fresh->reservation(reviewReservation), nullptr);
+                EXPECT_TRUE(restarted->closeReaders());
+                EXPECT_TRUE(starStore->closeReaders());
+                EXPECT_TRUE(Storage.remove(UnboundCourseStarReservationStore::PATH));
+                EXPECT_FALSE(hal.files.contains(UnboundCourseStarReservationStore::STAGE));
+                EXPECT_EQ(hal.files, beforePlan);
+              }
+            }
             EXPECT_TRUE(conversion->closeReaders());
             EXPECT_EQ(nativePlan->report(reviewReservation), nullptr);
             EXPECT_FALSE(nativePlan->inspect(reviewReservation));

@@ -4276,3 +4276,17 @@ sealing. Power-cut tests cover each storage mutation and all shortened record
 prefixes; HAL tests cover sync/close/rename failures, card-marker changes and
 preservation of the review reservation. No epoch allocation, prior-epoch recovery
 or runtime routing is supplied by these stores.
+
+Fresh star allocation/sealing is now composed in a Native owner that requires a
+proof callback for the exact review reservation, freshly computes the complete
+star plan and allocates a dedicated later epoch through guarded identity storage.
+The sealing callback rechecks both ownership and plan digest/count. Owned retries
+preserve that epoch through SD failures; new owners encountering retained records
+require recovery. Explicit close revokes the private proof. Permission or review
+ownership loss withholds a reservation loan until fresh verification succeeds.
+Cancellation after an NVS commit can burn an epoch without exposing a reservation.
+Native tests cover retained additions, empty plans and obsolete-star removals,
+SD sync/close/rename failures, idempotent retries, cold-owner refusal, callback
+reentry, revoked proof and cancellation after allocation. No learner state is
+published by this owner. Recovery of retained epochs, correspondence/provenance
+gates and runtime migration routing remain unfinished.

@@ -1448,5 +1448,31 @@ read-only and reject a star epoch beyond the durable Native counter. This upper
 bound is not exclusive epoch ownership; the mandatory verification callback
 must supply that proof and freshly recheck the real star-plan report. The adapter
 allocates no epoch and adds no internal heap allocation. Records and owners live
-off stack with the shared workspace. Native allocation/sealing composition,
-retained epoch recovery and runtime startup/command routing remain unwired.
+off stack with the shared workspace. The fresh allocation owner below supplies
+sealing composition; retained epoch recovery and runtime startup/command routing
+remain unwired.
+
+`HalUnboundCourseFreshStarReservation` now composes fresh Native allocation and
+star-plan sealing. Its parent lends exclusive identity/store/plan owners, supplies
+a mandatory proof callback authenticating the exact review reservation, excludes
+all identity/learner/journal writers and never uses the new star epoch elsewhere.
+With no retained star record, the owner freshly hashes the complete plan, checks
+review ownership and Native context, then calls `provisionIdentity` through a
+guarded identity proxy. The allocated star epoch must be strictly later than the
+review epoch. Every delegated identity operation checks permission before and
+after the call. Only that owner's successful allocation can satisfy the sealing
+callback, which again verifies review ownership, Native context and the exact
+fresh plan digest/count before the store persists `TCSR`.
+
+Retries in the same owner retain the privately allocated epoch across SD failures;
+no second allocation occurs for a matching stage or canonical record. A new owner
+encountering either returns `Pending` for recovery rather than allocating another
+epoch. Explicit close revokes its in-memory allocation proof. Permission or review
+ownership loss revokes the sealed reservation loan until a fresh successful
+reserve operation. Cancellation during allocation may leave a burned Native
+epoch, but exposes no reservation; a later attempt can allocate a new unused
+epoch. Active callback cancellation defers borrowed-reader cleanup until the
+operation returns. The owner adds no internal allocation, retains its fixed
+records off stack and reuses the session workspace. This seals identity ownership
+for a new local migration only: prior-epoch recovery, review/item correspondence,
+legacy provenance, journal publication and runtime routing remain required.
