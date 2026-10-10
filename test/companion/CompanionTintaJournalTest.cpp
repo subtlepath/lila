@@ -39,6 +39,7 @@
 #include "lib/Companion/CompanionLegacyBackupRequest.h"
 #include "lib/Companion/CompanionLegacyTintaBackupManifest.h"
 #include "lib/Companion/CompanionLegacyTintaBackupPaths.h"
+#include "lib/Companion/CompanionLegacyTintaEventCursor.h"
 #include "lib/Companion/CompanionLegacyTintaJournal.h"
 #include "lib/Companion/CompanionLegacyTintaMutation.h"
 #include "lib/Companion/CompanionTintaApplicationReceipt.h"
@@ -4864,4 +4865,119 @@ TEST(CompanionBookmarkResolution, ConcurrentPutAndDeleteRequireChoiceAndJoinedDe
   ASSERT_EQ(choices.sources.size(), 1u);
   EXPECT_EQ(choices.sources[0], index.ids.back());
   EXPECT_TRUE(choices.deleted[0]);
+}
+
+TEST(CompanionTintaJournal, LegacyIdentityCursorPreservesUndoAfterExpandedFlagsAndRestartsDeterministically) {
+  EventIdentity first;
+  first.origin.fill(17);
+  first.epoch = 19;
+  first.sequence = 1;
+  std::array<LegacyTintaEntry, 4> records{};
+  for (auto& record : records) record.uid = 123;
+  records[0].operation = LegacyTintaOperation::Flags;
+  records[0].flags = tinta::core::item_flag::kSuspended;
+  records[1].grade = 3;
+  records[2].operation = LegacyTintaOperation::Undo;
+  records[2].undoRecord = 1;
+  records[3].operation = LegacyTintaOperation::Flags;
+  records[3].flags = tinta::core::item_flag::kStarred;
+  std::array<LegacyTintaEventIdentities, 4> planned{};
+  for (unsigned restart = 0; restart < 2; ++restart) {
+    LegacyTintaEventCursor cursor;
+    ASSERT_TRUE(cursor.begin(first, records.size()));
+    EXPECT_FALSE(cursor.complete());
+    uint64_t sequence = 1;
+    for (unsigned index = 0; index < records.size(); ++index) {
+      LegacyTintaEventIdentities result;
+      ASSERT_TRUE(cursor.assign(index, records[index], result));
+      EXPECT_EQ(result.events[0].sequence, sequence);
+      EXPECT_EQ(result.events[0].origin, first.origin);
+      EXPECT_EQ(result.events[0].epoch, first.epoch);
+      EXPECT_EQ(result.count, records[index].operation == LegacyTintaOperation::Flags ? 2 : 1);
+      if (result.count == 2) {
+        EXPECT_EQ(result.events[1].sequence, sequence + 1);
+      }
+      if (index == 2) {
+        EXPECT_EQ(result.undoTarget, planned[1].events[0]);
+        EXPECT_EQ(result.undoTarget.sequence, 3u);
+      }
+      TintaProgressMutation mutation;
+      Identity course{};
+      course.fill(1);
+      ASSERT_TRUE(mapLegacyTintaMutation(records[index], tinta::core::ItemState::fresh(123), course, {},
+                                         result.undoTarget, mutation));
+      EXPECT_EQ(mutation.count, result.count);
+      if (restart == 0)
+        planned[index] = result;
+      else
+        EXPECT_EQ(result, planned[index]);
+      sequence += result.count;
+    }
+    EXPECT_TRUE(cursor.complete());
+    EXPECT_EQ(cursor.records(), 4u);
+    EXPECT_EQ(cursor.events(), 6u);
+    auto sentinel = planned.back();
+    EXPECT_FALSE(cursor.assign(4, records[1], sentinel));
+    EXPECT_EQ(sentinel, planned.back());
+  }
+}
+
+TEST(CompanionTintaJournal, LegacyIdentityCursorRejectsBrokenOrderAndUndoWithoutConsumingSequences) {
+  EventIdentity first;
+  first.origin.fill(17);
+  first.epoch = 19;
+  first.sequence = 1;
+  LegacyTintaEventCursor cursor;
+  ASSERT_TRUE(cursor.begin(first, 3));
+  LegacyTintaEntry review;
+  review.uid = 123;
+  review.grade = 3;
+  LegacyTintaEventIdentities output;
+  output.count = 99;
+  const auto sentinel = output;
+  EXPECT_FALSE(cursor.assign(1, review, output));
+  EXPECT_EQ(output, sentinel);
+  auto invalid = review;
+  invalid.grade = 0;
+  EXPECT_FALSE(cursor.assign(0, invalid, output));
+  EXPECT_EQ(cursor.records(), 0u);
+  EXPECT_EQ(cursor.events(), 0u);
+  ASSERT_TRUE(cursor.assign(0, review, output));
+  const auto identity = output.events[0];
+  LegacyTintaEntry undo;
+  undo.operation = LegacyTintaOperation::Undo;
+  undo.uid = 123;
+  undo.undoRecord = 1;
+  output = sentinel;
+  EXPECT_FALSE(cursor.assign(1, undo, output));
+  undo.undoRecord = 0;
+  undo.uid = 456;
+  EXPECT_FALSE(cursor.assign(1, undo, output));
+  EXPECT_EQ(output, sentinel);
+  EXPECT_EQ(cursor.events(), 1u);
+  undo.uid = 123;
+  ASSERT_TRUE(cursor.assign(1, undo, output));
+  EXPECT_EQ(output.undoTarget, identity);
+  output = sentinel;
+  EXPECT_FALSE(cursor.assign(2, undo, output));
+  EXPECT_EQ(output, sentinel);
+  EXPECT_EQ(cursor.events(), 2u);
+  ASSERT_TRUE(cursor.assign(2, review, output));
+  EXPECT_EQ(output.events[0].sequence, 3u);
+  EXPECT_TRUE(cursor.complete());
+  first.sequence = 2;
+  EXPECT_FALSE(cursor.begin(first, 3));
+  EXPECT_FALSE(cursor.complete());
+  EXPECT_FALSE(cursor.assign(0, review, output));
+  first.sequence = 1;
+  first.epoch = 0;
+  EXPECT_FALSE(cursor.begin(first, 3));
+  first.epoch = 19;
+  first.origin = {};
+  EXPECT_FALSE(cursor.begin(first, 3));
+  first.origin.fill(17);
+  EXPECT_FALSE(cursor.begin(first, UINT32_MAX));
+  ASSERT_TRUE(cursor.begin(first, 0));
+  EXPECT_TRUE(cursor.complete());
+  EXPECT_EQ(cursor.events(), 0u);
 }

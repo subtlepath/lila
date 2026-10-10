@@ -39,6 +39,7 @@
 #include "lib/hal/HalTintaJournalMergeCommitContext.h"
 #include "lib/hal/HalTintaMergedJournalReconciliation.h"
 #undef HEX
+#include "lib/Companion/CompanionLegacyTintaEventCursor.h"
 #include "lib/hal/HalCompletedRemovalJournalRelease.h"
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportBegin.h"
@@ -9377,16 +9378,32 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         EXPECT_EQ(stream->next(foreign, reviewEntry), LegacyTintaReadResult::Unavailable);
         EXPECT_EQ(reviewEntry.index, 123u);
         if (fault == 9) {
+          EventIdentity reservation;
+          reservation.origin.fill(61);
+          reservation.epoch = 62;
+          reservation.sequence = 1;
+          LegacyTintaEventCursor cursor;
+          ASSERT_TRUE(cursor.begin(reservation, report->learner.reviews.journal.records));
           for (unsigned index = 0; index < 3; ++index) {
             ASSERT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Record);
             EXPECT_EQ(reviewEntry.index, index);
             EXPECT_EQ(reviewEntry.committed, index == 0);
             EXPECT_EQ(reviewEntry.entry.uid, reviewUid);
+            LegacyTintaEventIdentities identities;
+            ASSERT_TRUE(cursor.assign(reviewEntry.index, reviewEntry.entry, identities));
+            EXPECT_EQ(identities.events[0].sequence, index + 1);
+            EXPECT_EQ(identities.count, index == 2 ? 2 : 1);
+            if (index == 1) {
+              EXPECT_EQ(identities.undoTarget, reservation);
+            }
+
             if (index == 1) {
               EXPECT_EQ(reviewEntry.entry.operation, LegacyTintaOperation::Undo);
               EXPECT_EQ(reviewEntry.entry.undoRecord, 0u);
             }
           }
+          EXPECT_TRUE(cursor.complete());
+          EXPECT_EQ(cursor.events(), 4u);
         }
         reviewEntry.index = 123;
         EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::End);

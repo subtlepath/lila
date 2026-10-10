@@ -3986,3 +3986,19 @@ consumption, wrong intent, permission revocation, reentry and cancellation.
 The final ESP32-C3 compile probe has no emitted frame above 160 bytes. Re-run
 `ctest --test-dir .cache/companion-verification/host --output-on-failure`.
 The stream is not yet wired to authoritative legacy conversion or publication.
+
+Legacy conversion now has a portable allocation-free event identity cursor.
+It accounts for flag records expanding into two events and preserves the exact
+review identity referenced by undo, rather than assuming record index plus
+one. It accepts a caller-reserved dedicated origin/epoch at sequence one and
+assigns contiguous sequences in frozen record order. Invalid order/undo leaves
+both cursor state and output unchanged; restarting with the same reservation
+is deterministic. The Native frozen review stream test also feeds these
+identities from its reviewed entries. Durable reservation and authoritative
+publication are still not wired, and cursor completion does not replace the
+stream's final hash check or replay/provenance verification.
+Validation: all 1,998 host tests pass after the final edits, including
+deterministic restart, expanded flag records before review/undo, rejected
+record order/UID/undo, and Native frozen-stream composition. The ESP32-C3
+compile probe emits no frame above 176 bytes. Re-run `ctest --test-dir
+.cache/companion-verification/host --output-on-failure` for the host suite.

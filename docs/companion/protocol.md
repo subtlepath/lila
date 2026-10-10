@@ -1293,3 +1293,17 @@ The caller lends exclusive reviewed-file and shared 8 KiB workspace owners and
 excludes writers. The stream allocates nothing and is retained off stack.
 Journal identity reservation, scheduler configuration/clock evidence, replay
 agreement and authoritative event publication remain separate requirements.
+
+`LegacyTintaEventCursor` assigns provisional contiguous event sequences to a
+verified legacy stream using a caller-provided dedicated migration origin/epoch
+starting at sequence one. Review and undo records consume one identity; flag
+records consume two identities in the suspension/star order used by
+`mapLegacyTintaMutation`. Undo targets the exact immediately preceding review
+identity, checked against legacy UID and record index. Incorrect ordering,
+invalid records and repeated undo are refused without advancing the cursor or
+changing output. Replaying the same frozen stream with the same reservation
+produces identical identities. Cursor completion proves only that the declared
+record count was assigned; successful frozen-stream completion, durable origin
+reservation, causal provenance, scheduler/clock evidence, replay correspondence
+and journal publication remain separate requirements. An origin must never be
+reused for another migration or inferred from unconfirmed shared legacy bytes.
