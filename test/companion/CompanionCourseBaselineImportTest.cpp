@@ -657,6 +657,39 @@ TEST(CompanionCourseBaselinePublicationStore, RefusesOrphanForeignTornAndDuplica
   }
 }
 
+TEST(CompanionCourseBaselinePublicationStore, EveryTruncatedPhaseRecordPreservesEvidenceWithoutPublication) {
+  for (const auto phase : {CourseBaselinePublicationPhase::Prepared, CourseBaselinePublicationPhase::Published}) {
+    for (const bool staged : {false, true}) {
+      for (size_t length = 0; length < COURSE_BASELINE_PUBLICATION_SIZE; ++length) {
+        SCOPED_TRACE(::testing::Message()
+                     << "phase=" << unsigned(phase) << " staged=" << staged << " length=" << length);
+        PublicationFixture f;
+        std::array<uint8_t, COURSE_BASELINE_PUBLICATION_SIZE> bytes{};
+        auto record = f.record;
+        if (phase == CourseBaselinePublicationPhase::Published) {
+          ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+          f.base.storage.files[f.prepared()] = {bytes.begin(), bytes.end()};
+          f.archive = true;
+        }
+        record.phase = phase;
+        ASSERT_TRUE(encodeCourseBaselinePublicationRecord(record, bytes));
+        const auto path =
+            (phase == CourseBaselinePublicationPhase::Prepared ? f.prepared() : f.published()) + (staged ? ".tmp" : "");
+        f.base.storage.files[path] = {bytes.begin(), bytes.begin() + length};
+        const auto files = f.base.storage.files;
+        auto store = f.store();
+        EXPECT_EQ(store.publish(f.record, f.hooks()), CourseBaselinePublicationResult::Corrupt);
+        EXPECT_EQ(store.published(), nullptr);
+        EXPECT_EQ(f.base.storage.files, files);
+        EXPECT_EQ(f.base.storage.mutations, 0u);
+        EXPECT_EQ(f.preparationCalls, 0u);
+        EXPECT_EQ(f.publicationCalls, 0u);
+        EXPECT_EQ(f.verificationCalls, 0u);
+      }
+    }
+  }
+}
+
 TEST(CompanionCourseBaselinePublicationStore, PermissionLossRetainsEvidenceAndRevokesPublishedLoan) {
   PublicationFixture f;
   auto store = f.store();

@@ -36,7 +36,7 @@ final class CoursePackTests: XCTestCase, @unchecked Sendable {
             return sqlite3_column_int(query, 0)
         }
         try sql("""
-            DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP TABLE tinta_migration_events; DROP TABLE tinta_migration_jobs; DROP TABLE removal_jobs; DROP TABLE job_font_destinations; DROP TABLE firmware_installations; DROP TABLE course_switch_confirmations; DROP TABLE legacy_backup_jobs;
+            DROP TABLE course_baseline_confirmations; DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; DROP TABLE journal_merge_events; DROP TABLE journal_merge_jobs; DROP TABLE legacy_preference_imports; DROP TABLE tinta_migration_events; DROP TABLE tinta_migration_jobs; DROP TABLE removal_jobs; DROP TABLE job_font_destinations; DROP TABLE firmware_installations; DROP TABLE course_switch_confirmations; DROP TABLE legacy_backup_jobs;
             DROP TABLE reader_journal_baselines;
             DROP TABLE firmware_assets;
             DROP TABLE tinta_installation_queue;
@@ -58,7 +58,7 @@ final class CoursePackTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(try scalar("SELECT count(*) FROM sqlite_master WHERE name='tinta_installation_queue_v26'"), 0)
         try sql("UPDATE tinta_installation_queue SET owner=X'\(String(repeating: "09", count: 16))' WHERE phase='staging';")
         let migrated = try LibraryStore(url: url)
-        XCTAssertEqual(try scalar("PRAGMA user_version"), 40)
+        XCTAssertEqual(try scalar("PRAGMA user_version"), 41)
         for (index, phase) in [TintaInstallationPhase.queued, .staging].enumerated() {
             let pending = try await migrated.pendingTintaInstallation(reader: Data(repeating: UInt8(index + 2), count: 16), generation: generation)
             XCTAssertEqual(pending, PendingTintaInstallation(transaction: transactions[index], manifest: manifest,

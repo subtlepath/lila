@@ -1,5 +1,24 @@
 # Reader transfer persistence
 
+Publication-record interruption coverage checks all 183 truncated lengths of
+Prepared and Published records, both canonical and staged (732 cases). Each
+case preserves every file, performs no storage mutation or publication callback,
+and exposes no completed-publication loan. All 1,916 host tests pass. This proves
+safe refusal for torn records; automatic finish/rollback for those records still
+requires implementation and physical power-cut acceptance.
+
+The final default build including the BLE workspace lease passes the x4/chip-5
+image validator: 6,546,208 bytes, SHA-256
+`30acf6b1d67967d1ef7a3815774ccdafdd3b98ec491a481fd48e522546afb541`,
+leaving 7,392 bytes in the OTA partition. The final sticky image also passes its
+board/chip-9 validator: 5,789,648 bytes, SHA-256
+`797b0504f888ef4e5107c6863b9673e305ac7bd485365de128a59c8683fae88d`,
+with 763,952 bytes of OTA headroom. The same batch validated x4c (6,550,256 bytes,
+3,344 bytes of headroom) and papermono (5,904,080 bytes, 649,520 bytes of headroom).
+X4pro failed during framework package copying before compilation. These images
+precede the later borrowed-source/native reviewed-journal audit changes; new
+affected-target builds and physical acceptance remain pending.
+
 BLE exposes a mutex-protected exclusive control-workspace lease for operations
 that need more than the ordinary 940-byte transfer partition. Acquisition requires
 the current authenticated transport token, an empty command queue, and an idle

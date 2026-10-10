@@ -33,14 +33,22 @@ class HalJournalCausalAuditSession {
       : storage(location) {
     mbedtls_sha256_init(&hash);
   }
+  // Source/context outlive the audit. Cleanup is idempotent, including failure
+  // paths; the caller reopens a borrowed source before subsequent read operations.
+  HalJournalCausalAuditSession(TintaJournalStorage& source, bool (*close)(void*), void* context)
+      : journal(source, journalScratch), borrowedSource(true), closeBorrowed(close), closeContext(context) {
+    mbedtls_sha256_init(&hash);
+  }
   ~HalJournalCausalAuditSession() {
     endPreferenceKnowledge();
+    if (borrowedSource && !closeJournal()) failure("borrowed journal cleanup");
     mbedtls_sha256_free(&hash);
   }
   bool run(Digest* frontier = nullptr, const Identity* course = nullptr, TintaSubjectCatalog* catalog = nullptr) {
     if (preferenceKnowledge) return failure("audit while preference knowledge is retained");
     exportPages.reset();
     audited = false;
+    if (borrowedSource && !closeBorrowed) return failure("borrowed journal cleanup unavailable");
     if ((course == nullptr) != (catalog == nullptr) || (course && !tinta_body_detail::nonzero(*course)))
       return failure("course membership arguments");
     const auto opened = journal.open();
@@ -65,7 +73,7 @@ class HalJournalCausalAuditSession {
                      mbedtls_sha256_finish(&hash, computed.data()) != 0))
       return failure("frontier SHA-256");
     if (!reader.close()) return failure("index close");
-    if (!storage.close()) return failure("journal close");
+    if (!closeJournal()) return failure("journal close");
     audited = true;
     if (frontier) *frontier = computed;
     return true;
@@ -80,7 +88,7 @@ class HalJournalCausalAuditSession {
     if (!migration) return failure("OOM: migration workspace");
     const auto result = migration->copy(journal, destination, index);
     const bool closed = reader.close();
-    if (result != TintaJournalResult::Ok || !closed || !storage.close()) return failure("journal copy");
+    if (result != TintaJournalResult::Ok || !closed || !closeJournal()) return failure("journal copy");
     return true;
   }
   using ReplayVisitor = bool (*)(void*, uint32_t, const SyncEvent&, std::span<const uint8_t>, bool);
@@ -123,7 +131,7 @@ class HalJournalCausalAuditSession {
       vTaskDelay(1);
     }
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!indexClosed || !journalClosed) {
       failure("bookmark edition proof close");
       return TintaJournalResult::IoError;
@@ -157,7 +165,7 @@ class HalJournalCausalAuditSession {
       vTaskDelay(1);
     }
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!indexClosed || !journalClosed) {
       failure("bookmark enumeration close");
       return TintaJournalResult::IoError;
@@ -179,7 +187,7 @@ class HalJournalCausalAuditSession {
       return nullptr;
     }
     const bool valid = reader.open() && index.open(journal.count()) && preferenceKnowledge->begin(journal);
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!valid || !journalClosed) {
       failure("preference knowledge preparation or journal close");
       endPreferenceKnowledge();
@@ -203,7 +211,7 @@ class HalJournalCausalAuditSession {
     const auto finish = [&](bool success) {
       const bool visitsClosed = workspace->visits.close();
       const bool indexClosed = reader.close();
-      const bool journalClosed = storage.close();
+      const bool journalClosed = closeJournal();
       return success && visitsClosed && indexClosed && journalClosed;
     };
     if (!reader.open() || !index.open(journal.count()) ||
@@ -236,7 +244,7 @@ class HalJournalCausalAuditSession {
       const bool exclusionsClosed = workspace->exclusions.close();
       const bool visitsClosed = workspace->visits.close();
       const bool indexClosed = reader.close();
-      const bool journalClosed = storage.close();
+      const bool journalClosed = closeJournal();
       return success && exclusionsClosed && visitsClosed && indexClosed && journalClosed;
     };
     if (!reader.open() || !index.open(journal.count()) ||
@@ -296,7 +304,7 @@ class HalJournalCausalAuditSession {
         break;
       }
     }
-    const bool closed = storage.close();
+    const bool closed = closeJournal();
     if (!valid || !closed || journal.count() != count) return failure("course history lookup");
     output = found;
     return true;
@@ -318,7 +326,7 @@ class HalJournalCausalAuditSession {
                                                                      : TintaJournalResult::IoError;
     const bool visitsClosed = visits->close();
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!visitsClosed || !indexClosed || !journalClosed ||
         (result != TintaJournalResult::Ok && result != TintaJournalResult::Conflict)) {
       resolution.clear();
@@ -344,7 +352,7 @@ class HalJournalCausalAuditSession {
                                                                      : TintaJournalResult::IoError;
     const bool visitsClosed = visits->close();
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!visitsClosed || !indexClosed || !journalClosed ||
         (result != TintaJournalResult::Ok && result != TintaJournalResult::Conflict)) {
       resolution.clear();
@@ -372,7 +380,7 @@ class HalJournalCausalAuditSession {
                             : TintaJournalResult::IoError;
     const bool visitsClosed = visits->close();
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!visitsClosed || !indexClosed || !journalClosed) {
       failure("reading resolution close");
       return TintaJournalResult::IoError;
@@ -403,7 +411,7 @@ class HalJournalCausalAuditSession {
                             : TintaJournalResult::IoError;
     const bool visitsClosed = workspace->visits.close();
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!visitsClosed || !indexClosed || !journalClosed) {
       failure("bookmark resolution close");
       return TintaJournalResult::IoError;
@@ -436,7 +444,7 @@ class HalJournalCausalAuditSession {
             : TintaJournalResult::IoError;
     const bool visitsClosed = workspace->visits.close();
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!visitsClosed || !indexClosed || !journalClosed) {
       failure("bookmark choices close");
       return TintaJournalResult::IoError;
@@ -454,7 +462,7 @@ class HalJournalCausalAuditSession {
                        streamJournalPrefixFrontier(journal, index, count, encoding) == TintaJournalResult::Ok &&
                        mbedtls_sha256_finish(&hash, computed.data()) == 0;
     const bool indexClosed = reader.close();
-    const bool journalClosed = storage.close();
+    const bool journalClosed = closeJournal();
     if (!valid || !indexClosed || !journalClosed) return failure("prefix frontier");
     output = computed;
     return true;
@@ -474,7 +482,7 @@ class HalJournalCausalAuditSession {
     if (preferenceKnowledge) return failure("export end while preference knowledge is retained");
     exportPages.reset();
     audited = false;
-    return storage.close();
+    return closeJournal();
   }
 
  private:
@@ -565,6 +573,10 @@ class HalJournalCausalAuditSession {
   mbedtls_sha256_context hash{};
   Digest computed{};
   bool audited = false;
+  bool borrowedSource = false;
+  bool (*closeBorrowed)(void*) = nullptr;
+  void* closeContext = nullptr;
+  bool closeJournal() { return borrowedSource ? closeBorrowed && closeBorrowed(closeContext) : storage.close(); }
   std::unique_ptr<PreferenceKnowledgeWorkspace> preferenceKnowledge;
   TintaJournalFrontierEncoding encoding{sortScratch, this, hashBytes};
 };

@@ -492,3 +492,22 @@ firmware/image identity alongside the results.
 - [ ] Measure free/largest heap and stack watermarks through nested bridge scans.
       Both readers use heap admission and share scratch sequentially; require the
       runtime heap threshold and no accumulating loss across repeated editions.
+
+### Reviewed baseline journal acceptance
+
+- [ ] Freeze a review containing real review/undo, star, lesson, and completed
+      reading events. Confirm the original candidate's subject catalog accepts
+      the reviewed journal. Offer a candidate missing a subject without matching
+      retained identity evidence; confirm refusal preserves all learner files,
+      canonical journal, frozen review, and backup hashes before publication.
+- [ ] Corrupt a reviewed journal copy/header or retain an uncommitted tail in a
+      reviewed copy. Confirm the read-only audit refuses rather than repairing
+      the copy. Watch debug serial logs for baseline journal audit refusal.
+- [ ] Exercise interrupted reads and revoked operation permission during audit,
+      then reboot/retry. Confirm no frontier/publication is reported on failed
+      cleanup and that the temporary audit owner is released. Disposable indices
+      may be rebuilt; reviewed authority and learner bytes must remain unchanged.
+- [ ] Monitor free/largest internal heap and stack watermarks with a present
+      reviewed journal. Require over 50 KiB free heap and no accumulating loss
+      across repeated boot/Connect recovery. Host frame/owner-size checks do not
+      establish these physical limits or learner/saved-session replay equality.

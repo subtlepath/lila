@@ -209,6 +209,9 @@ public actor TransferRunner {
         try await prepareDeclaration(id, device: session.device, installation: session.installation)
     }
     private func validateCourse(_ content: LibraryContent, job: UUID, url: URL, device: DeviceDescriptor) async throws {
+        guard try await library.courseBaselineConfirmation(job) == nil else {
+            throw TransferRunnerError.unsupportedContent
+        }
         let metadata = try CoursePackInspector.inspect(url)
         let details = try CoursePackDetails(metadata)
         guard let stored = try await library.coursePackDetails(content.id), stored == details,
@@ -285,6 +288,9 @@ public actor TransferRunner {
         guard !running else { throw TransferRunnerError.busy }
         running = true
         defer { running = false }
+        guard try await library.courseBaselineConfirmation(id) == nil else {
+            throw TransferRunnerError.unsupportedContent
+        }
         do { return try await transfer(id, device: device, transport: transport, requireSelection: requireSelection, prepareOnly: prepareOnly) }
         catch {
             if let job = try? await library.job(id), job.phase != .committing,

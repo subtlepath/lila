@@ -8,6 +8,7 @@
 #include "CompanionCourseBaselinePublication.h"
 #include "CompanionCourseValidation.h"
 #include "HalCourseBaselineImportConsentStore.h"
+#include "HalCourseBaselineReviewedJournalAudit.h"
 #include "HalTintaLegacyCourseReferences.h"
 #include "HalTintaLegacyItemCatalogValidation.h"
 #include "HalTintaLegacyReviewValidation.h"
@@ -69,6 +70,11 @@ class HalCourseBaselineLearnerInspection final {
     if (valid) valid = readCourseItemIdentityTable(source, identities, hasIdentities);
     CourseUidLookup catalog(source);
     if (valid) valid = catalog.begin() && loadReview();
+    if (valid && scratch[5]) {
+      auto audit = createHalCourseBaselineReviewedJournalAudit(parser, source, allowed, this);
+      valid = audit && audit->run(scratch.first(64 + reviewCount * COURSE_BASELINE_REVIEW_ENTRY_SIZE),
+                                  selected.request.reviewHash, selected.request.manifest.logicalIdentity, scratch);
+    }
     const auto count = reviewCount;
     for (size_t index = 0; valid && index < count; ++index) {
       valid = loadEntry(index);

@@ -2550,3 +2550,86 @@ The SDK speech components also emitted their existing discarded-const warnings
 on sticky. This batch is not final acceptance of the later BLE workspace-lease
 changes: a final five-target run is pending, including the x4pro retry. Physical
 acceptance and the remaining baseline protocol/authority work are still required.
+
+The Apple package now defines the native 155-byte `CourseBaselineImportRequest`
+codec, including its CRC and exact generation/owner/transaction/manifest/review
+binding. Added tests use the shared native fixture and cover truncation, byte
+corruption, re-signed empty identities, oversized content, and retargeted consent.
+The fixture layout and CRC were checked independently. This codec does not enable
+a baseline command, create consent, or provide the original-pack confirmation UI.
+
+Apple also has a bounded `CourseBaselineReview` decoder matching the native roster
+rules: canonical ASCII names/order, stable learner filenames, exact journal and
+isolation records, lengths/presence/hashes, identities, and CRC. It hashes the
+complete frozen record and checks confirmation against its reader, generation,
+course, and hash. The shared fixture's eight entries, CRC, and SHA-256
+`d02419c360bc310e304f166a08cfcc28cafcfb114d514097f02fc2991b1100eb`
+were independently checked. Added Swift tests cover malformed/re-signed rosters
+and retargeted confirmations. Roster validation
+does not establish the contents or semantic correspondence of backed-up files.
+
+All 529 CompanionKit tests pass with Swift 6.0.3 on Debian 12/aarch64, including
+the confirmation/review and durable-consent tests. The isolated official toolchain's archive
+signature was verified against Swift's published release key. This validates
+the portable package; Xcode iOS simulator/native Mac builds, UI tests, and
+physical device acceptance remain required.
+
+SQLite schema 41 stores baseline confirmation and its exact frozen review in a
+local job-bound table. Confirmation is explicit through
+`confirmCourseBaselineImport`, restricted to queued/paused jobs with zero durable
+offset, matching reader/generation/course, and no abort or library deletion.
+Baseline and course-switch consent are mutually exclusive. Loading revalidates
+the review hash and full manifest against the job; retries cannot replace a saved
+review. Tests cover reopen, changed/foreign reviews, started transfers, version-40
+migration with job preservation, and corrupt stored bindings. These records do
+not enter CloudKit and do not authorize a command without reader-side checks.
+
+`queueCourseBaselineImport` selects the original pack, saves confirmation, and
+creates or reuses the exact queued job in one SQLite transaction. It refuses
+conflicting reader jobs, pending removals, aborts, and changed owners/reviews;
+selection failures roll back the new job and consent together. A retained ordinary
+transfer declaration prevents converting a zero-offset job into baseline intent.
+The ordinary BLE/Wi-Fi runner and handoff declaration preparation refuse baseline
+jobs before sending Begin; the runner leaves the job unchanged. Dedicated live
+baseline transfer commands and their Apple UI still require implementation.
+
+`CourseBaselineJournalSnapshot` now exposes verified reviewed journal copies to
+the native `TintaJournal` parser through a read-only storage adapter. It validates
+the canonical review/hash and the three journal-copy hashes, copying all file
+descriptors before verification reuses shared scratch. It refuses writes, header
+creation, and trailing-byte truncation. Native-header integration tests prove
+empty committed journals can open, corrupt headers/tails cannot be repaired,
+absent evidence cannot create authority, and review/permission failures preserve
+all files. All 1,918 C++ host tests pass. Forced C3 compilation reports a 516-byte
+metadata owner, 112-byte open frame, 80-byte header-read frame, and 144-byte review
+decode frame. The owner must be admitted off stack; the adapter allocates no
+buffer or heap itself.
+
+Native learner inspection now audits a present reviewed journal through this
+adapter before inspecting learner files. The existing causal audit accepts a
+borrowed source with explicit idempotent cleanup, preserving its native causal
+closure and undo-target checks. A validated candidate subject catalog checks
+item/lesson/reading membership, including retained item identity history. Actual
+capture/consent/backup integration tests accept a matching subject and refuse a
+hash-verified missing subject while preserving learner and review files. Cleanup
+failure withholds the frontier; no reviewed copy becomes writable. Disposable
+journal indices may be rebuilt by the audit.
+
+All 1,920 C++ host tests pass. Forced C3 compilation checks the full wired learner
+inspector with the 256-byte limit: inspection uses 192 bytes and native causal
+audit 144 bytes. The temporary reviewed-journal owner is 5,344 bytes, admitted
+once per inspection outside the learner-file loop and released before that loop.
+It reuses the existing workspace for hash and catalog verification; fixed native
+journal/index buffers and paths require checked heap ownership rather than the
+small task stack. The import owner remains 31,136 bytes and its admitted peak is
+now 36,480 bytes plus the 50 KiB reserve, taking the larger of historical-history
+and reviewed-journal owners. The general causal-audit owner measures 4,208 bytes
+after adding borrowed-source cleanup metadata. SDK handles/allocator overhead and
+physical free/largest heap remain separate acceptance checks.
+
+The preceding image batch validated default, sticky, x4c, and papermono for the
+workspace-lease checkpoint. X4pro again failed during framework package copying,
+before compilation. Those images do not establish acceptance of this later
+reviewed-journal wiring; a new five-target run is pending. Full authoritative
+replay correspondence with learner caches and saved sessions, torn-stage recovery,
+live commands/Apple UI, and physical acceptance remain unfinished.

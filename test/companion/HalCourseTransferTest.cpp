@@ -6,6 +6,7 @@
 #include <iterator>
 
 #include "HalStorage.h"
+#include "lib/Companion/CompanionCourseBaselineJournalSnapshot.h"
 #include "lib/Companion/CompanionCourseBaselineTransfer.h"
 #include "lib/Companion/CompanionCourseBinding.h"
 #include "lib/Companion/CompanionCourseSwitchHandler.h"
@@ -246,6 +247,37 @@ class HalCourseTransferTest : public testing::Test {
       consentPath += HEX_DIGITS[byte & 15];
     }
     consentPath += ".consent";
+  }
+  std::vector<uint8_t> reviewedJournalCopies(Digest& hash) {
+    std::ifstream fixture(std::string(COMPANION_FIXTURE_DIR) + "CourseBaselineReview-v1.fixture", std::ios::binary);
+    std::vector<uint8_t> review{std::istreambuf_iterator<char>(fixture), std::istreambuf_iterator<char>()};
+    if (review.size() != 608) return {};
+    review[5] = 1;
+    std::copy(declaration.manifest.logicalIdentity.begin(), declaration.manifest.logicalIdentity.end(),
+              review.begin() + 40);
+    static constexpr const char* PATHS[] = {TINTA_JOURNAL_EVENTS, TINTA_JOURNAL_HEADER_A, TINTA_JOURNAL_HEADER_B};
+    auto& files = inventory_hal_test::state.files;
+    for (unsigned index = 0; index < 3; ++index) {
+      const auto found = files.find(PATHS[index]);
+      auto entry = std::span(review).subspan(60 + (index + 1) * 68, 68);
+      entry[1] = found != files.end();
+      if (found == files.end()) continue;
+      course_review_detail::number(entry, 28, found->second.size(), 8);
+      SHA256(found->second.data(), found->second.size(), entry.data() + 36);
+    }
+    course_review_detail::number(review, review.size() - 4, binary_record::crc32(review.data(), review.size() - 4), 4);
+    SHA256(review.data(), review.size(), hash.data());
+    std::string prefix = "/.crosspoint/companion/course-review-state-";
+    static constexpr char DIGITS[] = "0123456789abcdef";
+    for (const auto byte : hash) {
+      prefix += DIGITS[byte >> 4];
+      prefix += DIGITS[byte & 15];
+    }
+    for (unsigned index = 0; index < 3; ++index) {
+      const auto found = files.find(PATHS[index]);
+      if (found != files.end()) files[prefix + "-0" + DIGITS[index + 1]] = found->second;
+    }
+    return review;
   }
   uint32_t addIdentityHistory() {
     tinta::core::pack::Pack pack;
@@ -6459,6 +6491,83 @@ TEST_F(HalCourseTransferTest, NativeLearnerInspectionUsesVerifiedImmutableCopies
   }
 }
 
+TEST_F(HalCourseTransferTest, NativeLearnerInspectionAuditsFrozenJournalMembershipWithoutChangingEvidence) {
+  for (const bool missing : {false, true}) {
+    SetUp();
+    SCOPED_TRACE(missing);
+    auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+    ASSERT_TRUE(parser);
+    ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+    const auto uid = parser->uidAt(0);
+    parser->close();
+    std::vector<uint8_t> items(1040, 0);
+    for (unsigned copy = 0; copy < 2; ++copy) {
+      auto* header = items.data() + copy * 512;
+      std::memcpy(header, "TIS1", 4);
+      binary_record::putU16(header + 4, 1);
+      binary_record::putU16(header + 6, 80);
+      binary_record::putU32(header + 8, copy + 1);
+      binary_record::putU32(header + 12, 1);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    tinta::core::ItemState::fresh(uid).encode(items.data() + 1024);
+    CourseBaselinePublicationRecord record;
+    std::string consentPath;
+    prepareBaselineApproval(record.request, record.reader, consentPath, items);
+    ASSERT_FALSE(HasFatalFailure());
+    {
+      HalTintaJournalStorage native;
+      auto journal = makeUniqueNoThrow<TintaJournal>(native, scratch);
+      ASSERT_TRUE(journal);
+      ASSERT_EQ(journal->open(), TintaJournalResult::Ok);
+      TintaBody body;
+      body.kind = EventKind::Star;
+      body.course = declaration.manifest.logicalIdentity;
+      body.uid = missing ? UINT32_MAX - 1 : uid;
+      body.enabled = true;
+      std::array<uint8_t, MAX_TINTA_BODY_SIZE> encoded{};
+      const auto length = encodeTintaBody(body, encoded);
+      ASSERT_NE(length, 0u);
+      SyncEvent event;
+      event.identity = {declaration.state.owner, 1, 1};
+      event.storageGeneration = generation;
+      event.kind = body.kind;
+      event.resource = declaration.manifest.contentHash;
+      ASSERT_TRUE(native.digest(std::span(encoded).first(length), event.bodyHash));
+      ASSERT_EQ(journal->append(event, std::span(encoded).first(length)), TintaJournalResult::Ok);
+      ASSERT_TRUE(native.close());
+    }
+    const auto permitted = [](void*) { return true; };
+    auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, permitted, nullptr);
+    ASSERT_TRUE(capture);
+    ASSERT_EQ(capture->capture(record.reader, generation, record.request.manifest.logicalIdentity),
+              CourseBaselineReviewResult::Ok);
+    ASSERT_NE(capture->hash(), nullptr);
+    record.request.reviewHash = *capture->hash();
+    const std::vector<uint8_t> review(capture->bytes().begin(), capture->bytes().end());
+    capture.reset();
+    auto store = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+        std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), permitted, nullptr);
+    ASSERT_TRUE(store);
+    ASSERT_EQ(store->publish(review, record.request.reviewHash), CourseBaselineReviewStoreResult::Ok);
+    store.reset();
+    auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(
+        record.reader, generation, record.request.owner, scratch, permitted, nullptr);
+    ASSERT_TRUE(consent);
+    ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+    consent.reset();
+    auto& hal = inventory_hal_test::state;
+    hal.files["/tinta/original.pack"] = bytes;
+    const auto retained = hal.files;
+    auto inspector = createHalCourseBaselineLearnerInspection(record.reader, generation, record.request.owner, scratch,
+                                                              *parser, {8, 40, 200}, permitted, nullptr);
+    ASSERT_TRUE(inspector);
+    EXPECT_EQ(inspector->inspect(record, "/tinta/original.pack"), !missing);
+    EXPECT_FALSE(parser->isOpen());
+    for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+  }
+}
+
 TEST_F(HalCourseTransferTest, NativeLearnerInspectionRejectsSemanticallyInvalidButHashVerifiedReview) {
   for (unsigned fault = 0; fault < 3; ++fault) {
     SetUp();
@@ -6738,6 +6847,208 @@ TEST_F(HalCourseTransferTest, BaselineJournalReadinessAuditsExistingAuthorityAnd
   const auto recovered = hal.files;
   EXPECT_FALSE(prepareHalCourseBaselineJournal([](void*) { return false; }, nullptr));
   EXPECT_EQ(hal.files, recovered);
+}
+
+TEST_F(HalCourseTransferTest, ReviewedJournalSnapshotUsesNativeHeadersAndNeverRepairsImmutableCopies) {
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+  {
+    HalTintaJournalStorage native;
+    TintaJournal journal(native, scratch);
+    ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+    ASSERT_TRUE(native.close());
+  }
+  auto& hal = inventory_hal_test::state;
+  const auto canonical = hal.files;
+  auto hash = [](void*, std::span<const uint8_t> input, Digest& output) {
+    return SHA256(input.data(), input.size(), output.data()) != nullptr;
+  };
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    SCOPED_TRACE(fault);
+    hal.files = canonical;
+    std::ifstream fixture(std::string(COMPANION_FIXTURE_DIR) + "CourseBaselineReview-v1.fixture", std::ios::binary);
+    std::vector<uint8_t> review{std::istreambuf_iterator<char>(fixture), std::istreambuf_iterator<char>()};
+    ASSERT_EQ(review.size(), 608u);
+    review[5] = 1;
+    std::array<std::vector<uint8_t>, 3> copies;
+    std::array<bool, 3> present{true, canonical.contains(TINTA_JOURNAL_HEADER_A),
+                                canonical.contains(TINTA_JOURNAL_HEADER_B)};
+    copies[0] = canonical.at(TINTA_JOURNAL_EVENTS);
+    if (present[1]) copies[1] = canonical.at(TINTA_JOURNAL_HEADER_A);
+    if (present[2]) copies[2] = canonical.at(TINTA_JOURNAL_HEADER_B);
+    if (fault == 1) copies[0] = {99};
+    if (fault == 2) copies[present[1] ? 1 : 2][0] ^= 1;
+    for (unsigned index = 0; index < copies.size(); ++index) {
+      auto entry = std::span(review).subspan(60 + (index + 1) * 68, 68);
+      entry[1] = present[index];
+      course_review_detail::number(entry, 28, copies[index].size(), 8);
+      if (present[index]) SHA256(copies[index].data(), copies[index].size(), entry.data() + 36);
+    }
+    course_review_detail::number(review, review.size() - 4, binary_record::crc32(review.data(), review.size() - 4), 4);
+    Digest expected{};
+    ASSERT_TRUE(hash(nullptr, review, expected));
+    std::string prefix = "/.crosspoint/companion/course-review-state-";
+    static constexpr char DIGITS[] = "0123456789abcdef";
+    for (const auto byte : expected) {
+      prefix += DIGITS[byte >> 4];
+      prefix += DIGITS[byte & 15];
+    }
+    for (unsigned index = 0; index < copies.size(); ++index)
+      if (present[index]) hal.files[prefix + "-0" + DIGITS[index + 1]] = copies[index];
+    if (fault == 3) hal.files[prefix + "-01"] = {8};
+    const auto retained = hal.files;
+    auto snapshot =
+        makeUniqueNoThrow<CourseBaselineJournalSnapshot>(storage, [](void*) { return true; }, nullptr, hash, nullptr);
+    ASSERT_TRUE(snapshot);
+    std::copy(review.begin(), review.end(), scratch.begin());
+    const auto opened = snapshot->open(std::span(scratch).first(review.size()), expected, scratch);
+    if (fault == 3) {
+      EXPECT_EQ(opened, CourseBaselineJournalSnapshotResult::IoError);
+    } else {
+      ASSERT_EQ(opened, CourseBaselineJournalSnapshotResult::Ok);
+      auto journal = makeUniqueNoThrow<TintaJournal>(*snapshot, scratch);
+      ASSERT_TRUE(journal);
+      EXPECT_EQ(journal->open(), fault == 0   ? TintaJournalResult::Ok
+                                 : fault == 1 ? TintaJournalResult::IoError
+                                              : TintaJournalResult::Corrupt);
+      EXPECT_FALSE(snapshot->write(0, std::span(review).first(1)));
+      EXPECT_FALSE(snapshot->truncate(0));
+      EXPECT_FALSE(snapshot->writeHeader(0, std::span(review).first(64)));
+    }
+    EXPECT_EQ(hal.files, retained);
+    if (fault == 0) {
+      struct Cleanup {
+        CourseBaselineJournalSnapshot* snapshot;
+        unsigned calls = 0;
+        bool succeeds = true;
+      } cleanup{snapshot.get()};
+      auto close = [](void* context) {
+        auto& cleanup = *static_cast<Cleanup*>(context);
+        ++cleanup.calls;
+        cleanup.snapshot->close();
+        return cleanup.succeeds;
+      };
+      auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>(*snapshot, close, &cleanup);
+      ASSERT_TRUE(audit);
+      Digest frontier{};
+      ASSERT_TRUE(audit->run(&frontier));
+      EXPECT_EQ(audit->recordCount(), 0u);
+      EXPECT_NE(frontier, Digest{});
+      EXPECT_EQ(cleanup.calls, 1u);
+      audit.reset();
+      EXPECT_EQ(cleanup.calls, 2u);
+      for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+      ASSERT_EQ(snapshot->open(review, expected, scratch), CourseBaselineJournalSnapshotResult::Ok);
+      cleanup.succeeds = false;
+      audit = makeUniqueNoThrow<HalJournalCausalAuditSession>(*snapshot, close, &cleanup);
+      ASSERT_TRUE(audit);
+      frontier.fill(9);
+      const auto untouched = frontier;
+      EXPECT_FALSE(audit->run(&frontier));
+      EXPECT_EQ(frontier, untouched);
+      audit.reset();
+      for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+    }
+  }
+}
+
+TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFrozenCopiesAndCleansUp) {
+  const auto initial = inventory_hal_test::state;
+  for (const bool missing : {false, true}) {
+    SCOPED_TRACE(missing);
+    inventory_hal_test::state = initial;
+    auto& hal = inventory_hal_test::state;
+    hal.enumerateFileMap = true;
+    ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    HalInventoryIndexStorage packStorage;
+    ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
+    StoredCourseSource source(packStorage);
+    ASSERT_TRUE(source.attach());
+    auto pack = makeUniqueNoThrow<tinta::core::pack::Pack>();
+    ASSERT_TRUE(pack);
+    ASSERT_EQ(validateCourseCandidate(*pack, source, scratch), CourseValidationResult::Ok);
+    TintaPackSubjectCatalog catalog(*pack, source);
+    ASSERT_TRUE(catalog.prepare(scratch));
+    {
+      HalTintaJournalStorage native;
+      auto journal = makeUniqueNoThrow<TintaJournal>(native, scratch);
+      ASSERT_TRUE(journal);
+      ASSERT_EQ(journal->open(), TintaJournalResult::Ok);
+      TintaBody body;
+      body.kind = EventKind::Star;
+      body.course = declaration.manifest.logicalIdentity;
+      body.uid = missing ? UINT32_MAX - 1 : pack->uidAt(0);
+      body.enabled = true;
+      std::array<uint8_t, MAX_TINTA_BODY_SIZE> encoded{};
+      const auto length = encodeTintaBody(body, encoded);
+      ASSERT_NE(length, 0u);
+      SyncEvent event;
+      event.identity = {declaration.state.owner, 1, 1};
+      event.storageGeneration = generation;
+      event.kind = body.kind;
+      event.resource = declaration.manifest.contentHash;
+      ASSERT_TRUE(native.digest(std::span(encoded).first(length), event.bodyHash));
+      ASSERT_EQ(journal->append(event, std::span(encoded).first(length)), TintaJournalResult::Ok);
+      ASSERT_TRUE(native.close());
+    }
+    Digest expected{};
+    const auto review = reviewedJournalCopies(expected);
+    ASSERT_FALSE(review.empty());
+    const auto retained = hal.files;
+    auto hash = [](void*, std::span<const uint8_t> input, Digest& output) {
+      return SHA256(input.data(), input.size(), output.data()) != nullptr;
+    };
+    auto snapshot =
+        makeUniqueNoThrow<CourseBaselineJournalSnapshot>(storage, [](void*) { return true; }, nullptr, hash, nullptr);
+    ASSERT_TRUE(snapshot);
+    ASSERT_EQ(snapshot->open(review, expected, scratch), CourseBaselineJournalSnapshotResult::Ok);
+    auto audit = makeUniqueNoThrow<HalJournalCausalAuditSession>(
+        *snapshot,
+        [](void* context) {
+          static_cast<CourseBaselineJournalSnapshot*>(context)->close();
+          return true;
+        },
+        snapshot.get());
+    ASSERT_TRUE(audit);
+    Digest frontier{};
+    EXPECT_EQ(audit->run(&frontier, &declaration.manifest.logicalIdentity, &catalog), !missing);
+    EXPECT_EQ(frontier == Digest{}, missing);
+    audit.reset();
+    for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
+    uint32_t length = 17;
+    EXPECT_FALSE(snapshot->size(length));
+    EXPECT_EQ(length, 17u);
+    ASSERT_TRUE(packStorage.close());
+  }
+}
+
+TEST_F(HalCourseTransferTest, ReviewedJournalAbsenceCannotCreateAuthorityAndRequiresExactReviewAndPermission) {
+  ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+  std::ifstream fixture(std::string(COMPANION_FIXTURE_DIR) + "CourseBaselineReview-v1.fixture", std::ios::binary);
+  std::vector<uint8_t> review{std::istreambuf_iterator<char>(fixture), std::istreambuf_iterator<char>()};
+  ASSERT_EQ(review.size(), 608u);
+  auto hash = [](void*, std::span<const uint8_t> input, Digest& output) {
+    return SHA256(input.data(), input.size(), output.data()) != nullptr;
+  };
+  Digest expected{};
+  ASSERT_TRUE(hash(nullptr, review, expected));
+  bool allowed = true;
+  auto snapshot = makeUniqueNoThrow<CourseBaselineJournalSnapshot>(
+      storage, [](void* context) { return *static_cast<bool*>(context); }, &allowed, hash, nullptr);
+  ASSERT_TRUE(snapshot);
+  const auto retained = inventory_hal_test::state.files;
+  auto wrongHash = expected;
+  wrongHash[0] ^= 1;
+  EXPECT_EQ(snapshot->open(review, wrongHash, scratch), CourseBaselineJournalSnapshotResult::Invalid);
+  allowed = false;
+  EXPECT_EQ(snapshot->open(review, expected, scratch), CourseBaselineJournalSnapshotResult::Busy);
+  allowed = true;
+  EXPECT_EQ(snapshot->open(review, expected, scratch), CourseBaselineJournalSnapshotResult::Missing);
+  auto journal = makeUniqueNoThrow<TintaJournal>(*snapshot, scratch);
+  ASSERT_TRUE(journal);
+  EXPECT_EQ(journal->open(), TintaJournalResult::IoError);
+  EXPECT_FALSE(journal->available());
+  EXPECT_EQ(inventory_hal_test::state.files, retained);
 }
 
 TEST_F(HalCourseTransferTest, BaselineRecoveryRequiresNativeIdentityKnownOwnerAndExclusiveWorkspace) {

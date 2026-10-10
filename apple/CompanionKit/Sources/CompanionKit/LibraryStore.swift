@@ -2579,7 +2579,8 @@ public actor LibraryStore {
     private func confirmCourseSwitchInTransaction(_ id: UUID, inventory: ReaderInventory) throws -> CourseSwitchRequest {
         guard let job = try job(id), inventory.complete, inventory.reader == job.reader,
               inventory.generation == job.storageGeneration,
-              job.phase == .queued || job.phase == .paused else { throw StoreError.invalidTransition }
+              job.phase == .queued || job.phase == .paused,
+              try courseBaselineConfirmation(id) == nil else { throw StoreError.invalidTransition }
         let courses = inventory.contents.filter { $0.kind == .course }
         guard courses.count <= 1, let old = inventory.boundCourse else { throw CourseTransferAdmissionError.multipleActiveCourses }
         let next = try courseManifest(job.content)
@@ -2635,6 +2636,85 @@ public actor LibraryStore {
               consent.nextHash == job.content.digest,
               try courseIdentity(job.content) == consent.nextCourse else { throw StoreError.conflictingJob }
         return consent
+    }
+    @discardableResult
+    public func confirmCourseBaselineImport(_ id: UUID, review: CourseBaselineReview) throws -> CourseBaselineImportRequest {
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        let request = try confirmCourseBaselineImportInTransaction(id, review: review)
+        try database.execute("COMMIT"); committed = true
+        return request
+    }
+    private func confirmCourseBaselineImportInTransaction(_ id: UUID, review: CourseBaselineReview) throws -> CourseBaselineImportRequest {
+        guard let job = try job(id), job.phase == .queued || job.phase == .paused,
+              job.durableOffset == 0, review.reader == job.reader,
+              review.generation == job.storageGeneration, try !hasTransferAbort(id),
+              try retainedTransferDeclaration(id) == nil,
+              try !isLibraryContentDeleted(job.content), try courseSwitchConfirmation(id) == nil else {
+            throw StoreError.invalidTransition
+        }
+        let request = try CourseBaselineImportRequest(generation: job.storageGeneration, owner: job.installation,
+            transaction: withUnsafeBytes(of: id.uuid) { Data($0) }, manifest: courseManifest(job.content),
+            reviewHash: review.hash)
+        guard review.matches(request, reader: job.reader) else { throw StoreError.conflictingJob }
+        try database.execute("INSERT OR IGNORE INTO course_baseline_confirmations(job,payload,review) VALUES(?,?,?)",
+            [.text(id.uuidString), .blob(request.encoded), .blob(review.encoded)])
+        guard try courseBaselineConfirmation(id) == request else { throw StoreError.conflictingJob }
+        return request
+    }
+    public func queueCourseBaselineImport(content: ContentID, review: CourseBaselineReview,
+                                          installation: Data) throws -> TransferJob {
+        guard installation.count == 16, installation.contains(where: { $0 != 0 }) else { throw StoreError.invalidValue }
+        try database.execute("BEGIN IMMEDIATE")
+        var committed = false
+        defer { if !committed { try? database.execute("ROLLBACK") } }
+        guard try !isLibraryContentDeleted(content),
+              try !hasPendingRemoval(reader: review.reader, generation: review.generation, content: content) else {
+            throw StoreError.invalidTransition
+        }
+        var existing: TransferJob?
+        let pending = try database.query("""
+            SELECT jobs.id,jobs.reader,jobs.generation,jobs.installation,jobs.content,jobs.offset,jobs.phase
+            FROM jobs JOIN content ON jobs.content=content.hash
+            WHERE jobs.reader=? AND content.kind=2 AND jobs.phase NOT IN ('completed','aborted')
+            """, [.blob(review.reader)])
+        while try pending.next() {
+            let job = try decodeJob(pending)
+            guard existing == nil, job.content == content, job.storageGeneration == review.generation,
+                  job.installation == installation, job.durableOffset == 0,
+                  job.phase == .queued || job.phase == .paused, try !hasTransferAbort(job.id) else {
+                throw StoreError.conflictingJob
+            }
+            existing = job
+        }
+        let id = existing?.id ?? UUID()
+        if existing == nil {
+            _ = try courseManifest(content)
+            try database.execute("INSERT INTO jobs(id,reader,generation,installation,content,offset,phase) VALUES(?,?,?,?,?,0,'queued')",
+                [.text(id.uuidString), .blob(review.reader), .blob(review.generation), .blob(installation), .text(content.hex)])
+        }
+        _ = try confirmCourseBaselineImportInTransaction(id, review: review)
+        try database.execute("UPDATE reader_selections SET selected=0 WHERE reader=? AND content IN (SELECT hash FROM content WHERE kind=2) AND content!=? AND selected=1",
+            [.blob(review.reader), .text(content.hex)])
+        try database.execute("INSERT INTO reader_selections(reader,content,selected) VALUES(?,?,1) ON CONFLICT(reader,content) DO UPDATE SET selected=1 WHERE selected!=1",
+            [.blob(review.reader), .text(content.hex)])
+        guard let job = try job(id) else { throw StoreError.missingJob }
+        try database.execute("COMMIT"); committed = true
+        return job
+    }
+    public func courseBaselineConfirmation(_ id: UUID) throws -> CourseBaselineImportRequest? {
+        let query = try database.query("SELECT payload,review FROM course_baseline_confirmations WHERE job=?",
+            [.text(id.uuidString)])
+        guard try query.next() else { return nil }
+        let request = try CourseBaselineImportRequest(decoding: query.blob(0))
+        let review = try CourseBaselineReview(decoding: query.blob(1))
+        guard let job = try job(id), request.generation == job.storageGeneration,
+              request.owner == job.installation, request.transaction == withUnsafeBytes(of: id.uuid, { Data($0) }),
+              try request.manifest == courseManifest(job.content), review.matches(request, reader: job.reader) else {
+            throw StoreError.conflictingJob
+        }
+        return request
     }
     public func enqueue(content: ContentID, reader: Data, storageGeneration: Data, installation: Data,
                         transaction: UUID = UUID()) throws -> TransferJob {
@@ -2983,7 +3063,7 @@ private final class Database {
             let schema: Int64
             do {
                 let version = try query("PRAGMA user_version")
-                guard try version.next(), (0 ... 40).contains(version.integer(0)) else { throw StoreError.unsupportedSchema }
+                guard try version.next(), (0 ... 41).contains(version.integer(0)) else { throw StoreError.unsupportedSchema }
                 schema = version.integer(0)
             }
             if schema == 0 {
@@ -3330,6 +3410,14 @@ private final class Database {
                     REFERENCES reader_import_jobs(id),original_filename TEXT NOT NULL
                     CHECK(length(CAST(original_filename AS BLOB)) BETWEEN 1 AND 255));
                 PRAGMA user_version=40;
+                """)
+            }
+            if schema < 41 {
+                try execute("""
+                CREATE TABLE course_baseline_confirmations(job TEXT PRIMARY KEY NOT NULL REFERENCES jobs(id),
+                    payload BLOB NOT NULL CHECK(length(payload)=155),
+                    review BLOB NOT NULL CHECK(length(review) BETWEEN 608 AND 4416));
+                PRAGMA user_version=41;
                 """)
             }
             try execute("COMMIT")

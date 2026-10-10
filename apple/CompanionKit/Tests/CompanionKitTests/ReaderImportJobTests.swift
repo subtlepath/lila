@@ -29,7 +29,7 @@ final class ReaderImportJobTests: XCTestCase, @unchecked Sendable {
         guard sqlite3_open(root.appendingPathComponent("library.sqlite").path, &handle) == SQLITE_OK else {
             if let handle { sqlite3_close(handle) }; XCTFail("Cannot open migration fixture"); return
         }
-        let status = sqlite3_exec(handle, "DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; PRAGMA user_version=38;", nil, nil, nil)
+        let status = sqlite3_exec(handle, "DROP TABLE course_baseline_confirmations; DROP TABLE reader_import_filenames; DROP TABLE reader_import_jobs; PRAGMA user_version=38;", nil, nil, nil)
         sqlite3_close(handle)
         guard status == SQLITE_OK else { XCTFail("Cannot prepare schema-38 fixture"); return }
         let migrated = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
@@ -224,7 +224,7 @@ final class ReaderImportJobTests: XCTestCase, @unchecked Sendable {
         guard sqlite3_open(root.appendingPathComponent("library.sqlite").path, &handle) == SQLITE_OK else {
             if let handle { sqlite3_close(handle) }; XCTFail("Cannot open migration fixture"); return
         }
-        let status = sqlite3_exec(handle, "DROP TABLE reader_import_filenames; PRAGMA user_version=39;", nil, nil, nil)
+        let status = sqlite3_exec(handle, "DROP TABLE course_baseline_confirmations; DROP TABLE reader_import_filenames; PRAGMA user_version=39;", nil, nil, nil)
         sqlite3_close(handle)
         guard status == SQLITE_OK else { XCTFail("Cannot prepare schema-39 fixture"); return }
         let migrated = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
@@ -247,7 +247,7 @@ final class ReaderImportJobTests: XCTestCase, @unchecked Sendable {
             guard sqlite3_open(root.appendingPathComponent("library.sqlite").path, &handle) == SQLITE_OK else {
                 if let handle { sqlite3_close(handle) }; XCTFail("Cannot open migration fixture"); return
             }
-            let status = sqlite3_exec(handle, "DROP TABLE reader_import_filenames; PRAGMA user_version=39;", nil, nil, nil)
+            let status = sqlite3_exec(handle, "DROP TABLE course_baseline_confirmations; DROP TABLE reader_import_filenames; PRAGMA user_version=39;", nil, nil, nil)
             sqlite3_close(handle)
             guard status == SQLITE_OK else { XCTFail("Cannot prepare schema-39 fixture"); return }
             let migrated = try LibraryStore(url: root.appendingPathComponent("library.sqlite"))
