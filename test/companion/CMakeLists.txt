@@ -816,3 +816,5 @@ add_executable(CompanionProgressHeaderTest CompanionProgressHeaderTest.cpp ../..
 target_include_directories(CompanionProgressHeaderTest PRIVATE ${REPO_ROOT}/lib/Tinta/src)
 target_link_libraries(CompanionProgressHeaderTest PRIVATE crosspoint_test_common GTest::gtest_main)
 gtest_discover_tests(CompanionProgressHeaderTest)
+
+target_sources(HalCourseTransferTest PRIVATE ${REPO_ROOT}/lib/Tinta/src/core/profile/Profile.cpp)

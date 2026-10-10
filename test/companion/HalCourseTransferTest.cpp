@@ -42,6 +42,7 @@
 #include "lib/hal/HalCourseBaselineArchiveSession.h"
 #include "lib/hal/HalCourseBaselineImportConsentStore.h"
 #include "lib/hal/HalCourseBaselineImportPreparation.h"
+#include "lib/hal/HalCourseBaselineLearnerInspection.h"
 #include "lib/hal/HalCourseBaselineNativeInstaller.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
@@ -136,8 +137,11 @@ class HalCourseTransferTest : public testing::Test {
     ASSERT_EQ(release.release(), CompletedRemovalResult::Ok);
     ASSERT_FALSE(hal.files.contains(ACTIVE_COURSE_PATH));
   }
-  void prepareBaselineReview(std::vector<uint8_t>& encoded, Digest& hash, Identity& reader) {
-    inventory_hal_test::state.files["/tinta/items.bin"] = {17};
+  void prepareBaselineReview(std::vector<uint8_t>& encoded, Digest& hash, Identity& reader,
+                             std::span<const uint8_t> learnerItems = {}) {
+    inventory_hal_test::state.files["/tinta/items.bin"] =
+        learnerItems.empty() ? std::vector<uint8_t>{17}
+                             : std::vector<uint8_t>{learnerItems.begin(), learnerItems.end()};
     removeInstalledCourse();
     ASSERT_FALSE(HasFatalFailure());
     reader[0] = 51;
@@ -149,10 +153,11 @@ class HalCourseTransferTest : public testing::Test {
     hash = *capture->hash();
     encoded.assign(capture->bytes().begin(), capture->bytes().end());
   }
-  void prepareBaselineApproval(CourseBaselineImportRequest& request, Identity& reader, std::string& consentPath) {
+  void prepareBaselineApproval(CourseBaselineImportRequest& request, Identity& reader, std::string& consentPath,
+                               std::span<const uint8_t> learnerItems = {}) {
     std::vector<uint8_t> encoded;
     Digest hash{};
-    prepareBaselineReview(encoded, hash, reader);
+    prepareBaselineReview(encoded, hash, reader, learnerItems);
     ASSERT_FALSE(HasFatalFailure());
     auto& hal = inventory_hal_test::state;
     for (auto iterator = hal.files.begin(); iterator != hal.files.end();) {
@@ -6312,4 +6317,218 @@ TEST_F(HalCourseTransferTest, BaselineParentInstallingRecoversRenameAndPhaseAckn
     EXPECT_EQ(hal.files.at(COURSE_BASELINE_DESTINATION), bytes);
     recoveredStorage.setCourseBaselineInstaller(nullptr);
   }
+}
+
+TEST_F(HalCourseTransferTest, NativeLearnerInspectionUsesVerifiedImmutableCopiesAndCompleteCandidatePack) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  ASSERT_GT(parser->itemCount(), 0u);
+  const auto uid = parser->uidAt(0);
+  parser->close();
+  std::vector<uint8_t> items(1040, 0);
+  for (unsigned copy = 0; copy < 2; ++copy) {
+    auto* header = items.data() + copy * 512;
+    std::memcpy(header, "TIS1", 4);
+    binary_record::putU16(header + 4, 1);
+    binary_record::putU16(header + 6, 80);
+    binary_record::putU32(header + 8, copy + 1);
+    binary_record::putU32(header + 12, 1);
+    binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+  }
+  tinta::core::ItemState::fresh(uid).encode(items.data() + 1024);
+  tinta::core::Profile profile;
+  auto& hal = inventory_hal_test::state;
+  hal.files["/tinta/profile.bin"].resize(tinta::core::Profile::kEncodedSize);
+  profile.encode(hal.files["/tinta/profile.bin"].data());
+  std::array<char, COURSE_STATE_PATH_SIZE> usage{};
+  ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "usage-0001.log", usage));
+  hal.files[usage.data()] = {'T', 'U', 99};
+  CourseBaselinePublicationRecord record;
+  std::string consentPath;
+  prepareBaselineApproval(record.request, record.reader, consentPath, items);
+  ASSERT_FALSE(HasFatalFailure());
+  bool permitted = true;
+  const auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(record.reader, generation, record.request.owner,
+                                                                        scratch, permission, &permitted);
+  ASSERT_TRUE(consent);
+  ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+  consent.reset();
+  hal.files["/tinta/original.pack"] = bytes;
+  std::array<char, COURSE_STATE_PATH_SIZE> current{};
+  ASSERT_TRUE(courseStatePath(record.request.manifest.logicalIdentity, "items.bin", current));
+  hal.files[current.data()] = {97};
+  const auto preserved = hal;
+  auto inspector = makeUniqueNoThrow<HalCourseBaselineLearnerInspection>(
+      record.reader, generation, record.request.owner, scratch, *parser, CourseBaselineSessionLimits{8, 40, 200},
+      permission, &permitted);
+  ASSERT_TRUE(inspector);
+  ASSERT_TRUE(inspector->inspect(record, "/tinta/original.pack"));
+  EXPECT_EQ(hal.files, preserved.files);
+  EXPECT_EQ(hal.renames, preserved.renames);
+  EXPECT_FALSE(parser->isOpen());
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    hal = preserved;
+    auto request = record;
+    if (fault == 0) request.reader[0] ^= 1;
+    if (fault == 1) hal.files["/tinta/original.pack"][0] ^= 1;
+    if (fault == 2) hal.failClosePath = "/tinta/original.pack";
+    if (fault == 3) permitted = false;
+    if (fault == 4) hal.files.erase(consentPath);
+    if (fault == 5) {
+      for (auto& [path, data] : hal.files) {
+        if (path.starts_with("/.crosspoint/companion/course-review-state-") && data.size() == 1040) {
+          data.back() ^= 1;
+          break;
+        }
+      }
+    }
+    const auto evidence = hal.files;
+    EXPECT_FALSE(inspector->inspect(request, "/tinta/original.pack")) << fault;
+    EXPECT_EQ(hal.files, evidence);
+    permitted = true;
+  }
+}
+
+TEST_F(HalCourseTransferTest, NativeLearnerInspectionRejectsSemanticallyInvalidButHashVerifiedReview) {
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    SetUp();
+    SCOPED_TRACE(fault);
+    auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+    ASSERT_TRUE(parser);
+    ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+    const auto uid = parser->uidAt(0);
+    parser->close();
+    std::vector<uint8_t> items(1040, 0);
+    for (unsigned copy = 0; copy < 2; ++copy) {
+      auto* header = items.data() + copy * 512;
+      std::memcpy(header, "TIS1", 4);
+      binary_record::putU16(header + 4, 1);
+      binary_record::putU16(header + 6, 80);
+      binary_record::putU32(header + 8, copy + 1);
+      binary_record::putU32(header + 12, 1);
+      binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+    }
+    tinta::core::ItemState::fresh(fault == 0 ? 0xfffffffe : uid).encode(items.data() + 1024);
+    if (fault == 1) items[1035] = 0x80;
+    auto& hal = inventory_hal_test::state;
+    if (fault == 2) {
+      std::array<char, COURSE_STATE_PATH_SIZE> unknown{};
+      ASSERT_TRUE(courseStatePath(declaration.manifest.logicalIdentity, "future-progress.bin", unknown));
+      hal.files[unknown.data()] = {1, 2, 3};
+    }
+    CourseBaselinePublicationRecord record;
+    std::string consentPath;
+    prepareBaselineApproval(record.request, record.reader, consentPath, items);
+    ASSERT_FALSE(HasFatalFailure());
+    auto permission = [](void*) { return true; };
+    auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(
+        record.reader, generation, record.request.owner, scratch, permission, nullptr);
+    ASSERT_TRUE(consent);
+    ASSERT_EQ(consent->approve(record.request, declaration), CourseBaselineConsentResult::Ok);
+    consent.reset();
+    hal.files["/tinta/original.pack"] = bytes;
+    const auto evidence = hal.files;
+    auto inspection = createHalCourseBaselineLearnerInspection(record.reader, generation, record.request.owner, scratch,
+                                                               *parser, {8, 40, 200}, permission, nullptr);
+    ASSERT_TRUE(inspection);
+    EXPECT_FALSE(inspection->inspect(record, "/tinta/original.pack"));
+    EXPECT_EQ(hal.files, evidence);
+  }
+}
+
+TEST_F(HalCourseTransferTest, BaselineTransferPublishesWithNativeLearnerCompatibilityInsteadOfModeledCallback) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  const auto uid = parser->uidAt(0);
+  parser->close();
+  std::vector<uint8_t> items(1040, 0);
+  for (unsigned copy = 0; copy < 2; ++copy) {
+    auto* header = items.data() + copy * 512;
+    std::memcpy(header, "TIS1", 4);
+    binary_record::putU16(header + 4, 1);
+    binary_record::putU16(header + 6, 80);
+    binary_record::putU32(header + 8, copy + 1);
+    binary_record::putU32(header + 12, 1);
+    binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+  }
+  tinta::core::ItemState::fresh(uid).encode(items.data() + 1024);
+  CourseBaselineImportRequest request;
+  Identity reader{};
+  std::string consentPath;
+  prepareBaselineApproval(request, reader, consentPath, items);
+  ASSERT_FALSE(HasFatalFailure());
+  auto permission = [](void*) { return true; };
+  auto consent = makeUniqueNoThrow<HalCourseBaselineImportConsentStore>(reader, generation, request.owner, scratch,
+                                                                        permission, nullptr);
+  ASSERT_TRUE(consent);
+  const auto approve = [](void* context, const CourseBaselineImportRequest& request,
+                          const TransferDeclaration& upload) {
+    return static_cast<HalCourseBaselineImportConsentStore*>(context)->approve(request, upload) ==
+           CourseBaselineConsentResult::Ok;
+  };
+  Transfer transfer(storage, scratch);
+  ASSERT_EQ(transfer.recover(generation), TransferResult::Ok);
+  ASSERT_EQ(beginCourseBaselineTransfer(transfer, request, generation, request.owner, approve, consent.get()),
+            TransferResult::Ok);
+  consent.reset();
+  auto inspector = createHalCourseBaselineLearnerInspection(reader, generation, request.owner, scratch, *parser,
+                                                            {8, 40, 200}, permission, nullptr);
+  ASSERT_TRUE(inspector);
+  auto installer =
+      createHalCourseBaselineNativeInstaller(reader, generation, request.owner, scratch, permission, nullptr,
+                                             HalCourseBaselineLearnerInspection::compatible, inspector.get());
+  ASSERT_TRUE(installer);
+  storage.setCourseBaselineInstaller(installer.get());
+  for (size_t at = 0; at < bytes.size();) {
+    const auto count = std::min<size_t>(1000, bytes.size() - at);
+    ASSERT_EQ(transfer.append(request.transaction, request.owner, at, std::span(bytes).subspan(at, count)),
+              TransferResult::Ok);
+    at += count;
+  }
+  std::array<char, COURSE_STATE_PATH_SIZE> current{};
+  ASSERT_TRUE(courseStatePath(request.manifest.logicalIdentity, "items.bin", current));
+  auto& hal = inventory_hal_test::state;
+  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  ASSERT_NE(transfer.current(), nullptr);
+  EXPECT_EQ(transfer.current()->phase, TransferPhase::Committed);
+  EXPECT_EQ(hal.files.at(current.data()), items);
+  hal.files[current.data()] = {97};
+  const auto after = hal.files;
+  ASSERT_EQ(transfer.commit(request.transaction, request.owner), TransferResult::Ok);
+  EXPECT_EQ(hal.files, after);
+  storage.setCourseBaselineInstaller(nullptr);
+}
+
+TEST_F(HalCourseTransferTest, NativeLearnerInspectionAdmissionPreservesHeapReserveAndRefusesIncompleteLimits) {
+  auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(parser);
+  Identity reader{};
+  reader[0] = 51;
+  bool permitted = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  const auto evidence = inventory_hal_test::state.files;
+  EXPECT_FALSE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
+                                                        {8, 40, 0}, permission, &permitted));
+  EXPECT_FALSE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner,
+                                                        std::span(scratch).first(COURSE_BASELINE_REVIEW_MAX_SIZE),
+                                                        *parser, {8, 40, 200}, permission, &permitted));
+  permitted = false;
+  EXPECT_FALSE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
+                                                        {8, 40, 200}, permission, &permitted));
+  permitted = true;
+  const auto memory = companion_memory_test::internal;
+  companion_memory_test::internal.freeBytes = 50 * 1024 + sizeof(HalCourseBaselineLearnerInspection);
+  EXPECT_FALSE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
+                                                        {8, 40, 200}, permission, &permitted));
+  companion_memory_test::internal = memory;
+  companion_memory_test::internal.largestBlockBytes = sizeof(HalCourseBaselineLearnerInspection) - 1;
+  EXPECT_FALSE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
+                                                        {8, 40, 200}, permission, &permitted));
+  companion_memory_test::internal = memory;
+  EXPECT_TRUE(createHalCourseBaselineLearnerInspection(reader, generation, declaration.state.owner, scratch, *parser,
+                                                       {8, 40, 200}, permission, &permitted));
+  EXPECT_EQ(inventory_hal_test::state.files, evidence);
 }
