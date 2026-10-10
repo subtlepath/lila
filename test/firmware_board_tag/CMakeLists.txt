@@ -1,0 +1,8 @@
+foreach(board IN ITEMS X4 X4PRO X4CLASSIC STICKY PAPERMONO)
+  set(target FirmwareBoardTagTest_${board})
+  add_executable(${target} FirmwareBoardTagTest.cpp ../../src/network/FirmwareBoardTag.cpp)
+  target_include_directories(${target} BEFORE PRIVATE stubs ../../src/network)
+  target_compile_definitions(${target} PRIVATE FREEINK_DEVICE_${board}=1)
+  target_link_libraries(${target} PRIVATE crosspoint_test_common GTest::gtest_main)
+  gtest_discover_tests(${target} TEST_PREFIX "${board}.")
+endforeach()

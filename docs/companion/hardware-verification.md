@@ -226,6 +226,13 @@ and retained history before and after each attempt.
       and retained history. Record heap and stack watermarks on C3 and S3.
 - [ ] Interrupt multi-file dictionary/derived-state installation after every
       mutation; recovery yields one consistent version, not a mixture.
+- [ ] Test matching, absent, malformed, and wrong firmware board tags. Reader
+      validation requires a complete matching tag before flashing. Repeat tags
+      split across SD read boundaries; verify refusal preserves the running image.
+      Monitor task stack watermarks and heap during validation on C3 and S3. The
+      C3 compile probe reports a 208-byte validator frame after moving fixed SHA
+      and scanner state into its single checked stream-buffer allocation; runtime
+      and power-cut results remain pending.
 - [ ] Test stable-release and manually imported firmware, wrong chip/board,
       oversized partition, corrupt integrity data, insufficient storage, and
       incompatible migrated-state downgrade. None may reach flashing.
@@ -318,7 +325,7 @@ and S3; command tests and source parsing do not satisfy this acceptance section.
 ## Current portable software evidence
 
 The full CompanionKit Linux suite passes 556 tests on Swift 6.0.3. The complete
-configured CTest suite passes 2,040 entries. These cover the selected portable implementations,
+configured CTest suite passes 2,070 entries. These cover the selected portable implementations,
 including inventory, persistence, migration, synchronization, transfers, removal,
 export codecs and shared fixtures, source verification, encrypted imports,
 restart/fallback, in-flight deletion, immutable filenames, cancellation, and

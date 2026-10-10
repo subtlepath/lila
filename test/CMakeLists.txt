@@ -86,3 +86,5 @@ add_subdirectory(companion)
 add_subdirectory(i18n)
 
 add_subdirectory(bookmark)
+
+add_subdirectory(firmware_board_tag)
