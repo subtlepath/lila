@@ -4020,3 +4020,21 @@ paths all pass with no emitted frame above 224 bytes. Existing unrelated
 GoogleTest assertion-brace warnings remain in the baseline-import test source.
 Re-run `ctest --test-dir .cache/companion-verification/host --output-on-failure`.
 Native reservation sealing/recovery and hardware migration remain unfinished.
+
+The legacy review reservation now has recoverable persistence using immutable
+canonical/stage paths, stage readback, rename and canonical readback. Every
+attempt requires a fresh Native verification callback and reinspection of the
+same epoch/context. Matching complete stages can be promoted; shorter stages
+need exact prefix ownership before and after verification before removal and
+resealing. Corrupt/foreign stages and canonical/stage conflicts are preserved.
+The allocation-free store retains record copies off stack and reuses caller
+workspace. It requires checked storage, prepared parents and excluded writers;
+Native HAL integration, epoch reservation proof, startup gating/recovery and
+authoritative publication are not implemented by this primitive.
+Validation: all 2,006 host tests pass, including all 274 torn-prefix lengths,
+remove/write/rename failures before and after mutation, restart/idempotence,
+foreign/corrupt stages, post-verification changes, reentry, cancellation and
+permission loss. The ESP32-C3 persistence/load probe passes with no emitted
+frame above 224 bytes. Existing baseline-import assertion-brace warnings remain
+unrelated to these additions. Re-run `ctest --test-dir
+.cache/companion-verification/host --output-on-failure` for the host suite.

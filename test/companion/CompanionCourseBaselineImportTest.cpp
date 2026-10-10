@@ -17,6 +17,7 @@
 #include "lib/Companion/CompanionUnboundCourseMigrationIntentStore.h"
 #include "lib/Companion/CompanionUnboundCourseMigrationRequest.h"
 #include "lib/Companion/CompanionUnboundCourseReviewReservation.h"
+#include "lib/Companion/CompanionUnboundCourseReviewReservationStore.h"
 
 using namespace companion;
 namespace {
@@ -1837,4 +1838,195 @@ TEST(UnboundCourseReviewReservation, ValidChecksumsCannotAuthorizeInvalidEpochCo
   UnboundCourseReviewReservation empty;
   ASSERT_TRUE(decodeUnboundCourseReviewReservation(encoded, empty));
   EXPECT_EQ(empty, value);
+}
+
+namespace {
+UnboundCourseReviewReservation reviewReservation(const Fixture& f) {
+  UnboundCourseReviewReservation value;
+  value.intent.reader.fill(17);
+  value.intent.request.original = f.request;
+  value.intent.activePack = f.request.manifest;
+  value.epoch = 19;
+  value.records = 3;
+  value.events = 4;
+  return value;
+}
+bool verifiedReservation(void*, const UnboundCourseReviewReservation&) { return true; }
+}  // namespace
+
+TEST(UnboundCourseReviewReservationStore, RestartAndIdempotentRetryRetainEpochAndRejectForeignReservation) {
+  Fixture f;
+  const auto value = reviewReservation(f);
+  std::array<uint8_t, 512> scratch{};
+  UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+  auto output = value;
+  output.epoch = 777;
+  const auto sentinel = output;
+  EXPECT_EQ(store.load(output), UnboundCourseIntentResult::Missing);
+  EXPECT_EQ(output, sentinel);
+  EXPECT_EQ(store.persist(value, nullptr, nullptr), UnboundCourseIntentResult::Invalid);
+  EXPECT_EQ(f.storage.mutations, 0u);
+  ASSERT_EQ(store.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(f.storage.mutations, 2u);
+  ASSERT_EQ(store.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(f.storage.mutations, 2u);
+  UnboundCourseReviewReservationStore restarted(f.storage, scratch, Fixture::permitted, &f.storage);
+  ASSERT_EQ(restarted.load(output), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(output, value);
+  auto foreign = value;
+  ++foreign.epoch;
+  const auto files = f.storage.files;
+  EXPECT_EQ(restarted.persist(foreign, verifiedReservation, nullptr), UnboundCourseIntentResult::Conflict);
+  EXPECT_EQ(f.storage.files, files);
+  EXPECT_EQ(f.storage.mutations, 2u);
+}
+
+TEST(UnboundCourseReviewReservationStore, EveryWriteAndRenameFailureBeforeOrAfterMutationRecoversSameEpoch) {
+  for (unsigned mutation = 1; mutation <= 2; ++mutation) {
+    for (bool after : {false, true}) {
+      Fixture f;
+      const auto value = reviewReservation(f);
+      std::array<uint8_t, 512> scratch{};
+      f.storage.fail = mutation;
+      f.storage.after = after;
+      {
+        UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+        EXPECT_EQ(store.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::IoError);
+      }
+      f.storage.fail = 0;
+      UnboundCourseReviewReservationStore restarted(f.storage, scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(restarted.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::Ok);
+      auto output = value;
+      output.epoch = 777;
+      ASSERT_EQ(restarted.load(output), UnboundCourseIntentResult::Ok);
+      EXPECT_EQ(output, value);
+      EXPECT_FALSE(f.storage.files.contains(UnboundCourseReviewReservationStore::STAGE));
+    }
+  }
+}
+
+TEST(UnboundCourseReviewReservationStore, EveryExactTornPrefixRequiresFreshVerificationBeforeRepair) {
+  for (size_t size = 0; size < UNBOUND_COURSE_REVIEW_RESERVATION_SIZE; ++size) {
+    Fixture f;
+    const auto value = reviewReservation(f);
+    std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> encoded{};
+    ASSERT_TRUE(encodeUnboundCourseReviewReservation(value, encoded));
+    f.storage.files[UnboundCourseReviewReservationStore::STAGE] = {encoded.begin(), encoded.begin() + size};
+    f.storage.allowStageRemoval = true;
+    std::array<uint8_t, 512> scratch{};
+    UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+    auto output = value;
+    output.epoch = 777;
+    const auto sentinel = output;
+    EXPECT_EQ(store.load(output), UnboundCourseIntentResult::Pending);
+    EXPECT_EQ(output, sentinel);
+    EXPECT_EQ(store.persist(
+                  value, [](void*, const auto&) { return false; }, nullptr),
+              UnboundCourseIntentResult::VerificationFailed);
+    EXPECT_EQ(f.storage.mutations, 0u);
+    ASSERT_EQ(store.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::Ok);
+    ASSERT_EQ(store.load(output), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(output, value);
+    EXPECT_EQ(f.storage.mutations, 3u);
+  }
+}
+
+TEST(UnboundCourseReviewReservationStore, CorruptOrForeignStagesArePreservedAndCallbackChangesAreRechecked) {
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    Fixture f;
+    const auto value = reviewReservation(f);
+    auto foreign = value;
+    ++foreign.epoch;
+    std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> encoded{};
+    ASSERT_TRUE(encodeUnboundCourseReviewReservation(fault == 0 ? foreign : value, encoded));
+    auto& stage = f.storage.files[UnboundCourseReviewReservationStore::STAGE];
+    stage.reserve(encoded.size() + 1);
+    stage.assign(encoded.begin(), encoded.end());
+    if (fault == 1) stage[100] ^= 1;
+    if (fault == 2) {
+      stage.resize(100);
+      stage.back() ^= 1;
+    }
+    if (fault == 3) stage.push_back(0);
+    if (fault == 4) stage.resize(100);
+    f.storage.allowStageRemoval = true;
+    std::array<uint8_t, 512> scratch{};
+    UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+    const auto files = f.storage.files;
+    auto verify = [](void* raw, const UnboundCourseReviewReservation&) {
+      auto& storage = *static_cast<Storage*>(raw);
+      storage.files[UnboundCourseReviewReservationStore::STAGE].back() ^= 1;
+      return true;
+    };
+    EXPECT_NE(store.persist(value, fault == 4 ? verify : verifiedReservation, &f.storage),
+              UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(f.storage.mutations, 0u);
+    if (fault != 4) {
+      EXPECT_EQ(f.storage.files, files);
+    }
+  }
+}
+
+TEST(UnboundCourseReviewReservationStore, ReentryCancellationAndPermissionLossCannotPublishOrChangeOutput) {
+  Fixture f;
+  const auto value = reviewReservation(f);
+  std::array<uint8_t, 512> scratch{};
+  UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+  struct Context {
+    UnboundCourseReviewReservationStore* store;
+    const UnboundCourseReviewReservation* value;
+    unsigned probes = 0;
+    bool cancel = false;
+  } context{&store, &value};
+  auto verify = [](void* raw, const UnboundCourseReviewReservation&) {
+    auto& state = *static_cast<Context*>(raw);
+    auto output = *state.value;
+    output.epoch = 777;
+    EXPECT_EQ(state.store->load(output), UnboundCourseIntentResult::Busy);
+    EXPECT_EQ(output.epoch, 777u);
+    EXPECT_EQ(state.store->persist(*state.value, verifiedReservation, nullptr), UnboundCourseIntentResult::Busy);
+    ++state.probes;
+    if (state.cancel) state.store->close();
+    return true;
+  };
+  context.cancel = true;
+  EXPECT_EQ(store.persist(value, verify, &context), UnboundCourseIntentResult::Busy);
+  EXPECT_EQ(f.storage.mutations, 0u);
+  context.cancel = false;
+  ASSERT_EQ(store.persist(value, verify, &context), UnboundCourseIntentResult::Ok);
+  EXPECT_GT(context.probes, 0u);
+  auto output = value;
+  output.epoch = 777;
+  const auto sentinel = output;
+  f.storage.revokeRead = true;
+  EXPECT_EQ(store.load(output), UnboundCourseIntentResult::Busy);
+  EXPECT_EQ(output, sentinel);
+}
+
+TEST(UnboundCourseReviewReservationStore, TornStageRemoveWriteAndRenameFailuresRecoverBeforeAndAfterMutation) {
+  for (unsigned mutation = 1; mutation <= 3; ++mutation) {
+    for (bool after : {false, true}) {
+      Fixture f;
+      const auto value = reviewReservation(f);
+      std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> encoded{};
+      ASSERT_TRUE(encodeUnboundCourseReviewReservation(value, encoded));
+      f.storage.files[UnboundCourseReviewReservationStore::STAGE] = {encoded.begin(), encoded.begin() + 100};
+      f.storage.allowStageRemoval = true;
+      f.storage.fail = mutation;
+      f.storage.after = after;
+      std::array<uint8_t, 512> scratch{};
+      {
+        UnboundCourseReviewReservationStore store(f.storage, scratch, Fixture::permitted, &f.storage);
+        EXPECT_EQ(store.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::IoError);
+      }
+      f.storage.fail = 0;
+      UnboundCourseReviewReservationStore restarted(f.storage, scratch, Fixture::permitted, &f.storage);
+      ASSERT_EQ(restarted.persist(value, verifiedReservation, nullptr), UnboundCourseIntentResult::Ok);
+      auto output = value;
+      output.epoch = 777;
+      ASSERT_EQ(restarted.load(output), UnboundCourseIntentResult::Ok);
+      EXPECT_EQ(output, value);
+      EXPECT_FALSE(f.storage.files.contains(UnboundCourseReviewReservationStore::STAGE));
+    }
+  }
 }

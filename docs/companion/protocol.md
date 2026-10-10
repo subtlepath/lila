@@ -1324,3 +1324,21 @@ output on refusal. It does not prove exclusive Native epoch reservation,
 actual frozen-stream event counts, shared ancestry or publication authority.
 `protocol/fixtures/UnboundCourseReviewReservation-v1.fixture` supplies canonical
 bytes. Native persistence/reservation verification is not yet wired.
+
+`UnboundCourseReviewReservationStore` seals `TCRR` through
+`/.crosspoint/companion/course-unbound.review-reservation.tmp` and retains the
+canonical `/.crosspoint/companion/course-unbound.review-reservation`. The caller
+prepares parents, lends checked storage and the shared workspace, excludes
+writers, and supplies fresh read-only Native verification of exclusive epoch
+reservation and frozen record/event counts. Every persistence attempt,
+including idempotent retry, requires verification and reinspection. A complete
+matching stage is read back before rename; the canonical record is read back
+again afterward. Foreign reservations, fully corrupt stages, oversized stages
+and simultaneous canonical/stage records are preserved and refused. A shorter
+stage may be removed/resealed only when its entire extent exactly matches the
+supplied reservation before and after verification. Loading a pending stage
+never supplies a reservation or grants publication authority. Cancellation and
+permission loss refuse success; callback reentry is blocked through final
+permission checks. The store allocates nothing and retains its record copies
+off stack. Native HAL adaptation, exclusive epoch proof, startup recovery and
+journal publication remain unwired; this store alone cannot enable migration.
