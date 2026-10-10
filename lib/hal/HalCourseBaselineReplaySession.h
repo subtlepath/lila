@@ -48,7 +48,7 @@ class HalCourseBaselineReplaySession final {
   tinta::core::pack::PackSource& source;
   Permission permitted;
   void* context;
-  HalTintaReplayStore store;
+  HalTintaReplayStore store{TintaReplayStoreTarget::BaselineProof};
   Digest frontier{};
   bool ready = false;
   bool guard() const { return permitted && permitted(context) && Storage.ready() && admitCompanionHeap(); }

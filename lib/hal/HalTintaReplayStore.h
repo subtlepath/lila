@@ -6,6 +6,7 @@
 #include <freertos/task.h>
 
 #include "../Serialization/BinaryRecordBytes.h"
+#include "CompanionBaselineReplayPaths.h"
 #include "CompanionCourseStatePaths.h"
 #include "CompanionTintaReplayReducer.h"
 
@@ -13,11 +14,21 @@ namespace companion {
 // Disposable replay workspace; caller excludes other replay/publication writers.
 class HalTintaReplayStore final : public TintaReplayStore {
  public:
+  explicit HalTintaReplayStore(TintaReplayStoreTarget target = TintaReplayStoreTarget::Course) : target(target) {}
   ~HalTintaReplayStore() { close(); }
   bool begin(const Identity& course) {
     ready = false;
-    if (!close() || !courseStateDirectory(course, root) || !courseStatePath(course, "replay-work", path) ||
-        !Storage.ensureDirectoryExists(root.data()) || !Storage.openFileForWriteReusing("COMPANION", path.data(), file))
+    if (!close() || !courseStateDirectory(course, root)) return fail("binding or close");
+    if (target == TintaReplayStoreTarget::Course) {
+      if (!courseStatePath(course, "replay-work", path)) return fail("working path");
+    } else if (target == TintaReplayStoreTarget::BaselineProof) {
+      static_assert(sizeof(TRANSFER_DIRECTORY) <= COURSE_STATE_DIRECTORY_SIZE);
+      std::copy_n(TRANSFER_DIRECTORY, sizeof(TRANSFER_DIRECTORY), root.begin());
+      if (!baselineReplayFilePath(course, BaselineReplayFile::Working, path)) return fail("baseline working path");
+    } else {
+      return fail("working target");
+    }
+    if (!Storage.ensureDirectoryExists(root.data()) || !Storage.openFileForWriteReusing("COMPANION", path.data(), file))
       return fail("begin");
     bytes.fill(0);
     bytes[0] = 'T';
@@ -181,6 +192,7 @@ class HalTintaReplayStore final : public TintaReplayStore {
     }
   }
   static constexpr uint32_t HEADER_SIZE = 24, RECORD_SIZE = 36;
+  const TintaReplayStoreTarget target;
   std::array<char, COURSE_STATE_DIRECTORY_SIZE> root{};
   std::array<char, COURSE_STATE_PATH_SIZE> path{};
   std::array<uint8_t, RECORD_SIZE> bytes{};

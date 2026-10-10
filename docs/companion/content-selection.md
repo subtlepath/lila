@@ -2972,3 +2972,96 @@ both coverage directions, zero-day equivalence, rounding boundaries, corrupt
 CRCs, read failure, short scratch, mid-scan cancellation and counter overflow.
 All source-byte preservation assertions pass. Full baseline cache/receipt proof,
 live commands, Apple baseline UI and physical resource acceptance remain pending.
+
+Read-only completion correspondence now covers the native profile and legacy
+mark logs. `compareTintaReplayLessons` uses the portable native lesson projection
+against the confirmed original pack: current progress must agree, existing higher
+unlock choices remain local, and unknown enabled lesson identities refuse proof.
+The original profile, including preferences, is never saved or changed.
+`compareTintaReplayMarks` reconstructs native add/remove order, validates stars
+against the original item catalog, resolves reading title keys only when unique,
+and compares the resulting enabled set with replay in both directions. Corrupt or
+retired marks and ambiguous readings remain preserved and unproved.
+
+Neither helper adds an allocation or a second scratch loan. C3 production-header
+probes measure lesson comparison at 96 bytes (lookup callback 48 bytes) and mark
+comparison at 208 bytes. The final full host rebuild and all 1,943 tests pass
+(10.21 seconds), including original-pack lesson indices, preserved unlock and
+preference choices, unknown completions, enabled/disabled transitions, star and
+resolved reading add/remove logs, missing marks, permission refusal and corrupt
+CRC preservation. The helpers still need integration into the native baseline
+inspector before live baseline commands can use their results.
+
+The capture's checked course-directory scan already includes stable canonical
+files such as `sync-receipt`, `lessons.bin` and `readings.bin` in its immutable
+reviewed cohort. The existing inspector currently has no handlers for these
+files. Receipt verification must read their retained backups, bind the receipt to
+the confirmed course/storage/pack and verified journal frontier, and establish
+the saved-session receipt digest before authorizing that session. It must not
+substitute the frontier digest for the receipt hash or infer authority from an
+unknown learner filename.
+
+Baseline proof work now uses private companion paths (`bp-<course>-w` for replay
+and separate item/review/lesson/reading/day proof suffixes). Ordinary course replay
+and existing candidate/proof exports retain their original paths. This separation
+keeps newly generated baseline files out of the frozen learner-directory scan;
+the native test asserts that no new course-state file appears and all retained
+source bytes remain unchanged.
+
+`HalCourseBaselineReplayReceipt` copies a hash-verified retained manifest before
+exports reuse the shared loan, binds it to course/storage/pack and the audited
+frontier, reproduces all five canonical derived-file hashes in the private proof
+namespace, and exposes the receipt SHA-256 as `sessionSnapshot()` only on success.
+A CRC-valid receipt with an incorrect file hash is refused even if its own full
+hash matches the reviewed descriptor. This is receipt reproducibility evidence;
+matching actual retained learner files and integrating native saved-session
+handling remain required in the baseline inspector.
+
+The C3 header probe measures the receipt owner at 1,464 bytes and its entry frame
+at 144 bytes, with no compiled frame above 256 bytes. Its 332-byte manifest copy
+cannot remain in the overwritten loan or fit the local-variable budget; retaining
+it in the checked temporary heap owner avoids a permanently resident static
+buffer. The owner and largest block are admitted against the 50 KiB reserve, and
+RAII releases all owned export handles and buffers. The projection owner is now
+268 bytes after adding its explicit store location; allocations use actual
+`sizeof` admission. No second 8 KiB workspace is introduced.
+
+The final host rebuild and all 1,943 tests pass (11.32 seconds), including private
+namespace preservation, borrowed receipt/scratch overlap, wrong receipt hashes
+and CRC-valid false file declarations. Firmware targets need final builds after
+the private-path integration changes; the prior five-target checkpoint does not
+cover these edits. Native baseline integration, legacy reconciliation, saved
+session handling and physical acceptance remain unfinished.
+
+Native baseline inspection now consumes the frozen receipt cohort. When a
+reviewed `sync-receipt` exists, it replays the reviewed journal in the private
+namespace, proves receipt reproducibility, and requires all five retained derived
+files to match the receipt's lengths and hashes. It applies the read-only item,
+day, profile-lesson and legacy star/reading correspondence checks, validates
+canonical completion sets, and rechecks every backup hash before success. These
+checks run through the existing native import compatibility callback, with all
+temporary replay ownership released before parser/file cleanup.
+
+A version 3 saved session cannot pass without a verified receipt. A syntactically
+valid stale session remains retained for the native app's rebuild path;
+`sessionRequiresRebuild()` reports the verified outcome only after successful
+inspection. It uses the receipt digest and complete retained legacy review count,
+not a journal-frontier digest or only the item header's committed count. Earlier
+legacy histories still require the separate migration/reconciliation proof; this
+canonical receipt path does not establish their distributed provenance.
+
+The final host rebuild and all 1,944 tests pass (13.82 seconds). The native fixture
+contains a real star event and covers matching and stale queue bindings, a
+CRC-valid false receipt declaration, same-length valid learner headers that
+disagree with the receipt, and a version 3 session lacking receipt evidence. All
+retained source-byte assertions pass. C3 production-header probes measure the
+import owner at 31,512 bytes and the inspector at 11,880 bytes, with entry frames
+of 192 bytes for inspection and 144 bytes for receipt preparation; no compiled
+probe frame exceeds 256 bytes. The 332-byte retained manifest and projection
+handle are members of the already heap-admitted owner, preserving the single
+scratch loan. These are object/frame measurements, not hardware heap acceptance.
+
+The final five-target firmware batch is running under
+`.cache/companion-verification/baseline-native-receipt-final/`. Live baseline
+commands, Apple baseline UI, legacy reconciliation and physical acceptance remain
+unfinished; the full companion plan is not complete.

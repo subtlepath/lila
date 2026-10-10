@@ -21,8 +21,51 @@
 #include "HalTintaNativeStarRecovery.h"
 #include "HalTintaPreferenceApplication.h"
 #include "HalTintaReplayDayCorrespondence.h"
+#include "HalTintaReplayLessonCorrespondence.h"
+#include "HalTintaReplayMarkCorrespondence.h"
 
 using namespace companion;
+
+TEST(HalTintaReplayLessonCorrespondence, UsesOriginalPackIndicesAndPreservesProfileChoices) {
+  inventory_hal_test::state = {};
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  auto pack = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(pack);
+  ASSERT_EQ(pack->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  TintaPackSubjectKeys lessons(*pack, false);
+  ASSERT_GT(lessons.count(), 1u);
+  uint32_t first = 0;
+  ASSERT_TRUE(lessons.read(0, first));
+  Identity course{1};
+  auto store = makeUniqueNoThrow<HalTintaReplayStore>();
+  ASSERT_TRUE(store);
+  ASSERT_TRUE(store->begin(course));
+  tinta::core::Profile profile;
+  profile.unlockedThrough = 1;
+  profile.retentionPermille = 870;
+  profile.newPerDay = 23;
+  auto permission = [](void*) { return true; };
+  EXPECT_TRUE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+  ASSERT_TRUE(store->completion(EventKind::LessonComplete, first, true));
+  EXPECT_FALSE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+  profile.currentLesson = 1;
+  std::array<uint8_t, tinta::core::Profile::kEncodedSize> retained{}, after{};
+  profile.encode(retained.data());
+  ASSERT_TRUE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+  profile.encode(after.data());
+  EXPECT_EQ(after, retained);
+  ASSERT_TRUE(store->completion(EventKind::LessonComplete, UINT32_MAX - 1, true));
+  EXPECT_FALSE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+  ASSERT_TRUE(store->completion(EventKind::LessonComplete, UINT32_MAX - 1, false));
+  EXPECT_TRUE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+  EXPECT_FALSE(compareTintaReplayLessons(profile, *pack, *store, course, [](void*) { return false; }, nullptr));
+  profile.encode(after.data());
+  EXPECT_EQ(after, retained);
+  ASSERT_TRUE(store->completion(EventKind::LessonComplete, first, false));
+  EXPECT_FALSE(compareTintaReplayLessons(profile, *pack, *store, course, permission, nullptr));
+}
 
 TEST(HalTintaReplayDayCorrespondence, UnsortedSplitRecordsMustMatchBothDirections) {
   inventory_hal_test::state = {};
@@ -1144,6 +1187,76 @@ TEST(HalTintaLegacyReferences, ValidatesNativeLessonIndicesIncludingCompletedSen
   pack->close();
   EXPECT_FALSE(inspectTintaLegacyLessonReferences(profile, *pack));
 }
+TEST(HalTintaReplayMarkCorrespondence, ChecksStarsAndResolvedReadingsWithoutReplacingLogs) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(bytes.data(), bytes.size());
+  auto pack = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(pack);
+  ASSERT_EQ(pack->open(source), tinta::core::pack::PackStatus::Ok);
+  CourseUidLookup catalog(source);
+  ASSERT_TRUE(catalog.begin());
+  for (const auto kind : {TintaReplayMarkKind::Stars, TintaReplayMarkKind::Readings}) {
+    inventory_hal_test::state = {};
+    Identity course{1};
+    auto store = makeUniqueNoThrow<HalTintaReplayStore>();
+    ASSERT_TRUE(store);
+    ASSERT_TRUE(store->begin(course));
+    uint32_t key = pack->uidAt(0), uid = key;
+    if (kind == TintaReplayMarkKind::Readings) {
+      bool unique = false;
+      for (uint32_t at = 0; at < pack->count(tinta::core::pack::Section::Stor); ++at) {
+        tinta::core::pack::Story story;
+        ASSERT_TRUE(pack->story(at, story));
+        ASSERT_TRUE(tintaLegacyStoryKey(*pack, story, key));
+        if (resolveTintaLegacyStoryKey(*pack, key, uid) == LegacyStoryIdentityResult::Matched) {
+          unique = true;
+          break;
+        }
+      }
+      ASSERT_TRUE(unique);
+    }
+    auto& log = inventory_hal_test::state.files["/reviewed-marks"];
+    log = {'T', 'M', 'K', '1'};
+    legacyMarkRecord(log, key, 1);
+    legacyMarkRecord(log, key, 2);
+    legacyMarkRecord(log, key, 1);
+    const auto retained = log;
+    HalFile file("/reviewed-marks");
+    std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+    auto permission = [](void*) { return true; };
+    EXPECT_FALSE(compareTintaReplayMarks(file, *store, course, catalog, *pack, kind, scratch, permission, nullptr));
+    auto item = tinta::core::ItemState::fresh(uid);
+    item.flags = tinta::core::item_flag::kStarred;
+    if (kind == TintaReplayMarkKind::Stars) {
+      ASSERT_TRUE(store->putItem(item));
+    } else {
+      ASSERT_TRUE(store->completion(EventKind::ReadingComplete, uid, true));
+    }
+    ASSERT_TRUE(compareTintaReplayMarks(file, *store, course, catalog, *pack, kind, scratch, permission, nullptr));
+    EXPECT_EQ(log, retained);
+    log.resize(4);
+    EXPECT_FALSE(compareTintaReplayMarks(file, *store, course, catalog, *pack, kind, scratch, permission, nullptr));
+    log = retained;
+    EXPECT_FALSE(compareTintaReplayMarks(
+        file, *store, course, catalog, *pack, kind, scratch, [](void*) { return false; }, nullptr));
+    log.back() ^= 1;
+    const auto corrupt = log;
+    EXPECT_FALSE(compareTintaReplayMarks(file, *store, course, catalog, *pack, kind, scratch, permission, nullptr));
+    EXPECT_EQ(log, corrupt);
+    log = retained;
+    if (kind == TintaReplayMarkKind::Stars) {
+      item.flags = 0;
+      ASSERT_TRUE(store->putItem(item));
+    } else {
+      ASSERT_TRUE(store->completion(EventKind::ReadingComplete, uid, false));
+    }
+    EXPECT_FALSE(compareTintaReplayMarks(file, *store, course, catalog, *pack, kind, scratch, permission, nullptr));
+    EXPECT_EQ(log, retained);
+  }
+}
+
 TEST(HalTintaLegacyReferences, DistinguishesStarsAndTitleKeysWithoutChangingMarks) {
   std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
   ASSERT_TRUE(input.good());
