@@ -4038,3 +4038,21 @@ permission loss. The ESP32-C3 persistence/load probe passes with no emitted
 frame above 224 bytes. Existing baseline-import assertion-brace warnings remain
 unrelated to these additions. Re-run `ctest --test-dir
 .cache/companion-verification/host --output-on-failure` for the host suite.
+
+Review reservation persistence now has a Native HAL adapter with checked fixed
+paths, read-only hardware/card-generation inspection, Native owner admission,
+epoch-counter bounds, sync/close and recoverable stage handling. It preserves a
+reserved older epoch across later Native lifecycles without allocating a new
+one. Exclusive use of that epoch and actual frozen stream counts still require
+the caller's verification callback; counter bounds alone grant no authority.
+The adapter allocates nothing internally, retains large record/handle owners
+off stack, and uses the shared workspace. Native command/startup wiring and
+exclusive epoch verification remain outstanding before migration is enabled.
+Validation: all 2,009 host tests pass. Native cases cover retained older
+epochs, future epoch/wrong owner/card marker refusal, permission loss,
+verification/reentry/cancellation, and sync/close/rename failures with retry.
+Identity storage reports zero writes during persistence and recovery. The C3
+adapter probe has no emitted frame above 224 bytes; the identity implementation
+source probe has none above 240 bytes. Re-run `ctest --test-dir
+.cache/companion-verification/host --output-on-failure` for the host suite.
+Physical SD/NVS acceptance and migration runtime activation remain unfinished.

@@ -1342,3 +1342,21 @@ permission loss refuse success; callback reentry is blocked through final
 permission checks. The store allocates nothing and retains its record copies
 off stack. Native HAL adaptation, exclusive epoch proof, startup recovery and
 journal publication remain unwired; this store alone cannot enable migration.
+
+`HalUnboundCourseReviewReservationStore` adapts retained review reservations to
+HAL SD access. It accepts a Native identity-storage dependency and fixed reader
+and storage-generation context. Read-only identity inspection checks hardware,
+card marker/generation and a nonzero epoch across guarded I/O; a reservation
+cannot name an epoch beyond the durable Native counter. Recovery may retain an
+older reserved epoch after subsequent lifecycles advance that counter. A
+required verifier still proves exclusive epoch ownership and frozen counts;
+being below the counter does not prove either. Persistence checks the supplied
+Native owner and restricts stage writes to the exact reservation size, Prepared
+intent and expected reader/generation/owner bytes. Writes sync and close before
+readback, rename or removal. Only the owned short stage can be removed, and
+canonical records cannot be overwritten or deleted through this adapter.
+Loading is read-only and refuses identity/card drift without changing output.
+All owners are retained off stack with the existing shared workspace and no
+internal allocation. Identity inspection never provisions a new epoch. The
+adapter is not yet exposed through command routing or startup migration
+recovery; those paths must add reservation recovery/gating before activation.
