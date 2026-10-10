@@ -4263,3 +4263,16 @@ encoded bodies, cover empty plans, retained unreviewed stars and removals of
 obsolete stars left by review flags, and verify that
 frozen/live files remain unchanged. This is plan evidence for future durable
 sealing, not item-prefix agreement, epoch ownership, provenance or publication.
+
+Portable and HAL star-reservation stores now support checked staging, readback,
+rename and idempotent retry for the full plan-bound record. An exact shortened
+stage is repairable only after fresh mandatory verification; changed plan
+digests/counts, foreign scopes and corrupt retained records cannot overwrite a
+sealed reservation. The HAL adapter restricts paths, checks nested identity/owner
+bindings and requires checked SD sync/close. Its Native counter checks are
+read-only upper bounds, not exclusive ownership proof. The caller still must
+prove exclusive allocation and freshly verify the complete star plan before
+sealing. Power-cut tests cover each storage mutation and all shortened record
+prefixes; HAL tests cover sync/close/rename failures, card-marker changes and
+preservation of the review reservation. No epoch allocation, prior-epoch recovery
+or runtime routing is supplied by these stores.

@@ -1427,3 +1427,26 @@ exact reserved count and a caller-computed digest of all emitted canonical
 bodies matching the sealed plan digest. The converter itself does not compute
 that whole-plan digest or supply publication authority. It retains fixed fields
 off stack and performs no internal allocation.
+
+`UnboundCourseStarReservationStore` seals the complete `TCSR` record through
+`/.crosspoint/companion/course-unbound.star-reservation.tmp`, checked readback,
+rename and canonical readback. Its canonical path omits `.tmp`. Every persist,
+including an idempotent retry or repair of an exact shortened staging prefix,
+requires a fresh verification callback proving exclusive Native epoch ownership
+and the exact frozen plan digest/count. It checks retained files both before and
+after that callback. Foreign records, nonmatching prefixes, invalid complete
+records and canonical/stage coexistence remain conflicts or corruption evidence;
+the store never deletes a canonical reservation. Loading a stage reports pending
+recovery and preserves the caller's output. Interrupted mutations can be retried
+with the identical verified reservation; recovery cannot infer ownership from
+record integrity or a durable epoch counter.
+
+`HalUnboundCourseStarReservationStore` restricts access to those two paths,
+checks embedded reader/generation/owner fields in the nested review scope, and
+requires checked SD write/truncate/sync/close. Hardware/card identity checks are
+read-only and reject a star epoch beyond the durable Native counter. This upper
+bound is not exclusive epoch ownership; the mandatory verification callback
+must supply that proof and freshly recheck the real star-plan report. The adapter
+allocates no epoch and adds no internal heap allocation. Records and owners live
+off stack with the shared workspace. Native allocation/sealing composition,
+retained epoch recovery and runtime startup/command routing remain unwired.

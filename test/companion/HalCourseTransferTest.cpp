@@ -94,6 +94,7 @@
 #include "lib/hal/HalUnboundCourseSessionInspection.h"
 #include "lib/hal/HalUnboundCourseStarPlanInspection.h"
 #include "lib/hal/HalUnboundCourseStarReader.h"
+#include "lib/hal/HalUnboundCourseStarReservationStore.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
 void log(const char*, ...) {}
@@ -10332,5 +10333,119 @@ TEST_F(HalCourseTransferTest, FreshReviewReservationAllocatesOnceRetriesOwnedEpo
     EXPECT_EQ(fresh->reserve(intent), UnboundCourseIntentResult::Pending);
     EXPECT_EQ(identities.writes, writes);
     EXPECT_EQ(hal.files, files);
+  }
+}
+
+TEST_F(HalCourseTransferTest, NativeStarReservationChecksNestedIdentityOwnerAndEpochWithoutChangingReviews) {
+  auto& hal = inventory_hal_test::state;
+  hal.directories[TRANSFER_DIRECTORY] = {};
+  Identity reader{};
+  reader.fill(17);
+  BaselineRecoveryIdentities identities(reader, generation);
+  binary_record::putU32(identities.binding.data() + 68, 2);
+  binary_record::putU32(identities.binding.data() + 76, binary_record::crc32(identities.binding.data(), 76));
+  UnboundCourseStarReservation value;
+  value.reviews.intent.reader = reader;
+  value.reviews.intent.request.original = {generation, declaration.state.owner, declaration.state.transaction,
+                                           declaration.manifest, declaration.manifest.contentHash};
+  value.reviews.intent.activePack = declaration.manifest;
+  value.reviews.epoch = 1;
+  value.reviews.records = 3;
+  value.reviews.events = 4;
+  value.epoch = 2;
+  value.events = 2;
+  value.planHash.fill(7);
+  std::array<uint8_t, UNBOUND_COURSE_REVIEW_RESERVATION_SIZE> reviews{};
+  ASSERT_TRUE(encodeUnboundCourseReviewReservation(value.reviews, reviews));
+  hal.files[UnboundCourseReviewReservationStore::PATH] = {reviews.begin(), reviews.end()};
+  const auto originalFiles = hal.files;
+  bool allowed = true;
+  auto store = makeUniqueNoThrow<HalUnboundCourseStarReservationStore>(
+      identities, reader, generation, scratch, [](void* raw) { return *static_cast<bool*>(raw); }, &allowed);
+  ASSERT_TRUE(store);
+  auto verify = [](void*, const UnboundCourseStarReservation&) { return true; };
+  auto output = value;
+  output.epoch = 777;
+  const auto sentinel = output;
+  EXPECT_EQ(store->load(output), UnboundCourseIntentResult::Missing);
+  EXPECT_EQ(output, sentinel);
+  auto future = value;
+  future.epoch = 3;
+  EXPECT_NE(store->persist(future, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Ok);
+  auto foreignOwner = declaration.state.owner;
+  foreignOwner[0] ^= 1;
+  EXPECT_EQ(store->persist(value, foreignOwner, verify, nullptr), UnboundCourseIntentResult::Invalid);
+  EXPECT_EQ(hal.files, originalFiles);
+  EXPECT_EQ(store->persist(value, declaration.state.owner, nullptr, nullptr), UnboundCourseIntentResult::Invalid);
+  EXPECT_EQ(
+      store->persist(
+          value, declaration.state.owner, [](void*, const UnboundCourseStarReservation&) { return false; }, nullptr),
+      UnboundCourseIntentResult::VerificationFailed);
+  EXPECT_EQ(hal.files, originalFiles);
+  ASSERT_EQ(store->persist(value, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Ok);
+  const auto files = hal.files;
+  ASSERT_EQ(store->persist(value, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(hal.files, files);
+  ASSERT_EQ(store->load(output), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(output, value);
+  EXPECT_EQ(hal.files.at(UnboundCourseReviewReservationStore::PATH),
+            originalFiles.at(UnboundCourseReviewReservationStore::PATH));
+  auto changedPlan = value;
+  changedPlan.planHash[0] ^= 1;
+  EXPECT_EQ(store->persist(changedPlan, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Conflict);
+  EXPECT_EQ(hal.files, files);
+  output = sentinel;
+  identities.marker[0] ^= 1;
+  EXPECT_NE(store->load(output), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(output, sentinel);
+  identities.marker[0] ^= 1;
+  allowed = false;
+  EXPECT_NE(store->load(output), UnboundCourseIntentResult::Ok);
+  EXPECT_EQ(output, sentinel);
+  EXPECT_EQ(identities.writes, 0u);
+  EXPECT_TRUE(store->closeReaders());
+}
+
+TEST_F(HalCourseTransferTest, NativeStarReservationRetriesSyncCloseAndRenameFailuresWithSamePlanAndEpoch) {
+  for (unsigned fault = 0; fault < 4; ++fault) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    Identity reader{};
+    reader.fill(17);
+    BaselineRecoveryIdentities identities(reader, generation);
+    binary_record::putU32(identities.binding.data() + 68, 2);
+    binary_record::putU32(identities.binding.data() + 76, binary_record::crc32(identities.binding.data(), 76));
+    UnboundCourseStarReservation value;
+    value.reviews.intent.reader = reader;
+    value.reviews.intent.request.original = {generation, declaration.state.owner, declaration.state.transaction,
+                                             declaration.manifest, declaration.manifest.contentHash};
+    value.reviews.intent.activePack = declaration.manifest;
+    value.reviews.epoch = 1;
+    value.epoch = 2;
+    value.planHash.fill(7);
+    auto& hal = inventory_hal_test::state;
+    if (fault == 0) hal.failSyncPath = UnboundCourseStarReservationStore::STAGE;
+    if (fault == 1) hal.failClosePath = UnboundCourseStarReservationStore::STAGE;
+    if (fault == 2) hal.failRename = 1;
+    if (fault == 3) hal.failRenameAfter = 1;
+    auto verify = [](void*, const UnboundCourseStarReservation&) { return true; };
+    {
+      auto store = makeUniqueNoThrow<HalUnboundCourseStarReservationStore>(
+          identities, reader, generation, scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(store);
+      EXPECT_NE(store->persist(value, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Ok);
+    }
+    hal.failSyncPath.clear();
+    hal.failClosePath.clear();
+    hal.failRename = hal.failRenameAfter = 0;
+    auto restored = makeUniqueNoThrow<HalUnboundCourseStarReservationStore>(
+        identities, reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(restored);
+    ASSERT_EQ(restored->persist(value, declaration.state.owner, verify, nullptr), UnboundCourseIntentResult::Ok);
+    auto output = value;
+    output.epoch = 777;
+    ASSERT_EQ(restored->load(output), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(output, value);
+    EXPECT_EQ(identities.writes, 0u);
   }
 }
