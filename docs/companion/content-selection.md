@@ -4186,3 +4186,12 @@ undo before-images and saved undo day values while leaving frozen files intact.
 The reusable replay owner retains fixed counter fields and adds no allocation.
 This strengthens the committed-prefix evidence; it does not authorize publication
 or resolve archived history, other learner state or runtime migration recovery.
+
+Legacy star membership remains independent evidence: `App::toggleStar` changes
+`starred.bin` through `MarkLog`, without updating `ProgressStore` item flags.
+Consequently, committed review/item agreement alone cannot prove the frozen star
+set. Migration still needs explicit mark-state reconciliation and must preserve
+the frozen membership rather than infer it from review flags. The immutable mark
+reader yields every 32 records, including duplicate adds and absent-key removals,
+and rechecks permission before reading after each yield. Cancellation withholds
+membership until a fresh complete scan; it never compacts the source log.

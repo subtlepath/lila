@@ -1141,6 +1141,33 @@ TEST(HalTintaLegacyMarkView, ReconstructsOrderAndIdempotentChangesWithoutCompact
   EXPECT_EQ(bytes, original);
   EXPECT_TRUE(file.isOpen());
 }
+TEST(HalTintaLegacyMarkView, LongDuplicateLogYieldsAndCancellationWithholdsMembership) {
+  inventory_hal_test::state = {};
+  auto& state = inventory_hal_test::state;
+  auto& bytes = state.files["/reviewed-marks"];
+  bytes = {'T', 'M', 'K', '1'};
+  for (unsigned index = 0; index < 97; ++index) legacyMarkRecord(bytes, 7, 1);
+  const auto original = bytes;
+  HalFile file("/reviewed-marks");
+  HalTintaLegacyMarkView view(file);
+  std::array<uint8_t, HalTintaLegacyMarkView::WORKSPACE_SIZE> scratch{};
+  ASSERT_TRUE(view.begin(scratch));
+  EXPECT_EQ(state.yields, 4u);
+  uint16_t count = 777;
+  ASSERT_TRUE(view.entryCount(count));
+  EXPECT_EQ(count, 1);
+  state.yields = 0;
+  EXPECT_FALSE(view.begin(scratch, [](void*) { return inventory_hal_test::state.yields < 2; }));
+  EXPECT_EQ(state.yields, 2u);
+  count = 777;
+  EXPECT_FALSE(view.entryCount(count));
+  EXPECT_EQ(count, 777);
+  EXPECT_EQ(bytes, original);
+  EXPECT_TRUE(file.isOpen());
+  ASSERT_TRUE(view.begin(scratch));
+  ASSERT_TRUE(view.entryCount(count));
+  EXPECT_EQ(count, 1);
+}
 TEST(HalTintaLegacyMarkView, TornCorruptReadFailureAndCapacityOverflowWithholdView) {
   for (unsigned fault = 0; fault < 6; ++fault) {
     inventory_hal_test::state = {};

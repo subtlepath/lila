@@ -2,6 +2,7 @@
 
 #include <HalStorage.h>
 #include <Logging.h>
+#include <freertos/task.h>
 
 #include <algorithm>
 #include <cstring>
@@ -31,6 +32,7 @@ class HalTintaLegacyMarkView final {
         std::memcmp(bytes, "TMK1", 4))
       return failure("header or extent");
     for (uint64_t offset = 4; offset < extent; offset += 8) {
+      if (((offset - 4) / 8) % 32 == 0) vTaskDelay(1);
       if (!allowed() || file.read(bytes, sizeof bytes) != sizeof bytes) return failure("read or cancellation");
       const uint32_t key = binary_record::getU32(bytes);
       if (!key || bytes[5] || (bytes[4] != 1 && bytes[4] != 2) ||
