@@ -70,6 +70,7 @@
 #include "lib/hal/HalTintaReplayItemCorrespondence.h"
 #include "lib/hal/HalTintaReplayItemExport.h"
 #include "lib/hal/HalTransferStorage.h"
+#include "lib/hal/HalUnboundCourseBoundLessonMapping.h"
 #include "lib/hal/HalUnboundCourseDayInspection.h"
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseLearnerInspection.h"
@@ -9168,6 +9169,37 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       EXPECT_TRUE(inspection->report(request)->profile.present);
       EXPECT_FALSE(inspection->report(request)->items.present);
       EXPECT_FALSE(inspection->report(request)->session.present);
+      if (fault == 0) {
+        UnboundCourseMigrationIntent intent;
+        intent.reader = reader;
+        intent.request = request;
+        intent.activePack = declaration.manifest;
+        auto installedParser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+        ASSERT_TRUE(installedParser);
+        auto oldReader =
+            makeUniqueNoThrow<HalUnboundCoursePackReader>(scratch, *parser, [](void*) { return true; }, nullptr);
+        auto newReader = makeUniqueNoThrow<HalUnboundCoursePackReader>(
+            scratch, *installedParser, [](void*) { return true; }, nullptr);
+        ASSERT_TRUE(oldReader);
+        ASSERT_TRUE(newReader);
+        ASSERT_TRUE(oldReader->open(intent, UnboundPackRole::Original, ACTIVE_COURSE_PATH));
+        ASSERT_TRUE(newReader->open(intent, UnboundPackRole::Installed));
+        TintaLegacyLessonMapping mapped;
+        ASSERT_TRUE(mapUnboundCourseBoundLessons(
+            *inspection, *oldReader, *newReader, intent, scratch, mapped, [](void*) { return true; }, nullptr));
+        EXPECT_EQ(mapped.currentLesson, 0);
+        mapped.currentLesson = 123;
+        auto foreign = intent;
+        foreign.request.original.transaction[0] ^= 1;
+        EXPECT_FALSE(mapUnboundCourseBoundLessons(
+            *inspection, *oldReader, *newReader, foreign, scratch, mapped, [](void*) { return true; }, nullptr));
+        EXPECT_EQ(mapped.currentLesson, 123);
+        hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
+        EXPECT_FALSE(mapUnboundCourseBoundLessons(
+            *inspection, *oldReader, *newReader, intent, scratch, mapped, [](void*) { return true; }, nullptr));
+        EXPECT_EQ(mapped.currentLesson, 123);
+        hal.files[ACTIVE_COURSE_PATH] = bytes;
+      }
       permission.permitted = false;
       EXPECT_EQ(inspection->report(request), nullptr);
       permission.permitted = true;

@@ -1242,3 +1242,13 @@ without a fresh open. Wrong-context requests do not invalidate a valid original
 loan. Borrowing checks intent/role again after permission callbacks, withholding
 access if the caller's intent changes during admission. Native migration must
 compose these payload checks with its learner/replay and publication evidence.
+
+Intent-bound lesson mapping composes the frozen learner report with original and
+installed retained pack readers. Both payload hashes are rechecked before and
+after mapping, and frozen learner evidence is checked again before output is
+exposed. Wrong requests, unavailable loans and damaged payloads leave output
+unchanged. Readers remain borrowed from caller-owned off-stack owners and share
+the session workspace; no allocation is added. The native parent must keep the
+intent immutable and hold the migration operation lease/exclude writers through
+this operation. Pack-pair continuity, retired-history decisions, authoritative
+replay agreement and recoverable publication remain separate requirements.

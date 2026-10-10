@@ -3917,3 +3917,14 @@ recheck wrapper is 32 bytes and every emitted frame remains within 256 (largest
 224), with no allocation. Verify with the HAL companion Tinta host suite. Runtime
 firmware is unchanged. Learner mapping/replay composition, explicit legacy
 confirmation and recoverable native migration publication remain unfinished.
+
+Native intent-bound lesson mapping now combines the frozen learner report and
+guarded original/installed pack loans, checking both payload hashes before and
+after mapping and rechecking frozen evidence before exposing output. All 1,996
+host tests pass; the actual capture/backup/cohort test now opens both retained
+packs, maps the frozen profile and refuses changed transaction context or
+post-open payload damage without changing output. All emitted C3 frames are
+within 256 (largest 144), with no allocation. Verify with the HAL companion host
+suite. The parent must freeze its intent and hold the native operation lease.
+Pack-pair continuity, retired-history policy, replay agreement and recoverable
+migration publication remain unfinished; runtime firmware is unchanged.
