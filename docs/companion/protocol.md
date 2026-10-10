@@ -1372,3 +1372,24 @@ refuse a report. The stream closes before publication. Counts use no internal
 allocation and reuse the shared workspace; the intent owner is retained off
 stack. Native sealing must compare these totals with the proposed reservation
 and separately prove exclusive epoch ownership and replay correspondence.
+
+`HalUnboundCourseFreshReviewReservation` composes Native allocation and sealing
+for a new frozen review migration. Its parent lends exclusive identity/store/
+count owners, excludes identity/learner/journal writers, and never uses the
+chosen epoch for another purpose. With no retained reservation, it verifies
+frozen counts and Native context, calls `provisionIdentity` through a guarded
+identity proxy, and retains the resulting dedicated epoch in its off-stack
+owner. Every identity call checks permission before and after delegation.
+Only a successful Native allocation in this owner can satisfy the sealing
+callback; that callback freshly rechecks the frozen record/event counts and
+Native identity context before the HAL store persists `TCRR`. Ordinary retries
+within the same owner reuse that epoch, including a matching completed stage
+or canonical record left by an I/O error. A new owner encountering a pending
+or canonical reservation returns `Pending` for recovery instead of allocating
+another epoch. Explicit close revokes the in-memory allocation proof. A
+cancelled/failed NVS allocation may burn an epoch but supplies no reservation
+or publication authority. The exact intent retrieves a revocable sealed
+reservation loan. No internal allocation is added; owners and record copies
+are retained off stack and the workspace is shared. Recovery of prior epochs,
+legacy replay/provenance agreement and journal publication remain separate,
+and the owner is not yet wired to runtime commands or startup recovery.

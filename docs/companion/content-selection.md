@@ -4071,3 +4071,23 @@ counts, absent streams, wrong-intent retrieval, permission revocation, reentry,
 cancellation and changed frozen bytes. The ESP32-C3 count/report probe passes
 with no emitted frame above 160 bytes. Re-run `ctest --test-dir
 .cache/companion-verification/host --output-on-failure` for the host suite.
+
+New review migrations now compose frozen-count verification, guarded Native
+epoch allocation and recoverable reservation sealing in one off-stack owner.
+It retains a dedicated epoch for retries without reallocating after SD errors.
+A fresh owner refuses to allocate over a retained pending/canonical reservation;
+that case requires separate recovery verification. Explicit close revokes the
+in-memory proof. Failed/cancelled allocation exposes no reservation, and a
+Native counter increment that already committed may be safely burned. The
+parent supplies exclusive dependencies and excludes all relevant writers.
+This reserves identities for later conversion; authoritative replay/publication
+and previous-epoch recovery remain unfinished, as does runtime command/startup
+integration.
+Validation: all 2,010 host tests pass. The composed fixture covers SD
+sync/close/rename failures, one allocation across owned retries, NVS failure,
+cancellation after the counter write, callback reentry, idempotence, foreign
+intent refusal and a new owner requiring recovery without another allocation.
+The final ESP32-C3 probe includes construction/guarded-identity virtual calls
+and emits no frame above 224 bytes; the separately checked identity source
+remains at or below 240 bytes. Re-run `ctest --test-dir
+.cache/companion-verification/host --output-on-failure` for the host suite.

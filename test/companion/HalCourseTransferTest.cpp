@@ -74,6 +74,7 @@
 #include "lib/hal/HalUnboundCourseBoundLessonMapping.h"
 #include "lib/hal/HalUnboundCourseBoundReadingMapping.h"
 #include "lib/hal/HalUnboundCourseDayInspection.h"
+#include "lib/hal/HalUnboundCourseFreshReviewReservation.h"
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseLearnerInspection.h"
 #include "lib/hal/HalUnboundCourseMarkInspection.h"
@@ -98,7 +99,7 @@ struct BaselineRecoveryIdentities final : IdentityStorage {
   Identity device{}, card{}, marker{};
   std::array<uint8_t, IDENTITY_RECORD_SIZE> binding{};
   unsigned writes = 0;
-  bool fail = false;
+  bool fail = false, writable = false;
   BaselineRecoveryIdentities(const Identity& reader, const Identity& generation) : device(reader) {
     card[0] = 71;
     marker[0] = 72;
@@ -127,9 +128,11 @@ struct BaselineRecoveryIdentities final : IdentityStorage {
     output = marker;
     return fail ? IdentityRead::Error : IdentityRead::Present;
   }
-  bool writeBinding(std::span<const uint8_t>) override {
+  bool writeBinding(std::span<const uint8_t> input) override {
     ++writes;
-    return false;
+    if (fail || !writable) return false;
+    std::copy(input.begin(), input.end(), binding.begin());
+    return true;
   }
   bool createMarker(const Identity&) override {
     ++writes;
@@ -9691,5 +9694,151 @@ TEST_F(HalCourseTransferTest, NativeReviewReservationRetriesSyncCloseAndRenameFa
     ASSERT_EQ(restored->load(output), UnboundCourseIntentResult::Ok);
     EXPECT_EQ(output, value);
     EXPECT_EQ(identities.writes, 0u);
+  }
+}
+
+TEST_F(HalCourseTransferTest, FreshReviewReservationAllocatesOnceRetriesOwnedEpochAndRequiresRecoveryAfterRestart) {
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    SCOPED_TRACE(fault);
+    inventory_hal_test::state = {};
+    auto& hal = inventory_hal_test::state;
+    hal.enumerateFileMap = true;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    tinta::core::Profile profile;
+    auto& encoded = hal.files["/tinta/profile.bin"];
+    encoded.resize(tinta::core::Profile::kEncodedSize);
+    profile.encode(encoded.data());
+    Identity reader{};
+    reader.fill(17);
+    Digest hash{};
+    {
+      auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(capture);
+      ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+                CourseBaselineReviewResult::Ok);
+      hash = *capture->hash();
+      const std::vector<uint8_t> roster(capture->bytes().begin(), capture->bytes().end());
+      capture.reset();
+      auto sealed = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+          std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(sealed);
+      ASSERT_EQ(sealed->publish(roster, hash), CourseBaselineReviewStoreResult::Ok);
+    }
+    auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+        reader, generation, scratch, [](void*) { return true; }, nullptr);
+    auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+    ASSERT_TRUE(backups);
+    ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+    auto oldParser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+    auto newParser = makeUniqueNoThrow<tinta::core::pack::Pack>();
+    ASSERT_TRUE(oldParser);
+    ASSERT_TRUE(newParser);
+    auto pair =
+        makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *oldParser, [](void*) { return true; }, nullptr);
+    auto original =
+        makeUniqueNoThrow<HalUnboundCoursePackReader>(scratch, *oldParser, [](void*) { return true; }, nullptr);
+    auto installed =
+        makeUniqueNoThrow<HalUnboundCoursePackReader>(scratch, *newParser, [](void*) { return true; }, nullptr);
+    auto learner = makeUniqueNoThrow<HalUnboundCourseLearnerInspection>(
+        reader, generation, *reviewed, *backups, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(pair);
+    ASSERT_TRUE(original);
+    ASSERT_TRUE(installed);
+    ASSERT_TRUE(learner);
+    auto inspection = makeUniqueNoThrow<HalUnboundCourseMigrationInspection>(
+        reader, generation, declaration.state.owner, *pair, *original, *installed, *learner, *reviewed, scratch,
+        [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(inspection);
+    UnboundCourseMigrationIntent intent;
+    intent.reader = reader;
+    intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
+                               hash};
+    intent.activePack = declaration.manifest;
+    ASSERT_TRUE(inspection->inspect(intent, ACTIVE_COURSE_PATH));
+    auto stream = makeUniqueNoThrow<HalUnboundCourseReviewReader>(
+        *inspection, *reviewed, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(stream);
+    auto counts = makeUniqueNoThrow<HalUnboundCourseReviewCountInspection>(
+        *inspection, *stream, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(counts);
+    BaselineRecoveryIdentities identities(reader, generation);
+    identities.writable = fault != 4;
+    auto store = makeUniqueNoThrow<HalUnboundCourseReviewReservationStore>(
+        identities, reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(store);
+    struct PermissionContext {
+      HalUnboundCourseFreshReviewReservation* owner = nullptr;
+      const UnboundCourseMigrationIntent* intent = nullptr;
+      BaselineRecoveryIdentities* identities = nullptr;
+      bool checking = false, closeAfterEpoch = false;
+      unsigned probes = 0;
+    } permission;
+    auto fresh = makeUniqueNoThrow<HalUnboundCourseFreshReviewReservation>(
+        identities, reader, generation, declaration.state.owner, *store, *counts, scratch,
+        [](void* raw) {
+          auto& state = *static_cast<PermissionContext*>(raw);
+          if (state.checking) {
+            ++state.probes;
+            EXPECT_EQ(state.owner->reserve(*state.intent), UnboundCourseIntentResult::Busy);
+            EXPECT_EQ(state.owner->reservation(*state.intent), nullptr);
+          }
+          if (state.closeAfterEpoch && binary_record::getU32(state.identities->binding.data() + 68) >= 2) {
+            state.closeAfterEpoch = false;
+            state.owner->closeReaders();
+          }
+          return true;
+        },
+        &permission);
+    ASSERT_TRUE(fresh);
+    permission.owner = fresh.get();
+    permission.intent = &intent;
+    permission.identities = &identities;
+    permission.checking = true;
+    permission.closeAfterEpoch = fault == 5;
+    if (fault == 0) hal.failSyncPath = UnboundCourseReviewReservationStore::STAGE;
+    if (fault == 1) hal.failClosePath = UnboundCourseReviewReservationStore::STAGE;
+    if (fault == 2) hal.failRename = hal.renames + 1;
+    if (fault == 3) hal.failRenameAfter = hal.renames + 1;
+    EXPECT_NE(fresh->reserve(intent), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(fresh->reservation(intent), nullptr);
+    EXPECT_EQ(identities.writes, 1u);
+    hal.failSyncPath.clear();
+    hal.failClosePath.clear();
+    hal.failRename = hal.failRenameAfter = 0;
+    identities.writable = true;
+    ASSERT_EQ(fresh->reserve(intent), UnboundCourseIntentResult::Ok);
+    const auto* reservation = fresh->reservation(intent);
+    ASSERT_NE(reservation, nullptr);
+    EXPECT_EQ(reservation->epoch, fault == 5 ? 3u : 2u);
+    EXPECT_EQ(reservation->records, 0u);
+    EXPECT_EQ(reservation->events, 0u);
+    EXPECT_EQ(identities.writes, fault == 4 || fault == 5 ? 2u : 1u);
+    EXPECT_GT(permission.probes, 0u);
+    const auto writes = identities.writes;
+    const auto files = hal.files;
+    ASSERT_EQ(fresh->reserve(intent), UnboundCourseIntentResult::Ok);
+    EXPECT_EQ(identities.writes, writes);
+    EXPECT_EQ(hal.files, files);
+    auto foreign = intent;
+    foreign.request.original.transaction[0] ^= 1;
+    EXPECT_EQ(fresh->reserve(foreign), UnboundCourseIntentResult::Conflict);
+    EXPECT_EQ(identities.writes, writes);
+    ASSERT_EQ(fresh->reserve(intent), UnboundCourseIntentResult::Ok);
+    auto restarted = makeUniqueNoThrow<HalUnboundCourseFreshReviewReservation>(
+        identities, reader, generation, declaration.state.owner, *store, *counts, scratch, [](void*) { return true; },
+        nullptr);
+    ASSERT_TRUE(restarted);
+    EXPECT_EQ(restarted->reserve(intent), UnboundCourseIntentResult::Pending);
+    EXPECT_EQ(restarted->reservation(intent), nullptr);
+    EXPECT_EQ(identities.writes, writes);
+    EXPECT_EQ(hal.files, files);
+    ASSERT_TRUE(fresh->closeReaders());
+    EXPECT_EQ(fresh->reservation(intent), nullptr);
+    EXPECT_EQ(fresh->reserve(intent), UnboundCourseIntentResult::Pending);
+    EXPECT_EQ(identities.writes, writes);
+    EXPECT_EQ(hal.files, files);
   }
 }
