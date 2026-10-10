@@ -23,10 +23,10 @@ class HalCourseBaselineReviewedJournalAudit final {
         audit(snapshot, close, this) {}
   bool run(std::span<const uint8_t> review, const Digest& expected, const Identity& course,
            std::span<uint8_t> scratch) {
-    ready = false;
+    ready = replayVerified = false;
     if (!guard() || review.size() < 56 || !std::equal(course.begin(), course.end(), review.begin() + 40) ||
         snapshot.open(review, expected, scratch) != CourseBaselineJournalSnapshotResult::Ok ||
-        !subjects.prepare(scratch) || !guard() || !audit.run(nullptr, &course, &subjects) || !guard()) {
+        !subjects.prepare(scratch) || !guard() || !audit.run(&frontier, &course, &subjects) || !guard()) {
       LOG_ERR("COMPANION", "Reviewed baseline journal audit refused");
       return false;
     }
@@ -39,7 +39,7 @@ class HalCourseBaselineReviewedJournalAudit final {
     const bool admitted = ready && visitor && guard() &&
                           admitCompanionHeap(HalJournalCausalAuditSession::replayWorkspaceBytes(),
                                              HalJournalCausalAuditSession::replayWorkspaceBytes());
-    ready = false;
+    ready = replayVerified = false;
     if (!admitted || snapshot.reopen(scratch) != CourseBaselineJournalSnapshotResult::Ok) {
       snapshot.close();
       LOG_ERR("COMPANION", "Reviewed baseline replay admission or source refused");
@@ -52,8 +52,10 @@ class HalCourseBaselineReviewedJournalAudit final {
       LOG_ERR("COMPANION", "Reviewed baseline replay or final source proof refused");
       return false;
     }
+    replayVerified = true;
     return true;
   }
+  const Digest* journalFrontier() const { return replayVerified && guard() ? &frontier : nullptr; }
 
  private:
   Permission permitted;
@@ -62,7 +64,8 @@ class HalCourseBaselineReviewedJournalAudit final {
   CourseBaselineJournalSnapshot snapshot;
   TintaPackSubjectCatalog subjects;
   HalJournalCausalAuditSession audit;
-  bool ready = false;
+  Digest frontier{};
+  bool ready = false, replayVerified = false;
   bool guard() const { return permitted && permitted(context) && Storage.ready() && admitCompanionHeap(); }
   static bool allowed(void* context) { return static_cast<HalCourseBaselineReviewedJournalAudit*>(context)->guard(); }
   static bool hash(void* context, std::span<const uint8_t> bytes, Digest& output) {

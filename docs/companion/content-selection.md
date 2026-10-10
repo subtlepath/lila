@@ -2886,3 +2886,89 @@ borrowed scratch loan are reused; no second 8 KiB buffer was added. All 1,938 ho
 tests pass; final firmware and physical-device checks after this change remain pending. This replay visitor
 path is a prerequisite; it does not yet compare learner caches or establish the
 saved-session receipt digest.
+
+The reviewed owner also retains the native audited frontier in a 32-byte member;
+the C3 production-header probe measures the resulting owner at 5,384 bytes and
+passes the 256-byte frame limit.
+`journalFrontier()` exposes it only after replay and the final immutable-source
+checks succeed, while permission, storage and heap admission remain valid. A new
+audit or replay attempt invalidates that result. The 149 HAL course-transfer tests
+pass with a comparison against an independently audited frontier and assertions
+that unaudited, failed and repeated replay attempts expose no frontier. This
+frontier is journal evidence, not the saved-session receipt hash; full learner
+cache correspondence and final firmware verification remain pending. After the
+permission-loss and failed-subsequent-audit assertions were added, the complete
+host rebuild and all 1,938 tests pass (15.89 seconds).
+
+`HalCourseBaselineReplaySession` now projects frozen reviewed journal records
+through the portable scheduling reducer into the disposable course-local
+`replay-work` file. The session withholds its working store and frontier unless
+native membership audit, ordered replay, immutable-source revalidation and course
+binding all succeed. Permission loss or a new failed run invalidates both outputs.
+Retained journal backups and learner files are not rewritten. This helper is not
+yet wired into baseline learner-cache correspondence or receipt verification;
+its fresh-item defaults cannot establish equivalence with a partial legacy history.
+
+The C3 production-header probe passes the 256-byte frame limit and measures the
+projection entry frame at 112 bytes, the projection owner at 264 bytes and the
+portable reducer at 232 bytes. The owner is admitted and allocated off stack;
+each projection allocates one checked audit owner and one checked reducer, then
+reuses the audit's existing 640-byte replay workspace. Reducer and replay workspace
+requirements are admitted together against the 50 KiB reserve and largest block.
+The scratch loan is borrowed; no additional 8 KiB allocation is introduced.
+Physical retained-handle, pool and heap-watermark acceptance remains pending.
+The final host rebuild and all 1,938 tests pass (9.55 seconds), including projected
+star state, independent frontier agreement, missing subjects, permission loss,
+failed-run invalidation, overlapping-loan refusal and retained source-file
+preservation. The five-target firmware batch has validated and retained `default`
+and `sticky`; the other three targets remain in progress. These builds cover the
+current native audit integration; the projection helper still has no live caller.
+
+`compareTintaReplayItems` provides a read-only item component of that proof. It
+validates the retained catalog, compares each logical cached state with replay,
+then checks that every non-fresh projected item is represented. Missing fresh
+states are equivalent to the native fresh-item default. Retired or duplicate
+cached UIDs refuse correspondence. The comparison also checks current-day header
+new/review counters with the native 16-bit saturation rule; pending cached records
+are read logically without repairing their file. This does not prove legacy
+provenance, undo-header correspondence, all day logs or saved-session receipts.
+
+No heap allocation is added by the comparison. A coverage bitmap occupies the
+existing loan after the 160-byte header/read area (at most 4,096 more bytes for
+32,767 catalog items). Separate non-inlined walks keep item/iterator locals out
+of the view-owning frame: the C3 stack report measures the entry at 224 bytes and
+the walks at 96/112 bytes, with no compiled probe frame exceeding 256 bytes.
+The full host rebuild and all 1,938 tests pass (9.95 seconds). Checks include
+matching states, changed flags, a missing projected item, header-counter mismatch,
+logical pending-record recovery without a write, short workspace and cancellation.
+The interrupted firmware batch was resumed after its process and temporary
+toolchain disappeared; `x4pro` is now validated and retained alongside `default`
+and `sticky`. `x4c` and `papermono` remain pending.
+
+The native audit checkpoint has now built all five targets successfully. Their
+validated retained images are under
+`.cache/companion-verification/baseline-replay-final/`, with lengths/headroom:
+`default` 6,467,744/85,856 bytes; `sticky` 5,703,616/849,984 bytes;
+`x4pro` 6,500,768/52,832 bytes; `x4c` 6,471,552/82,048 bytes;
+`papermono` 5,817,904/735,696 bytes. Each retained image was revalidated against
+its board/chip, checksum, hash and OTA partition, and task-owned native source
+fingerprints remained unchanged. These firmware builds exercise the current
+native audit integration; the new projection/comparison helpers still require
+live baseline integration and have been checked with C3 production-header probes.
+
+`compareTintaReplayDays` now checks unordered native day-log records against
+canonical replay totals in both directions. It sums split per-day records with
+checked 32-bit arithmetic, verifies every record CRC, rounds projected day-level
+milliseconds using the canonical export rule, and refuses missing or extra
+nonzero days. The existing 8 KiB scratch loan holds the entire 65,536-day coverage
+bitmap; record buffers and sums stay small, and no heap allocation is added.
+The native entry/aggregation frames measure 128/80 bytes; no compiled C3 probe
+frame exceeds 256 bytes. Legacy per-session rounding differences remain evidence
+to resolve, not permission to replace learner files.
+
+After the final edits, the full host rebuild and all 1,941 tests pass (9.96
+seconds), including unordered/split records, minimum/maximum day identities,
+both coverage directions, zero-day equivalence, rounding boundaries, corrupt
+CRCs, read failure, short scratch, mid-scan cancellation and counter overflow.
+All source-byte preservation assertions pass. Full baseline cache/receipt proof,
+live commands, Apple baseline UI and physical resource acceptance remain pending.

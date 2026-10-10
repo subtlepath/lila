@@ -48,6 +48,7 @@
 #include "lib/hal/HalCourseBaselineNativeInstaller.h"
 #include "lib/hal/HalCourseBaselinePublicationStore.h"
 #include "lib/hal/HalCourseBaselineRecovery.h"
+#include "lib/hal/HalCourseBaselineReplaySession.h"
 #include "lib/hal/HalCourseBaselineReviewBackup.h"
 #include "lib/hal/HalCourseBaselineReviewCapture.h"
 #include "lib/hal/HalCourseBaselineReviewStore.h"
@@ -61,6 +62,8 @@
 #include "lib/hal/HalHistoricalCourseBaseline.h"
 #include "lib/hal/HalHistoricalCourseHistory.h"
 #include "lib/hal/HalRemovedCourseBaseline.h"
+#include "lib/hal/HalTintaReplayItemCorrespondence.h"
+#include "lib/hal/HalTintaReplayItemExport.h"
 #include "lib/hal/HalTransferStorage.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
@@ -7164,6 +7167,7 @@ TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFro
     EXPECT_EQ(length, 17u);
     auto reviewed = createHalCourseBaselineReviewedJournalAudit(*pack, source, [](void*) { return true; }, nullptr);
     ASSERT_TRUE(reviewed);
+    EXPECT_EQ(reviewed->journalFrontier(), nullptr);
     struct ReplayCheck {
       Identity course;
       uint32_t uid;
@@ -7183,9 +7187,17 @@ TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFro
     };
     EXPECT_FALSE(reviewed->replay(&check, visitor, scratch));
     EXPECT_EQ(reviewed->run(review, expected, declaration.manifest.logicalIdentity, scratch), !missing);
+    EXPECT_EQ(reviewed->journalFrontier(), nullptr);
     EXPECT_EQ(reviewed->replay(&check, visitor, scratch), !missing);
+    if (!missing) {
+      ASSERT_NE(reviewed->journalFrontier(), nullptr);
+      EXPECT_EQ(*reviewed->journalFrontier(), frontier);
+    } else {
+      EXPECT_EQ(reviewed->journalFrontier(), nullptr);
+    }
     EXPECT_EQ(check.calls, missing ? 0u : 1u);
     EXPECT_FALSE(reviewed->replay(&check, visitor, scratch));
+    EXPECT_EQ(reviewed->journalFrontier(), nullptr);
     for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
     if (!missing) {
       auto backup = std::find_if(hal.files.begin(), hal.files.end(), [](const auto& entry) {
@@ -7219,8 +7231,10 @@ TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFro
         permitted = true;
         hal.files.at(path) = original;
         ASSERT_TRUE(guarded->run(review, expected, declaration.manifest.logicalIdentity, scratch));
+        EXPECT_EQ(guarded->journalFrontier(), nullptr);
         if (mode == 0) hal.files.at(path).back() ^= 1;
         EXPECT_FALSE(guarded->replay(&fault, reject, scratch));
+        EXPECT_EQ(guarded->journalFrontier(), nullptr);
         EXPECT_EQ(fault.calls, mode == 0 ? 0u : 1u);
         permitted = true;
         EXPECT_FALSE(guarded->replay(&fault, reject, scratch));
@@ -7231,7 +7245,93 @@ TEST_F(HalCourseTransferTest, ReviewedJournalAuditChecksCandidateSubjectsFromFro
         }
       }
       hal.files.at(path) = original;
+      ASSERT_TRUE(guarded->run(review, expected, declaration.manifest.logicalIdentity, scratch));
+      ASSERT_TRUE(guarded->replay(&check, visitor, scratch));
+      ASSERT_NE(guarded->journalFrontier(), nullptr);
+      EXPECT_EQ(*guarded->journalFrontier(), frontier);
+      permitted = false;
+      EXPECT_EQ(guarded->journalFrontier(), nullptr);
+      EXPECT_FALSE(guarded->run(review, expected, declaration.manifest.logicalIdentity, scratch));
+      permitted = true;
+      EXPECT_EQ(guarded->journalFrontier(), nullptr);
     }
+    bool projectionAllowed = true;
+    auto projection = createHalCourseBaselineReplaySession(
+        *pack, source, [](void* context) { return *static_cast<bool*>(context); }, &projectionAllowed);
+    ASSERT_TRUE(projection);
+    EXPECT_EQ(projection->workingStore(), nullptr);
+    EXPECT_EQ(projection->journalFrontier(), nullptr);
+    EXPECT_EQ(projection->run(review, expected, declaration.manifest.logicalIdentity, scratch), !missing);
+    if (!missing) {
+      ASSERT_NE(projection->workingStore(), nullptr);
+      ASSERT_NE(projection->journalFrontier(), nullptr);
+      EXPECT_EQ(*projection->journalFrontier(), frontier);
+      tinta::core::ItemState projected;
+      ASSERT_TRUE(projection->workingStore()->item(pack->uidAt(0), projected));
+      EXPECT_TRUE(projected.flags & tinta::core::item_flag::kStarred);
+      EXPECT_EQ(projected.reps, 0);
+      auto& projectedStore = *projection->workingStore();
+      auto itemExport = makeUniqueNoThrow<HalTintaReplayItemExport>(TintaReplayExportTarget::Proof);
+      ASSERT_TRUE(itemExport);
+      ASSERT_TRUE(itemExport->run(*projection->workingStore(), declaration.manifest.logicalIdentity, 0));
+      ASSERT_NE(itemExport->verifiedPath(), nullptr);
+      const std::string itemPath = itemExport->verifiedPath();
+      const auto itemBytes = hal.files.at(itemPath);
+      HalFile itemFile;
+      ASSERT_TRUE(Storage.openFileForRead("TEST", itemPath.c_str(), itemFile));
+      CourseUidLookup itemCatalog(source);
+      ASSERT_TRUE(itemCatalog.begin());
+      auto permission = [](void* context) { return *static_cast<bool*>(context); };
+      ASSERT_TRUE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                          scratch, permission, &projectionAllowed));
+      EXPECT_EQ(hal.files.at(itemPath), itemBytes);
+      auto& changedItems = hal.files.at(itemPath);
+      auto changed = projected;
+      changed.flags = 0;
+      changed.encode(changedItems.data() + 1024);
+      EXPECT_FALSE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                           scratch, permission, &projectionAllowed));
+      for (const size_t at : {size_t(0), size_t(512)}) {
+        binary_record::putU16(changedItems.data() + at + 26, 1);
+        binary_record::putU32(changedItems.data() + at + 28, 0);
+        projected.encode(changedItems.data() + at + 32);
+        binary_record::putU32(changedItems.data() + at + 76, binary_record::crc32(changedItems.data() + at, 76));
+      }
+      ASSERT_TRUE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                          scratch, permission, &projectionAllowed));
+      changedItems = itemBytes;
+      changedItems.resize(1024);
+      for (const size_t at : {size_t(0), size_t(512)}) {
+        binary_record::putU32(changedItems.data() + at + 12, 0);
+        binary_record::putU32(changedItems.data() + at + 76, binary_record::crc32(changedItems.data() + at, 76));
+      }
+      EXPECT_FALSE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                           scratch, permission, &projectionAllowed));
+      changedItems = itemBytes;
+      for (const size_t at : {size_t(0), size_t(512)}) {
+        binary_record::putU16(changedItems.data() + at + 22, 1);
+        binary_record::putU32(changedItems.data() + at + 76, binary_record::crc32(changedItems.data() + at, 76));
+      }
+      EXPECT_FALSE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                           scratch, permission, &projectionAllowed));
+      changedItems = itemBytes;
+      EXPECT_FALSE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                           std::span(scratch).first(159), permission, &projectionAllowed));
+      projectionAllowed = false;
+      EXPECT_FALSE(compareTintaReplayItems(itemFile, projectedStore, declaration.manifest.logicalIdentity, itemCatalog,
+                                           scratch, permission, &projectionAllowed));
+      EXPECT_EQ(projection->workingStore(), nullptr);
+      EXPECT_EQ(projection->journalFrontier(), nullptr);
+      EXPECT_FALSE(projection->run(review, expected, declaration.manifest.logicalIdentity, scratch));
+      projectionAllowed = true;
+    }
+    EXPECT_EQ(projection->workingStore(), nullptr);
+    EXPECT_EQ(projection->journalFrontier(), nullptr);
+    EXPECT_FALSE(projection->run(review, expected, declaration.manifest.logicalIdentity,
+                                 {reinterpret_cast<uint8_t*>(projection.get()), sizeof(*projection)}));
+    EXPECT_EQ(projection->workingStore(), nullptr);
+    EXPECT_EQ(projection->journalFrontier(), nullptr);
+    for (const auto& [path, data] : retained) EXPECT_EQ(hal.files.at(path), data);
     ASSERT_TRUE(packStorage.close());
   }
 }

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iterator>
 
+#include "../../lib/Memory/Memory.h"
 #include "../tinta/fakes.h"
 #include "HalTintaCompletionSetView.h"
 #include "HalTintaDayLogValidation.h"
@@ -19,8 +20,136 @@
 #include "HalTintaNativeReadingRecovery.h"
 #include "HalTintaNativeStarRecovery.h"
 #include "HalTintaPreferenceApplication.h"
+#include "HalTintaReplayDayCorrespondence.h"
 
 using namespace companion;
+
+TEST(HalTintaReplayDayCorrespondence, UnsortedSplitRecordsMustMatchBothDirections) {
+  inventory_hal_test::state = {};
+  Identity course{1};
+  auto store = makeUniqueNoThrow<HalTintaReplayStore>();
+  ASSERT_TRUE(store);
+  ASSERT_TRUE(store->begin(course));
+  TintaReplayDay first;
+  first.gradedReviews = 70000;
+  first.correctReviews = 60000;
+  first.newItems = 10;
+  first.responseMilliseconds = 1234500;
+  ASSERT_TRUE(store->putDay(UINT16_MAX, first));
+  TintaReplayDay second;
+  second.gradedReviews = second.correctReviews = 1;
+  second.responseMilliseconds = 1499;
+  ASSERT_TRUE(store->putDay(0, second));
+  constexpr const char* PATH = "/reviewed-days.bin";
+  auto& bytes = inventory_hal_test::state.files[PATH];
+  bytes.resize(4 + 3 * 12);
+  std::memcpy(bytes.data(), "TDL1", 4);
+  auto record = [&](size_t at, uint16_t day, uint16_t reviews, uint16_t correct, uint16_t fresh, uint16_t seconds) {
+    auto* out = bytes.data() + 4 + at * 12;
+    binary_record::putU16(out, day);
+    binary_record::putU16(out + 2, reviews);
+    binary_record::putU16(out + 4, correct);
+    binary_record::putU16(out + 6, fresh);
+    binary_record::putU16(out + 8, seconds);
+    binary_record::putU16(out + 10, uint16_t(binary_record::crc32(out, 10)));
+  };
+  record(0, UINT16_MAX, 65535, 60000, 10, 1235);
+  record(1, 0, 1, 1, 0, 1);
+  record(2, UINT16_MAX, 4465, 0, 0, 0);
+  const auto retained = bytes;
+  HalFile file(PATH);
+  std::array<uint8_t, 8192> scratch{};
+  bool allowed = true;
+  auto permission = [](void* context) { return *static_cast<bool*>(context); };
+  ASSERT_TRUE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  EXPECT_EQ(bytes, retained);
+  record(2, UINT16_MAX, 4464, 0, 0, 0);
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  bytes = retained;
+  bytes.resize(4 + 2 * 12);
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  bytes = retained;
+  std::copy_n(retained.data() + 4 + 2 * 12, 12, bytes.data() + 4 + 12);
+  bytes.resize(4 + 2 * 12);
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  bytes = retained;
+  record(1, 1, 1, 1, 0, 1);
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  bytes = retained;
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, std::span(scratch).first(8191), permission, &allowed));
+  allowed = false;
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, &allowed));
+  EXPECT_EQ(bytes, retained);
+}
+
+TEST(HalTintaReplayDayCorrespondence, ZeroDaysCrcRoundingAndReadFailuresDoNotRewriteEvidence) {
+  inventory_hal_test::state = {};
+  auto& state = inventory_hal_test::state;
+  Identity course{1};
+  auto store = makeUniqueNoThrow<HalTintaReplayStore>();
+  ASSERT_TRUE(store);
+  ASSERT_TRUE(store->begin(course));
+  ASSERT_TRUE(store->putDay(17, {}));
+  constexpr const char* PATH = "/zero-days.bin";
+  auto& bytes = state.files[PATH];
+  bytes.resize(16);
+  std::memcpy(bytes.data(), "TDL1", 4);
+  binary_record::putU16(bytes.data() + 4, 18);
+  binary_record::putU16(bytes.data() + 14, uint16_t(binary_record::crc32(bytes.data() + 4, 10)));
+  HalFile file(PATH);
+  std::array<uint8_t, 8192> scratch{};
+  auto permission = [](void*) { return true; };
+  ASSERT_TRUE(compareTintaReplayDays(file, *store, course, scratch, permission, nullptr));
+  TintaReplayDay projected;
+  projected.gradedReviews = projected.correctReviews = 1;
+  projected.responseMilliseconds = 1500;
+  ASSERT_TRUE(store->putDay(18, projected));
+  binary_record::putU16(bytes.data() + 6, 1);
+  binary_record::putU16(bytes.data() + 8, 1);
+  binary_record::putU16(bytes.data() + 12, 1);
+  binary_record::putU16(bytes.data() + 14, uint16_t(binary_record::crc32(bytes.data() + 4, 10)));
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, nullptr));
+  binary_record::putU16(bytes.data() + 12, 2);
+  binary_record::putU16(bytes.data() + 14, uint16_t(binary_record::crc32(bytes.data() + 4, 10)));
+  ASSERT_TRUE(compareTintaReplayDays(file, *store, course, scratch, permission, nullptr));
+  const auto retained = bytes;
+  bytes.back() ^= 1;
+  const auto corrupt = bytes;
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, nullptr));
+  EXPECT_EQ(bytes, corrupt);
+  bytes = retained;
+  unsigned calls = 0;
+  auto cancel = [](void* context) { return ++*static_cast<unsigned*>(context) < 5; };
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, cancel, &calls));
+  EXPECT_EQ(bytes, retained);
+  state.failRead = state.reads + 1;
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, permission, nullptr));
+  EXPECT_EQ(bytes, retained);
+}
+
+TEST(HalTintaReplayDayCorrespondence, RefusesCounterOverflowInsteadOfAcceptingWrappedTotals) {
+  inventory_hal_test::state = {};
+  Identity course{1};
+  auto store = makeUniqueNoThrow<HalTintaReplayStore>();
+  ASSERT_TRUE(store);
+  ASSERT_TRUE(store->begin(course));
+  TintaReplayDay wrapped;
+  wrapped.gradedReviews = 65534;
+  ASSERT_TRUE(store->putDay(27, wrapped));
+  constexpr const char* PATH = "/overflow-days.bin";
+  auto& bytes = inventory_hal_test::state.files[PATH];
+  bytes.resize(4 + 65538 * 12);
+  std::memcpy(bytes.data(), "TDL1", 4);
+  binary_record::putU16(bytes.data() + 4, 27);
+  binary_record::putU16(bytes.data() + 6, UINT16_MAX);
+  binary_record::putU16(bytes.data() + 14, uint16_t(binary_record::crc32(bytes.data() + 4, 10)));
+  for (size_t at = 16; at < bytes.size(); at += 12) std::copy_n(bytes.data() + 4, 12, bytes.data() + at);
+  const auto retained = bytes;
+  HalFile file(PATH);
+  std::array<uint8_t, 8192> scratch{};
+  EXPECT_FALSE(compareTintaReplayDays(file, *store, course, scratch, [](void*) { return true; }, nullptr));
+  EXPECT_EQ(bytes, retained);
+}
 
 TEST(HalTintaCompletionSetView, MaximumSetUsesBoundedSearchAndRejectsExtentChange) {
   inventory_hal_test::state = {};
