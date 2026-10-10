@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <string_view>
 
 #include "CrossPointSettings.h"
 #if LILA_COMPANION
@@ -236,13 +237,14 @@ void CrossPointWebServer::begin() {
   LOG_DBG("WEB", "[MEM] Free heap after server.begin(): %d bytes", ESP.getFreeHeap());
 }
 
-void CrossPointWebServer::abortWsUpload(const char* tag) {
+bool CrossPointWebServer::abortWsUpload(const char* tag) {
   // Explicit close() required: file-scope global persists beyond function scope
-  wsUploadFile.close();
+  const bool closed = !wsUploadFile.isOpen() || wsUploadFile.close();
   String filePath = wsUploadPath;
   if (!filePath.endsWith("/")) filePath += "/";
   filePath += wsUploadFileName;
-  if (Storage.remove(filePath.c_str())) {
+  const bool removed = closed && Storage.remove(filePath.c_str());
+  if (removed) {
     LOG_DBG(tag, "Deleted incomplete upload: %s", filePath.c_str());
   } else {
     LOG_DBG(tag, "Failed to delete incomplete upload: %s", filePath.c_str());
@@ -250,6 +252,37 @@ void CrossPointWebServer::abortWsUpload(const char* tag) {
   wsUploadInProgress = false;
   wsUploadClientNum = 255;
   wsLastProgressSent = 0;
+  uploadsClosed = closed && removed && uploadsClosed;
+  return closed && removed;
+}
+
+bool CrossPointWebServer::hasDictionaryUploads() const {
+  return dictionaryChanged && uploadsClosed && !upload.file.isOpen() && !fontUpload.file.isOpen() &&
+         !wsUploadFile.isOpen();
+}
+void CrossPointWebServer::noteDictionaryUpload(const String& directory) {
+  constexpr std::string_view ROOT = "/dictionaries";
+  const std::string_view path(directory.c_str(), directory.length());
+  if (path.size() < ROOT.size() || (path.size() > ROOT.size() && path[ROOT.size()] != '/')) return;
+  for (size_t at = 0; at < ROOT.size(); ++at) {
+    const auto byte = path[at];
+    if ((byte >= 'A' && byte <= 'Z' ? byte + ('a' - 'A') : byte) != ROOT[at]) return;
+  }
+  dictionaryChanged = true;
+}
+bool CrossPointWebServer::finishWsUpload(uint8_t client) {
+  const bool synced = wsUploadFile.sync();
+  const bool closed = wsUploadFile.close();
+  if (!synced || !closed) {
+    uploadsClosed = false;
+    LOG_ERR("WS", "Upload sync/close failed");
+    char message[128];
+    snprintf(message, sizeof(message), "ERROR:%s", tr(STR_FILE_SAVE_FAILED));
+    wsServer->sendTXT(client, message);
+    return false;
+  }
+  noteDictionaryUpload(wsUploadPath);
+  return true;
 }
 
 void CrossPointWebServer::stop() {
@@ -264,8 +297,8 @@ void CrossPointWebServer::stop() {
   LOG_DBG("WEB", "[MEM] Free heap before stop: %d bytes", ESP.getFreeHeap());
 
   // Close any in-progress WebSocket upload and remove partial file
-  if (wsUploadInProgress && wsUploadFile) {
-    abortWsUpload("WEB");
+  if (wsUploadFile.isOpen()) {
+    uploadsClosed = abortWsUpload("WEB") && uploadsClosed;
   }
 
   // Stop WebSocket server
@@ -292,6 +325,22 @@ void CrossPointWebServer::stop() {
   delay(10);
 
   server.reset();
+  if (upload.file.isOpen()) {
+    const bool closed = upload.file.close();
+    uploadsClosed = closed && uploadsClosed;
+    upload.bufferPos = 0;
+    if (closed && !upload.buffer.empty()) {
+      auto* path = reinterpret_cast<char*>(upload.buffer.data());
+      const int size = snprintf(path, upload.buffer.size(), "%s%s%s", upload.path.c_str(),
+                                upload.path.endsWith("/") ? "" : "/", upload.fileName.c_str());
+      uploadsClosed =
+          size > 0 && static_cast<size_t>(size) < upload.buffer.size() && Storage.remove(path) && uploadsClosed;
+    } else {
+      uploadsClosed = false;
+    }
+  }
+  if (fontUpload.file.isOpen()) uploadsClosed = fontUpload.file.close() && uploadsClosed;
+  if (!uploadsClosed) LOG_ERR("WEB", "Upload cleanup failed; dictionary refresh deferred");
   LOG_DBG("WEB", "Web server stopped and deleted");
   LOG_DBG("WEB", "[MEM] Free heap after delete server: %d bytes", ESP.getFreeHeap());
 
@@ -666,7 +715,7 @@ static bool flushUploadBuffer(CrossPointWebServer::UploadState& state) {
   return true;
 }
 
-void CrossPointWebServer::handleUpload(UploadState& state) const {
+void CrossPointWebServer::handleUpload(UploadState& state) {
   static size_t lastLoggedSize = 0;
 
   // Reset watchdog at start of every upload callback - HTTP parsing can be slow
@@ -753,6 +802,7 @@ void CrossPointWebServer::handleUpload(UploadState& state) const {
         // Flush buffer when full
         if (state.bufferPos >= UploadState::UPLOAD_BUFFER_SIZE) {
           if (!flushUploadBuffer(state)) {
+            uploadsClosed = false;
             state.error = "Failed to write to SD card - disk may be full";
             state.file.close();
             return;
@@ -775,11 +825,19 @@ void CrossPointWebServer::handleUpload(UploadState& state) const {
     if (state.file) {
       // Flush any remaining buffered data
       if (!flushUploadBuffer(state)) {
+        uploadsClosed = false;
         state.error = "Failed to write final data to SD card";
       }
-      state.file.close();
+      const bool synced = state.file.sync();
+      const bool closed = state.file.close();
+      if (!synced || !closed) {
+        uploadsClosed = false;
+        state.error = tr(STR_FILE_SAVE_FAILED);
+        LOG_ERR("WEB", "Upload sync/close failed");
+      }
 
       if (state.error.isEmpty()) {
+        noteDictionaryUpload(state.path);
         state.success = true;
         const unsigned long elapsed = millis() - uploadStartTime;
         const float avgKbps = (elapsed > 0) ? (state.size / 1024.0) / (elapsed / 1000.0) : 0;
@@ -1705,7 +1763,13 @@ void CrossPointWebServer::onWebSocketEvent(uint8_t num, WStype_t type, uint8_t* 
           // Zero-byte upload: complete immediately without waiting for BIN frames
           if (wsUploadSize == 0) {
             // Explicit close() required: file-scope global persists beyond function scope
-            wsUploadFile.close();
+            if (!finishWsUpload(num)) {
+              wsUploadInProgress = false;
+              wsUploadClientNum = 255;
+              return;
+            }
+            wsUploadInProgress = false;
+            wsUploadClientNum = 255;
             wsLastCompleteName = wsUploadFileName;
             wsLastCompleteSize = 0;
             wsLastCompleteAt = millis();
@@ -1762,7 +1826,11 @@ void CrossPointWebServer::onWebSocketEvent(uint8_t num, WStype_t type, uint8_t* 
       // Check if upload complete
       if (wsUploadReceived >= wsUploadSize) {
         // Explicit close() required: file-scope global persists beyond function scope
-        wsUploadFile.close();
+        if (!finishWsUpload(num)) {
+          wsUploadInProgress = false;
+          wsUploadClientNum = 255;
+          return;
+        }
         wsUploadInProgress = false;
         wsUploadClientNum = 255;
 

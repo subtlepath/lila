@@ -4,11 +4,13 @@
 #include <ESPmDNS.h>
 #include <FontCacheManager.h>
 #include <GfxRenderer.h>
+#include <HalArduinoWifiShutdown.h>
 #include <I18n.h>
 #include <WiFi.h>
 
 #include <cstddef>
 
+#include "CompanionReaderPreferences.h"
 #include "MappedInputManager.h"
 #include "NetworkModeSelectionActivity.h"
 #include "SilentRestart.h"
@@ -106,13 +108,20 @@ void CrossPointWebServerActivity::onExit() {
   stopDnsServer();
   MDNS.end();
 
-  // Skip reboot if WiFi was never activated (e.g. user backed out of mode selection).
-  if (WiFi.getMode() != WIFI_MODE_NULL) {
-    if (isApMode) {
-      WiFi.softAPdisconnect(true);
-    } else {
-      WiFi.disconnect(false);
-    }
+  const bool hadWifi = companion::arduinoWifiActive();
+  [[maybe_unused]] bool dictionaryChanged = false;
+  if (webServer) {
+    webServer->stop();
+    dictionaryChanged = webServer->hasDictionaryUploads();
+    webServer.reset();
+  }
+  [[maybe_unused]] const bool radioStopped = companion::shutdownArduinoWifi();
+  LOG_DBG("WEBACT", "Free heap after network teardown: %u bytes", ESP.getFreeHeap());
+#if LILA_COMPANION
+  if (dictionaryChanged && radioStopped && !companion::captureLocalDictionaryReplacement())
+    LOG_ERR("WEBACT", "Dictionary saved but synchronization capture failed");
+#endif
+  if (hadWifi) {
     delay(30);
     silentRestart();
   }

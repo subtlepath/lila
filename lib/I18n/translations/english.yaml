@@ -713,3 +713,5 @@ STR_LEGACY_BOOKMARK_DECISION_REQUIRED: "Open Bookmarks to choose how to handle s
 STR_FONT_SYNC_SAVE_FAILED: "Font saved, but synchronization could not be saved. Restart the reader before trying again."
 
 STR_FONT_DELETE_FAILED: "Font deletion failed"
+
+STR_FILE_SAVE_FAILED: "Could not save file"

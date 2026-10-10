@@ -332,6 +332,12 @@ bool captureLocalFontReplacement(std::string_view family, std::string_view path)
   return persistPreferences(runtime, runtime.baseline, uint16_t{1});
 }
 
+bool captureLocalDictionaryReplacement() {
+  std::lock_guard<std::mutex> lock(runtime.mutex);
+  if (!runtime.baseline.dictionaryName.front()) return true;
+  return persistPreferences(runtime, runtime.baseline, uint16_t{0x400});
+}
+
 ReaderPreferenceApplicationResult restoreReaderPreferenceRuntime(CrossPointSettings& settings, SdCardFontSystem& fonts,
                                                                  bool enableCapture) {
   // Unbind before taking the runtime mutex: saves acquire settings then runtime.

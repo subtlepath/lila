@@ -1,9 +1,10 @@
 # Portable preference events
 
-The Apple shared core implements a version-one explicit allowlist and causal merge.
-Reader emission, causal application, and settings UI remain pending. Arbitrary settings JSON,
-credentials, controls, orientation, clocks, lighting, refresh, and sleep behavior are
-not part of this protocol.
+The Apple shared core and reader implement a version-one explicit allowlist and
+causal merge. The Apple app exposes saved preferences and conflict resolution;
+reader startup restores resolved values and binds journal capture to settings
+saves. Credentials, controls, orientation, clocks, lighting, refresh, and sleep
+behavior remain device-specific.
 
 Preferences use the SHA-256 of UTF-8 `lila:portable-preferences:v1` as their global
 resource identity. The envelope kind is Preference (4); scheduler fields are zero.
@@ -40,9 +41,8 @@ Content selection identifies immutable font/dictionary bytes, not a device-local
 is verified. Reader application must validate the asset kind/name against inventory,
 install first, and only then apply the dependent setting. Font-size changes also wait
 for the selected font. Unsupported values/capabilities must remain pending with an
-explanation rather than silently selecting a different preference. In particular,
-current firmware forces hyphenation on; disabling it requires a capability/firmware
-change before it can be applied. The shared core does not currently apply any settings.
+explanation rather than silently selecting a different preference. Hyphenation is
+a portable boolean in the current reader settings and application plan.
 
 Each key merges through complete causal history. One-sided successors supersede older
 values. Concurrent differing values remain candidates; matching concurrent values keep
@@ -56,116 +56,37 @@ UTF-8/path boundaries, required content, causal conflicts/resolution, and SQLite
 Physical acceptance must confirm each allowed setting applies after required assets,
 and every excluded device-specific setting remains local across repeated syncs.
 
-`CompanionTintaPreferences` maps the nine portable Tinta integer keys (32–40)
-to native Profile fields and exports the same eight-byte bodies. It validates
-the shared wire schema before changing a field, preserves device-specific refresh,
-lighting, clocks, and local state, and rejects unrelated keys. It uses fixed local
-storage without heap allocation and passes the C3 256-byte frame compile check.
-Callers must establish causal resolution and authority before applying a body,
-then persist and reconfigure the runtime once per resolved batch. This mapping
-is not yet wired to native settings emission or journal replay.
+Reader integration uses `restoreReaderPreferenceRuntime` at startup and
+`CrossPointSettings::bindPortablePreferenceSave` for local settings edits. Changed
+values are journaled before settings publication. Dependency selections are
+validated against their actual content, so selecting the same name after replacing
+its bytes can emit a changed content hash. Font uploads capture replacement after
+closing the file. Dictionary uploads defer capture until the web-server activity
+exits: writers and networking are stopped, server buffers are released, and the
+selected bundle is validated before publishing its identity. Unchanged content
+is deduplicated. Incomplete bundles and failed upload writes/sync/close do not
+publish replacement authority.
 
-`persistResolvedTintaPreferences` validates at most nine distinct portable Tinta
-keys against a profile copy before writing. Invalid or duplicate bodies leave both
-the profile and storage unchanged. Changed batches replace the profile once and
-publish the in-memory candidate only after successful persistence; identical
-batches are write-free. The helper uses bounded local state without heap
-allocation and passes the C3 256-byte frame check. Host coverage exercises invalid
-batches, duplicate keys, failed replacement, durable reload, repeated application,
-and unavailable storage. Callers still must supply ownership-verified, causally
-resolved bodies and reconfigure App after success; native synchronization dispatch
-remains pending.
+Dictionary capture reuses the existing checked, short-lived 8 KiB preference
+workspace and save-session owner. They exceed the C3 task stack budget, so they
+are allocated with `makeUniqueNoThrow` after network teardown and released before
+reboot. Upload tracking itself adds fixed flags and borrows path bytes; shutdown
+cleanup reuses the existing upload buffer.
 
-`JournalCausalRelation::precedes` supplies the shared native ancestry primitive
-needed for preference, reading-position, and bookmark conflict handling. It
-validates the frozen journal/index, traverses marked dependencies backward through
-physical causal order, and includes implicit per-origin sequence predecessors.
-It distinguishes strict ancestry from concurrency and preserves output on errors.
-Retained envelope metadata belongs off-stack; disposable visit marks remain
-caller-owned, allowing SD-backed traversal without a history vector or per-query
-allocation. Host coverage checks direct/transitive/implicit ancestry, reverse/self
-queries, concurrent origins, invalid indices, and failed marking. The helper passes
-the C3 256-byte frame probe. Preference candidate selection and conflict dispatch
-remain pending.
+For a bound Tinta course, `HalTintaLearnerPreparation` audits and resolves portable
+profile preferences before the learner opens. `TintaCompanionSession` owns the
+mutation bindings while the activity is open. Profile changes and learning
+mutations share authoritative journal ordering; a failed publication blocks
+further mutation until recovery. `App::close` flushes while the borrowed bindings
+are still alive, then activity exit releases them. Historical reviews retain
+their recorded scheduler configuration rather than being rescheduled with a
+new preference value.
 
-`TintaPreferenceResolution` selects maximal native preference events for keys
-32–40 from a frozen, validated journal/index. For each key it scans backward once,
-propagating explicit and implicit sequence dependencies through caller-owned
-disposable visit marks. Earlier causally superseded values are excluded; concurrent
-equal values resolve, while differing maximal values set a per-key conflict bit.
-Conflicts and errors expose no applicable batch. The retained owner keeps at most
-nine eight-byte bodies and their borrowed views, plus bounded traversal metadata;
-it allocates no history vector or per-query storage. Successful batches can feed
-`persistResolvedTintaPreferences` after ownership admission. Host coverage checks
-concurrent disagreement, explicit resolution naming both branches, equal concurrent
-values, and failed marking. Native activity/connection dispatch remains pending.
-
-`HalJournalCausalAuditSession::resolveTintaPreferences` exposes resolution through
-the checked HAL identity index. It requires a completed audit, reopens the index,
-allocates one checked visit-storage owner because its retained file handle exceeds
-the stack budget, and closes visit/index/journal handles before returning. The
-caller retains the resolution owner and its output views. Read/close errors clear
-all output; successful conflicts retain only their conflict mask and no applicable
-batch. The audit is consumed, requiring a fresh audit before another operation.
-Host SD tests exercise pre-audit rejection, resolved output, concurrent conflict,
-and read-error invalidation. The C3 256-byte frame compile probe passes.
-
-`TintaWriter::recordPreference` emits validated portable preference bodies through
-the learner session's existing durable identity, epoch, sequence, and causal
-frontier. Preference scope and zero scheduler fields are enforced; body hashes
-are computed before the fresh journal append. The same commit path advances
-identity/frontier state for both preference and learning mutations. Invalid bodies
-leave the writer usable without advancing history; uncertain storage failure stops
-the writer until recovery. Retained envelope and journal workspace are reused,
-with no per-event allocation. Host coverage interleaves preference and learning
-mutations, checks exact ancestry, rejects invalid bodies, and injects a torn write.
-The C3 256-byte frame compile probe passes. Profile-change capture and activity
-writer binding remain required before enabling bidirectional application.
-
-`TintaPreferenceCapture` initializes a session cache from the recovered native
-profile, then prevalidates all nine portable fields before emitting changed
-values. Device-only edits and identical retries create no events. Each successful
-field advances the cache only after durable journal commit. Failure stops both
-capture and writer; any already committed prefix remains authority and must be
-recovered before the profile is saved or a fresh capture is bound. The fixed
-previous/candidate arrays are retained in the session owner, with no per-field
-allocation. Host coverage checks unchanged/device-only edits, whole-profile
-preflight, exact changed-key ancestry, write-free repetition, and a cut after a
-durable prefix. The native helper passes the C3 256-byte frame probe. App save
-hook and activity lifetime binding remain pending.
-
-`App::setProfileMutationJournal` installs a borrowed callback for debounced durable
-profile saves. `saveIfDirty` invokes it before replacing profile.bin. Guest storage
-skips the callback; failed authority blocks subsequent profile saves for that App
-instance even if cleanup removes the callback. Rebinding after failure is refused;
-a fresh recovered App is required. The callback context must outlive saves and
-App::close, then be cleared before destruction. This adds fixed callback/flag state
-and no heap allocation. Native App compilation passes. Activity capture ownership,
-clock sampling, error presentation, and synchronized startup application remain
-pending; the hook alone does not enable bidirectional preference sync.
-
-Capture initialization succeeds only once per owner. Reinitialization cannot
-silently adopt unjournaled edits or clear a failed batch; recovery must construct
-a fresh capture from recovered profile state. Regression coverage rejects both
-reinitialization after edits and reinitialization after a torn publication, while
-preserving normal subsequent capture of the changed fields.
-
-`HalTintaProfileMutationContext` adapts profile capture to App's borrowed save
-callback and native clock. It prevalidates change detection before clock sampling,
-so device-only edits do not require date confirmation. Changed portable values
-sample a confirmed clock once; while awaiting confirmation, preference events use
-explicit Unknown evidence, zero timestamp, and the recovered known day. This is
-preference emission, not review scheduling. Failures log and invoke the caller's
-error delegate. All buffers remain in the retained capture owner; the adapter adds
-no heap allocation. Change-detection tests cover unchanged/changed/invalid profiles,
-and the native callback passes the C3 256-byte frame compile probe. Activity
-ownership and end-to-end callback/runtime tests remain pending.
-
-`TintaNativeProfileMutationTest` links the production native Clock, journal writer,
-identity provisioning, and profile callback adapter against host storage/RTC
-fixtures. It verifies device-only edits emit no event while the date is
-unconfirmed, portable edits retain Unknown evidence/known day/zero timestamp,
-confirmed RTC edits carry Device evidence and the cached absolute UTC value,
-repeated values emit nothing, and storage failure stops the writer and calls the
-error delegate. This is runtime host coverage of the native callback chain,
-separate from firmware and physical-device acceptance.
+Host coverage includes causal preference conflicts, dependent font/dictionary
+metadata, content-hash replacement and deduplication, native profile capture,
+and interrupted journal publication. C3 compilation checks the actual upload,
+shutdown, and capture entry points against the 256-byte frame limit. These checks
+do not establish native Apple UI behavior or reader heap/radio behavior. Run the
+portable-preference and dictionary-upload checks in
+[hardware-verification.md](hardware-verification.md) on the participating readers
+and verify each excluded setting remains local.

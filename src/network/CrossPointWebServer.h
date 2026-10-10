@@ -56,6 +56,7 @@ class CrossPointWebServer {
 
   // Stop the web server
   void stop();
+  bool hasDictionaryUploads() const;
 
   // Call this periodically to handle client requests
   void handleClient();
@@ -72,6 +73,7 @@ class CrossPointWebServer {
   std::unique_ptr<WebServer> server = nullptr;
   std::unique_ptr<WebSocketsServer> wsServer = nullptr;
   bool running = false;
+  bool dictionaryChanged = false, uploadsClosed = true;
   bool apMode = false;  // true when running in AP mode, false for STA mode
   uint16_t port = 80;
   uint16_t wsPort = 81;  // WebSocket port
@@ -81,7 +83,9 @@ class CrossPointWebServer {
   // WebSocket upload state
   void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
   static void wsEventCallback(uint8_t num, WStype_t type, uint8_t* payload, size_t length);
-  void abortWsUpload(const char* tag);
+  bool abortWsUpload(const char* tag);
+  void noteDictionaryUpload(const String& directory);
+  [[gnu::noinline]] bool finishWsUpload(uint8_t client);
 
   // File scanning
   void scanFiles(const char* path, const std::function<void(FileInfo)>& callback) const;
@@ -96,7 +100,7 @@ class CrossPointWebServer {
   void handleFileList() const;
   void handleFileListData() const;
   void handleDownload() const;
-  void handleUpload(UploadState& state) const;
+  void handleUpload(UploadState& state);
   void handleUploadPost(UploadState& state) const;
   void handleCreateFolder() const;
   void handleRename() const;

@@ -25,6 +25,8 @@ TintaJournalResult restoreReaderBookmark(const Epub& epub, const Identity& bookm
 // Successful local upload only, after closing the file and releasing storage locks.
 // Acquires the render lock; must not be called while holding it.
 bool captureLocalFontReplacement(std::string_view family, std::string_view path);
+// Caller holds RenderLock and has closed upload writers and stopped radios.
+bool captureLocalDictionaryReplacement();
 void suspendReaderPreferenceCapture();
 void resumeReaderPreferenceCapture();
 void notifyReaderPreferenceSaveError();
