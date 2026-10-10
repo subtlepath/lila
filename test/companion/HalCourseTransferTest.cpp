@@ -81,6 +81,7 @@
 #include "lib/hal/HalUnboundCoursePackVerification.h"
 #include "lib/hal/HalUnboundCourseProfileInspection.h"
 #include "lib/hal/HalUnboundCourseReviewInspection.h"
+#include "lib/hal/HalUnboundCourseReviewReader.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "lib/hal/HalUnboundCourseSessionInspection.h"
 #include "platform/StateFiles.h"
@@ -9097,7 +9098,8 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
-  for (unsigned fault = 0; fault < 9; ++fault) {
+  const auto reviewUid = parser->uidAt(0);
+  for (unsigned fault = 0; fault < 10; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9128,6 +9130,30 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       binary_record::putU32(marks.data() + 4, 123);
       marks[8] = 1;
       binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
+    }
+    if (fault == 9) {
+      auto& items = hal.files["/tinta/items.bin"];
+      items.resize(1040, 0);
+      for (unsigned slot = 0; slot < 2; ++slot) {
+        auto* header = items.data() + slot * 512;
+        std::memcpy(header, "TIS1", 4);
+        binary_record::putU16(header + 4, 1);
+        binary_record::putU16(header + 6, 80);
+        binary_record::putU32(header + 8, slot + 1);
+        binary_record::putU32(header + 12, 1);
+        binary_record::putU32(header + 16, 1);
+        binary_record::putU32(header + 76, binary_record::crc32(header, 76));
+      }
+      tinta::core::ItemState::fresh(reviewUid).encode(items.data() + 1024);
+      auto& log = hal.files["/tinta/reviews.log"];
+      log.resize(39, 0);
+      binary_record::putU32(log.data(), reviewUid);
+      log[10] = 3;
+      binary_record::putU32(log.data() + 12, reviewUid);
+      log[22] = 8;
+      binary_record::putU32(log.data() + 24, reviewUid);
+      log[34] = 16;
+      log[35] = 1;
     }
     if (fault == 2) encoded.back() ^= 1;
     if (fault == 3) hal.files["/tinta/items.bin"] = {1};
@@ -9208,10 +9234,11 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     permission.owner = inspection.get();
     permission.checking = true;
     const auto files = hal.files;
-    EXPECT_EQ(inspection->inspect(request, original, *parser), fault == 0 || fault == 4 || fault == 7 || fault == 8);
+    EXPECT_EQ(inspection->inspect(request, original, *parser),
+              fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9);
     permission.checking = false;
     EXPECT_GT(permission.probes, 0u);
-    if (fault == 0 || fault == 4 || fault == 7 || fault == 8) {
+    if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9) {
       auto foreign = request;
       foreign.original.transaction[0] ^= 1;
       EXPECT_EQ(inspection->report(foreign), nullptr);
@@ -9227,9 +9254,9 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       EXPECT_GT(permission.probes, probes);
       permission.checking = false;
       EXPECT_TRUE(inspection->report(request)->profile.present);
-      EXPECT_FALSE(inspection->report(request)->items.present);
+      EXPECT_EQ(inspection->report(request)->items.present, fault == 9);
       EXPECT_FALSE(inspection->report(request)->session.present);
-      if (fault == 0 || fault == 4 || fault == 7 || fault == 8) {
+      if (fault == 0 || fault == 4 || fault == 7 || fault == 8 || fault == 9) {
         UnboundCourseMigrationIntent intent;
         intent.reader = reader;
         intent.request = request;
@@ -9252,7 +9279,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(mapUnboundCourseBoundReadings(
             *inspection, *reviewed, *oldReader, *newReader, intent, scratch, readings, [](void*) { return true; },
             nullptr));
-        EXPECT_EQ(readings.present, fault != 4);
+        EXPECT_EQ(readings.present, fault != 4 && fault != 9);
         EXPECT_EQ(readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(readings.installedMissing, 0);
         EXPECT_EQ(readings.originalMissing, fault == 8 ? 1 : 0);
@@ -9311,10 +9338,89 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         const auto* report = migration->report(intent);
         ASSERT_NE(report, nullptr);
         EXPECT_EQ(report->lessons.currentLesson, 0);
-        EXPECT_EQ(report->readings.present, fault != 4);
+        EXPECT_EQ(report->readings.present, fault != 4 && fault != 9);
         EXPECT_EQ(report->readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(report->readings.originalMissing, fault == 8 ? 1 : 0);
         EXPECT_TRUE(report->learner.profile.present);
+        struct StreamPermission {
+          bool permitted = true, checking = false, closeNext = false;
+          unsigned probes = 0;
+          HalUnboundCourseReviewReader* owner = nullptr;
+          const UnboundCourseMigrationIntent* intent = nullptr;
+        } streamPermission;
+        auto stream = makeUniqueNoThrow<HalUnboundCourseReviewReader>(
+            *migration, *reviewed, scratch,
+            [](void* raw) {
+              auto& state = *static_cast<StreamPermission*>(raw);
+              if (state.checking) {
+                ++state.probes;
+                EXPECT_FALSE(state.owner->open(*state.intent));
+                UnboundCourseReviewEntry nested;
+                nested.index = 123;
+                EXPECT_EQ(state.owner->next(*state.intent, nested), LegacyTintaReadResult::Unavailable);
+                EXPECT_EQ(nested.index, 123u);
+              }
+              if (state.closeNext) {
+                state.closeNext = false;
+                state.owner->closeReaders();
+              }
+              return state.permitted;
+            },
+            &streamPermission);
+        ASSERT_TRUE(stream);
+        streamPermission.owner = stream.get();
+        streamPermission.intent = &intent;
+        streamPermission.checking = true;
+        ASSERT_TRUE(stream->open(intent));
+        UnboundCourseReviewEntry reviewEntry;
+        reviewEntry.index = 123;
+        EXPECT_EQ(stream->next(foreign, reviewEntry), LegacyTintaReadResult::Unavailable);
+        EXPECT_EQ(reviewEntry.index, 123u);
+        if (fault == 9) {
+          for (unsigned index = 0; index < 3; ++index) {
+            ASSERT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Record);
+            EXPECT_EQ(reviewEntry.index, index);
+            EXPECT_EQ(reviewEntry.committed, index == 0);
+            EXPECT_EQ(reviewEntry.entry.uid, reviewUid);
+            if (index == 1) {
+              EXPECT_EQ(reviewEntry.entry.operation, LegacyTintaOperation::Undo);
+              EXPECT_EQ(reviewEntry.entry.undoRecord, 0u);
+            }
+          }
+        }
+        reviewEntry.index = 123;
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::End);
+        EXPECT_EQ(reviewEntry.index, 123u);
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::End);
+        ASSERT_TRUE(stream->open(intent));
+        streamPermission.permitted = false;
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
+        EXPECT_EQ(reviewEntry.index, 123u);
+        streamPermission.permitted = true;
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
+        if (fault == 9) {
+          ASSERT_TRUE(stream->open(intent));
+          for (unsigned index = 0; index < 3; ++index)
+            ASSERT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Record);
+          std::string frozenLog;
+          for (const auto& [path, file] : hal.files)
+            if (path.find("course-review-state-") != std::string::npos && file.size() == 39) frozenLog = path;
+          ASSERT_FALSE(frozenLog.empty());
+          hal.files[frozenLog][4] ^= 1;
+          reviewEntry.index = 123;
+          EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::IoError);
+          EXPECT_EQ(reviewEntry.index, 123u);
+          hal.files[frozenLog][4] ^= 1;
+        }
+        EXPECT_GT(streamPermission.probes, 0u);
+        streamPermission.closeNext = true;
+        EXPECT_FALSE(stream->open(intent));
+        ASSERT_TRUE(stream->open(intent));
+        streamPermission.closeNext = true;
+        EXPECT_EQ(stream->next(intent, reviewEntry), LegacyTintaReadResult::Unavailable);
+        EXPECT_EQ(reviewEntry.index, 123u);
+        ASSERT_TRUE(stream->closeReaders());
+
         EXPECT_FALSE(parser->isOpen());
         EXPECT_FALSE(installedParser->isOpen());
         EXPECT_EQ(reviewed->borrowed(), nullptr);

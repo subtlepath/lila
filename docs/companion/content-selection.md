@@ -3972,3 +3972,17 @@ compile probe emits a 144-byte inspection frame and no frame above 240 bytes.
 Re-run `ctest --test-dir .cache/companion-verification/host
 --output-on-failure` for the host suite. Runtime integration and physical
 migration acceptance are not yet complete.
+
+The unbound Native inspection can now feed a scoped frozen legacy review
+reader. It emits review/undo/flag entries with legacy indices and the frozen
+item header's committed/pending boundary, retaining undo targets without
+inventing distributed identities. Successful completion requires the original
+inspected record count and a fresh hash verification of the frozen backup.
+This supplies conversion input, not replay or mutation authority. The parent
+still excludes writers and lends exclusive owners and the existing workspace.
+Validation: all 1,996 host tests pass, including a frozen committed review
+followed by pending undo/flags, zero tail, absent log, payload damage after
+consumption, wrong intent, permission revocation, reentry and cancellation.
+The final ESP32-C3 compile probe has no emitted frame above 160 bytes. Re-run
+`ctest --test-dir .cache/companion-verification/host --output-on-failure`.
+The stream is not yet wired to authoritative legacy conversion or publication.

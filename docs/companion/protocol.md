@@ -1278,3 +1278,18 @@ revokes the report, and explicit close during a callback cancels the operation.
 Unknown/retired reading identities remain counted evidence. This report does
 not establish legacy event ancestry, replay agreement, retirement policy or
 publication authority, and does not enable a migration command.
+
+`HalUnboundCourseReviewReader` lends a frozen legacy review stream scoped to
+one successful combined Native migration inspection. Each record carries its
+zero-based legacy index and whether it falls before the frozen item snapshot's
+committed-record boundary. Undo retains its decoded target index; this does not
+reserve a distributed event identity. Records remain provisional conversion
+input until the reader returns `End`, after checking the inspected record count
+and reopening/hash-verifying the exact roster-bound backup. Missing logs are
+accepted only when the combined report records absence and zero records.
+Permission loss, wrong context, callback reentry/cancellation, malformed input,
+or a changed frozen payload cannot produce a successful completed stream.
+The caller lends exclusive reviewed-file and shared 8 KiB workspace owners and
+excludes writers. The stream allocates nothing and is retained off stack.
+Journal identity reservation, scheduler configuration/clock evidence, replay
+agreement and authoritative event publication remain separate requirements.
