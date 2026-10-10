@@ -1125,3 +1125,13 @@ The decoder's `Loaded` or `Upgraded` status is retained without saving repaired
 bytes. Device-local fields in this evidence are not portable preference changes.
 Mapping lessons to the installed pack and proving scheduler correspondence remain
 required before migration can authorize learner mutations.
+
+Frozen stars and completed-reading inspection reconstructs current membership
+from immutable, hash-verified legacy mark logs. It verifies headers, extent,
+record checksums and add/remove order without compacting or saving the logs.
+Starred UIDs must exist in the confirmed original pack or its retained item
+identity history. Reading title keys must resolve unambiguously; missing reading
+references remain explicit retired evidence requiring migration review. Missing
+files are distinct from malformed logs. Failure preserves the output and copied
+bytes and closes the file loan. This membership report does not establish the
+ancestry of removed marks or authorize distributed event creation.

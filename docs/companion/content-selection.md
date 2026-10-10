@@ -3767,3 +3767,14 @@ there is no new allocation. Verify with the HAL companion host suite. This
 helper remains outside runtime firmware. Stable lesson mapping to the installed
 pack, marks/days/sessions, distributed replay correspondence and native migration
 composition remain unfinished. Device-local profile fields are evidence only.
+
+Frozen stars/completed-reading inspection now validates native mark records and
+reconstructs current membership without mutation. Starred UIDs require active or
+retained original-pack identity evidence; ambiguous reading keys refuse and
+missing reading references remain retired evidence. All 1,987 host tests pass,
+including captured/backed-up add/remove/add logs, malformed checksums/extents,
+unknown stars, completed readings and absence. The C3 entry frame is 96 bytes and
+mark-file validation is 240 bytes; every emitted frame is within 256 bytes and
+no allocation is added. Verify with the HAL companion host suite. These helpers
+remain outside runtime firmware. Removed-event ancestry, days/sessions, installed
+pack correspondence and native migration composition still require completion.
