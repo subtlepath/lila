@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HalTintaPackTransition.h"
 #include "HalTintaProvenPublication.h"
 
 namespace companion {
@@ -21,8 +22,17 @@ class HalTintaIncrementalRecovery final {
     if (loaded == TintaDerivedRecordLoad::Missing) return TintaIncrementalRecoveryResult::NoReceipt;
     if (loaded != TintaDerivedRecordLoad::Loaded || !previous.decode(previousBytes)) return failure("baseline receipt");
     std::copy_n(previousBytes.begin() + 52, previousFrontier.size(), previousFrontier.begin());
-    if (!previous.matches(course, generation, pack, previousFrontier) || !tinta_body_detail::nonzero(snapshot))
+    std::copy_n(previousBytes.begin() + 20, previousPack.size(), previousPack.begin());
+    if (!previous.matches(course, generation, previousPack, previousFrontier) || !tinta_body_detail::nonzero(snapshot))
       return failure("baseline binding");
+    const bool packChanged = previousPack != pack;
+    if (packChanged) {
+      if (!admitCompanionHeap(sizeof(HalTintaPackTransition), sizeof(HalTintaPackTransition)))
+        return failure("pack transition heap admission");
+      auto transition = makeUniqueNoThrow<HalTintaPackTransition>(scratch);
+      if (!transition) return failure("OOM: pack transition workspace");
+      if (!transition->verify(course, previousPack, pack)) return failure("pack transition");
+    }
     studyDay = std::max(knownDay, previous.studyDay());
     // Audit/replay/export owners retain fixed scratch and handles beyond the task
     // stack. Release each phase before allocating the next publication workspace.
@@ -33,7 +43,7 @@ class HalTintaIncrementalRecovery final {
     audit.reset();
     auto retention = makeUniqueNoThrow<HalTintaAuthorityRetention>();
     if (!retention) return failure("OOM: authority retention workspace");
-    if (frontier == previousFrontier) {
+    if (!packChanged && frontier == previousFrontier) {
       const auto verified = reader.verifyGeneration(previous);
       if (verified == TintaDerivedVerification::IoError) return failure("baseline file verification");
       if (!retention->establish(previousBytes, course, generation, pack, catalog))
@@ -43,7 +53,7 @@ class HalTintaIncrementalRecovery final {
         return TintaIncrementalRecoveryResult::Unchanged;
       }
     }
-    if (!retention->prove(previousBytes, course, generation, pack, catalog, frontier) ||
+    if (!retention->prove(previousBytes, course, generation, previousPack, catalog, frontier) ||
         (proveRetention && !proveRetention(retentionContext, previous, frontier)))
       return failure("authority retention");
     retention.reset();
@@ -124,7 +134,7 @@ class HalTintaIncrementalRecovery final {
   std::array<uint8_t, TINTA_DERIVED_MANIFEST_SIZE> previousBytes{}, nextBytes{};
   HalTintaDerivedRecordReader reader;
   TintaDerivedManifestView previous;
-  Digest previousFrontier{}, frontier{};
+  Digest previousFrontier{}, frontier{}, previousPack{};
   TintaBody body;
   uint16_t studyDay = 0;
   bool ready = false;

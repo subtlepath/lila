@@ -880,6 +880,16 @@ still pending for the capability-enabled implementation.
 
 ## Bound-course context
 
+After a compatible installed-pack update, canonical learner recovery verifies
+the current binding and pack hash, opens the receipt's previous pack from its
+verified archive, and checks language and item-identity continuity. It proves
+the previous receipt's authority checkpoint against the current journal before
+replaying into a new recoverable publication with the new pack hash and next
+revision. Missing or corrupt archives/checkpoints block recovery; they do not
+reset learning history. An unchanged journal still requires a new publication
+when the pack hash changes. This covers current-format updates, not migration
+from older alpha state.
+
 Tinta-enabled readers advertise bound-course context with capability bit 15 and
 course removal with bit 18. Course removal also requires course-transfer support
 (bit 1). The app admits a course-removal job only with all three capabilities,

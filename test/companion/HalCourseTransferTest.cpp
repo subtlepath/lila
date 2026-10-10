@@ -1318,6 +1318,46 @@ TEST_F(HalCourseTransferTest, NativeCourseOwnerPreservesCanonicalAlphaHistoryAcr
   HalTintaJournalMergeCommitContext restored;
   ASSERT_TRUE(restored.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
   for (const auto& [path, content] : authority) EXPECT_EQ(hal.files.at(path), content) << path;
+  const auto previousPack = declaration.manifest.contentHash;
+  const auto journal = hal.files.at(TINTA_JOURNAL_EVENTS);
+  std::array<char, COURSE_STATE_PATH_SIZE> receiptPath{};
+  ASSERT_TRUE(tintaDerivedRecordPath(declaration.manifest.logicalIdentity, TintaDerivedRecord::Receipt, receiptPath));
+  TintaDerivedManifestView oldReceipt;
+  ASSERT_TRUE(oldReceipt.decode(hal.files.at(receiptPath.data())));
+  const auto revision = oldReceipt.revision();
+  bytes[12] ^= 1;
+  sealPack();
+  declaration.state.transaction[0] = 22;
+  Transfer update(storage, scratch);
+  receive(update);
+  ASSERT_FALSE(HasFatalFailure());
+  ASSERT_EQ(update.commit(declaration.state.transaction, declaration.state.owner), TransferResult::Ok);
+  HalCoursePackArchive archived(scratch, [](void*) { return true; }, nullptr);
+  ASSERT_EQ(archived.open(declaration.manifest.logicalIdentity, previousPack), CourseArchiveResult::Ok);
+  const std::string previousPath = archived.path();
+  ASSERT_TRUE(archived.closeReaders());
+  hal.files.at(previousPath)[12] ^= 1;
+  const auto damaged = hal.files;
+  {
+    HalTintaJournalMergeCommitContext refused;
+    EXPECT_FALSE(refused.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  }
+  EXPECT_EQ(hal.files, damaged);
+  hal.files.at(previousPath)[12] ^= 1;
+  HalTintaJournalMergeCommitContext updated;
+  ASSERT_TRUE(updated.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  EXPECT_EQ(hal.files.at(TINTA_JOURNAL_EVENTS), journal);
+  TintaDerivedManifestView newReceipt;
+  ASSERT_TRUE(newReceipt.decode(hal.files.at(receiptPath.data())));
+  EXPECT_EQ(newReceipt.revision(), revision + 1);
+  Digest frontier{};
+  std::copy_n(hal.files.at(receiptPath.data()).begin() + 52, frontier.size(), frontier.begin());
+  EXPECT_TRUE(
+      newReceipt.matches(declaration.manifest.logicalIdentity, generation, declaration.manifest.contentHash, frontier));
+  const auto published = hal.files;
+  HalTintaJournalMergeCommitContext retry;
+  EXPECT_TRUE(retry.reconcileLocalHistory(declaration.manifest.logicalIdentity, generation, snapshots));
+  EXPECT_EQ(hal.files, published);
 }
 TEST_F(HalCourseTransferTest, NativeRemovalPreparationValidatesPackBeforeIsolatingLegacyState) {
   auto& hal = inventory_hal_test::state;
