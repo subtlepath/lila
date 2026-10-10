@@ -1537,14 +1537,44 @@ TEST(HalUnboundPackReader, LoansAreIntentBoundAndPermissionLossRevokesRetainedSo
   std::array<uint8_t, 8192> scratch{};
   auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
   ASSERT_TRUE(parser);
-  bool permission = true;
+  struct PermissionContext {
+    bool permitted = true, nested = false, closeNext = false;
+    uint32_t probes = 0;
+    HalUnboundCoursePackReader* owner = nullptr;
+    const UnboundCourseMigrationIntent* intent = nullptr;
+    tinta::core::pack::PackSource* retained = nullptr;
+  } permission;
+  permission.intent = &intent;
   auto owner = makeUniqueNoThrow<HalUnboundCoursePackReader>(
-      scratch, *parser, [](void* context) { return *static_cast<bool*>(context); }, &permission);
+      scratch, *parser,
+      [](void* context) {
+        auto& permission = *static_cast<PermissionContext*>(context);
+        if (!permission.nested) {
+          permission.nested = true;
+          EXPECT_FALSE(permission.owner->open(*permission.intent, UnboundPackRole::Installed));
+          EXPECT_FALSE(permission.owner->borrowed(*permission.intent, UnboundPackRole::Original));
+          if (permission.retained) {
+            uint8_t byte = 17;
+            EXPECT_FALSE(permission.retained->read(0, &byte, 1));
+            EXPECT_EQ(byte, 17);
+          }
+          ++permission.probes;
+          if (permission.closeNext) {
+            permission.closeNext = false;
+            EXPECT_TRUE(permission.owner->closeReaders());
+          }
+          permission.nested = false;
+        }
+        return permission.permitted;
+      },
+      &permission);
   ASSERT_TRUE(owner);
+  permission.owner = owner.get();
   const auto files = hal.files;
   ASSERT_TRUE(owner->open(intent, UnboundPackRole::Original, "/tinta/original.pack"));
   auto loan = owner->borrowed(intent, UnboundPackRole::Original);
   ASSERT_TRUE(loan);
+  permission.retained = loan.source;
   uint8_t byte = 0;
   ASSERT_TRUE(loan.source->read(0, &byte, 1));
   EXPECT_EQ(byte, 'T');
@@ -1552,13 +1582,19 @@ TEST(HalUnboundPackReader, LoansAreIntentBoundAndPermissionLossRevokesRetainedSo
   foreign.request.original.transaction[0] ^= 1;
   EXPECT_FALSE(owner->borrowed(foreign, UnboundPackRole::Original));
   EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Installed));
-  permission = false;
+  permission.permitted = false;
   EXPECT_FALSE(loan.source->read(0, &byte, 1));
   EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Original));
-  permission = true;
+  permission.permitted = true;
   EXPECT_FALSE(loan.source->read(0, &byte, 1));
   ASSERT_TRUE(owner->open(intent, UnboundPackRole::Installed));
   EXPECT_TRUE(owner->borrowed(intent, UnboundPackRole::Installed));
+  EXPECT_GT(permission.probes, 0u);
+  permission.closeNext = true;
+  EXPECT_FALSE(owner->open(intent, UnboundPackRole::Installed));
+  EXPECT_FALSE(parser->isOpen());
+  EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Installed));
+  ASSERT_TRUE(owner->open(intent, UnboundPackRole::Installed));
   hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
   EXPECT_FALSE(owner->open(intent, UnboundPackRole::Installed));
   EXPECT_FALSE(owner->borrowed(intent, UnboundPackRole::Installed));

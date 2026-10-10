@@ -1226,3 +1226,11 @@ reentry during reads. Close releases parser and handles. The caller excludes pac
 writers and lends the off-stack parser and shared workspace; no internal buffer
 allocation is added. These loans prove payload readability, not pack-pair
 continuity, human confirmation, learner replay agreement or migration authority.
+
+Retained pack sources distinguish internal validation reads from external loan
+reads. External raw-source reentry is refused during opening or borrowing, and
+recursive reads are refused without copying bytes. Permission callbacks cannot
+replace the intent/role while any pack operation is active. Closing during an
+open cancels the result, even if permission remains available; only a fresh open
+can produce a new loan. Successful opening also requires the parser and expected
+source extent to remain available at the final admission check.

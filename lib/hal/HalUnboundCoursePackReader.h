@@ -48,13 +48,15 @@ class HalUnboundCoursePackReader final {
     std::copy(selectedPath.begin(), selectedPath.end(), path.begin());
     path[selectedPath.size()] = 0;
     operating = true;
-    bool valid = closeReaders() && guard() && hash();
+    const bool closed = closeReaders();
+    cancelled = false;
+    bool valid = closed && guard() && hash();
     source.length = manifest().length;
     source.failed = false;
     source.reads = 0;
     if (valid)
-      valid = validateCourseCandidate(parser, source, scratch) == CourseValidationResult::Ok &&
-              parser.formatMajor() == manifest().formatVersion && hash() && !source.failed && guard();
+      valid = validate() && hash() && !source.failed && guard() && !cancelled && parser.isOpen() &&
+              source.length == manifest().length;
     if (!valid) closeReaders();
     ready = valid;
     operating = false;
@@ -68,6 +70,7 @@ class HalUnboundCoursePackReader final {
     return ready ? UnboundPackLoan{&parser, &source} : UnboundPackLoan{};
   }
   bool closeReaders() {
+    if (operating) cancelled = true;
     ready = false;
     parser.close();
     source.length = 0;
@@ -82,13 +85,13 @@ class HalUnboundCoursePackReader final {
     explicit Source(HalUnboundCoursePackReader& owner) : owner(owner) {}
     uint32_t size() const override { return length; }
     bool read(uint32_t offset, void* output, uint32_t count) override {
-      if (reading) return false;
+      if (reading || (owner.operating && !owner.validating)) return false;
       reading = true;
       const bool previousOperating = owner.operating;
       owner.operating = true;
       const auto expectedLength = length;
-      const bool valid = !failed && (previousOperating || owner.ready) && owner.guard() && offset <= length &&
-                         count <= length - offset && (!count || output) &&
+      const bool valid = !failed && !owner.cancelled && (previousOperating || owner.ready) && owner.guard() &&
+                         offset <= length && count <= length - offset && (!count || output) &&
                          owner.metadata.read(owner.path.data(), offset, {static_cast<uint8_t*>(output), count}) &&
                          owner.guard() && length == expectedLength && (previousOperating || owner.ready);
       if (!valid) {
@@ -121,12 +124,19 @@ class HalUnboundCoursePackReader final {
   UnboundCourseMigrationIntent selected;
   UnboundPackRole selectedRole = UnboundPackRole::Original;
   std::array<char, INVENTORY_PATH_LIMIT + 1> path{};
-  bool operating = false, ready = false;
+  bool operating = false, ready = false, validating = false, cancelled = false;
   const ContentManifest& manifest() const {
     return selectedRole == UnboundPackRole::Original ? selected.request.original.manifest : selected.activePack;
   }
   bool guard() const { return permitted && permitted(context) && admitCompanionHeap(); }
   static bool allowed(void* context) { return static_cast<HalUnboundCoursePackReader*>(context)->guard(); }
+  [[gnu::noinline]] bool validate() {
+    validating = true;
+    const bool valid = validateCourseCandidate(parser, source, scratch) == CourseValidationResult::Ok &&
+                       parser.formatMajor() == manifest().formatVersion;
+    validating = false;
+    return valid && guard();
+  }
   [[gnu::noinline]] bool hash() {
     uint64_t length = 0, actualLength = 0;
     Digest actual{};

@@ -3896,3 +3896,13 @@ retry passed. No internal allocation is added; parser/workspace/owner stay
 caller-owned off stack. Verify with the HAL companion Tinta host suite. Runtime
 firmware is unchanged. Pack-pair continuity, explicit confirmation, learner
 mapping/replay composition and recoverable native migration remain unfinished.
+
+Retained pack operations now reject raw-source reentry outside internal pack
+validation, and a close during opening cancels the result instead of reviving a
+closed parser. All 1,996 host tests pass with nested open/borrow/raw-read attempts
+at every permission check, close-during-open refusal and fresh-open recovery.
+Rejected nested reads preserve their output byte. The final C3 probe constructs
+the source and checks the complete reader/validator path; every emitted frame is
+within 256 (largest 224), with no new allocation. Verify with the HAL companion
+Tinta host suite. Runtime firmware remains unchanged. Native learner mapping,
+replay agreement and recoverable migration composition remain unfinished.
