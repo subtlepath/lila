@@ -4121,3 +4121,16 @@ backup; no UTC offset or trustworthy time is inferred. The caller must supply
 frozen scheduler configuration and replayed prior item state, verify the complete
 source stream and prove replay agreement. Matching the generated packet is
 conversion evidence, not permission to publish it or deduplicate shared history.
+
+Native frozen review streaming now composes the reserved converter with the
+scoped migration inspection. Scheduler settings come from the frozen profile;
+a caller-supplied replay provider returns each prior item state while preserving
+the stream workspace. Scoped event/body loans are provisional conversion output.
+Completion requires the source reader's final frozen-file rehash and exact
+reserved record/event counts, then closes source handles. Cancellation, missing
+replay state, mismatched counts or lost scope revokes output until a fresh open.
+
+The owner reuses its event/body members and the single session workspace without
+internal allocation. This composition does not establish snapshot replay
+agreement, authorize an epoch, write a journal or enable a runtime migration
+command. Those remain required before learner-state publication.

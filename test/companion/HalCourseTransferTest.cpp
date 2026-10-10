@@ -82,6 +82,7 @@
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
 #include "lib/hal/HalUnboundCoursePackVerification.h"
 #include "lib/hal/HalUnboundCourseProfileInspection.h"
+#include "lib/hal/HalUnboundCourseReviewConversion.h"
 #include "lib/hal/HalUnboundCourseReviewCountInspection.h"
 #include "lib/hal/HalUnboundCourseReviewInspection.h"
 #include "lib/hal/HalUnboundCourseReviewReader.h"
@@ -9496,6 +9497,127 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
           EXPECT_EQ(counts->report(intent), nullptr);
           hal.files[frozenLog][4] ^= 1;
         }
+
+        UnboundCourseReviewReservation reviewReservation;
+        reviewReservation.intent = intent;
+        reviewReservation.epoch = 77;
+        reviewReservation.records = fault == 9 ? 3 : 0;
+        reviewReservation.events = fault == 9 ? 4 : 0;
+        struct ConversionContext {
+          HalUnboundCourseReviewConversion* owner = nullptr;
+          const UnboundCourseReviewReservation* reservation;
+          bool allowed = true, failPrior = false, closePrior = false, closePermission = false;
+          unsigned calls = 0;
+        } conversionContext{nullptr, &reviewReservation};
+        auto prior = [](void* raw, const UnboundCourseReviewEntry& record, tinta::core::ItemState& output) {
+          auto& state = *static_cast<ConversionContext*>(raw);
+          ++state.calls;
+          EXPECT_EQ(state.owner->next(*state.reservation), LegacyTintaReadResult::Unavailable);
+          EXPECT_EQ(state.owner->event(*state.reservation, 0), nullptr);
+          if (state.closePrior) {
+            state.closePrior = false;
+            EXPECT_TRUE(state.owner->closeReaders());
+          }
+          output = tinta::core::ItemState::fresh(record.entry.uid);
+          return !state.failPrior;
+        };
+        auto conversion = makeUniqueNoThrow<HalUnboundCourseReviewConversion>(
+            *migration, *stream, scratch,
+            [](void* raw) {
+              auto& state = *static_cast<ConversionContext*>(raw);
+              if (state.closePermission) {
+                state.closePermission = false;
+                EXPECT_TRUE(state.owner->closeReaders());
+              }
+              return state.allowed;
+            },
+            &conversionContext);
+        ASSERT_TRUE(conversion);
+        conversionContext.owner = conversion.get();
+        const auto conversionFiles = hal.files;
+        ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+        EXPECT_FALSE(conversion->completed(reviewReservation));
+        auto wrongReservation = reviewReservation;
+        ++wrongReservation.epoch;
+        EXPECT_EQ(conversion->next(wrongReservation), LegacyTintaReadResult::Unavailable);
+        if (fault == 9) {
+          for (unsigned index = 0; index < 3; ++index) {
+            ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+            const auto* event = conversion->event(reviewReservation, 0);
+            ASSERT_NE(event, nullptr);
+            EXPECT_EQ(event->identity.origin, intent.reader);
+            EXPECT_EQ(event->identity.epoch, 77u);
+            EXPECT_EQ(event->identity.sequence, index + 1u);
+            EXPECT_EQ(event->clockQuality, ClockQuality::Unknown);
+            TintaBody body;
+            ASSERT_TRUE(decodeTintaBody(conversion->body(reviewReservation, 0), body));
+            EXPECT_EQ(body.uid, reviewUid);
+            if (index == 0) {
+              EXPECT_EQ(body.configuration.retentionBasisPoints, profile.retentionPermille * 10u);
+            }
+            if (index == 1) {
+              EXPECT_EQ(body.undoTarget.sequence, 1u);
+            }
+            if (index == 2) {
+              ASSERT_NE(conversion->event(reviewReservation, 1), nullptr);
+              EXPECT_EQ(conversion->event(reviewReservation, 1)->identity.sequence, 4u);
+            }
+          }
+        }
+        EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::End);
+        EXPECT_TRUE(conversion->completed(reviewReservation));
+        EXPECT_EQ(conversion->event(reviewReservation, 0), nullptr);
+        EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::End);
+        conversionContext.allowed = false;
+        EXPECT_FALSE(conversion->completed(reviewReservation));
+        conversionContext.allowed = true;
+        EXPECT_FALSE(conversion->completed(reviewReservation));
+        ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+        if (fault == 9) {
+          conversionContext.failPrior = true;
+          EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::IoError);
+          EXPECT_EQ(conversion->event(reviewReservation, 0), nullptr);
+          conversionContext.failPrior = false;
+          ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+          conversionContext.closePrior = true;
+          EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Unavailable);
+          EXPECT_EQ(conversion->event(reviewReservation, 0), nullptr);
+          ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+          ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+          EXPECT_EQ(conversion->event(reviewReservation, 0)->identity.sequence, 1u);
+          auto wrongCounts = reviewReservation;
+          wrongCounts.events = 3;
+          ASSERT_TRUE(conversion->open(wrongCounts, prior, &conversionContext));
+          ASSERT_EQ(conversion->next(wrongCounts), LegacyTintaReadResult::Record);
+          ASSERT_EQ(conversion->next(wrongCounts), LegacyTintaReadResult::Record);
+          EXPECT_EQ(conversion->next(wrongCounts), LegacyTintaReadResult::IoError);
+          EXPECT_FALSE(conversion->completed(wrongCounts));
+          wrongCounts.events = 5;
+          ASSERT_TRUE(conversion->open(wrongCounts, prior, &conversionContext));
+          for (unsigned index = 0; index < 3; ++index) {
+            ASSERT_EQ(conversion->next(wrongCounts), LegacyTintaReadResult::Record);
+          }
+          EXPECT_EQ(conversion->next(wrongCounts), LegacyTintaReadResult::IoError);
+          EXPECT_FALSE(conversion->completed(wrongCounts));
+          ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+          for (unsigned index = 0; index < 3; ++index) {
+            ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
+          }
+          std::string frozenLog;
+          for (const auto& [path, file] : hal.files) {
+            if (path.find("course-review-state-") != std::string::npos && file.size() == 39) frozenLog = path;
+          }
+          ASSERT_FALSE(frozenLog.empty());
+          hal.files[frozenLog][4] ^= 1;
+          EXPECT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::IoError);
+          EXPECT_FALSE(conversion->completed(reviewReservation));
+          hal.files[frozenLog][4] ^= 1;
+        }
+        conversionContext.closePermission = true;
+        EXPECT_FALSE(conversion->open(reviewReservation, prior, &conversionContext));
+        ASSERT_TRUE(conversion->open(reviewReservation, prior, &conversionContext));
+        EXPECT_TRUE(conversion->closeReaders());
+        EXPECT_EQ(hal.files, conversionFiles);
 
         EXPECT_FALSE(parser->isOpen());
         EXPECT_FALSE(installedParser->isOpen());
