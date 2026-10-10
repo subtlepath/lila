@@ -37,7 +37,8 @@ class HalUnboundCoursePackVerification final {
     std::copy(originalPath.begin(), originalPath.end(), path.begin());
     path[originalPath.size()] = 0;
     operating = true;
-    bool valid = closeReaders() && hash(path.data(), selected.request.original.manifest) &&
+    cancelled = false;
+    bool valid = releaseReaders() && hash(path.data(), selected.request.original.manifest) &&
                  validate(path.data(), selected.request.original.manifest, originalLocale) &&
                  hash(ACTIVE_COURSE_PATH, selected.activePack) &&
                  validate(ACTIVE_COURSE_PATH, selected.activePack, activeLocale);
@@ -56,22 +57,22 @@ class HalUnboundCoursePackVerification final {
     }
     if (valid)
       valid = hash(path.data(), selected.request.original.manifest) && hash(ACTIVE_COURSE_PATH, selected.activePack);
-    const bool closed = closeReaders();
+    const bool closed = releaseReaders();
+    ready = valid && closed && guard() && !cancelled;
     operating = false;
-    ready = valid && closed && guard();
     return ready || failure("pack compatibility");
   }
-  bool verified() const {
-    if (!guard()) ready = false;
-    return ready;
+  bool verified(const UnboundCourseMigrationIntent& input) const {
+    if (operating || !ready || input != selected) return false;
+    operating = true;
+    const bool allowed = guard();
+    if (!allowed || cancelled) ready = false;
+    operating = false;
+    return ready && input == selected;
   }
   bool closeReaders() {
-    ready = false;
-    parser.close();
-    source.length = 0;
-    const bool fileClosed = !reader.isOpen() || reader.close();
-    const bool metadataClosed = metadata.closeReaders();
-    return fileClosed && metadataClosed;
+    if (operating) cancelled = true;
+    return releaseReaders();
   }
 
  private:
@@ -106,16 +107,25 @@ class HalUnboundCoursePackVerification final {
   UnboundCourseMigrationIntent selected;
   std::array<char, INVENTORY_PATH_LIMIT + 1> path{};
   std::array<char, 9> originalLocale{}, activeLocale{};
-  bool operating = false;
+  mutable bool operating = false;
+  bool cancelled = false;
   mutable bool ready = false;
-  bool guard() const { return permitted && permitted(context) && admitCompanionHeap(); }
+  bool releaseReaders() {
+    ready = false;
+    parser.close();
+    source.length = 0;
+    const bool fileClosed = !reader.isOpen() || reader.close();
+    const bool metadataClosed = metadata.closeReaders();
+    return fileClosed && metadataClosed;
+  }
+  bool guard() const { return !cancelled && permitted && permitted(context) && !cancelled && admitCompanionHeap(); }
   static bool allowed(void* context) { return static_cast<HalUnboundCoursePackVerification*>(context)->guard(); }
   static void yield() { vTaskDelay(1); }
   static unsigned char lower(unsigned char value) { return value >= 'A' && value <= 'Z' ? value + ('a' - 'A') : value; }
   bool hash(const char* file, const ContentManifest& manifest) {
     uint64_t size = 0, length = 0;
     Digest actual{};
-    if (!closeReaders() || !guard() || metadata.stat(file, size) != FileStatus::Present || size != manifest.length ||
+    if (!releaseReaders() || !guard() || metadata.stat(file, size) != FileStatus::Present || size != manifest.length ||
         !guard() || !Storage.openFileForReadReusing("COMPANION", file, reader))
       return failure("hash open");
     const bool hashed = !reader.isDirectory() && hashInventoryFile(reader, scratch, length, actual, allowed, this);

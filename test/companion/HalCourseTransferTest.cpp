@@ -8397,25 +8397,62 @@ TEST_F(HalCourseTransferTest, UnboundPackPairVerificationChecksBytesAndLeavesGlo
   intent.request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest,
                              declaration.manifest.contentHash};
   intent.activePack = declaration.manifest;
-  bool permitted = true;
-  auto permission = [](void* raw) { return *static_cast<bool*>(raw); };
+  struct PermissionContext {
+    bool permitted = true;
+    bool checking = false;
+    bool closeNext = false;
+    unsigned probes = 0;
+    HalUnboundCoursePackVerification* verifier = nullptr;
+    const UnboundCourseMigrationIntent* intent = nullptr;
+    const std::string* path = nullptr;
+  } permissionContext;
+  auto permission = [](void* raw) {
+    auto& state = *static_cast<PermissionContext*>(raw);
+    if (state.checking && state.verifier) {
+      ++state.probes;
+      EXPECT_FALSE(state.verifier->verified(*state.intent));
+      EXPECT_FALSE(state.verifier->verify(*state.intent, *state.path));
+    }
+    if (state.closeNext && state.verifier) {
+      state.closeNext = false;
+      state.verifier->closeReaders();
+    }
+    return state.permitted;
+  };
   auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
   ASSERT_TRUE(parser);
-  auto verifier = makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, permission, &permitted);
+  auto verifier = makeUniqueNoThrow<HalUnboundCoursePackVerification>(scratch, *parser, permission, &permissionContext);
   ASSERT_TRUE(verifier);
+  permissionContext.verifier = verifier.get();
+  permissionContext.intent = &intent;
+  permissionContext.path = &originalPath;
+  permissionContext.checking = true;
   const auto files = hal.files;
   ASSERT_TRUE(verifier->verify(intent, originalPath));
-  EXPECT_TRUE(verifier->verified());
+  EXPECT_TRUE(verifier->verified(intent));
+  EXPECT_GT(permissionContext.probes, 0u);
+  auto foreign = intent;
+  foreign.request.original.transaction[0] ^= 1;
+  EXPECT_FALSE(verifier->verified(foreign));
+  EXPECT_TRUE(verifier->verified(intent));
+  permissionContext.closeNext = true;
+  EXPECT_FALSE(verifier->verified(intent));
+  EXPECT_FALSE(verifier->verified(intent));
+  ASSERT_TRUE(verifier->verify(intent, originalPath));
+  permissionContext.closeNext = true;
+  EXPECT_FALSE(verifier->verify(intent, originalPath));
+  EXPECT_FALSE(verifier->verified(intent));
+  ASSERT_TRUE(verifier->verify(intent, originalPath));
   EXPECT_FALSE(parser->isOpen());
   EXPECT_EQ(hal.files, files);
   auto corrupt = intent;
   corrupt.activePack.contentHash[0] ^= 1;
   EXPECT_FALSE(verifier->verify(corrupt, originalPath));
-  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(verifier->verified(intent));
   EXPECT_EQ(hal.files, files);
-  permitted = false;
+  permissionContext.permitted = false;
   EXPECT_FALSE(verifier->verify(intent, originalPath));
-  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(verifier->verified(intent));
   EXPECT_EQ(hal.files, files);
 }
 
@@ -8441,7 +8478,7 @@ TEST_F(HalCourseTransferTest, UnboundPackPairVerificationRejectsMalformedOrigina
   ASSERT_TRUE(verifier);
   const auto files = hal.files;
   EXPECT_FALSE(verifier->verify(intent, originalPath));
-  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(verifier->verified(intent));
   EXPECT_FALSE(parser->isOpen());
   EXPECT_EQ(hal.files, files);
 }
@@ -8477,7 +8514,7 @@ TEST_F(HalCourseTransferTest, UnboundPackPairAcceptsCompatibleUpdatedBytesAndRej
   const auto different = hal.files;
   EXPECT_FALSE(verifier->verify(intent, originalPath));
   EXPECT_EQ(hal.files, different);
-  EXPECT_FALSE(verifier->verified());
+  EXPECT_FALSE(verifier->verified(intent));
   EXPECT_FALSE(parser->isOpen());
 }
 

@@ -3940,3 +3940,18 @@ frames remain within 256, with no allocation. Verify with the HAL companion host
 suite. Native parents must freeze intent/owners and hold the operation lease.
 Retired/unresolved identity policy, replay agreement and recoverable native
 migration publication remain unfinished; runtime firmware is unchanged.
+
+The Native unbound pack-pair verifier now requires the exact migration intent
+when retrieving its result. It holds its operation guard across the final
+permission callback and result retrieval. Nested verification/retrieval is
+refused, and an explicit close during a callback cancels the operation; a fresh
+verification is required before a result becomes available again. Internal
+reader cleanup does not count as cancellation. These checks add no allocation
+and retain the shared session workspace. This remains read-only compatibility
+evidence; Native migration publication, replay agreement, and command routing
+are still separate requirements.
+Validation: all 1,996 host tests pass. The ESP32-C3 compile probe for verification
+and scoped result retrieval passes, with every emitted frame at or below 240
+bytes. No runtime command uses this verifier yet; hardware migration acceptance
+remains outstanding. Re-run the host suite with `ctest --test-dir
+.cache/companion-verification/host --output-on-failure`.
