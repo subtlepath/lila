@@ -698,3 +698,61 @@ TEST(TintaLegacyReadingMapping, RetainsOriginalIdentityAndDistinguishesMissingAn
     EXPECT_EQ(result.installedKey, 456u);
   }
 }
+
+TEST(TintaLegacyReadingMapping, EveryOriginalAndInstalledReadFailureWithholdsEvidenceAndAllowsCleanRetry) {
+  namespace pk = tinta::core::pack;
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  class Source final : public pk::PackSource {
+   public:
+    explicit Source(const std::vector<uint8_t>& bytes) : bytes(bytes) {}
+    uint32_t size() const override { return bytes.size(); }
+    bool read(uint32_t offset, void* output, uint32_t length) override {
+      if (++reads == failRead || offset > bytes.size() || length > bytes.size() - offset) return false;
+      std::memcpy(output, bytes.data() + offset, length);
+      return true;
+    }
+    const std::vector<uint8_t>& bytes;
+    uint32_t reads = 0, failRead = 0;
+  } oldSource(bytes), newSource(bytes);
+  pk::Pack original, installed;
+  ASSERT_EQ(original.open(oldSource), pk::PackStatus::Ok);
+  ASSERT_EQ(installed.open(newSource), pk::PackStatus::Ok);
+  uint32_t key = 0, identity = 0;
+  bool found = false;
+  for (uint32_t index = 0; index < original.count(pk::Section::Stor); ++index) {
+    pk::Story story;
+    ASSERT_TRUE(original.story(index, story));
+    ASSERT_TRUE(tintaLegacyStoryKey(original, story, key));
+    if (resolveTintaLegacyStoryKey(original, key, identity) == LegacyStoryIdentityResult::Matched) {
+      found = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(found);
+  oldSource.reads = newSource.reads = 0;
+  TintaLegacyReadingMapping result;
+  ASSERT_EQ(mapTintaLegacyReadingKey(original, installed, key, result), LegacyReadingMappingResult::Mapped);
+  const auto oldReads = oldSource.reads, newReads = newSource.reads;
+  ASSERT_GT(oldReads, 0u);
+  ASSERT_GT(newReads, 0u);
+  for (unsigned side = 0; side < 2; ++side) {
+    for (uint32_t failure = 1; failure <= (side ? newReads : oldReads); ++failure) {
+      SCOPED_TRACE(::testing::Message() << "source=" << side << " read=" << failure);
+      oldSource.reads = newSource.reads = 0;
+      oldSource.failRead = side ? 0 : failure;
+      newSource.failRead = side ? failure : 0;
+      result = {123, 456};
+      EXPECT_EQ(mapTintaLegacyReadingKey(original, installed, key, result), LegacyReadingMappingResult::IoError);
+      EXPECT_EQ(result.identity, 123u);
+      EXPECT_EQ(result.installedKey, 456u);
+      oldSource.failRead = newSource.failRead = 0;
+      ASSERT_EQ(mapTintaLegacyReadingKey(original, installed, key, result), LegacyReadingMappingResult::Mapped);
+      EXPECT_EQ(result.identity, identity);
+      EXPECT_EQ(result.installedKey, key);
+    }
+  }
+  EXPECT_EQ(original.arenaPeak(), 0u);
+  EXPECT_EQ(installed.arenaPeak(), 0u);
+}

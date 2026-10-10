@@ -3873,3 +3873,13 @@ keys. The C3 mapping frame is 32 bytes and all emitted frames are within 256
 Native hash-bound pack composition, guarded sources, retired-reading policy,
 authoritative replay agreement and recoverable learner publication remain
 unfinished; runtime firmware is unchanged.
+
+Completed-reading mapping now has exhaustive source-read fault coverage across
+both original identity resolution and installed-key/reverse-ambiguity resolution.
+Every injected read failure returns I/O error without exposing partial identity
+or key evidence, and a clean retry succeeds on the same parsers. Neither parser
+uses its string arena during these operations. All 1,995 host tests pass. Verify
+with `TintaLegacyReadingMapping.EveryOriginalAndInstalledReadFailureWithholdsEvidenceAndAllowsCleanRetry`
+in the companion Tinta host suite. Production code is unchanged, so the existing
+C3 stack proof and firmware images remain applicable. Native pack binding,
+retirement policy, replay agreement and recoverable migration remain unfinished.
