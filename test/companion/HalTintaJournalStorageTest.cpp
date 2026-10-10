@@ -32,6 +32,7 @@
 #include "HalTintaAuthorityRetention.h"
 #include "HalTintaDerivedJournalProof.h"
 #include "HalTintaIncrementalRecovery.h"
+#include "HalTintaJournalReadOnlyStorage.h"
 #include "HalTintaJournalStorage.h"
 #include "HalTintaLegacyAdmission.h"
 #include "HalTintaMigrationAdmissionStore.h"
@@ -3964,4 +3965,67 @@ TEST(HalTintaJournalStorageTest, SdKnowledgeSnapshotFiltersParentsAndRejectsOutO
   ASSERT_TRUE(snapshot->read(1, output));
   EXPECT_EQ(output, secondHead);
   ASSERT_TRUE(audit.endPreferenceKnowledge());
+}
+
+TEST(HalTintaJournalStorageTest, ReadOnlyInspectionPreservesCompletePartialAndMissingJournals) {
+  auto& state = inventory_hal_test::state;
+  for (const auto location :
+       {TintaJournalLocation::Active, TintaJournalLocation::MigrationCandidate, TintaJournalLocation::Backup,
+        TintaJournalLocation::MergeCandidate, TintaJournalLocation::MergeBackup}) {
+    for (unsigned fault = 0; fault < 6; ++fault) {
+      state = {};
+      state.enumerateFileMap = true;
+      ASSERT_TRUE(Storage.ensureDirectoryExists(TRANSFER_DIRECTORY));
+      const auto* paths = tintaJournalPaths(location);
+      std::array<uint8_t, 1024> scratch{};
+      TintaBody body;
+      body.kind = EventKind::Star;
+      body.course.fill(7);
+      body.uid = 1;
+      std::array<uint8_t, MAX_TINTA_BODY_SIZE> bytes{};
+      const auto length = encodeTintaBody(body, bytes);
+      SyncEvent event;
+      event.identity.origin.fill(1);
+      event.identity.epoch = event.identity.sequence = 1;
+      event.storageGeneration.fill(2);
+      event.resource.fill(3);
+      event.kind = EventKind::Star;
+      if (fault != 4) {
+        HalTintaJournalStorage writable(location);
+        TintaJournal journal(writable, scratch);
+        ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+        ASSERT_TRUE(writable.digest(std::span(bytes).first(length), event.bodyHash));
+        ASSERT_EQ(journal.append(event, std::span(bytes).first(length)), TintaJournalResult::Ok);
+      }
+      if (fault == 1) state.files[paths->events].push_back(42);
+      if (fault == 2) {
+        state.files[paths->events].clear();
+        state.files.erase(paths->headerA);
+        state.files.erase(paths->headerB);
+      }
+      if (fault == 3) state.files[paths->events][30] ^= 1;
+      bool permitted = fault != 5;
+      const auto files = state.files;
+      const auto directoryCount = state.directories.size();
+      HalTintaJournalReadOnlyStorage readOnly(
+          location, [](void* context) { return *static_cast<bool*>(context); }, &permitted);
+      TintaJournal journal(readOnly, scratch);
+      if (fault == 0) {
+        ASSERT_EQ(journal.open(), TintaJournalResult::Ok);
+        ASSERT_EQ(journal.read(0), TintaJournalResult::Ok);
+        EXPECT_EQ(journal.event().identity, event.identity);
+        EXPECT_FALSE(readOnly.write(0, scratch));
+        EXPECT_FALSE(readOnly.writeHeader(0, std::span(scratch).first(64)));
+        EXPECT_FALSE(readOnly.truncate(0));
+        event.identity.sequence = 2;
+        EXPECT_EQ(journal.append(event, std::span(bytes).first(length)), TintaJournalResult::IoError);
+      } else {
+        EXPECT_NE(journal.open(), TintaJournalResult::Ok);
+        EXPECT_FALSE(journal.available());
+      }
+      EXPECT_TRUE(readOnly.close());
+      EXPECT_EQ(state.files, files);
+      EXPECT_EQ(state.directories.size(), directoryCount);
+    }
+  }
 }
