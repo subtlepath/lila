@@ -91,6 +91,7 @@
 #include "lib/hal/HalUnboundCourseReviewReservationStore.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "lib/hal/HalUnboundCourseSessionInspection.h"
+#include "lib/hal/HalUnboundCourseStarReader.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
 void log(const char*, ...) {}
@@ -9120,6 +9121,14 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     encoded.resize(tinta::core::Profile::kEncodedSize);
     profile.encode(encoded.data());
     if (fault == 0) {
+      auto& stars = hal.files["/tinta/starred.bin"];
+      stars.resize(20, 0);
+      std::memcpy(stars.data(), "TMK1", 4);
+      for (unsigned offset : {4u, 12u}) {
+        binary_record::putU32(stars.data() + offset, reviewUid);
+        stars[offset + 4] = 1;
+        binary_record::putU16(stars.data() + offset + 6, uint16_t(binary_record::crc32(stars.data() + offset, 6)));
+      }
       tinta::core::pack::Story story;
       ASSERT_TRUE(parser->story(0, story));
       uint32_t key = 0;
@@ -9131,7 +9140,10 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       marks[8] = 1;
       binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
     }
-    if (fault == 7) hal.files["/tinta/read.bin"] = {'T', 'M', 'K', '1'};
+    if (fault == 7) {
+      hal.files["/tinta/read.bin"] = {'T', 'M', 'K', '1'};
+      hal.files["/tinta/starred.bin"] = {'T', 'M', 'K', '1'};
+    }
     if (fault == 8) {
       auto& marks = hal.files["/tinta/read.bin"];
       marks.resize(12, 0);
@@ -9370,6 +9382,85 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         EXPECT_EQ(report->readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(report->readings.originalMissing, fault == 8 ? 1 : 0);
         EXPECT_TRUE(report->learner.profile.present);
+        {
+          struct StarPermission {
+            bool permitted = true, checking = false, closeNext = false;
+            unsigned probes = 0;
+            HalUnboundCourseStarReader* owner = nullptr;
+            const UnboundCourseMigrationIntent* intent = nullptr;
+          } starPermission;
+          auto stars = makeUniqueNoThrow<HalUnboundCourseStarReader>(
+              *migration, *reviewed, scratch,
+              [](void* raw) {
+                auto& state = *static_cast<StarPermission*>(raw);
+                if (state.checking) {
+                  ++state.probes;
+                  EXPECT_FALSE(state.owner->open(*state.intent));
+                  UnboundCourseStarEntry nested{123, 77};
+                  EXPECT_EQ(state.owner->next(*state.intent, nested), UnboundCourseStarReadResult::Unavailable);
+                  EXPECT_EQ(nested.uid, 123u);
+                  EXPECT_EQ(nested.index, 77);
+                }
+                if (state.closeNext) {
+                  state.closeNext = false;
+                  EXPECT_TRUE(state.owner->closeReaders());
+                }
+                return state.permitted;
+              },
+              &starPermission);
+          ASSERT_TRUE(stars);
+          starPermission.owner = stars.get();
+          starPermission.intent = &intent;
+          starPermission.checking = true;
+          const auto starFiles = hal.files;
+          ASSERT_TRUE(stars->open(intent));
+          UnboundCourseStarEntry entry{123, 77};
+          EXPECT_EQ(stars->next(foreign, entry), UnboundCourseStarReadResult::Unavailable);
+          EXPECT_EQ(entry.uid, 123u);
+          if (fault == 0) {
+            ASSERT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Record);
+            EXPECT_EQ(entry.uid, reviewUid);
+            EXPECT_EQ(entry.index, 0);
+          }
+          EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::End);
+          EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::End);
+          EXPECT_EQ(reviewed->borrowed(), nullptr);
+          EXPECT_GT(starPermission.probes, 0u);
+          ASSERT_TRUE(stars->open(intent));
+          entry = {123, 77};
+          starPermission.permitted = false;
+          EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Unavailable);
+          EXPECT_EQ(entry.uid, 123u);
+          EXPECT_EQ(entry.index, 77);
+          starPermission.permitted = true;
+          EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Unavailable);
+          ASSERT_TRUE(stars->open(intent));
+          starPermission.closeNext = true;
+          EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Unavailable);
+          EXPECT_EQ(entry.uid, 123u);
+          EXPECT_EQ(entry.index, 77);
+          EXPECT_EQ(reviewed->borrowed(), nullptr);
+          ASSERT_TRUE(stars->open(intent));
+          if (fault == 0) {
+            ASSERT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Record);
+            std::string frozenStars;
+            for (const auto& [path, content] : hal.files) {
+              if (path.find("course-review-state-") != std::string::npos && content.size() == 20 &&
+                  std::memcmp(content.data(), "TMK1", 4) == 0)
+                frozenStars = path;
+            }
+            ASSERT_FALSE(frozenStars.empty());
+            hal.files[frozenStars].back() ^= 1;
+            entry = {123, 77};
+            EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::IoError);
+            EXPECT_EQ(entry.uid, 123u);
+            EXPECT_EQ(entry.index, 77);
+            hal.files[frozenStars].back() ^= 1;
+            EXPECT_EQ(stars->next(intent, entry), UnboundCourseStarReadResult::Unavailable);
+          }
+          EXPECT_TRUE(stars->closeReaders());
+          EXPECT_EQ(hal.files, starFiles);
+        }
         struct StreamPermission {
           bool permitted = true, checking = false, closeNext = false;
           unsigned probes = 0;

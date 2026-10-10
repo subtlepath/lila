@@ -4195,3 +4195,22 @@ the frozen membership rather than infer it from review flags. The immutable mark
 reader yields every 32 records, including duplicate adds and absent-key removals,
 and rechecks permission before reading after each yield. Cancellation withholds
 membership until a fresh complete scan; it never compacts the source log.
+
+The scoped frozen-star reader now exposes retained original-course UIDs in native
+mark order, including retired UIDs, independently of item flags. Duplicate adds
+remain a single membership entry. Missing logs and present empty logs both yield
+no entries while their distinct presence stays bound to the inspected cohort.
+The parent lends an exclusive reviewed-file reader and workspace; the reader has
+no internal allocation and must live off stack. It can use the unused workspace
+tail while a separate review reader retains its prefix, provided the parent does
+not operate either borrowed owner concurrently.
+
+Entries remain provisional until End reopens and hashes the frozen roster-bound
+file. Wrong scope, permission loss, callback cancellation, count mismatch or file
+damage withholds completion; failed calls preserve the caller's output. Callback
+cancellation defers destruction of the active mark view until the operation
+returns. Native tests exercise retained, missing and present empty logs, duplicate
+membership, reentrant calls, cancellation and damage after an entry was exposed.
+This reader supplies frozen membership evidence only. Migration still needs
+durable identities for mark events, replay reconciliation, provenance/conflict
+handling and recoverable publication before runtime activation.
