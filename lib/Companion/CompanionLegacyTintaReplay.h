@@ -26,6 +26,7 @@ class LegacyTintaReplay final {
     this->configuration = configuration;
     operating = true;
     cancelled = hasUndo = false;
+    progress = undoProgress = {};
     ready = guard() && cursor.begin(selected.first(), selected.records) && guard();
     operating = false;
     return ready;
@@ -66,6 +67,12 @@ class LegacyTintaReplay final {
         undoAfter = after;
         undoTotals = priorTotals;
         undoDay = entry.studyDay;
+        undoProgress = progress;
+        if (progress.day != entry.studyDay) progress = {entry.studyDay, 0, 0};
+        if (counts.newItem) progress.newItems = increment(progress.newItems);
+        if (counts.review) progress.reviews = increment(progress.reviews);
+      } else if (entry.operation == LegacyTintaOperation::Undo) {
+        progress = undoProgress;
       }
       hasUndo = entry.operation == LegacyTintaOperation::Review;
       cursor = proposed;
@@ -92,6 +99,19 @@ class LegacyTintaReplay final {
     operating = false;
     return valid;
   }
+  bool matchesProgressHeader(const UnboundCourseReviewReservation& input, const TintaReplayStore& candidate,
+                             const tinta::core::ProgressHeader& header) const {
+    if (!at(input, candidate, header.journalCount)) return false;
+    operating = true;
+    if (!guard()) ready = false;
+    const bool valid =
+        ready && input == selected && header.statDay == progress.day && header.statNew == progress.newItems &&
+        header.statReviews == progress.reviews && header.undoValid == hasUndo &&
+        (!hasUndo || (header.undoBefore == undoBefore && header.undoStatDay == undoProgress.day &&
+                      header.undoStatNew == undoProgress.newItems && header.undoStatReviews == undoProgress.reviews));
+    operating = false;
+    return valid;
+  }
   void close() {
     if (operating) cancelled = true;
     ready = false;
@@ -111,6 +131,10 @@ class LegacyTintaReplay final {
   tinta::core::ItemState before, after, undoBefore, undoAfter;
   TintaReplayDay totals, priorTotals, undoTotals;
   TintaReplayCounts counts;
+  struct ProgressCounters {
+    uint16_t day = 0, newItems = 0, reviews = 0;
+  } progress, undoProgress;
+  static uint16_t increment(uint16_t value) { return value == UINT16_MAX ? value : static_cast<uint16_t>(value + 1); }
   uint16_t undoDay = 0;
   mutable bool operating = false, ready = false;
   bool cancelled = false, hasUndo = false;

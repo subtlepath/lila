@@ -9108,7 +9108,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
   const auto reviewUid = parser->uidAt(0);
-  for (unsigned fault = 0; fault < 12; ++fault) {
+  for (unsigned fault = 0; fault < 17; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9143,6 +9143,13 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     if (fault >= 9) {
       auto& items = hal.files["/tinta/items.bin"];
       items.resize(1040, 0);
+      const auto prior = tinta::core::ItemState::fresh(reviewUid);
+      auto snapshot = prior;
+      const bool graded = fault == 10 || fault >= 12;
+      if (graded) {
+        tinta::core::Fsrs scheduler;
+        tinta::core::applyReview(scheduler, snapshot, tinta::core::Grade::Good, 0);
+      }
       for (unsigned slot = 0; slot < 2; ++slot) {
         auto* header = items.data() + slot * 512;
         std::memcpy(header, "TIS1", 4);
@@ -9151,15 +9158,21 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         binary_record::putU32(header + 8, slot + 1);
         binary_record::putU32(header + 12, 1);
         binary_record::putU32(header + 16, 1);
+        if (graded) {
+          binary_record::putU16(header + 22, fault == 12 ? 0 : 1);
+          binary_record::putU16(header + 24, fault == 16 ? 1 : 0);
+          binary_record::putU16(header + 26, fault == 15 ? 1 : 3);
+          snapshot.encode(header + 32);
+          auto undo = prior;
+          if (fault == 13) undo.flags = tinta::core::item_flag::kStarred;
+          undo.encode(header + 52);
+          binary_record::putU16(header + 68, fault == 14 ? 7 : 0);
+        }
         binary_record::putU32(header + 76, binary_record::crc32(header, 76));
       }
-      auto snapshot = tinta::core::ItemState::fresh(reviewUid);
-      if (fault == 10) {
-        tinta::core::Fsrs scheduler;
-        tinta::core::applyReview(scheduler, snapshot, tinta::core::Grade::Good, 0);
-      }
       if (fault == 11) snapshot = tinta::core::ItemState::fresh(UINT32_MAX);
-      snapshot.encode(items.data() + 1024);
+      // Graded snapshots retain a torn on-disk row; the header supplies its committed state.
+      (graded ? prior : snapshot).encode(items.data() + 1024);
       auto& log = hal.files["/tinta/reviews.log"];
       log.resize(39, 0);
       binary_record::putU32(log.data(), reviewUid);

@@ -15,7 +15,8 @@ struct UnboundCourseReplayItemReport {
 // Parent freezes replay at the committed boundary and lends exclusive reviewed
 // file/workspace owners. A paused review stream may retain only a disjoint prefix
 // of the session workspace. No source stream operations run during inspection.
-// The report covers items, not undo metadata, counters, marks or publication.
+// Checks item state, undo before-images and native progress counters; marks and
+// publication remain separate checks.
 class HalUnboundCourseReplayItemInspection final {
  public:
   using Permission = bool (*)(void*);
@@ -61,7 +62,8 @@ class HalUnboundCourseReplayItemInspection final {
       auto* file = reviewed.borrowed();
       if (file) view.emplace(*file);
       valid = file && view->begin(scratch, allowed, this) && view->header() &&
-              view->header()->journalCount == result.committedRecords;
+              view->header()->journalCount == result.committedRecords &&
+              replay.matchesProgressHeader(selected, store, *view->header());
     }
     if (valid) valid = compareItems();
     const bool closed = releaseReaders();

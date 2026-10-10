@@ -4166,6 +4166,23 @@ fixture pauses review streaming and lends the unused workspace tail to a separat
 reviewed-file reader, preserving the retained review buffer and using no second
 session workspace. SD rescans avoid a per-item heap table; this trades additional
 I/O for bounded RAM and is not a performance improvement. The reusable inspector
-has no internal allocation. Undo metadata, progress counters, other learner files,
-archived journal coverage and recoverable runtime publication remain separate
-required checks.
+has no internal allocation. Other learner files, archived journal coverage and
+recoverable runtime publication remain separate required checks.
+
+
+Frozen progress comparison now also requires the replayed native daily counters,
+undo availability, full undo item before-image and saved undo counters to match
+the committed header. Counter reconstruction follows native day changes and
+saturating increments; undo restores the previous counter day rather than the
+undo operation's day. Pending item state is read from the validated header even
+when the on-disk row is still torn. Persistence sequence numbers and physical
+slot placement are not learner counters; existing item-reference validation and
+complete item-set comparison cover the referenced slots.
+
+Independent host checks compare these fields with real `ProgressStore` headers
+after every review, undo and flag record. The Native fixture includes a committed
+pending record and rejects separately corrupted current counters, undo flags,
+undo before-images and saved undo day values while leaving frozen files intact.
+The reusable replay owner retains fixed counter fields and adds no allocation.
+This strengthens the committed-prefix evidence; it does not authorize publication
+or resolve archived history, other learner state or runtime migration recovery.

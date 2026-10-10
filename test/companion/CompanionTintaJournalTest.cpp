@@ -5341,6 +5341,25 @@ TEST(CompanionTintaJournal, LegacyReplayMatchesNativeProgressAndRestoresUndoneDa
     tinta::core::ItemState prior;
     ASSERT_TRUE(replay.apply(reservation, index, entry, prior));
     EXPECT_EQ(prior, expectedPrior);
+    const auto& items = nativeFiles.files["items.bin"];
+    tinta::core::ProgressHeader first, second;
+    ASSERT_TRUE(tinta::core::ProgressHeader::decode(items.data(), first));
+    ASSERT_TRUE(tinta::core::ProgressHeader::decode(items.data() + 512, second));
+    auto header = first.seq > second.seq ? first : second;
+    ASSERT_TRUE(replay.matchesProgressHeader(reservation, candidate, header));
+    ++header.statNew;
+    EXPECT_FALSE(replay.matchesProgressHeader(reservation, candidate, header));
+    --header.statNew;
+    header.undoValid = !header.undoValid;
+    EXPECT_FALSE(replay.matchesProgressHeader(reservation, candidate, header));
+    header.undoValid = !header.undoValid;
+    if (header.undoValid) {
+      ++header.undoStatReviews;
+      EXPECT_FALSE(replay.matchesProgressHeader(reservation, candidate, header));
+      --header.undoStatReviews;
+      header.undoBefore.flags ^= tinta::core::item_flag::kStarred;
+      EXPECT_FALSE(replay.matchesProgressHeader(reservation, candidate, header));
+    }
     for (uint32_t at = 0; at < 2; ++at) {
       tinta::core::ItemState expected, actual;
       ASSERT_TRUE(native.load(at, expected));
