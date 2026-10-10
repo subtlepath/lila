@@ -37,6 +37,38 @@ jobs:
         run: >-
           xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-macOS
           -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+      - name: Run native macOS UI tests
+        run: >-
+          xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-macOS
+          -destination 'platform=macOS' test
+      - name: Select an available iPhone simulator
+        run: |
+          xcrun simctl list devices available --json > "$RUNNER_TEMP/lila-simulators.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          devices = json.loads((Path(os.environ["RUNNER_TEMP"]) / "lila-simulators.json").read_text())["devices"]
+          candidates = []
+          for runtime, entries in devices.items():
+              if ".iOS-" not in runtime:
+                  continue
+              version = tuple(int(part) for part in runtime.split(".iOS-", 1)[1].split("-"))
+              for device in entries:
+                  if device.get("isAvailable") and device["name"].startswith("iPhone"):
+                      candidates.append((version, device["name"], device["udid"]))
+          if not candidates:
+              raise SystemExit("No available iPhone simulator for companion UI tests")
+          simulator_id = max(candidates)[2]
+          with open(os.environ["GITHUB_ENV"], "a") as environment:
+              environment.write(f"LILA_IOS_SIMULATOR_ID={simulator_id}\n")
+          PY
+      - name: Run iOS simulator UI tests
+        run: >-
+          xcodebuild -project apple/LilaCompanion.xcodeproj -scheme LilaCompanion-iOS
+          -destination "platform=iOS Simulator,id=$LILA_IOS_SIMULATOR_ID"
+          CODE_SIGNING_ALLOWED=NO test
 
   clang-format:
     runs-on: ubuntu-latest
