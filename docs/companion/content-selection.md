@@ -3816,3 +3816,14 @@ stack and adds no internal allocation. Verify with the HAL companion host suite.
 Runtime firmware is unchanged. Original-payload/source proof, live cohort and
 installed-pack correspondence, authoritative replay and native migration recovery
 remain required before binding or moving learner state.
+
+Combined learner inspection now proves its original source length/hash before
+and after the cohort checks and opens/fully validates its parser from that same
+source. Previously opened unrelated metadata cannot substitute for original
+bytes. The SHA context remains in the off-stack owner and hashing reuses the
+shared workspace, with no new internal allocation. All 1,990 host tests pass,
+including two added wrong-hash/changed-source cases and callback reentry. The C3
+entry is 80 bytes, hashing 96 and validation 64; all emitted frames remain within
+256 (largest 240). Verify with the HAL companion host suite. Runtime firmware
+remains unchanged. Explicit original confirmation, live cohort/installed-pack
+mapping, authoritative replay and native migration recovery remain unfinished.

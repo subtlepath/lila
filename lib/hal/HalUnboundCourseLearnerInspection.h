@@ -1,5 +1,8 @@
 #pragma once
 
+#include <mbedtls/sha256.h>
+
+#include "CompanionCourseValidation.h"
 #include "HalCourseBaselineReviewBackup.h"
 #include "HalUnboundCourseDayInspection.h"
 #include "HalUnboundCourseMarkInspection.h"
@@ -15,8 +18,8 @@ struct UnboundCourseLearnerReport {
   UnboundCourseDayReport days;
   UnboundCourseSessionReport session;
 };
-// Admit off stack. Caller validates the immutable original pack/source, excludes
-// writers and lends exclusive reviewed-file/backup owners with the same workspace.
+// Admit off stack. Caller confirms the original payload, excludes writers and
+// lends exclusive parser/reviewed-file/backup owners with the same workspace.
 class HalUnboundCourseLearnerInspection final {
  public:
   using Permission = bool (*)(void*);
@@ -34,11 +37,11 @@ class HalUnboundCourseLearnerInspection final {
   HalUnboundCourseLearnerInspection(const HalUnboundCourseLearnerInspection&) = delete;
   HalUnboundCourseLearnerInspection& operator=(const HalUnboundCourseLearnerInspection&) = delete;
   bool inspect(const UnboundCourseMigrationRequest& request, tinta::core::pack::PackSource& source,
-               const tinta::core::pack::Pack& pack) {
+               tinta::core::pack::Pack& pack) {
     if (operating) return false;
     ready = false;
     if (reader == Identity{} || generation == Identity{} || request.original.generation != generation ||
-        !validCourseBaselineImportRequest(request.original) || !pack.isOpen() ||
+        !validCourseBaselineImportRequest(request.original) ||
         scratch.size() < unbound_course_detail::DAY_COVERAGE_BYTES ||
         course_baseline_detail::overlaps(scratch.data(), scratch.size(), this, sizeof(*this)) ||
         course_baseline_detail::overlaps(scratch.data(), scratch.size(), &request, sizeof(request)) ||
@@ -50,9 +53,10 @@ class HalUnboundCourseLearnerInspection final {
     selected = request;
     result = {};
     operating = true;
-    const bool valid = guard() && closeReaders() && verifyBackups() && inspectItems(source) && inspectReviews(source) &&
-                       inspectProfile(pack) && inspectMarks(source, pack, false) && inspectMarks(source, pack, true) &&
-                       inspectDays() && inspectSession(source, pack) && verifyBackups();
+    const bool valid = guard() && closeReaders() && verifySource(source) && validateSource(source, pack) &&
+                       verifyBackups() && inspectItems(source) && inspectReviews(source) && inspectProfile(pack) &&
+                       inspectMarks(source, pack, false) && inspectMarks(source, pack, true) && inspectDays() &&
+                       inspectSession(source, pack) && verifyBackups() && verifySource(source);
     const bool closed = closeReaders();
     ready = valid && closed && guard();
     operating = false;
@@ -79,6 +83,7 @@ class HalUnboundCourseLearnerInspection final {
   void* context;
   UnboundCourseMigrationRequest selected;
   UnboundCourseLearnerReport result;
+  mbedtls_sha256_context digest;
   bool operating = false;
   mutable bool ready = false;
   bool guard() const { return permitted && permitted(context) && admitCompanionHeap(); }
@@ -87,6 +92,30 @@ class HalUnboundCourseLearnerInspection final {
     ready = false;
     LOG_ERR("COMPANION", "Unbound learner cohort inspection refused");
     return false;
+  }
+  [[gnu::noinline]] bool verifySource(tinta::core::pack::PackSource& source) {
+    const auto length = source.size();
+    if (!guard() || length != selected.original.manifest.length) return false;
+    mbedtls_sha256_init(&digest);
+    int status = mbedtls_sha256_starts(&digest, 0);
+    for (uint32_t offset = 0; status == 0 && offset < length;) {
+      const auto count = static_cast<uint32_t>(std::min<size_t>(scratch.size(), length - offset));
+      if (!guard() || !source.read(offset, scratch.data(), count)) {
+        status = -1;
+        break;
+      }
+      status = mbedtls_sha256_update(&digest, scratch.data(), count);
+      offset += count;
+      vTaskDelay(1);
+    }
+    Digest actual{};
+    if (status == 0) status = mbedtls_sha256_finish(&digest, actual.data());
+    mbedtls_sha256_free(&digest);
+    return status == 0 && source.size() == length && actual == selected.original.manifest.contentHash && guard();
+  }
+  [[gnu::noinline]] bool validateSource(tinta::core::pack::PackSource& source, tinta::core::pack::Pack& pack) {
+    return guard() && validateCourseCandidate(pack, source, scratch) == CourseValidationResult::Ok &&
+           pack.formatMajor() == selected.original.manifest.formatVersion && guard();
   }
   [[gnu::noinline]] bool verifyBackups() {
     return guard() && backups.verifyStoredUnbound(selected.original.reviewHash, reader, generation,

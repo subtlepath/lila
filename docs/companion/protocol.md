@@ -1167,3 +1167,12 @@ have moved during owned migration, so historical inspection uses frozen copies.
 Original-payload validation/confirmation, live cohort correspondence, installed
 pack mapping, replay provenance and native recovery remain separate authority
 requirements. Diagnostic copies are verified as backup evidence, not merged.
+
+Combined learner inspection now validates the original parser directly from its
+supplied source and verifies that source's length and SHA-256 against the request
+both before and after inspecting the cohort. A previously opened parser is not
+proof of the source's identity. Full format/content/identity validation and the
+manifest format-major check precede learner reference checks. Hashing reuses the
+session workspace; its SHA context lives in the off-stack inspection owner and
+is initialized/freed for each pass. Explicit original-payload confirmation and
+live/installed-state correspondence remain separate migration requirements.

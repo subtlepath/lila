@@ -9057,7 +9057,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
-  for (unsigned fault = 0; fault < 5; ++fault) {
+  for (unsigned fault = 0; fault < 7; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9112,6 +9112,8 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       ASSERT_TRUE(damaged);
     }
     if (fault == 4) hal.files["/tinta/profile.bin"] = {9};
+    if (fault == 5) request.original.manifest.contentHash[0] ^= 1;
+    if (fault == 6) hal.files[ACTIVE_COURSE_PATH].back() ^= 1;
     HalInventoryIndexStorage packStorage;
     ASSERT_TRUE(packStorage.open(ACTIVE_COURSE_PATH));
     StoredCourseSource original(packStorage);
@@ -9122,7 +9124,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       HalUnboundCourseLearnerInspection* owner = nullptr;
       const UnboundCourseMigrationRequest* request = nullptr;
       tinta::core::pack::PackSource* source = nullptr;
-      const tinta::core::pack::Pack* pack = nullptr;
+      tinta::core::pack::Pack* pack = nullptr;
     } permission;
     permission.request = &request;
     permission.source = &original;
