@@ -324,7 +324,7 @@ and S3; command tests and source parsing do not satisfy this acceptance section.
 ## Current portable software evidence
 
 The full CompanionKit Linux suite passes 556 tests on Swift 6.0.3. The complete
-configured CTest suite passes 2,070 entries. These cover the selected portable implementations,
+configured CTest suite passes 2,058 entries. These cover the selected portable implementations,
 including inventory, persistence, migration, synchronization, transfers, removal,
 export codecs and shared fixtures, source verification, encrypted imports,
 restart/fallback, in-flight deletion, immutable filenames, cancellation, and
@@ -347,31 +347,29 @@ serialization or physical SD failure behavior.
 
 ### Current firmware images
 
-The dictionary-enabled implementation passes all five firmware builds and image
-validation. These images include independent removal capability bits 13 and 14,
-complete-path admission, checked settings publication, dictionary cohort startup
-recovery and inventory refresh, alongside the earlier export and font-removal flows.
+The selected profiles (`default` for X3, `x4pro`, and `x4c`) pass their final
+firmware builds. These images include course context/removal, compatible-pack
+history reconciliation, candidate authority checks before replacement, dictionary
+completion journaling, and strict board-tag validation in the companion SD flasher.
 Board/chip identity, segment bounds, checksum, SHA trailer and OTA-size checks pass
-through `scripts/build_companion_release_manifest.py`. Saved proof records and
-images are under `/tmp/lila-dictionary-final-images`.
+using `validate_firmware` from `scripts/build_companion_release_manifest.py`.
+Image copies and proof records are under
+`.cache/companion-verification/xteink-final-images/` and
+`.cache/companion-verification/xteink-final-images.json`.
 
-The new course-removal codec, participant and storage adapter are host-tested but
-are not referenced by these firmware images; they do not enable course removal.
-The initial X4 Pro attempt stopped during SDK package copying with an operating
-system file-table error. Its successful retry is the result shown below.
+The image length below is the actual `firmware.bin` file length, including its
+image padding and SHA trailer. It differs from the linker's reported flash usage.
 
 | Profile | Static link RAM (bytes) | Image (bytes) | OTA headroom (bytes) | SHA-256 |
 | --- | ---: | ---: | ---: | --- |
-| default | 64984 | 6465632 | 87968 | `11e7ab08facba7532d5b351e93a28d9f5ba18078dc53f6239e1c47f802c64a7e` |
-| sticky | 75212 | 5772528 | 781072 | `a257ffcca7a81038e271060543b5dbbbc457ef112dee1d2e86592d6831627c83` |
-| x4pro | 108884 | 6502976 | 50624 | `d44032c592fe97eced8a3b5468adbbae01d86c7b57a305bc98f7bb08290ee28a` |
-| x4c | 108740 | 6474416 | 79184 | `df6ca7dfac68a02b41a6d3c37c49039a82afdb543dc66ad6bd707e0e3ae6a96c` |
-| papermono | 125084 | 5886976 | 666624 | `1163c7a3284b1b5d7d6a90c0b13f09b7e50d76ec4d97de8230fb16ce5ae8196f` |
+| default | 64992 | 6497648 | 55952 | `2eb6096bfdd0a5d4c2e6dccd616a2b47e157f8cd4e6b65a13a5f2a8b5d9879e9` |
+| x4pro | 108876 | 6529056 | 24544 | `62c89d4ad4189da93a330ba8a4316e732c76343afdbf12d77590d8b23c7666e3` |
+| x4c | 108740 | 6498800 | 54800 | `fce9429480a91aefcd0be6c0357c52993e4675c4fa1bb79df56df07c8e9e48bb` |
 
 Static link RAM is not runtime free heap. Firmware-image acceptance does not prove
 radio operation, learner-history preservation, SD power-loss recovery, or the
-required repeated-session memory acceptance. Sticky excludes Tinta, so its build
-is not evidence of course installation or learner-state behavior.
+required repeated-session memory acceptance. X3 uses the combined X3/X4 image
+and its `x4` board tag. Physical acceptance remains pending on all three devices.
 
 ### Compiler frame checks
 

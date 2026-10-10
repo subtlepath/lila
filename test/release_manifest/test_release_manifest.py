@@ -53,7 +53,7 @@ class ManifestTests(unittest.TestCase):
     def test_complete_manifest_hashes_and_compatibility(self):
         result = self.build()
         self.assertEqual(result, self.build())
-        self.assertEqual(len(result["assets"]), 6)
+        self.assertEqual(len(result["assets"]), 4)
         for asset in result["assets"]:
             data = (self.directory / asset["name"]).read_bytes()
             self.assertEqual(asset["length"], len(data))

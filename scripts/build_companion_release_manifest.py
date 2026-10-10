@@ -15,10 +15,8 @@ ROOT = Path(__file__).resolve().parent.parent
 # Board tags match FirmwareBoardTag.cpp; chip IDs match esptool's C3/S3 targets.
 BOARDS = {
     "x3-x4": ("x4", 5),
-    "sticky": ("sticky", 9),
     "x4pro": ("x4pro", 9),
     "x4c": ("x4c", 9),
-    "papermono": ("papermono", 9),
 }
 OTA_PARTITION_BYTES = 0x640000
 BOARD_PREFIX = b"CROSSPOINT-BOARD-V1:"

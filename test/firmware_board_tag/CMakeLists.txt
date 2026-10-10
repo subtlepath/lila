@@ -1,4 +1,4 @@
-foreach(board IN ITEMS X4 X4PRO X4CLASSIC STICKY PAPERMONO)
+foreach(board IN ITEMS X3 X4PRO X4CLASSIC)
   set(target FirmwareBoardTagTest_${board})
   add_executable(${target} FirmwareBoardTagTest.cpp ../../src/network/FirmwareBoardTag.cpp)
   target_include_directories(${target} BEFORE PRIVATE stubs ../../src/network)
