@@ -23,6 +23,7 @@
 #include "HalTintaReplayDayCorrespondence.h"
 #include "HalTintaReplayLessonCorrespondence.h"
 #include "HalTintaReplayMarkCorrespondence.h"
+#include "HalUnboundCourseLessonMapping.h"
 
 using namespace companion;
 
@@ -1468,4 +1469,42 @@ TEST(HalTintaLegacySession, ReadCancellationWorkspaceAndPracticeTargetFailuresWi
     EXPECT_TRUE(report.hasSnapshot);
     EXPECT_EQ(bytes, original);
   }
+}
+
+TEST(HalUnboundLessonMapping, MissingProfilesCarryNoProgressAndPresentProfilesUseNativeIdentities) {
+  inventory_hal_test::state = {};
+  companion_memory_test::internal = {1024 * 1024, 1024 * 1024, 1024 * 1024, 1024 * 1024};
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input), {}};
+  auto pack = makeUniqueNoThrow<tinta::core::pack::Pack>();
+  ASSERT_TRUE(pack);
+  ASSERT_EQ(pack->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
+  const auto lessons = pack->count(tinta::core::pack::Section::Less);
+  ASSERT_GT(lessons, 0u);
+  std::array<uint8_t, 512> scratch{};
+  UnboundCourseProfileReport profile;
+  profile.profile.currentLesson = UINT16_MAX;
+  TintaLegacyLessonMapping result;
+  ASSERT_TRUE(mapUnboundCourseLessons(profile, *pack, *pack, scratch, result, [](void*) { return true; }, nullptr));
+  EXPECT_EQ(result.currentLesson, 0);
+  EXPECT_EQ(result.unlockedThrough, 0);
+  EXPECT_EQ(result.retainedCompletions, 0);
+  profile.present = true;
+  profile.status = tinta::core::Profile::LoadResult::Loaded;
+  profile.profile.currentLesson = lessons;
+  profile.profile.unlockedThrough = lessons - 1;
+  ASSERT_TRUE(mapUnboundCourseLessons(profile, *pack, *pack, scratch, result, [](void*) { return true; }, nullptr));
+  EXPECT_EQ(result.currentLesson, lessons);
+  EXPECT_EQ(result.retainedCompletions, lessons);
+  EXPECT_EQ(result.retiredCompletions, 0);
+  result.currentLesson = 123;
+  uint32_t calls = 0;
+  EXPECT_FALSE(mapUnboundCourseLessons(
+      profile, *pack, *pack, scratch, result, [](void* context) { return ++*static_cast<uint32_t*>(context) < 4; },
+      &calls));
+  EXPECT_EQ(result.currentLesson, 123);
+  profile.status = tinta::core::Profile::LoadResult::Corrupt;
+  EXPECT_FALSE(mapUnboundCourseLessons(profile, *pack, *pack, scratch, result, [](void*) { return true; }, nullptr));
+  EXPECT_EQ(result.currentLesson, 123);
 }

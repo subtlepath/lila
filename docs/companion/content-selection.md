@@ -3849,3 +3849,15 @@ failure and invalid ranges. The C3 mapping frame is 80 bytes and every emitted
 frame is within 256 (largest 96), with no allocation. Verify with the companion
 Tinta host suite. Native pack/profile binding, absence handling, guarded/yielding
 reads, replay correspondence and recoverable publication remain unfinished.
+
+Native lesson mapping now consumes frozen profile evidence and original/installed
+pack lesson keys with permission/heap checks and bounded read yields. Missing
+profiles carry no progress/unlock evidence; present profiles require successful
+decode status and valid original indices. All 1,993 host tests pass after fixing
+the test heap-stub namespace, including actual-pack complete progress, missing
+profiles with unusable decoded indices, cancellation and corrupt-status refusal.
+The C3 entry frame is 144 bytes and every emitted frame remains within 256,
+with no allocation. Verify with the HAL companion Tinta host suite. Original/
+installed pack binding, authoritative replay correspondence, retired-history
+handling and recoverable native publication remain unfinished; firmware runtime
+and migration capability advertisement are unchanged.

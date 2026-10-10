@@ -1194,3 +1194,12 @@ unlock boundary remain explicit evidence, never permission to drop history.
 Mapping changes neither profile nor pack and preserves output on failure. Native
 callers must bind validated immutable packs, bound/yield identity reads and prove
 replay correspondence before publishing a profile or completion events.
+
+Native lesson mapping consumes the frozen profile report and fully validated
+immutable original/installed packs. Present profiles must have a successful
+loaded/upgraded status and valid original lesson indices. Absent profiles carry
+no completion or unlock evidence; installed progress starts at its default
+boundary rather than remapping decoded defaults as a learner choice. Identity
+reads check permission and heap admission and yield every 32 reads. Failure
+preserves output and neither profile nor pack is changed. This adapter does not
+publish derived state or authorize retirement of missing completion history.
