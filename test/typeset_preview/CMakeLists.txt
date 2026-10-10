@@ -1,5 +1,14 @@
 # Not a test: a host tool that renders reader pages with the firmware's layout code and built-in fonts.
 # See test/typeset_preview/preview.py.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME SharedBuiltinFontGroups
+  COMMAND ${Python3_EXECUTABLE} ${REPO_ROOT}/test/builtin_font_groups/test_shared_groups.py
+)
+add_custom_target(GeneratePreviewFontGroups
+  COMMAND ${Python3_EXECUTABLE} ${REPO_ROOT}/scripts/share_builtin_font_groups.py
+  WORKING_DIRECTORY ${REPO_ROOT}
+  VERBATIM
+)
 add_executable(TypesetPreview
   TypesetPreview.cpp
   HostGfxRenderer.cpp
@@ -26,6 +35,7 @@ add_executable(TypesetPreview
   ${REPO_ROOT}/lib/MiniBidi/minibidi.c
   ${REPO_ROOT}/lib/Utf8/Utf8.cpp
 )
+add_dependencies(TypesetPreview GeneratePreviewFontGroups)
 
 target_include_directories(TypesetPreview PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/stubs

@@ -82,7 +82,8 @@ bool FontDecompressor::decompressGroup(const EpdFontData* fontData, uint16_t gro
 
   const uint32_t tDecomp = millis();
   inflateReader.init(false);
-  inflateReader.setSource(&fontData->bitmap[group.compressedOffset], group.compressedSize);
+  const auto* compressed = group.compressedData ? group.compressedData : &fontData->bitmap[group.compressedOffset];
+  inflateReader.setSource(compressed, group.compressedSize);
   if (!inflateReader.read(outBuf, outSize)) {
     stats.decompressTimeMs += millis() - tDecomp;
     LOG_ERR("FDC", "Decompression failed for group %u", groupIndex);

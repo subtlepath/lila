@@ -2630,6 +2630,90 @@ physical free/largest heap remain separate acceptance checks.
 The preceding image batch validated default, sticky, x4c, and papermono for the
 workspace-lease checkpoint. X4pro again failed during framework package copying,
 before compilation. Those images do not establish acceptance of this later
-reviewed-journal wiring; a new five-target run is pending. Full authoritative
+reviewed-journal wiring. The new batch at checkpoint `5b6b0ee3` has built
+default and sticky successfully. Their actual binaries pass the repository
+image validator: default is 6,548,608 bytes (4,992 bytes of OTA partition
+headroom), and sticky is 5,789,776 bytes (763,824 bytes of headroom). X4pro
+failed again during framework package copying before compilation. X4c has
+also built successfully and passed image validation at 6,552,752 bytes
+(848 bytes of OTA partition headroom). Papermono also built successfully
+and passed image validation at 5,904,208 bytes (649,392 bytes of headroom).
+The batch finished with four successful targets and the x4pro package-copy
+failure. The x4pro retry with packages and caching on local `/tmp` storage
+passed package installation and compilation, then failed the program-size gate:
+6,576,986 bytes against 6,553,600 allowed (23,386 bytes over). The linker
+reported 6,582,062 bytes of image content before binary padding. No validated
+x4pro image was produced for this checkpoint. Flash reduction is required
+before that target can pass. A temporary `-Oz` experiment, verified on both
+compiler and LTO invocations, also failed: the program-size gate reported
+6,577,162 bytes, 176 bytes larger than the existing settings. That experiment
+was not adopted; repository optimizer flags remain unchanged. Full authoritative
 replay correspondence with learner caches and saved sessions, torn-stage recovery,
 live commands/Apple UI, and physical acceptance remain unfinished.
+
+
+The automatic-inlining experiment also failed the x4pro size gate at 6,575,554
+bytes (1,432 bytes below the original program-size result); its flags were not
+adopted. The subsequent shared-font implementation retains the source font
+headers and generates deduplicated headers through
+`scripts/share_builtin_font_groups.py` during the normal PlatformIO pre-build.
+`python3 test/builtin_font_groups/test_shared_groups.py` verifies all 600 groups
+byte for byte, decompresses their streams to the original lengths, checks that
+other declarations are unchanged, and checks deterministic regeneration.
+The input fonts contain 88,869 duplicate stream bytes. Shared pointers add
+2,400 bytes to their 600 group descriptors on 32-bit targets; this is a flash
+data change with no new heap allocation or decompression buffer. Original
+five-field group initializers retain the offset-based path through the default
+null shared pointer. The generated headers compile for ESP32-C3 with 24-byte
+aligned group descriptors. All 1,920 host tests pass after the change. The
+normal-config x4pro build passes, and its actual image passes the repository
+validator at 6,495,760 bytes, leaving 57,840 bytes of OTA partition headroom.
+The image SHA-256 is
+`0c19778e56a3e5632ba7fbe7dc154e9f7afe3b6c3ad4243b5aa70f1d45b12738`.
+The previous overflowing build did not produce a final binary, so an exact
+before/after binary-size delta is unavailable. Final builds for the other four
+affected targets need re-verification: their process handle, process and `/tmp`
+logs disappeared before terminal results could be retained. The exact x4pro
+binary was recovered from `.pio/build/x4pro/firmware.bin`, revalidated with
+the SHA-256 above, and copied with its metadata to ignored workspace cache
+`.cache/companion-verification/shared-fonts/`. New verification logs and images
+use that workspace cache. The host typesetting-preview target also runs
+the generator before compiling, preserving its fresh-checkout build path.
+That target built successfully and rendered a one-page sample in both Times
+and Helvetica with regular, bold, italic, bold-italic, Cyrillic, Greek and
+accented text. The output pages contain 6,993 and 8,436 ink pixels respectively.
+This is a host rendering smoke check, not pixel-equivalence or physical-display
+acceptance. The generator test also verifies that every source font remains in
+the include roster, including uncompressed UI fonts.
+A subsequent original-font reference renderer was linked with the same host
+renderer code and the unchanged source tables. Its page bytes match the shared
+tables exactly for Times and Helvetica at sizes 8, 9, 12, 14 and 16: ten sample
+pages covering the styled multilingual text above. This establishes pixel
+equivalence for that host sample, not all books or physical-display acceptance.
+On hardware, verify the built-in font families, styles and sizes, including
+non-Latin fallback glyphs, across reading and UI screens and repeated cache
+warm-up/eviction. Physical rendering and heap acceptance remain pending.
+
+
+The restarted shared-font verification batch has completed default successfully.
+Its actual image passes the repository validator for x4/chip 5 at 6,462,480
+bytes, leaving 91,120 bytes of OTA partition headroom. Compared with the
+previously validated 6,548,608-byte default image at checkpoint `5b6b0ee3`,
+the binary is 86,128 bytes smaller. SHA-256:
+`e37d21604a73286f3a87d1f14cffc4f53480fe83362b1d01372acaa687020a6a`.
+The image and validator metadata are retained under the workspace cache above.
+Sticky has also built successfully and passed image validation at 5,703,616
+bytes, leaving 849,984 bytes of OTA partition headroom. Its SHA-256 is
+`d16c73eebe641d8466122d3f483ec480873b14e8e201ecce7c31678468adedc8`.
+X4c has built successfully and passed image validation at 6,465,344 bytes,
+leaving 88,256 bytes of OTA partition headroom. Its SHA-256 is
+`6ebb2b866ef1a155c06951426013a48149cef2c0b1e0088c59e8e496a37a0a5c`.
+Papermono also built successfully and passed image validation at 5,816,752
+bytes, leaving 736,848 bytes of OTA partition headroom. Its SHA-256 is
+`77f1b2483fa85637038b38adf3606a5a740142fe5f483b240ccacc396f177dd8`.
+All five affected targets now have passing builds and validated images for the
+shared-font change. The fresh host test
+rebuild completed successfully, and all 1,921 CTest cases pass in 13.30 seconds,
+including the shared-font generator test. Configure, build and test logs are
+retained in `.cache/companion-verification/shared-fonts/`. These build results do not replace the
+remaining physical rendering and companion acceptance checks.

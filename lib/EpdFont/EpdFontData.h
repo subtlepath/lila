@@ -140,11 +140,12 @@ typedef struct {
 
 /// Compressed font group: a DEFLATE-compressed block of glyph bitmaps
 typedef struct {
-  uint32_t compressedOffset;  ///< Byte offset into compressed data array
-  uint32_t compressedSize;    ///< Compressed DEFLATE stream size
-  uint32_t uncompressedSize;  ///< Decompressed size
-  uint16_t glyphCount;        ///< Number of glyphs in this group
-  uint32_t firstGlyphIndex;   ///< First glyph index in the global glyph array
+  uint32_t compressedOffset;                ///< Byte offset into compressed data array
+  uint32_t compressedSize;                  ///< Compressed DEFLATE stream size
+  uint32_t uncompressedSize;                ///< Decompressed size
+  uint16_t glyphCount;                      ///< Number of glyphs in this group
+  uint32_t firstGlyphIndex;                 ///< First glyph index in the global glyph array
+  const uint8_t* compressedData = nullptr;  ///< Shared stream, or nullptr to use compressedOffset
 } EpdFontGroup;
 
 /// Glyph interval structure
