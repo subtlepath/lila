@@ -9059,7 +9059,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   auto parser = makeUniqueNoThrow<tinta::core::pack::Pack>();
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
-  for (unsigned fault = 0; fault < 7; ++fault) {
+  for (unsigned fault = 0; fault < 9; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9079,6 +9079,15 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       marks.resize(12, 0);
       std::memcpy(marks.data(), "TMK1", 4);
       binary_record::putU32(marks.data() + 4, key);
+      marks[8] = 1;
+      binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
+    }
+    if (fault == 7) hal.files["/tinta/read.bin"] = {'T', 'M', 'K', '1'};
+    if (fault == 8) {
+      auto& marks = hal.files["/tinta/read.bin"];
+      marks.resize(12, 0);
+      std::memcpy(marks.data(), "TMK1", 4);
+      binary_record::putU32(marks.data() + 4, 123);
       marks[8] = 1;
       binary_record::putU16(marks.data() + 10, uint16_t(binary_record::crc32(marks.data() + 4, 6)));
     }
@@ -9161,10 +9170,10 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
     permission.owner = inspection.get();
     permission.checking = true;
     const auto files = hal.files;
-    EXPECT_EQ(inspection->inspect(request, original, *parser), fault == 0 || fault == 4);
+    EXPECT_EQ(inspection->inspect(request, original, *parser), fault == 0 || fault == 4 || fault == 7 || fault == 8);
     permission.checking = false;
     EXPECT_GT(permission.probes, 0u);
-    if (fault == 0 || fault == 4) {
+    if (fault == 0 || fault == 4 || fault == 7 || fault == 8) {
       auto foreign = request;
       foreign.original.transaction[0] ^= 1;
       EXPECT_EQ(inspection->report(foreign), nullptr);
@@ -9182,7 +9191,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       EXPECT_TRUE(inspection->report(request)->profile.present);
       EXPECT_FALSE(inspection->report(request)->items.present);
       EXPECT_FALSE(inspection->report(request)->session.present);
-      if (fault == 0) {
+      if (fault == 0 || fault == 4 || fault == 7 || fault == 8) {
         UnboundCourseMigrationIntent intent;
         intent.reader = reader;
         intent.request = request;
@@ -9205,10 +9214,10 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
         ASSERT_TRUE(mapUnboundCourseBoundReadings(
             *inspection, *reviewed, *oldReader, *newReader, intent, scratch, readings, [](void*) { return true; },
             nullptr));
-        EXPECT_TRUE(readings.present);
-        EXPECT_EQ(readings.mapped, 1);
+        EXPECT_EQ(readings.present, fault != 4);
+        EXPECT_EQ(readings.mapped, fault == 0 ? 1 : 0);
         EXPECT_EQ(readings.installedMissing, 0);
-        EXPECT_EQ(readings.originalMissing, 0);
+        EXPECT_EQ(readings.originalMissing, fault == 8 ? 1 : 0);
         mapped.currentLesson = 123;
         auto foreign = intent;
         foreign.request.original.transaction[0] ^= 1;
