@@ -1135,3 +1135,13 @@ references remain explicit retired evidence requiring migration review. Missing
 files are distinct from malformed logs. Failure preserves the output and copied
 bytes and closes the file loan. This membership report does not establish the
 ancestry of removed marks or authorize distributed event creation.
+
+Frozen legacy day inspection preserves unsorted native day order and split
+session records. It validates magic, complete record extent and checksums, sums
+records for each distinct day with overflow checks, and requires correct/new-item
+totals not to exceed reviews for that day. A split record need not satisfy that
+relationship by itself. The existing 8 KiB workspace holds day coverage bits;
+per-day rescans avoid a heap table and yield periodically. Missing files remain
+explicit absence; malformed or inconsistent files preserve the output and copied
+bytes and close the loan. These totals are evidence only: migration must still
+prove their correspondence to authoritative replay, including legacy rounding.

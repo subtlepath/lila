@@ -70,6 +70,7 @@
 #include "lib/hal/HalTintaReplayItemCorrespondence.h"
 #include "lib/hal/HalTintaReplayItemExport.h"
 #include "lib/hal/HalTransferStorage.h"
+#include "lib/hal/HalUnboundCourseDayInspection.h"
 #include "lib/hal/HalUnboundCourseItemInspection.h"
 #include "lib/hal/HalUnboundCourseMarkInspection.h"
 #include "lib/hal/HalUnboundCourseMigrationIntentStore.h"
@@ -8873,6 +8874,82 @@ TEST_F(HalCourseTransferTest, UnboundMarkInspectionChecksFrozenMembershipAndPres
       EXPECT_EQ(report.present, fault != 5);
       EXPECT_EQ(report.catalog.matched, fault == 5 ? 0 : 1);
       EXPECT_EQ(report.catalog.retired, 0);
+    }
+    EXPECT_EQ(reviewed->borrowed(), nullptr);
+    EXPECT_EQ(hal.files, files);
+  }
+}
+
+TEST_F(HalCourseTransferTest, UnboundDayInspectionAcceptsUnsortedSplitsAndRejectsInconsistentDays) {
+  for (unsigned fault = 0; fault < 6; ++fault) {
+    inventory_hal_test::state = {};
+    inventory_hal_test::state.enumerateFileMap = true;
+    auto& hal = inventory_hal_test::state;
+    hal.directories["/tinta"] = {};
+    hal.directories[TRANSFER_DIRECTORY] = {};
+    hal.files[ACTIVE_COURSE_PATH] = bytes;
+    hal.files["/tinta/items.bin"] = {1};
+    if (fault != 5) {
+      auto& log = hal.files["/tinta/days.bin"];
+      log.resize(40, 0);
+      std::memcpy(log.data(), "TDL1", 4);
+      for (unsigned index = 0; index < 3; ++index) {
+        auto* record = log.data() + 4 + index * 12;
+        binary_record::putU16(record, index == 1 ? 2 : UINT16_MAX);
+        binary_record::putU16(record + 2, index == 2 ? 0 : 3);
+        binary_record::putU16(record + 4, index == 2 ? 2 : fault == 3 && index == 1 ? 4 : 1);
+        binary_record::putU16(record + 6, index == 2 ? 0 : 1);
+        binary_record::putU16(record + 8, 10);
+        binary_record::putU16(record + 10, uint16_t(binary_record::crc32(record, 10)));
+      }
+      if (fault == 1) log.back() ^= 1;
+      if (fault == 2) log.pop_back();
+      if (fault == 4) log[0] = 'X';
+    }
+    Identity reader{};
+    reader.fill(51);
+    Digest hash{};
+    {
+      auto capture = makeUniqueNoThrow<HalCourseBaselineReviewCapture>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(capture);
+      ASSERT_EQ(capture->capture(reader, generation, declaration.manifest.logicalIdentity),
+                CourseBaselineReviewResult::Ok);
+      hash = *capture->hash();
+      const std::vector<uint8_t> encoded(capture->bytes().begin(), capture->bytes().end());
+      capture.reset();
+      auto roster = makeUniqueNoThrow<HalCourseBaselineReviewStore>(
+          std::span(scratch).subspan(COURSE_BASELINE_REVIEW_MAX_SIZE), [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(roster);
+      ASSERT_EQ(roster->publish(encoded, hash), CourseBaselineReviewStoreResult::Ok);
+    }
+    {
+      auto backups = makeUniqueNoThrow<HalCourseBaselineReviewBackup>(scratch, [](void*) { return true; }, nullptr);
+      ASSERT_TRUE(backups);
+      ASSERT_TRUE(backups->preserveUnbound(hash, reader, generation, declaration.manifest.logicalIdentity));
+      ASSERT_TRUE(backups->closeReaders());
+    }
+    UnboundCourseMigrationRequest request;
+    request.original = {generation, declaration.state.owner, declaration.state.transaction, declaration.manifest, hash};
+    auto reviewed = makeUniqueNoThrow<HalUnboundCourseReviewedFile>(
+        reader, generation, scratch, [](void*) { return true; }, nullptr);
+    ASSERT_TRUE(reviewed);
+
+    UnboundCourseDayReport report;
+    report.records = 123;
+    const auto files = hal.files;
+    EXPECT_EQ(inspectUnboundCourseDays(
+                  *reviewed, request, scratch, report, [](void*) { return true; }, nullptr),
+              fault == 0 || fault == 5);
+    if (fault > 0 && fault < 5) {
+      EXPECT_FALSE(report.present);
+      EXPECT_EQ(report.records, 123u);
+    } else {
+      EXPECT_EQ(report.present, fault != 5);
+      EXPECT_EQ(report.records, fault == 5 ? 0u : 3u);
+      EXPECT_EQ(report.days, fault == 5 ? 0u : 2u);
+      if (!fault) {
+        EXPECT_EQ(report.totals, (std::array<uint32_t, 4>{6, 4, 2, 30}));
+      }
     }
     EXPECT_EQ(reviewed->borrowed(), nullptr);
     EXPECT_EQ(hal.files, files);

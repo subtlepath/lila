@@ -3778,3 +3778,15 @@ mark-file validation is 240 bytes; every emitted frame is within 256 bytes and
 no allocation is added. Verify with the HAL companion host suite. These helpers
 remain outside runtime firmware. Removed-event ancestry, days/sessions, installed
 pack correspondence and native migration composition still require completion.
+
+Frozen day inspection accepts unsorted and split native records, checks each
+record and aggregates every distinct day with overflow and consistency checks.
+The shared 8 KiB workspace supplies coverage bits; per-day rescans periodically
+yield and introduce no allocation. All 1,988 host tests pass after the final
+assertion-brace fix; the final changed-target build emits no warnings. Captured
+and backed-up logs cover unsorted split totals, corrupt checksums, partial records,
+inconsistent days, wrong magic and absence, with copied bytes unchanged. The C3
+entry/file frames are 96 bytes and aggregation is 112 bytes; all emitted frames
+remain within 256. Verify with the HAL companion host suite. Runtime firmware is
+unchanged. Saved sessions, authoritative replay correspondence and native
+migration composition remain unfinished.
