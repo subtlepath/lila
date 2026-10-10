@@ -15,15 +15,13 @@ the same destination validator used during installation, restricts vector fonts 
 PSRAM boards, and admits format-1 dictionaries only at their hash-scoped destination.
 Command-handler regressions cover valid requests and invalid paths without mutation;
 these host checks do not establish physical transfer acceptance.
-The Sticky profile excludes Tinta because it lacks layouts (platformio.ini:291),
-so its build does not validate course installation/switching or learner state.
-Use a Tinta-enabled X4 Pro or X4 Classic for the S3 learning-history checks
-(platformio.ini:343 onward). Run the remaining advertised companion flows on
-Sticky separately; unsupported Tinta flows are not hardware passes.
+Reader build and hardware acceptance cover Xteink X3, X4 Pro, and X4 Classic.
+Other reader boards are outside this project's verification scope. All three
+selected profiles enable Tinta (platformio.ini:238,343,373).
 
 ## Equipment and evidence
 
-Use an X4/C3 without PSRAM and a Tinta-enabled X4 Pro or X4 Classic/S3, a physical iPhone/iPad running iOS 18
+Use an X3/C3 without PSRAM, an X4 Pro/S3, an X4 Classic/S3, a physical iPhone/iPad running iOS 18
 or later, and a Mac running macOS 15 or later. Use one person's Apple account.
 Keep a spare SD card, copies of original books/course progress, a known-good
 firmware image, and deliberately corrupt/wrong-board images.
@@ -33,8 +31,9 @@ storage generation, device identity, and test start/end times. Save serial logs,
 transfer hashes/offsets, screenshots of conflicts, and outcomes per board and
 Apple installation. Never record pairing secrets or handoff keys in evidence.
 
-Build the final sources once per affected firmware profile: `default`, `sticky`,
-`x4pro`, `x4c`, and `papermono`. Record each result and binary hash. Also record
+Build the final sources once per selected firmware profile: `default` (the
+combined X3/X4 C3 image, tagged `x4`), `x4pro`, and `x4c`. Record each result and
+binary hash. Use at least two readers for distributed synchronization checks. Also record
 Apple unit/UI tests, iOS simulator build, native Mac build, affected C++/Tinta
 host tests, and `./bin/clang-format-fix -g`. Keep these as software checks separate
 from the physical results below.
