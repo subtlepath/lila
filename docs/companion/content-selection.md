@@ -2416,3 +2416,30 @@ story/subject identity readers use 80-byte frames. No allocation or learner
 writes are added. These standalone headers are not yet in the production
 baseline installer. Saved-session/usage validation and a complete native
 compatibility owner are still required before enabling baseline commands.
+
+Saved-session inspection now reuses the native `SessionFile` decoder for TSES
+versions 1–3 and audits the nested controller/TSQ1 queue without restoring it.
+Both queue versions are supported. The inspector checks nested CRCs, declared
+extents, reserved fields, statistics bounds, queue flags/UIDs, caller-supplied
+screen/depth/capacity limits, and lesson/phrase-category practice targets. Checked
+UID lookup distinguishes retired queue references from read failures. A changed
+saved journal count is reported rather than rejected: native restoration can
+rebuild a queue when authority changes. Snapshot presence is reported separately
+and does not establish that its hash matches the retained learner cohort.
+
+The file and report remain unchanged on failure; no session or progress writes
+occur. The HAL helper borrows workspace for the complete saved file. Native App
+uses depth 8 and SessionController capacity 200, giving a 1,105-byte maximum
+saved-file buffer; these limits remain caller arguments rather than a duplicate
+UI enum in the protocol layer. No heap allocation is introduced. Forced C3
+compilation reports 160 bytes for the HAL inspection probe, 112 bytes for nested
+session decoding, and 96 bytes for the existing envelope decoder.
+
+All 1,898 host tests pass, including every single-bit envelope corruption,
+old envelope/queue versions, nested corruption, retired UIDs, journal changes,
+HAL read failure, insufficient workspace, cancellation, and missing practice
+targets. These standalone helpers remain outside the production baseline
+installer. Full immutable-cohort composition, snapshot/replay correspondence,
+usage-file inspection, native session ownership, command/Apple integration, and
+physical acceptance remain incomplete; the prior default firmware image is
+unchanged by these new unwired headers and host tests.

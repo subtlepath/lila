@@ -13,6 +13,7 @@
 #include "HalTintaLegacyMarkView.h"
 #include "HalTintaLegacyProfileValidation.h"
 #include "HalTintaLegacyReviewValidation.h"
+#include "HalTintaLegacySessionValidation.h"
 #include "HalTintaNativeDerivedPreparation.h"
 #include "HalTintaNativeLessonRecovery.h"
 #include "HalTintaNativeReadingRecovery.h"
@@ -1089,4 +1090,140 @@ TEST(HalTintaLegacyReferences, ReservedItemUidIsNotRejectedByGenericTitleKeyLogP
   uint32_t key = 0;
   ASSERT_TRUE(view.identityAt(0, key));
   EXPECT_EQ(key, UINT32_MAX);
+}
+
+namespace {
+std::vector<uint8_t> savedLegacySession(uint32_t firstUid) {
+  std::vector<uint8_t> bytes(7 + 1 + 2 + 20 + 28 + 10 + 4 + 32 + 4, 0);
+  std::memcpy(bytes.data(), "TSES", 4);
+  binary_record::putU16(bytes.data() + 4, 3);
+  bytes[6] = 1;
+  bytes[7] = 1;
+  binary_record::putU16(bytes.data() + 8, 62);
+  auto* controller = bytes.data() + 10;
+  binary_record::putU32(controller, 42);
+  binary_record::putU16(controller + 16, 42);
+  auto* queue = controller + 20;
+  std::memcpy(queue, "TSQ1", 4);
+  binary_record::putU16(queue + 4, 2);
+  binary_record::putU16(queue + 6, 2);
+  binary_record::putU16(queue + 8, 99);
+  binary_record::putU32(queue + 28, firstUid);
+  binary_record::putU32(queue + 33, 0xfffffffe);
+  binary_record::putU32(queue + 38, binary_record::crc32(queue, 38));
+  bytes[72] = 1;
+  binary_record::putU32(bytes.data() + 104, binary_record::crc32(bytes.data(), 104));
+  return bytes;
+}
+}  // namespace
+TEST(HalTintaLegacySession, PreservesSavedQueueAndReportsChangedJournalAndRetiredItems) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(packBytes.data(), packBytes.size());
+  auto pack = std::make_unique<tinta::core::pack::Pack>();
+  ASSERT_EQ(pack->open(source), tinta::core::pack::PackStatus::Ok);
+  CourseUidLookup items(source);
+  ASSERT_TRUE(items.begin());
+  inventory_hal_test::state = {};
+  auto& bytes = inventory_hal_test::state.files["/reviewed-session"];
+  bytes = savedLegacySession(pack->uidAt(0));
+  const auto original = bytes;
+  HalFile file("/reviewed-session");
+  std::array<uint8_t, 256> scratch{};
+  LegacySessionReport report;
+  ASSERT_TRUE(inspectTintaLegacySession(file, items, 43, 0, 0, 8, 40, 200, scratch, report));
+  EXPECT_EQ(report.queued, 2);
+  EXPECT_EQ(report.mapped, 1);
+  EXPECT_EQ(report.retired, 1);
+  EXPECT_EQ(report.day, 99);
+  EXPECT_TRUE(report.journalChanged);
+  EXPECT_TRUE(report.hasSnapshot);
+  EXPECT_EQ(bytes, original);
+}
+TEST(TintaLegacySession, NestedQueueCorruptionAndEveryEnvelopeBitPreserveOutputOnFailure) {
+  const auto original = savedLegacySession(7);
+  for (size_t bit = 0; bit < original.size() * 8; ++bit) {
+    auto bytes = original;
+    bytes[bit / 8] ^= uint8_t(1u << (bit % 8));
+    LegacySessionView view;
+    view.journalCount = 777;
+    EXPECT_FALSE(decodeTintaLegacySession(bytes, 8, 40, 200, view)) << bit;
+    EXPECT_EQ(view.journalCount, 777u);
+  }
+  auto bytes = original;
+  bytes[58] = 0;
+  binary_record::putU32(bytes.data() + 104, binary_record::crc32(bytes.data(), 104));
+  LegacySessionView view;
+  EXPECT_FALSE(decodeTintaLegacySession(bytes, 8, 40, 200, view));
+}
+
+TEST(TintaLegacySession, AcceptsOlderEnvelopeAndQueueVersionsAndEnforcesNativeLimits) {
+  auto bytes = savedLegacySession(7);
+  LegacySessionView view;
+  ASSERT_TRUE(decodeTintaLegacySession(bytes, 8, 40, 200, view));
+  EXPECT_FALSE(decodeTintaLegacySession(bytes, 8, 40, 1, view));
+  EXPECT_FALSE(decodeTintaLegacySession(bytes, 0, 40, 200, view));
+  EXPECT_FALSE(decodeTintaLegacySession(bytes, 8, 1, 200, view));
+  // Version 2 envelope has no snapshot; the controller/queue bytes stay identical.
+  bytes.resize(76);
+  binary_record::putU16(bytes.data() + 4, 2);
+  binary_record::putU32(bytes.data() + 72, binary_record::crc32(bytes.data(), 72));
+  ASSERT_TRUE(decodeTintaLegacySession(bytes, 8, 40, 200, view));
+  EXPECT_TRUE(view.file.snapshot.empty());
+  // Version 1 queue omits the four-byte tag tail of the version 2 header.
+  bytes.erase(bytes.begin() + 54, bytes.begin() + 58);
+  binary_record::putU16(bytes.data() + 8, 58);
+  binary_record::putU16(bytes.data() + 26, 38);
+  binary_record::putU16(bytes.data() + 34, 1);
+  binary_record::putU32(bytes.data() + 64, binary_record::crc32(bytes.data() + 30, 34));
+  binary_record::putU32(bytes.data() + 68, binary_record::crc32(bytes.data(), 68));
+  ASSERT_TRUE(decodeTintaLegacySession(bytes, 8, 40, 200, view));
+  EXPECT_EQ(view.queued, 2);
+  EXPECT_EQ(view.kind, 0);
+  EXPECT_EQ(view.tag, 0);
+  // Version 1 envelope stores only a screen stack.
+  bytes.resize(12);
+  binary_record::putU16(bytes.data() + 4, 1);
+  binary_record::putU32(bytes.data() + 8, binary_record::crc32(bytes.data(), 8));
+  ASSERT_TRUE(decodeTintaLegacySession(bytes, 8, 40, 200, view));
+  EXPECT_TRUE(view.file.session.empty());
+  EXPECT_EQ(view.queued, 0);
+}
+
+TEST(HalTintaLegacySession, ReadCancellationWorkspaceAndPracticeTargetFailuresWithholdReports) {
+  std::ifstream input(TINTA_TEST_PACK, std::ios::binary);
+  ASSERT_TRUE(input.good());
+  const std::vector<uint8_t> packBytes{std::istreambuf_iterator<char>(input), {}};
+  tinta::core::pack::MemorySource source(packBytes.data(), packBytes.size());
+  CourseUidLookup items(source);
+  ASSERT_TRUE(items.begin());
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    inventory_hal_test::state = {};
+    auto& state = inventory_hal_test::state;
+    auto& bytes = state.files["/reviewed-session"];
+    bytes = savedLegacySession(7);
+    if (fault == 0) state.failRead = state.reads + 1;
+    if (fault == 3 || fault == 4) {
+      bytes[48] = 1;
+      binary_record::putU16(bytes.data() + 54, fault == 3 ? 1 : 0x8000);
+      binary_record::putU32(bytes.data() + 68, binary_record::crc32(bytes.data() + 30, 38));
+      binary_record::putU32(bytes.data() + 104, binary_record::crc32(bytes.data(), 104));
+    }
+    const auto original = bytes;
+    HalFile file("/reviewed-session");
+    std::array<uint8_t, 256> scratch{};
+    LegacySessionReport report;
+    report.journalCount = 777;
+    report.queued = 888;
+    report.hasSnapshot = true;
+    bool permitted = fault != 1;
+    EXPECT_FALSE(inspectTintaLegacySession(
+        file, items, 42, 0, 0, 8, 40, 200, std::span(scratch).first(fault == 2 ? 100 : 256), report,
+        [](void* context) { return *static_cast<bool*>(context); }, &permitted));
+    EXPECT_EQ(report.journalCount, 777u);
+    EXPECT_EQ(report.queued, 888);
+    EXPECT_TRUE(report.hasSnapshot);
+    EXPECT_EQ(bytes, original);
+  }
 }
