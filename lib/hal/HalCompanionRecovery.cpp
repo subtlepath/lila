@@ -118,7 +118,12 @@ bool recoverAtStartup(bool (*firmwareValidator)(const char*),
       if (!recovery->removal.run(recovery->identity.storageGeneration)) return false;
     }
   }
-  bool pending = Storage.exists(TRANSFER_JOURNALS[0]) || Storage.exists(TRANSFER_JOURNALS[1]) ||
+  bool orphanConsentPending = false;
+#if LILA_TINTA
+  if (!hasHalCourseBaselineOrphanConsents(orphanConsentPending, [](void*) { return Storage.ready(); }, nullptr))
+    return false;
+#endif
+  bool pending = orphanConsentPending || Storage.exists(TRANSFER_JOURNALS[0]) || Storage.exists(TRANSFER_JOURNALS[1]) ||
                  Storage.exists(TRANSFER_STAGE) || Storage.exists(TRANSFER_BACKUP) ||
                  Storage.exists(FIRMWARE_INSTALL_INTENT_PATH) || Storage.exists(FIRMWARE_INSTALL_INTENT_STAGE);
   static constexpr const char* INVENTORY_FILES[] = {InventoryPublication::INDEX,      InventoryPublication::PATHS,

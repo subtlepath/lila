@@ -32,7 +32,7 @@ class CourseBaselineImportConsent final {
     if (result == CourseBaselineConsentResult::Ok) output = observed;
     return result;
   }
-  CourseBaselineConsentResult persist(const CourseBaselineImportRequest& request) {
+  CourseBaselineConsentResult persist(const CourseBaselineImportRequest& request, bool recoverTornStage = false) {
     if (operating) return CourseBaselineConsentResult::Busy;
     if (!validCourseBaselineImportRequest(request) || !arguments(request.transaction) ||
         course_baseline_detail::overlaps(scratch.data(), scratch.size(), &request, sizeof(request)))
@@ -48,6 +48,7 @@ class CourseBaselineImportConsent final {
     }
     if (result != CourseBaselineConsentResult::Missing) return finish(result);
     result = read(stage.data());
+    if (result == CourseBaselineConsentResult::Corrupt && recoverTornStage) result = discardTornStage(request);
     if (result == CourseBaselineConsentResult::Ok) {
       if (observed != request) return finish(CourseBaselineConsentResult::Conflict);
     } else if (result == CourseBaselineConsentResult::Missing) {
@@ -125,6 +126,39 @@ class CourseBaselineImportConsent final {
           path[TRANSACTION_OFFSET + 2 * at + 1] != HEX_DIGITS[observed.transaction[at] & 15])
         return CourseBaselineConsentResult::Corrupt;
     return CourseBaselineConsentResult::Ok;
+  }
+  // Only fresh approval with native review/backup checks may opt into recovery.
+  CourseBaselineConsentResult discardTornStage(const CourseBaselineImportRequest& request) {
+    if (scratch.size() <= COURSE_BASELINE_IMPORT_REQUEST_SIZE) return CourseBaselineConsentResult::Invalid;
+    uint64_t length = 0;
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    if (storage.stat(stage.data(), length) != FileStatus::Present) return CourseBaselineConsentResult::IoError;
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    if (length >= COURSE_BASELINE_IMPORT_REQUEST_SIZE) return CourseBaselineConsentResult::Corrupt;
+    const auto encoded = scratch.first(COURSE_BASELINE_IMPORT_REQUEST_SIZE);
+    if (!encodeCourseBaselineImportRequest(request, encoded)) return CourseBaselineConsentResult::Invalid;
+    const auto buffer = scratch.subspan(COURSE_BASELINE_IMPORT_REQUEST_SIZE);
+    for (size_t offset = 0; offset < length;) {
+      const auto count = std::min<uint64_t>(buffer.size(), length - offset);
+      if (!guard()) return CourseBaselineConsentResult::Busy;
+      if (!storage.read(stage.data(), offset, buffer.first(count))) return CourseBaselineConsentResult::IoError;
+      if (!guard()) return CourseBaselineConsentResult::Busy;
+      if (!std::equal(buffer.begin(), buffer.begin() + count, encoded.begin() + offset))
+        return CourseBaselineConsentResult::Corrupt;
+      offset += count;
+    }
+    uint64_t size = 0;
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    const auto canonicalStatus = storage.stat(canonical.data(), size);
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    if (canonicalStatus == FileStatus::Error) return CourseBaselineConsentResult::IoError;
+    if (canonicalStatus != FileStatus::Missing) return CourseBaselineConsentResult::Conflict;
+    if (!storage.remove(stage.data())) return CourseBaselineConsentResult::IoError;
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    const auto stageStatus = storage.stat(stage.data(), size);
+    if (!guard()) return CourseBaselineConsentResult::Busy;
+    return stageStatus == FileStatus::Missing ? CourseBaselineConsentResult::Missing
+                                              : CourseBaselineConsentResult::IoError;
   }
   CourseBaselineConsentResult finish(CourseBaselineConsentResult result) {
     if (!guard()) result = CourseBaselineConsentResult::Busy;

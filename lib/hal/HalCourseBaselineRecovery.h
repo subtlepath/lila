@@ -6,6 +6,7 @@
 
 #include "HalCourseBaselineImportSession.h"
 #include "HalCourseBaselineJournalReadiness.h"
+#include "HalCourseBaselineOrphanConsentRecovery.h"
 #include "HalTransferStorage.h"
 #include "app/PersistedSessionLimits.h"
 
@@ -20,7 +21,7 @@ inline bool attachHalCourseBaselineRecovery(Transfer& transfer, HalTransferStora
                                             std::unique_ptr<HalCourseBaselineImportSession>& session,
                                             HalCourseBaselineLearnerInspection::Permission permitted, void* context) {
   if (!permitted || !permitted(context) ||
-      transfer.recover(identity.storageGeneration, TransferRecoveryMode::InspectJournal) != TransferResult::Ok) {
+      !recoverHalCourseBaselineOrphanConsents(transfer, identity.storageGeneration, permitted, context)) {
     LOG_ERR("COMPANION", "Baseline recovery transfer inspection or workspace permission failed");
     return false;
   }

@@ -2717,3 +2717,148 @@ rebuild completed successfully, and all 1,921 CTest cases pass in 13.30 seconds,
 including the shared-font generator test. Configure, build and test logs are
 retained in `.cache/companion-verification/shared-fonts/`. These build results do not replace the
 remaining physical rendering and companion acceptance checks.
+
+Publication-stage recovery at checkpoint `62aea35c` accepts a short
+`.prepared.tmp` or `.published.tmp` only when every retained byte matches the
+expected publication-record prefix and the canonical phase evidence permits
+recovery. Native preparation verification must succeed before removal. The
+stage is read and compared again after verification, since verification borrows
+the same scratch workspace. Changed bytes, permission loss, read/stat errors,
+and replacement with a complete or oversized record prevent removal. Truncated
+canonical records and mismatched stages remain preserved and refuse publication.
+The HAL restricts removal to the selected transaction's short staging file,
+checks its namespace and size, and closes readers before calling `HalStorage`.
+Prefix comparison reuses the existing scratch loan without another allocation.
+
+All 1,925 host tests pass, including exhaustive matching stage lengths with
+successful and refused verification, canonical truncation, mismatched prefixes,
+removal power cuts, changed evidence during verification, and native HAL
+write/close/rename recovery. An ESP32-C3 production-header compile probe with
+the 256-byte frame limit passes. The final five-target firmware build is pending;
+logs are retained in `.cache/companion-verification/baseline-torn-stage-firmware.log`.
+Torn consent-stage recovery, authoritative replay correspondence with learner
+caches and saved sessions, live baseline commands and Apple UI remain unfinished.
+On hardware, interrupt staging writes and removal at both publication phases,
+reboot, and verify that recovery finishes before reading resumes, the original
+learner files remain intact, and repeated commits do not change the result.
+Monitor free/largest heap and task stack watermarks throughout recovery; the
+host fault tests and compile probe do not establish physical acceptance.
+
+The subsequent native installer test exercises both torn phases through the real
+consent store, archive session and publication store, rather than modeled native
+verification hooks. Valid persisted consent permits recovery and repeated retry;
+damaged consent, missing/corrupt immutable backups, or changed current learner
+items preserve all evidence and refuse recovery. All 145 HAL course
+transfer tests pass after this addition. The default firmware build has completed
+and its image passes board/chip validation at 6,463,120 bytes, leaving 90,480 bytes
+of OTA headroom. SHA-256:
+`50af54aca3e7f02bbc050711bd2a312982b870c6dc659f26bc14c5d94f33a46a`.
+The other four target builds remain pending in the running batch. This test does
+not establish the remaining authoritative learner-state replay correspondence.
+
+Consent is persisted before the parent transfer is begun, so a power cut can
+leave a consent stage without a parent transfer journal. Startup currently
+selects baseline recovery from the parent transfer. Handling an orphan consent
+stage therefore requires a separate recovery path; reconstructing a truncated
+record must not itself grant approval or learner-state reuse. Complete consent
+stages can be retried through explicit approval. Truncated stages now have an
+opt-in retry through `HalCourseBaselineImportConsentStore::approve`: native
+preparation first revalidates the frozen review and backups, then persistence
+compares the stage with the exact newly approved request prefix. Canonical
+consent must be absent before removal. Ordinary `load()` does not repair or
+grant consent, and ordinary core persistence keeps recovery disabled by default.
+Mismatched/full corrupt stages, storage errors, permission loss and conflicting
+canonical evidence remain preserved. Removal is restricted to the selected
+transaction's short consent stage and uses HAL namespace/size checks.
+
+All 13 core consent tests and 145 HAL course-transfer tests pass after this
+change. Coverage includes every truncated request length, mismatched bytes,
+removal power cuts, permission loss during reads, read/stat errors, insufficient
+scratch and canonical consent appearing before removal. The production consent
+path compiles for ESP32-C3 with the 256-byte frame limit; reported frames are
+64 bytes for prefix removal and 48 bytes for persistence. The existing scratch
+loan supplies both comparison buffers; no heap allocation was added. These
+checks do not establish orphan-stage boot recovery or physical power-cut
+acceptance. Final firmware builds after this consent change are still required.
+
+The native approval retry test additionally seeds a nonempty matching consent
+prefix after preserving review backups. `load()` leaves it untouched and reports
+missing canonical consent. Explicit approval recovers it only while the reviewed
+learner items still match; changed learner items refuse approval and preserve all
+files. The final host suite passes all 1,931 tests after this addition, including
+146 HAL course-transfer tests. Its log is retained at
+`.cache/companion-verification/baseline-native-consent-final-ctest.log`.
+
+`CourseBaselineOrphanConsent` supplies the portable rollback component for
+consent stages without a parent transfer. Its caller must prove parent absence
+from native journal inspection and exclude writers. It refuses any canonical
+consent or Prepared/Published evidence, then moves
+the bounded consent stage to `.consent.orphan`. This inactive file preserves
+the original bytes and grants no approval. Retry handles a lost rename
+acknowledgement without deleting evidence. The component keeps its path buffers
+in an owner retained off stack and adds no allocation. Four host tests pass,
+covering every stage length, malformed retained bytes, protected phase evidence,
+destination exhaustion, permission/stat failures, invalid identities, oversized
+stages and both rename failure boundaries.
+
+Native `HalCourseBaselineOrphanConsentRecovery` now scans the companion directory
+to checked end, closes scan handles before mutation, inspects the parent transfer
+journals and freezes their state, then performs rollback through a restricted HAL
+adapter. Matching parent transactions, malformed/case-variant consent names,
+alias/lookup errors, canonical approval and publication evidence refuse recovery.
+The adapter only renames the selected bounded stage to its inactive orphan path;
+it cannot read, write, resize or delete learner files. After each rollback the
+directory is scanned again, avoiding an iterator retained across mutation.
+
+Boot checks for orphan consent stages before its no-work early return. Both boot
+and Connect run native rollback before baseline session attachment and normal
+transfer recovery. The temporary owner is allocated with `makeUniqueNoThrow`,
+checked against the 50 KiB reserve and largest-block requirement, and released
+before the larger baseline session is allocated. Its path/name buffers and HAL
+handles exceed the stack budget, so stack storage was rejected; it borrows the
+existing transfer workspace for parent inspection rather than allocating another.
+All 149 HAL course-transfer tests pass, including multiple orphan stages, parent
+and canonical/phase conflicts, corrupt journals, name/alias failures, permission
+loss and both rename power-cut boundaries. A C3 production-header probe passes
+the 256-byte frame limit: scan 112 bytes, portable rollback 128 bytes and native
+recovery 64 bytes. Final firmware builds and physical acceptance after this native
+integration remain pending. Repeated failed approval attempts now choose the
+first free `.consent.orphan-00` through `.consent.orphan-ff` destination after
+the base orphan path is occupied. The search is bounded and uses the existing
+path buffers without allocation. Earlier copies are never overwritten. Exhaustion,
+uncertain lookup and oversized diagnostic files preserve the new stage and
+refuse rollback. The HAL accepts only the exact selected transaction and
+lowercase two-digit slot suffixes. Native tests cover recovery of a second
+attempt while preserving the first; core tests cover multiple retained attempts
+and full destination exhaustion.
+
+All 1,938 host tests pass after numbered orphan handling. Final firmware builds
+run one target at a time, retaining and validating each image before starting
+the next target, since framework reconfiguration can remove earlier build
+directories. Logs, task source fingerprints, images and validator metadata are
+retained under `.cache/companion-verification/baseline-orphan-final/`. Physical
+power-cut/heap acceptance and the remaining full companion plan are still pending.
+
+The final native-orphan default image builds and passes the board/chip validator
+at 6,467,680 bytes, leaving 85,920 bytes of OTA headroom. SHA-256:
+`5d1a1400870a4f6740899798d6f66886bfe01d2d96db14a8318c4fe3dba795a1`.
+Its image and metadata have been retained before starting Sticky. All five
+targets have now completed successfully and passed image validation. Sticky is
+5,703,616 bytes (849,984 bytes of OTA headroom), X4 Pro is 6,499,616 bytes
+(53,984 bytes), X4c is 6,470,384 bytes (83,216 bytes), and Papermono is
+5,816,752 bytes (736,848 bytes). Each actual image, SHA-256 and board/chip
+validator result is retained in the final verification directory above.
+The changed boot recovery file also passes a C3 compile with the 256-byte
+frame limit; `recoverAtStartup()` reports a 144-byte frame. These build and
+stack checks do not establish physical heap or power-cut acceptance.
+
+Saved-session replay correspondence must use the derived receipt digest, not
+the journal frontier alone. `HalTintaLearnerPreparation::run` verifies native
+derived preparation, matches the receipt to course/storage/pack/frontier, and
+hashes that receipt before exposing `sessionSnapshot()`. `TintaActivity` binds
+that digest to the app. Baseline session inspection currently checks saved-file
+syntax and item coverage but does not establish this receipt-backed proof.
+Legacy learner state also cannot be assumed to come entirely from a partial
+canonical journal; the legacy migration draft separately confirms scheduler
+configuration and ambiguous history/reading correspondence. Full baseline
+replay verification and live commands remain unfinished.

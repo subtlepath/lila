@@ -100,7 +100,13 @@ class HalCourseBaselineImportConsentStore final {
              failure("rename");
     }
     bool resize(const char*, uint64_t) override { return failure("resize refused"); }
-    bool remove(const char*) override { return failure("remove refused"); }
+    bool remove(const char* path) override {
+      uint64_t size = 0;
+      return (valid(path, true) && closeReaders() && guard() && metadata.stat(path, size) == FileStatus::Present &&
+              size < COURSE_BASELINE_IMPORT_REQUEST_SIZE && closeReaders() && guard() && Storage.remove(path) &&
+              guard()) ||
+             failure("torn stage removal");
+    }
     bool verify(const char*, uint64_t, const Digest&, std::span<uint8_t>) override { return failure("verify refused"); }
     bool closeReaders() {
       const bool writerClosed = !writer.isOpen() || writer.close(), metadataClosed = metadata.closeReaders();
@@ -155,7 +161,7 @@ class HalCourseBaselineImportConsentStore final {
   static bool allowed(void* context) { return static_cast<HalCourseBaselineImportConsentStore*>(context)->guard(); }
   static bool persist(void* context, const CourseBaselineImportRequest& request) {
     auto& store = *static_cast<HalCourseBaselineImportConsentStore*>(context);
-    store.outcome = store.consent.persist(request);
+    store.outcome = store.consent.persist(request, true);
     if (!store.storage.closeReaders()) store.outcome = CourseBaselineConsentResult::IoError;
     return store.outcome == CourseBaselineConsentResult::Ok && store.guard();
   }

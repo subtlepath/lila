@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "lib/Companion/CompanionCourseBaselineImportConsent.h"
+#include "lib/Companion/CompanionCourseBaselineOrphanConsent.h"
 #include "lib/Companion/CompanionCourseBaselinePublication.h"
 #include "lib/Companion/CompanionCourseBaselinePublicationStore.h"
 #include "lib/Companion/CompanionCourseBaselineReview.h"
@@ -250,6 +251,194 @@ TEST(CompanionCourseBaselineImport, RecoversWriteAndRenameFailuresWithoutRepeati
       EXPECT_EQ(f.storage.files.at(f.canonical()), f.encoded());
       EXPECT_FALSE(f.storage.files.contains(f.canonical() + ".tmp"));
     }
+  }
+}
+
+TEST(CompanionCourseBaselineImport, ExplicitApprovalRecoversEveryMatchingTornStage) {
+  for (size_t length = 0; length < COURSE_BASELINE_IMPORT_REQUEST_SIZE; ++length) {
+    Fixture f;
+    f.storage.allowStageRemoval = true;
+    auto bytes = f.encoded();
+    bytes.resize(length);
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    const auto original = f.storage.files;
+    auto consent = f.consent();
+    EXPECT_EQ(consent.persist(f.request), CourseBaselineConsentResult::Corrupt);
+    EXPECT_EQ(f.storage.files, original);
+    ASSERT_EQ(consent.persist(f.request, true), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files.at(f.canonical()), f.encoded());
+    EXPECT_FALSE(f.storage.files.contains(f.canonical() + ".tmp"));
+    for (const auto& [path, data] : original) {
+      if (path != f.canonical() + ".tmp") {
+        EXPECT_EQ(f.storage.files.at(path), data);
+      }
+    }
+  }
+}
+
+TEST(CompanionCourseBaselineImport, TornStageRecoveryPreservesMismatchAndRetriesRemovalPowerCuts) {
+  for (const bool after : {false, true}) {
+    Fixture f;
+    f.storage.allowStageRemoval = true;
+    auto bytes = f.encoded();
+    bytes.resize(100);
+    bytes.back() ^= 1;
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    auto consent = f.consent();
+    EXPECT_EQ(consent.persist(f.request, true), CourseBaselineConsentResult::Corrupt);
+    EXPECT_EQ(f.storage.mutations, 0u);
+    EXPECT_EQ(f.storage.files.at(f.canonical() + ".tmp"), bytes);
+    bytes.back() ^= 1;
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    f.storage.fail = 1;
+    f.storage.after = after;
+    EXPECT_EQ(consent.persist(f.request, true), CourseBaselineConsentResult::IoError);
+    EXPECT_EQ(f.storage.files.contains(f.canonical() + ".tmp"), !after);
+    EXPECT_FALSE(f.storage.files.contains(f.canonical()));
+    f.storage.fail = 0;
+    auto restarted = f.consent();
+    ASSERT_EQ(restarted.persist(f.request, true), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files.at(f.canonical()), f.encoded());
+  }
+}
+
+TEST(CompanionCourseBaselineImport, TornRecoveryRefusesPermissionErrorsAndInsufficientScratch) {
+  for (unsigned fault = 0; fault < 5; ++fault) {
+    SCOPED_TRACE(fault);
+    Fixture f;
+    f.storage.allowStageRemoval = true;
+    auto bytes = f.encoded();
+    bytes.resize(100);
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    const auto evidence = f.storage.files;
+    if (fault == 0) f.storage.allowed = false;
+    if (fault == 1) f.storage.revokeRead = true;
+    if (fault == 2) f.storage.readError = true;
+    if (fault == 3) f.storage.statError = true;
+    std::span<uint8_t> loan = f.scratch;
+    if (fault == 4) loan = loan.first(COURSE_BASELINE_IMPORT_REQUEST_SIZE);
+    CourseBaselineImportConsent consent(f.storage, loan, Fixture::permitted, &f.storage);
+    EXPECT_EQ(consent.persist(f.request, true), fault < 2    ? CourseBaselineConsentResult::Busy
+                                                : fault == 4 ? CourseBaselineConsentResult::Invalid
+                                                             : CourseBaselineConsentResult::IoError);
+    EXPECT_EQ(f.storage.files, evidence);
+    EXPECT_EQ(f.storage.mutations, 0u);
+  }
+}
+
+TEST(CompanionCourseBaselineImport, TornRecoveryRefusesCanonicalConsentAppearingBeforeRemoval) {
+  Fixture f;
+  f.storage.allowStageRemoval = true;
+  auto bytes = f.encoded();
+  bytes.resize(100);
+  f.storage.files[f.canonical() + ".tmp"] = bytes;
+  struct Context {
+    Fixture* fixture;
+    unsigned calls = 0;
+  } context{&f};
+  f.storage.statContext = &context;
+  f.storage.onStat = [](void* raw) {
+    auto& state = *static_cast<Context*>(raw);
+    if (++state.calls == 4) state.fixture->storage.files[state.fixture->canonical()] = state.fixture->encoded();
+  };
+  auto consent = f.consent();
+  EXPECT_EQ(consent.persist(f.request, true), CourseBaselineConsentResult::Conflict);
+  EXPECT_EQ(f.storage.files.at(f.canonical() + ".tmp"), bytes);
+  EXPECT_EQ(f.storage.files.at(f.canonical()), f.encoded());
+  EXPECT_EQ(f.storage.mutations, 0u);
+}
+
+TEST(CompanionCourseBaselineOrphanConsent, PreservesEveryStageLengthWithoutGrantingApproval) {
+  for (size_t length = 0; length <= COURSE_BASELINE_IMPORT_REQUEST_SIZE; ++length) {
+    Fixture f;
+    auto bytes = f.encoded();
+    bytes.resize(length);
+    if (length) bytes.back() ^= 1;
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    const auto before = f.storage.files;
+    CourseBaselineOrphanConsent recovery(f.storage, Fixture::permitted, &f.storage);
+    ASSERT_EQ(recovery.rollback(f.request.transaction), CourseBaselineConsentResult::Ok);
+    EXPECT_FALSE(f.storage.files.contains(f.canonical() + ".tmp"));
+    EXPECT_FALSE(f.storage.files.contains(f.canonical()));
+    EXPECT_EQ(f.storage.files.at(f.canonical() + ".orphan"), bytes);
+    const auto complete = f.storage.files;
+    EXPECT_EQ(recovery.rollback(f.request.transaction), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files, complete);
+    for (const auto& [path, data] : before) {
+      if (path != f.canonical() + ".tmp") {
+        EXPECT_EQ(f.storage.files.at(path), data);
+      }
+    }
+  }
+}
+
+TEST(CompanionCourseBaselineOrphanConsent, RefusesAuthorityConflictsErrorsAndUnavailablePermission) {
+  for (unsigned fault = 0; fault < 10; ++fault) {
+    Fixture f;
+    f.storage.files[f.canonical() + ".tmp"] = {1, 2, 3};
+    const auto prefix = f.canonical().substr(0, f.canonical().size() - std::string_view(".consent").size());
+    static constexpr const char* PROTECTED[] = {".consent", ".prepared", ".prepared.tmp", ".published",
+                                                ".published.tmp"};
+    if (fault < 5) f.storage.files[prefix + PROTECTED[fault]] = {9};
+    if (fault == 5) {
+      f.storage.files[f.canonical() + ".orphan"] = {8};
+      for (unsigned slot = 0; slot < 256; ++slot) {
+        char suffix[16]{};
+        snprintf(suffix, sizeof(suffix), ".orphan-%02x", slot);
+        f.storage.files[f.canonical() + suffix] = {9};
+      }
+    }
+    if (fault == 6) f.storage.allowed = false;
+    if (fault == 7) f.storage.statError = true;
+    if (fault == 8) f.storage.files.at(f.canonical() + ".tmp").resize(COURSE_BASELINE_IMPORT_REQUEST_SIZE + 1);
+    const auto before = f.storage.files;
+    CourseBaselineOrphanConsent recovery(f.storage, Fixture::permitted, &f.storage);
+    EXPECT_EQ(recovery.rollback(fault == 9 ? Identity{} : f.request.transaction),
+              fault < 6    ? CourseBaselineConsentResult::Conflict
+              : fault == 6 ? CourseBaselineConsentResult::Busy
+              : fault == 7 ? CourseBaselineConsentResult::IoError
+              : fault == 8 ? CourseBaselineConsentResult::Corrupt
+                           : CourseBaselineConsentResult::Invalid);
+    EXPECT_EQ(f.storage.files, before);
+    EXPECT_EQ(f.storage.mutations, 0u);
+  }
+}
+
+TEST(CompanionCourseBaselineOrphanConsent, RepeatedAttemptsPreserveEachDiagnosticCopy) {
+  Fixture f;
+  CourseBaselineOrphanConsent recovery(f.storage, Fixture::permitted, &f.storage);
+  f.storage.files[f.canonical() + ".orphan"] = {9};
+  for (unsigned attempt = 0; attempt < 3; ++attempt) {
+    f.storage.files[f.canonical() + ".tmp"] = {static_cast<uint8_t>(attempt)};
+    ASSERT_EQ(recovery.rollback(f.request.transaction), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files.at(f.canonical() + ".orphan"), std::vector<uint8_t>{9});
+    for (unsigned retained = 0; retained <= attempt; ++retained) {
+      char suffix[16]{};
+      snprintf(suffix, sizeof(suffix), ".orphan-%02x", retained);
+      EXPECT_EQ(f.storage.files.at(f.canonical() + suffix), std::vector<uint8_t>{static_cast<uint8_t>(retained)});
+    }
+    const auto complete = f.storage.files;
+    EXPECT_EQ(recovery.rollback(f.request.transaction), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files, complete);
+    EXPECT_FALSE(f.storage.files.contains(f.canonical()));
+  }
+}
+
+TEST(CompanionCourseBaselineOrphanConsent, RecoversRenameAcknowledgementLossWithoutRemovingEvidence) {
+  for (const bool after : {false, true}) {
+    Fixture f;
+    const std::vector<uint8_t> bytes{1, 2, 3};
+    f.storage.files[f.canonical() + ".tmp"] = bytes;
+    f.storage.fail = 1;
+    f.storage.after = after;
+    CourseBaselineOrphanConsent recovery(f.storage, Fixture::permitted, &f.storage);
+    EXPECT_EQ(recovery.rollback(f.request.transaction), CourseBaselineConsentResult::IoError);
+    EXPECT_EQ(f.storage.files.at(f.canonical() + (after ? ".orphan" : ".tmp")), bytes);
+    EXPECT_FALSE(f.storage.files.contains(f.canonical()));
+    f.storage.fail = 0;
+    CourseBaselineOrphanConsent restarted(f.storage, Fixture::permitted, &f.storage);
+    EXPECT_EQ(restarted.rollback(f.request.transaction), CourseBaselineConsentResult::Ok);
+    EXPECT_EQ(f.storage.files.at(f.canonical() + ".orphan"), bytes);
   }
 }
 
