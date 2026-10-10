@@ -1183,3 +1183,14 @@ retrieval holds the operation guard during permission checks, so a callback cann
 start a replacement inspection or recursively expose evidence. A mismatching
 request receives no report without discarding the original inspected result.
 Permission loss still revokes that result until a fresh inspection succeeds.
+
+Portable legacy lesson mapping translates the original completed prefix by stable
+unit/lesson identity into installed-course indices. Inserted lessons remain
+unfinished; reordered completed lessons retain completion. The result identifies
+the first unfinished installed lesson and preserves a surviving local unlock
+boundary by identity, with unlock projection matching completion-based navigation.
+Both identity catalogs must be unique. Missing completed identities and a retired
+unlock boundary remain explicit evidence, never permission to drop history.
+Mapping changes neither profile nor pack and preserves output on failure. Native
+callers must bind validated immutable packs, bound/yield identity reads and prove
+replay correspondence before publishing a profile or completion events.

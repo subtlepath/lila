@@ -11,6 +11,7 @@
 #include "lib/Companion/CompanionTintaCompletionSet.h"
 #include "lib/Companion/CompanionTintaDayLog.h"
 #include "lib/Companion/CompanionTintaDerivedManifest.h"
+#include "lib/Companion/CompanionTintaLegacyLessonMapping.h"
 #include "lib/Companion/CompanionTintaLegacyStoryIdentity.h"
 #include "lib/Companion/CompanionTintaNativeMarkIdentity.h"
 #include "lib/Companion/CompanionTintaPackStoryIdentity.h"
@@ -582,4 +583,54 @@ TEST(CourseUidLookup, ExtentChangesInvalidateAndPreserveOutput) {
   EXPECT_EQ(found, 777);
   source.bytes.pop_back();
   EXPECT_FALSE(lookup.find(1, found));
+}
+
+namespace {
+class LessonMappingKeys final : public IdentityKeys {
+ public:
+  explicit LessonMappingKeys(std::span<const uint32_t> values) : values(values) {}
+  uint32_t count() const override { return values.size(); }
+  bool read(uint32_t index, uint32_t& output) override {
+    if (fail || index >= values.size()) return false;
+    output = values[index];
+    return true;
+  }
+  bool fail = false;
+
+ private:
+  std::span<const uint32_t> values;
+};
+}  // namespace
+TEST(TintaLegacyLessonMapping, ReorderedAndInsertedLessonsUseIdentityInsteadOfOldIndex) {
+  const std::array<uint32_t, 3> oldIds{10, 20, 30};
+  const std::array<uint32_t, 4> newIds{20, 99, 10, 30};
+  LessonMappingKeys original(oldIds), installed(newIds);
+  std::array<uint8_t, 512> scratch{};
+  TintaLegacyLessonMapping result;
+  ASSERT_TRUE(mapTintaLegacyLessons(original, installed, 2, 2, scratch, result));
+  EXPECT_EQ(result.currentLesson, 1);
+  EXPECT_EQ(result.unlockedThrough, 3);
+  EXPECT_EQ(result.retainedCompletions, 2);
+  EXPECT_EQ(result.retiredCompletions, 0);
+  EXPECT_FALSE(result.unlockedBoundaryRetired);
+}
+TEST(TintaLegacyLessonMapping, MissingLessonsRemainExplicitAndFailuresPreserveOutput) {
+  const std::array<uint32_t, 3> oldIds{10, 20, 30};
+  const std::array<uint32_t, 2> newIds{10, 99}, duplicate{10, 10};
+  LessonMappingKeys original(oldIds), installed(newIds), ambiguous(duplicate);
+  std::array<uint8_t, 512> scratch{};
+  TintaLegacyLessonMapping result;
+  ASSERT_TRUE(mapTintaLegacyLessons(original, installed, 2, 2, scratch, result));
+  EXPECT_EQ(result.currentLesson, 1);
+  EXPECT_EQ(result.retiredCompletions, 1);
+  EXPECT_TRUE(result.unlockedBoundaryRetired);
+  result.currentLesson = 123;
+  EXPECT_FALSE(mapTintaLegacyLessons(original, ambiguous, 2, 2, scratch, result));
+  EXPECT_EQ(result.currentLesson, 123);
+  original.fail = true;
+  EXPECT_FALSE(mapTintaLegacyLessons(original, installed, 2, 2, scratch, result));
+  EXPECT_EQ(result.currentLesson, 123);
+  original.fail = false;
+  EXPECT_FALSE(mapTintaLegacyLessons(original, installed, 4, 1, scratch, result));
+  EXPECT_EQ(result.currentLesson, 123);
 }

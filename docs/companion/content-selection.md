@@ -3837,3 +3837,15 @@ retrieval wrapper is 16 bytes; every emitted frame remains within 256 (largest
 240), with no new allocation. Verify with the HAL companion host suite. Runtime
 firmware remains unchanged; installed-state mapping, authoritative replay and
 native migration integration remain unfinished.
+
+Portable legacy lesson mapping now carries the original completed prefix by
+stable unit/lesson identities into the installed index order. Inserted lessons
+remain unfinished, completed lessons survive reordering, and missing completions/
+unlock boundaries remain explicit evidence. It checks both catalogs for duplicate
+identities and preserves output on failure, without saving a profile or dropping
+history. All 1,992 host tests pass after correcting fixture unlock boundaries to
+the native invariant; tests cover reorder/insertion, retirement, ambiguity, read
+failure and invalid ranges. The C3 mapping frame is 80 bytes and every emitted
+frame is within 256 (largest 96), with no allocation. Verify with the companion
+Tinta host suite. Native pack/profile binding, absence handling, guarded/yielding
+reads, replay correspondence and recoverable publication remain unfinished.
