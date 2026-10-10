@@ -92,6 +92,7 @@
 #include "lib/hal/HalUnboundCourseReviewReservationStore.h"
 #include "lib/hal/HalUnboundCourseReviewedFile.h"
 #include "lib/hal/HalUnboundCourseSessionInspection.h"
+#include "lib/hal/HalUnboundCourseStarPlanInspection.h"
 #include "lib/hal/HalUnboundCourseStarReader.h"
 #include "platform/StateFiles.h"
 namespace tinta::platform {
@@ -9110,7 +9111,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
   ASSERT_TRUE(parser);
   ASSERT_EQ(parser->open(bytes.data(), bytes.size()), tinta::core::pack::PackStatus::Ok);
   const auto reviewUid = parser->uidAt(0);
-  for (unsigned fault = 0; fault < 17; ++fault) {
+  for (unsigned fault = 0; fault < 18; ++fault) {
     inventory_hal_test::state = {};
     inventory_hal_test::state.enumerateFileMap = true;
     auto& hal = inventory_hal_test::state;
@@ -9194,7 +9195,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
       log[22] = 8;
       binary_record::putU32(log.data() + 24, reviewUid);
       log[34] = 16;
-      log[35] = 1;
+      log[35] = fault == 17 ? 5 : 1;
     }
     if (fault == 2) encoded.back() ^= 1;
     if (fault == 3) hal.files["/tinta/items.bin"] = {1};
@@ -9786,7 +9787,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
             ASSERT_EQ(conversion->next(reviewReservation), LegacyTintaReadResult::Record);
           }
           snapshotPermission.checking = true;
-          const bool matching = fault < 9 || fault == 10;
+          const bool matching = fault < 9 || fault == 10 || fault == 17;
           EXPECT_EQ(snapshotProof->inspect(reviewReservation), matching);
           snapshotPermission.checking = false;
           if (matching) {
@@ -9857,6 +9858,7 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
           ASSERT_TRUE(working->item(reviewUid, state));
           auto expected = tinta::core::ItemState::fresh(reviewUid);
           expected.flags = fault >= 9 ? tinta::core::item_flag::kSuspended : 0;
+          if (fault == 17) expected.flags |= tinta::core::item_flag::kStarred;
           EXPECT_EQ(state, expected);
           TintaReplayDay day;
           ASSERT_TRUE(working->day(0, day));
@@ -9904,15 +9906,78 @@ TEST_F(HalCourseTransferTest, UnboundLearnerInspectionRequiresWholeCohortAndRevo
             ASSERT_TRUE(plan->begin(intent.request.original.manifest.logicalIdentity,
                                     std::span(membership).first(memberCount)));
             TintaBody body;
-            if (fault == 0) {
+            if (fault == 0 || fault == 17) {
               ASSERT_EQ(plan->next(body), LegacyTintaStarPlanResult::Record);
               EXPECT_EQ(body.kind, EventKind::Star);
               EXPECT_EQ(body.uid, reviewUid);
-              EXPECT_TRUE(body.enabled);
+              EXPECT_EQ(body.enabled, fault == 0);
             }
             EXPECT_EQ(plan->next(body), LegacyTintaStarPlanResult::End);
             EXPECT_TRUE(plan->completed());
             EXPECT_EQ(hal.files, beforePlan);
+            struct NativePlanPermission {
+              bool allowed = true, checking = false, closeNext = false;
+              unsigned probes = 0;
+              HalUnboundCourseStarPlanInspection* owner = nullptr;
+              const UnboundCourseReviewReservation* reservation;
+            } nativePermission{true, false, false, 0, nullptr, &reviewReservation};
+            auto nativePlan = makeUniqueNoThrow<HalUnboundCourseStarPlanInspection>(
+                *migration, *stars, *conversion, *replay, *working,
+                [](void* raw) {
+                  auto& state = *static_cast<NativePlanPermission*>(raw);
+                  if (state.checking) {
+                    ++state.probes;
+                    EXPECT_FALSE(state.owner->inspect(*state.reservation));
+                    EXPECT_EQ(state.owner->report(*state.reservation), nullptr);
+                  }
+                  if (state.closeNext) {
+                    state.closeNext = false;
+                    EXPECT_TRUE(state.owner->closeReaders());
+                  }
+                  return state.allowed;
+                },
+                &nativePermission);
+            ASSERT_TRUE(nativePlan);
+            nativePermission.owner = nativePlan.get();
+            nativePermission.checking = true;
+            ASSERT_TRUE(nativePlan->inspect(reviewReservation));
+            nativePermission.checking = false;
+            const auto* digestReport = nativePlan->report(reviewReservation);
+            ASSERT_NE(digestReport, nullptr);
+            EXPECT_EQ(digestReport->events, fault == 0 || fault == 17 ? 1u : 0u);
+            std::array<uint8_t, 23> encodedStar{};
+            size_t length = 0;
+            if (fault == 0 || fault == 17) length = encodeTintaBody(body, encodedStar);
+            Digest expectedHash{};
+            ASSERT_NE(SHA256(encodedStar.data(), length, expectedHash.data()), nullptr);
+            EXPECT_EQ(digestReport->hash, expectedHash);
+            EXPECT_GT(nativePermission.probes, 0u);
+            auto foreignReservation = reviewReservation;
+            ++foreignReservation.epoch;
+            EXPECT_EQ(nativePlan->report(foreignReservation), nullptr);
+            EXPECT_NE(nativePlan->report(reviewReservation), nullptr);
+            nativePermission.allowed = false;
+            EXPECT_EQ(nativePlan->report(reviewReservation), nullptr);
+            nativePermission.allowed = true;
+            EXPECT_EQ(nativePlan->report(reviewReservation), nullptr);
+            ASSERT_TRUE(nativePlan->inspect(reviewReservation));
+            nativePermission.closeNext = true;
+            EXPECT_FALSE(nativePlan->inspect(reviewReservation));
+            EXPECT_EQ(nativePlan->report(reviewReservation), nullptr);
+            EXPECT_EQ(snapshotReader->borrowed(), nullptr);
+            ASSERT_TRUE(nativePlan->inspect(reviewReservation));
+            auto otherStore = makeUniqueNoThrow<HalTintaReplayStore>(TintaReplayStoreTarget::BaselineProof);
+            ASSERT_TRUE(otherStore);
+            auto otherPlan = makeUniqueNoThrow<HalUnboundCourseStarPlanInspection>(
+                *migration, *stars, *conversion, *replay, *otherStore, [](void*) { return true; }, nullptr);
+            ASSERT_TRUE(otherPlan);
+            EXPECT_FALSE(otherPlan->inspect(reviewReservation));
+            EXPECT_EQ(otherPlan->report(reviewReservation), nullptr);
+            EXPECT_EQ(hal.files, beforePlan);
+            EXPECT_TRUE(conversion->closeReaders());
+            EXPECT_EQ(nativePlan->report(reviewReservation), nullptr);
+            EXPECT_FALSE(nativePlan->inspect(reviewReservation));
+            EXPECT_TRUE(nativePlan->closeReaders());
             EXPECT_TRUE(stars->closeReaders());
           }
           EXPECT_TRUE(conversion->closeReaders());

@@ -4244,3 +4244,22 @@ of the complete emitted body sequence must match before conversion is complete.
 Codec integrity and conversion are not durable identity ownership: Native epoch
 allocation/sealing, full plan hashing, retained-epoch recovery, provenance and
 runtime publication remain required and are not wired by these helpers.
+
+The native star-plan inspector now computes the exact event count and SHA-256
+digest from the frozen mark stream and completed disposable review projection.
+The planner collects UIDs directly into its existing fixed membership storage;
+there is no second UID array or internal heap allocation. Source End must verify
+the frozen file before any planned body becomes available. The inspector hashes
+every canonical 23-byte body in order and reopens/finishes the frozen mark stream
+again before exposing its report. An empty plan produces SHA-256 of empty input.
+
+The exact review reservation retrieves a revocable report only while review
+conversion remains complete, replay remains complete in the identical candidate
+store and the course binding still matches. Wrong stores, revoked permission,
+callback cancellation and lost conversion evidence refuse the report. Owners
+and hash context live off stack; the parent excludes concurrent writers and
+workspace/reader operations. Native tests compare reported digests with separately
+encoded bodies, cover empty plans, retained unreviewed stars and removals of
+obsolete stars left by review flags, and verify that
+frozen/live files remain unchanged. This is plan evidence for future durable
+sealing, not item-prefix agreement, epoch ownership, provenance or publication.

@@ -5693,3 +5693,50 @@ TEST(CompanionTintaJournal, LegacyStarConversionHashFailureAndCallbackCancellati
   EXPECT_FALSE(conversion.next(0, foreign));
   EXPECT_EQ(conversion.event(), nullptr);
 }
+
+TEST(CompanionTintaJournal, LegacyStarPlanStreamRequiresVerifiedEndBeforeExposingMembership) {
+  struct Source {
+    LegacyStarPlanSource items;
+    std::array<uint32_t, 3> members{2, 4, 4};
+    uint16_t index = 0, count = 2;
+    bool failEnd = false, cancel = false;
+    LegacyTintaStarPlan* owner = nullptr;
+  } source;
+  LegacyTintaStarPlan plan(
+      [](void* raw, bool previous, uint32_t uid, tinta::core::ItemState& item, bool& found) {
+        return LegacyStarPlanSource::next(&static_cast<Source*>(raw)->items, previous, uid, item, found);
+      },
+      [](void* raw) { return static_cast<Source*>(raw)->items.permitted; }, &source);
+  source.owner = &plan;
+  Identity course{};
+  course.fill(7);
+  auto member = [](void* raw, uint32_t& uid) {
+    auto& source = *static_cast<Source*>(raw);
+    if (source.cancel) source.owner->close();
+    if (source.index == source.count)
+      return source.failEnd ? LegacyTintaStarPlanResult::IoError : LegacyTintaStarPlanResult::End;
+    uid = source.members[source.index++];
+    return LegacyTintaStarPlanResult::Record;
+  };
+  ASSERT_TRUE(plan.beginFromSource(course, member));
+  source.members.fill(99);
+  TintaBody body;
+  for (uint32_t uid : {2u, 4u}) {
+    ASSERT_EQ(plan.next(body), LegacyTintaStarPlanResult::Record);
+    EXPECT_EQ(body.uid, uid);
+    EXPECT_TRUE(body.enabled);
+  }
+  EXPECT_EQ(plan.next(body), LegacyTintaStarPlanResult::End);
+  source.members = {2, 4, 4};
+  for (unsigned fault = 0; fault < 3; ++fault) {
+    source.index = 0;
+    source.count = fault == 1 ? 3 : 2;
+    source.failEnd = fault == 0;
+    source.cancel = fault == 2;
+    EXPECT_FALSE(plan.beginFromSource(course, member));
+    EXPECT_FALSE(plan.completed());
+    body.uid = 123;
+    EXPECT_EQ(plan.next(body), LegacyTintaStarPlanResult::Unavailable);
+    EXPECT_EQ(body.uid, 123u);
+  }
+}

@@ -12,9 +12,37 @@ class LegacyTintaStarPlan final {
  public:
   static constexpr size_t CAPACITY = 96;
   using NextItem = bool (*)(void*, bool, uint32_t, tinta::core::ItemState&, bool&);
+  using NextMember = LegacyTintaStarPlanResult (*)(void*, uint32_t&);
   using Permission = bool (*)(void*);
   LegacyTintaStarPlan(NextItem nextItem, Permission permitted, void* context)
       : nextItem(nextItem), permitted(permitted), context(context) {}
+  // Source must return End only after verifying its full frozen membership.
+  bool beginFromSource(const Identity& inputCourse, NextMember source) {
+    if (operating) return false;
+    ready = complete = false;
+    if (!nextItem || !permitted || !source || !tinta_body_detail::nonzero(inputCourse) ||
+        overlaps(&inputCourse, sizeof(inputCourse)))
+      return false;
+    course = inputCourse;
+    count = index = 0;
+    previous = 0;
+    hasPrevious = additions = false;
+    operating = true;
+    cancelled = false;
+    bool valid = guard();
+    while (valid) {
+      uint32_t uid = 0;
+      const auto result = source(context, uid);
+      valid = guard();
+      if (valid && result == LegacyTintaStarPlanResult::End) break;
+      valid = valid && result == LegacyTintaStarPlanResult::Record && count < CAPACITY && uid && uid != UINT32_MAX;
+      for (uint16_t at = 0; valid && at < count; ++at) valid = members[at] != uid;
+      if (valid) members[count++] = uid;
+    }
+    ready = valid && guard();
+    operating = false;
+    return ready;
+  }
   bool begin(const Identity& inputCourse, std::span<const uint32_t> membership) {
     if (operating) return false;
     ready = complete = false;
